@@ -22,14 +22,32 @@ mod.COLOR_PLAYER_TOTAL = Color.ui_orange_light(255, true) -- цвет общег
 mod.COLOR_TEAM_TOTAL = Color.ui_orange_light(255, true) -- цвет общего урона от команды
 mod.COLOR_BACKGROUND = Color.terminal_corner_selected(60, true) -- цвет фона уведомления
 -- Настройки времени
-mod.DEFAULT_NOTIFICATION_COALESCE_TIME = 4
+mod.DEFAULT_NOTIFICATION_COALESCE_TIME = 3
+mod.DEFAULT_NOTIFICATION_DURATION_TIME = 8
 mod.settings = {}
+local NotificationFeed = nil
 mod.DEBUG = true
+
+local function apply_notification_duration(duration)
+	if not NotificationFeed or not NotificationFeed._notification_templates or not NotificationFeed._notification_templates.custom then
+		return
+	end
+
+	local new_time = duration or mod.DEFAULT_NOTIFICATION_DURATION_TIME
+	NotificationFeed._notification_templates.custom.total_time = new_time
+
+	if NotificationFeed._notifications then
+		for _, notification in ipairs(NotificationFeed._notifications) do
+			notification.total_time = new_time
+		end
+	end
+end
 
 local function refresh_settings()
 	local min_threshold = tonumber(mod:get("min_damage_threshold")) or 0
 	local show_total = mod:get("show_total_damage")
 	local coalesce_time = tonumber(mod:get("notification_coalesce_time")) or mod.DEFAULT_NOTIFICATION_COALESCE_TIME
+	local note_time = tonumber(mod:get("notification_duration_time")) or mod.DEFAULT_NOTIFICATION_DURATION_TIME
 	local bg_setting = mod:get("notification_background_color")
 	local bg_color = (bg_setting and Color[bg_setting]) and Color[bg_setting](60, true) or mod.COLOR_BACKGROUND
 
@@ -37,8 +55,11 @@ local function refresh_settings()
 		min_damage_threshold = min_threshold,
 		show_total_damage = show_total ~= false,
 		notification_coalesce_time = coalesce_time,
+		notification_duration_time = note_time,
 		notification_background_color = bg_color,
 	}
+
+	apply_notification_duration(note_time)
 end
 
 local function reset_stats()
@@ -58,6 +79,7 @@ mod.on_setting_changed = function(setting_id)
 	if setting_id == "min_damage_threshold"
 		or setting_id == "show_total_damage"
 		or setting_id == "notification_coalesce_time"
+		or setting_id == "notification_duration_time"
 		or setting_id == "notification_background_color"
 	then
 		refresh_settings()
@@ -79,6 +101,11 @@ mod:hook(ConstantElementNotificationFeed, "_generate_notification_data", functio
 	end
 
 	return notification_data
+end)
+
+mod:hook_safe(ConstantElementNotificationFeed, "_event_player_authenticated", function(self)
+	NotificationFeed = self
+	apply_notification_duration(mod.settings.notification_duration_time)
 end)
 
 function mod.on_game_state_changed(status, state_name)

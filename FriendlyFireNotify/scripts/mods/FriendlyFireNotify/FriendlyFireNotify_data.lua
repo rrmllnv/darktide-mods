@@ -43,6 +43,12 @@ return {
 				range = {1, 10},
 			},
 			{
+				setting_id = "notification_duration_time",
+				type = "numeric",
+				default_value  = 8,
+				range = {1, 20},
+			},
+			{
 				setting_id = "notification_background_color",
 				type = "dropdown",
 				default_value = "terminal_corner_selected",

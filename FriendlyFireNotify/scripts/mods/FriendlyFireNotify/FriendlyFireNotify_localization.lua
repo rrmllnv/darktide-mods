@@ -21,6 +21,10 @@ local localizations = {
 		en = "Damage aggregation window (sec)",
 		ru = "Окно агрегации урона (сек)",
 	},
+	notification_duration_time = {
+		en = "Notification display time (sec)",
+		ru = "Время показа уведомления (сек)",
+	},
 	notification_background_color = {
 		en = "Notification background color",
 		ru = "Цвет фона уведомления",
