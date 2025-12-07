@@ -255,7 +255,7 @@ local function show_friendly_fire_kill_notification(player_name, total_killer_ki
 		local frame_item = profile and profile.loadout and profile.loadout.slot_portrait_frame
 
 		local notification_data = {
-			show_shine = true,
+			show_shine = false,
 			icon = "content/ui/materials/base/ui_portrait_frame_base",
 			icon_size = "portrait_frame",
 			line_1 = line1,
@@ -354,7 +354,7 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 		local frame_item = profile and profile.loadout and profile.loadout.slot_portrait_frame
 
 		local notification_data = {
-			show_shine = true,
+			show_shine = false,
 			icon = "content/ui/materials/base/ui_portrait_frame_base",
 			icon_size = "large_item",
 			line_1 = message,
@@ -512,6 +512,16 @@ mod:hook_safe(AttackReportManager, "_process_attack_result", function(self, buff
 	if not resolved_owner_unit and attacking_unit then
 		local AttackingUnitResolver = mod:original_require("scripts/utilities/attack/attacking_unit_resolver")
 		resolved_owner_unit = AttackingUnitResolver.resolve(attacking_unit)
+	end
+
+	if not resolved_owner_unit and attacking_unit and attacking_unit == attacked_unit then
+		mod.add_friendly_fire_damage(nil, damage, nil, true, source_text, local_player)
+		return
+	end
+
+	if resolved_owner_unit and resolved_owner_unit == attacked_unit then
+		mod.add_friendly_fire_damage(nil, damage, nil, true, source_text, local_player)
+		return
 	end
 
 	if resolved_owner_unit then
