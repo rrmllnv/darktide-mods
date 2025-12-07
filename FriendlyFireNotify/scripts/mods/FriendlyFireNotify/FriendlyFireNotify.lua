@@ -26,7 +26,7 @@ mod.DEFAULT_NOTIFICATION_COALESCE_TIME = 3
 mod.DEFAULT_NOTIFICATION_DURATION_TIME = 8
 mod.settings = {}
 local NotificationFeed = nil
-mod.DEBUG = false
+mod.DEBUG = true
 
 local function apply_notification_duration(duration)
 	if not NotificationFeed or not NotificationFeed._notification_templates or not NotificationFeed._notification_templates.custom then
@@ -46,6 +46,7 @@ end
 local function refresh_settings()
 	local min_threshold = tonumber(mod:get("min_damage_threshold")) or 0
 	local show_total = mod:get("show_total_damage")
+	local show_team_total = mod:get("show_team_total_damage")
 	local coalesce_time = tonumber(mod:get("notification_coalesce_time")) or mod.DEFAULT_NOTIFICATION_COALESCE_TIME
 	local note_time = tonumber(mod:get("notification_duration_time")) or mod.DEFAULT_NOTIFICATION_DURATION_TIME
 	local bg_setting = mod:get("notification_background_color")
@@ -54,6 +55,7 @@ local function refresh_settings()
 	mod.settings = {
 		min_damage_threshold = min_threshold,
 		show_total_damage = show_total ~= false,
+		show_team_total_damage = show_team_total ~= false,
 		notification_coalesce_time = coalesce_time,
 		notification_duration_time = note_time,
 		notification_background_color = bg_color,
@@ -78,6 +80,7 @@ end
 mod.on_setting_changed = function(setting_id)
 	if setting_id == "min_damage_threshold"
 		or setting_id == "show_total_damage"
+		or setting_id == "show_team_total_damage"
 		or setting_id == "notification_coalesce_time"
 		or setting_id == "notification_duration_time"
 		or setting_id == "notification_background_color"
@@ -329,7 +332,6 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 	
 	local line2 = damage_line
 	local line3 = ""
-	local line4 = ""
 
 	local function background_color()
 		return mod.settings.notification_background_color or mod.COLOR_BACKGROUND
@@ -337,8 +339,8 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 
 	if show_total and total_damage and total_damage > 0 then
 		local total_value = Text.apply_color_to_text(format_number(total_damage or 0), mod.COLOR_PLAYER_TOTAL) or format_number(total_damage or 0)
-		local total_template = loc("friendly_fire_total_line")
-		line3 = safe_format(total_template, "Total damage from player: %s", tostring(total_value or "0"))
+		local total_template = loc("friendly_fire_total_suffix")
+		line2 = safe_format("%s" .. total_template, "%s (total %s)", line2, tostring(total_value or "0"))
 	end
 
 	if not is_self_damage then
@@ -346,8 +348,8 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 
 		if show_team_total and allies_total > 0 then
 			local allies_value = Text.apply_color_to_text(format_number(allies_total or 0), mod.COLOR_TEAM_TOTAL) or format_number(allies_total or 0)
-				local team_template = loc("friendly_fire_team_total")
-			line4 = safe_format(team_template, "Team total damage: %s", tostring(allies_value or "0"))
+			local team_template = loc("friendly_fire_team_total")
+			line3 = safe_format(team_template, "Team total damage: %s", tostring(allies_value or "0"))
 		end
 	end
 	
@@ -365,7 +367,6 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 			line_1 = message,
 			line_2 = line2,
 			line_3 = line3,
-			line_4 = line4,
 			color = background_color(),
 		}
 
