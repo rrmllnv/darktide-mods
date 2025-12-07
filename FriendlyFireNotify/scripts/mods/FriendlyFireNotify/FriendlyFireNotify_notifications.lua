@@ -11,6 +11,7 @@ mod.notifications = notifications
 local FFN_MESSAGE_TYPE = "ffn_custom"
 
 local ENABLE_CUSTOM_WIDTH = false -- переключатель расширения кастомных уведомлений
+local ENABLE_TEST_PREFIX = true -- добавить префикс к первой строке (для проверки кастомного типа)
 
 local NotificationFeed = nil
 
@@ -226,6 +227,10 @@ mod:hook_require("scripts/ui/constant_elements/elements/notification_feed/consta
 		widget.style.text_1.text_color[1] = 0
 		widget.style.text_2.text_color[1] = 0
 		widget.style.text_3.text_color[1] = 0
+
+		if widget.content.text_1 then
+			widget.content.text_1 = "[FFNHOOK] " .. widget.content.text_1
+		end
 	end
 end)
 
