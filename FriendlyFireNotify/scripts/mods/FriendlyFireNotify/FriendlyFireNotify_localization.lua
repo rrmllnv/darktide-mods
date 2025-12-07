@@ -15,6 +15,14 @@ return {
 		en = "Show total damage in notification",
 		ru = "Показывать общий урон в уведомлении",
 	},
+	notification_coalesce_time = {
+		en = "Damage aggregation window (sec)",
+		ru = "Окно агрегации урона (сек)",
+	},
+	notification_duration_time = {
+		en = "Notification display time (sec)",
+		ru = "Время показа уведомления (сек)",
+	},
 	friendly_fire_line1_self = {
 		en = "You damaged yourself",
 		ru = "Вы нанесли себе",

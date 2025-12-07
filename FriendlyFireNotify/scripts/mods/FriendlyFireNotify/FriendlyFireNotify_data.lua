@@ -18,6 +18,18 @@ return {
 				type = "checkbox",
 				default_value = true,
 			},
+			{
+				setting_id = "notification_coalesce_time",
+				type = "numeric",
+				default_value  = 4,
+				range = {1, 10},
+			},
+			{
+				setting_id = "notification_duration_time",
+				type = "numeric",
+				default_value  = 8,
+				range = {1, 20},
+			},
 		},
 	},
 }

@@ -15,12 +15,14 @@ mod.self_damage_total = 0 -- Общий урон от собственных в�
 mod.friendly_fire_kills = {} -- account_id -> kills
 mod.team_kills_total = 0
 mod.pending_notifications = {} -- key -> payload для коалесса уведомлений
-mod.NOTIFICATION_COALESCE_TIME = 0.75
 -- Цвета для отображения урона
 mod.COLOR_DAMAGE = Color.ui_orange_light(255, true) -- цвет единичного урона
 mod.COLOR_TOTAL_DAMAGE = Color.ui_orange_light(255, true) -- цвет суммарного урона (любого)
 mod.COLOR_PLAYER_TOTAL = Color.ui_orange_light(255, true) -- цвет общего урона от игрока
 mod.COLOR_TEAM_TOTAL = Color.ui_orange_light(255, true) -- цвет общего урона от команды
+-- Настройки времени
+mod.DEFAULT_NOTIFICATION_COALESCE_TIME = 4
+mod.DEFAULT_NOTIFICATION_DURATION_TIME = 8
 mod.DEBUG = true
 
 local function reset_stats()
@@ -308,6 +310,7 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 			line_3 = line3,
 			line_4 = line4,
 			color = Color.terminal_corner_selected(60, true),
+			duration = mod:get("notification_duration_time") or mod.DEFAULT_NOTIFICATION_DURATION_TIME,
 		}
 
 		local has_portrait = portrait_target and profile
@@ -366,9 +369,10 @@ mod.update = function()
 	end
 
 	local t = now()
+	local coalesce_time = tonumber(mod:get("notification_coalesce_time")) or mod.DEFAULT_NOTIFICATION_COALESCE_TIME
 
 	for key, entry in pairs(mod.pending_notifications) do
-		if entry.last_update and t - entry.last_update >= mod.NOTIFICATION_COALESCE_TIME then
+		if entry.last_update and t - entry.last_update >= coalesce_time then
 			show_friendly_fire_notification(
 				entry.player_name,
 				entry.damage,
