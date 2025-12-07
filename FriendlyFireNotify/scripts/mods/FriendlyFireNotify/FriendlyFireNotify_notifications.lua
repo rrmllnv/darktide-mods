@@ -60,12 +60,38 @@ mod:hook_require("scripts/ui/constant_elements/elements/notification_feed/consta
 		return
 	end
 
+	-- Добавляем 4-й текстовый пасс в шаблон
+	local original_pass_template_function = defs.notification_message.pass_template_function
+
+	defs.notification_message.pass_template_function = function()
+		local passes = original_pass_template_function()
+
+		table.insert(passes, {
+			pass_type = "text",
+			style_id = "text_4",
+			value = "",
+			value_id = "text_4",
+			style = table.clone(passes[#passes].style),
+			visibility_function = function(content)
+				return content.text_4
+			end,
+		})
+
+		return passes
+	end
+
 	local create = defs.notification_message
 	local original_init = create.init
 
 	create.init = function(parent, widget, element)
 		if element.message_type ~= FFN_MESSAGE_TYPE then
 			return original_init(parent, widget, element)
+		end
+
+		-- Добавляем кастомную 4-ю строку, если передана (line_4)
+		if element.line_4 then
+			element.texts = element.texts or {}
+			element.texts[4] = element.texts[4] or { display_name = element.line_4 }
 		end
 
 		-- скопировано из оригинала, но с увеличенными width/max_text_width
@@ -227,6 +253,9 @@ mod:hook_require("scripts/ui/constant_elements/elements/notification_feed/consta
 		widget.style.text_1.text_color[1] = 0
 		widget.style.text_2.text_color[1] = 0
 		widget.style.text_3.text_color[1] = 0
+		if widget.style.text_4 then
+			widget.style.text_4.text_color[1] = 0
+		end
 
 		if widget.content.text_1 then
 			widget.content.text_1 = "[FFNHOOK] " .. widget.content.text_1
@@ -410,6 +439,7 @@ local function notification_data(lines, options)
 		line_1 = lines.line1 or "",
 		line_2 = lines.line2 or "",
 		line_3 = lines.line3 or "",
+		line_4 = lines.line4 or "",
 		color = (options and options.background_color) or mod.settings.notification_background_color or mod.COLOR_BACKGROUND,
 	}
 
