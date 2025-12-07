@@ -340,7 +340,7 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 	if show_total and total_damage and total_damage > 0 then
 		local total_value = Text.apply_color_to_text(format_number(total_damage or 0), mod.COLOR_PLAYER_TOTAL) or format_number(total_damage or 0)
 		local total_template = loc("friendly_fire_total_suffix")
-		line2 = safe_format(total_template .. " %s", "(total %s) %s", tostring(total_value or "0"), line2)
+		line2 = safe_format("%s" .. total_template, "%s (total %s)", line2, tostring(total_value or "0"))
 	end
 
 	if not is_self_damage then
