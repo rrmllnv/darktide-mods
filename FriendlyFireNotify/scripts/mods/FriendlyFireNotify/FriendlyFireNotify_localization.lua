@@ -1,11 +1,11 @@
 return {
 	mod_title = {
-		en = "Friendly Fire Damage",
-		ru = "Урон от сокомандников",
+		en = "Friendly Fire Notify",
+		ru = "Уведомления об уроне союзников",
 	},
 	mod_description = {
-		en = "FriendlyFireDamage - Shows notifications when you take damage from teammates (including barrels).",
-		ru = "FriendlyFireDamage - Показывает уведомления при получении урона от сокомандников (включая бочки).",
+		en = "FriendlyFireNotify - Shows notifications when you take damage from teammates.",
+		ru = "FriendlyFireNotify - Показывает уведомления при получении урона от сокомандников.",
 	},
 	min_damage_threshold = {
 		en = "Minimum damage threshold",

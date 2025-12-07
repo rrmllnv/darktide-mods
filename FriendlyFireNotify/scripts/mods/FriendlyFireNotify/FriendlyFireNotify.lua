@@ -1,4 +1,4 @@
-local mod = get_mod("FriendlyFireDamage")
+local mod = get_mod("FriendlyFireNotify")
 
 local Breed = mod:original_require("scripts/utilities/breed")
 local UISoundEvents = require("scripts/settings/ui/ui_sound_events")
@@ -508,7 +508,7 @@ mod:hook_safe(AttackReportManager, "_process_attack_result", function(self, buff
 	end
 end)
 
-mod:command("ffd", "Test FriendlyFireDamage notification (damage/kill)", function(mode)
+mod:command("ffd", "Test FriendlyFireNotify notification (damage/kill)", function(mode)
 	if not mod.DEBUG then
 		return
 	end

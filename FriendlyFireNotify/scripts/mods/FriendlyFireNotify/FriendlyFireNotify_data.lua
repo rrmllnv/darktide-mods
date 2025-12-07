@@ -1,4 +1,4 @@
-local mod = get_mod("FriendlyFireDamage")
+local mod = get_mod("FriendlyFireNotify")
 
 return {
 	name = mod:localize("mod_title"),
