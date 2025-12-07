@@ -10,23 +10,21 @@ local Damage = mod:original_require("scripts/utilities/attack/damage")
 local ConstantElementNotificationFeed = mod:original_require("scripts/ui/constant_elements/elements/notification_feed/constant_element_notification_feed")
 local attack_types = AttackSettings.attack_types
 local attack_results = AttackSettings.attack_results
-mod.friendly_fire_damage = {} -- account_id -> damage
-mod.self_damage_total = 0 -- Общий урон от собственных взрывов
-mod.friendly_fire_kills = {} -- account_id -> kills
+local NotificationFeed = nil
+mod.friendly_fire_damage = {}
+mod.self_damage_total = 0
+mod.friendly_fire_kills = {}
 mod.team_kills_total = 0
-mod.pending_notifications = {} -- key -> payload для коалесса уведомлений
--- Цвета для отображения урона
-mod.COLOR_DAMAGE = Color.ui_orange_light(255, true) -- цвет единичного урона
-mod.COLOR_TOTAL_DAMAGE = Color.ui_orange_light(255, true) -- цвет суммарного урона (любого)
-mod.COLOR_PLAYER_TOTAL = Color.ui_orange_light(255, true) -- цвет общего урона от игрока
-mod.COLOR_TEAM_TOTAL = Color.ui_orange_light(255, true) -- цвет общего урона от команды
-mod.COLOR_BACKGROUND = Color.terminal_corner_selected(60, true) -- цвет фона уведомления
--- Настройки времени
+mod.pending_notifications = {}
+mod.COLOR_DAMAGE = Color.ui_orange_light(255, true)
+mod.COLOR_TOTAL_DAMAGE = Color.ui_orange_light(255, true)
+mod.COLOR_PLAYER_TOTAL = Color.ui_orange_light(255, true)
+mod.COLOR_TEAM_TOTAL = Color.ui_orange_light(255, true)
+mod.COLOR_BACKGROUND = Color.terminal_corner_selected(60, true)
 mod.DEFAULT_NOTIFICATION_COALESCE_TIME = 3
 mod.DEFAULT_NOTIFICATION_DURATION_TIME = 8
 mod.settings = {}
-local NotificationFeed = nil
-mod.DEBUG = true
+mod.DEBUG = false
 
 local function apply_notification_duration(duration)
 	if not NotificationFeed or not NotificationFeed._notification_templates or not NotificationFeed._notification_templates.custom then
@@ -159,27 +157,22 @@ local function safe_format(template, fallback, ...)
 end
 
 local PROFILE_EXCEPTIONS = {
-	-- Бочки
-	fire_barrel_explosion = true, -- дальний радиус бочки
-	fire_barrel_explosion_close = true, -- ближний радиус бочки
-	barrel_explosion_close = true, -- ближний радиус (нейм другой схемы)
-	barrel_explosion = true, -- дальний радиус (нейм другой схемы)
-	
-	-- Горячие лужи/поджоги
+	fire_barrel_explosion = true,
+	fire_barrel_explosion_close = true,
+	barrel_explosion_close = true,
+	barrel_explosion = true,
 	liquid_area_fire_burning = true,
-	liquid_area_fire_burning_barrel = true, -- горящая лужа от бочки
+	liquid_area_fire_burning_barrel = true,
 	flame_grenade_liquid_area_fire_burning = true,
 	grenadier_liquid_fire_burning = true,
 	cultist_flamer_liquid_fire_burning = true,
 	renegade_flamer_liquid_fire_burning = true,
-	-- Взрывун (poxburster)
-	poxwalker_explosion_close = true, -- ближний радиус
-	poxwalker_explosion = true, -- дальний радиус
-	-- Ранец огнемета
+	poxwalker_explosion_close = true,
+	poxwalker_explosion = true,
 	flamer_backpack_explosion = true,
 	flamer_backpack_explosion_close = true,
-	interrupted_flamer_backpack_explosion = true, -- детон при прерывании
-	interrupted_flamer_backpack_explosion_close = true, -- детон при прерывании (ближний)
+	interrupted_flamer_backpack_explosion = true,
+	interrupted_flamer_backpack_explosion_close = true,
 }
 
 local function now()
@@ -514,7 +507,6 @@ mod:hook_safe(AttackReportManager, "_process_attack_result", function(self, buff
 		return
 	end
 
-	-- resolve owner
 	local resolved_owner_unit = attacking_unit
 
 	if not resolved_owner_unit and attacking_unit then
@@ -583,26 +575,21 @@ mod:hook_safe(AttackReportManager, "_process_attack_result", function(self, buff
 			end
 		end
 
-		-- если нет владельца или это не союзник — не считаем friendly fire
 	end
 end)
 
+if mod.DEBUG then
+	mod:command("notify", "Test FriendlyFireNotify notification (damage/kill)", function(mode)
+		local local_player = Managers.player and Managers.player:local_player(1)
 
-mod:command("ffd", "Test FriendlyFireNotify notification (damage/kill)", function(mode)
-	if not mod.DEBUG then
-		return
-	end
+		if not local_player or not Managers.event then
+			return
+		end
 
-	local local_player = Managers.player and Managers.player:local_player(1)
-
-	if not local_player or not Managers.event then
-		return
-	end
-
-	if mode == "kill" then
-		show_friendly_fire_kill_notification("Тестовый игрок", 4, 5, local_player, local_player)
-	else
-		show_friendly_fire_notification("Тестовый игрок", 123, 10, false, "", local_player, local_player, 789)
-	end
-end)
-
+		if mode == "kill" then
+			show_friendly_fire_kill_notification("Тестовый игрок", 4, 5, local_player, local_player)
+		else
+			show_friendly_fire_notification("Ophelia", 34, 57, false, "barrel explosion", local_player, local_player, 81)
+		end
+	end)
+end
