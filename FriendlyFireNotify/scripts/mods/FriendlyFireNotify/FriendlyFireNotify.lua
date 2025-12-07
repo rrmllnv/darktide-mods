@@ -307,6 +307,7 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 	end
 	
 	local show_total = mod.settings.show_total_damage ~= false
+	local show_team_total = mod.settings.show_team_total_damage ~= false
 	local message
 	local damage_line = make_damage_phrase(damage_amount)
 	if is_self_damage then
@@ -343,7 +344,7 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 	if not is_self_damage then
 		local allies_total = team_total_damage or 0
 
-		if allies_total > 0 then
+		if show_team_total and allies_total > 0 then
 			local allies_value = Text.apply_color_to_text(format_number(allies_total or 0), mod.COLOR_TEAM_TOTAL) or format_number(allies_total or 0)
 				local team_template = loc("friendly_fire_team_total")
 			line4 = safe_format(team_template, "Team total damage: %s", tostring(allies_value or "0"))

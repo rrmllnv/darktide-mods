@@ -14,8 +14,12 @@ local localizations = {
 		ru = "Минимальный порог урона",
 	},
 	show_total_damage = {
-		en = "Show total damage in notification",
-		ru = "Показывать общий урон в уведомлении",
+		en = "Show total damage from player",
+		ru = "Показывать общий урон от игрока",
+	},
+	show_team_total_damage = {
+		en = "Show total damage from team",
+		ru = "Показывать общий урон от команды",
 	},
 	notification_coalesce_time = {
 		en = "Damage aggregation window (sec)",
