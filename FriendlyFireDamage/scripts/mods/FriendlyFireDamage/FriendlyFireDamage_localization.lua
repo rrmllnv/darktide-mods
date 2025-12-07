@@ -31,6 +31,10 @@ return {
 		en = " (total %s)",
 		ru = " (всего %s)",
 	},
+	friendly_fire_total_line = {
+		en = "Total damage from player: %s",
+		ru = "Общий урон от игрока: %s",
+	},
 	friendly_fire_team_total = {
 		en = "Team total damage: %s",
 		ru = "Общий урон от команды: %s",
@@ -62,6 +66,50 @@ return {
 	friendly_fire_unknown_account = {
 		en = "Unknown",
 		ru = "Неизвестный",
+	},
+	friendly_fire_source_suffix = {
+		en = "via %s",
+		ru = "через %s",
+	},
+	fire_barrel_explosion = {
+		en = "barrel explosion",
+		ru = "взрыв бочки",
+	},
+	fire_barrel_explosion_close = {
+		en = "barrel explosion",
+		ru = "взрыв бочки",
+	},
+	barrel_explosion_close = {
+		en = "barrel explosion",
+		ru = "взрыв бочки",
+	},
+	barrel_explosion = {
+		en = "barrel explosion",
+		ru = "взрыв бочки",
+	},
+	flamer_backpack_explosion = {
+		en = "flamer backpack explosion",
+		ru = "взрыв ранца огнемета",
+	},
+	flamer_backpack_explosion_close = {
+		en = "flamer backpack explosion",
+		ru = "взрыв ранца огнемета",
+	},
+	interrupted_flamer_backpack_explosion = {
+		en = "flamer backpack explosion",
+		ru = "взрыв ранца огнемета",
+	},
+	interrupted_flamer_backpack_explosion_close = {
+		en = "flamer backpack explosion",
+		ru = "взрыв ранца огнемета",
+	},
+	poxwalker_explosion = {
+		en = "poxburster explosion",
+		ru = "взрыв боксбурстера",
+	},
+	poxwalker_explosion_close = {
+		en = "poxburster explosion",
+		ru = "взрыв боксбурстера",
 	},
 }
 

@@ -90,6 +90,44 @@ local function safe_format(template, fallback, ...)
 	return tostring(fallback or "")
 end
 
+local PROFILE_EXCEPTIONS = {
+	-- Бочки
+	fire_barrel_explosion = true, -- дальний радиус бочки
+	fire_barrel_explosion_close = true, -- ближний радиус бочки
+	barrel_explosion_close = true, -- ближний радиус (нейм другой схемы)
+	barrel_explosion = true, -- дальний радиус (нейм другой схемы)
+	-- Взрывун (poxburster)
+	poxwalker_explosion_close = true, -- ближний радиус
+	poxwalker_explosion = true, -- дальний радиус
+	-- Ранец огнемета
+	flamer_backpack_explosion = true,
+	flamer_backpack_explosion_close = true,
+	interrupted_flamer_backpack_explosion = true, -- детон при прерывании
+	interrupted_flamer_backpack_explosion_close = true, -- детон при прерывании (ближний)
+}
+
+local function resolve_source_text(buffer_data)
+	local damage_profile = buffer_data and buffer_data.damage_profile
+
+	if damage_profile and damage_profile.name then
+		local profile_name = damage_profile.name
+
+		if PROFILE_EXCEPTIONS[profile_name] then
+			return loc(profile_name)
+		end
+
+		return profile_name
+	end
+
+	local attack_type = buffer_data and buffer_data.attack_type
+
+	if attack_type then
+		return tostring(attack_type)
+	end
+
+	return ""
+end
+
 local function make_damage_phrase(amount)
 	local damage_value = Text.apply_color_to_text(format_number(amount), Color.ui_orange_light(255, true))
 	local localization_manager = Managers.localization
@@ -206,14 +244,20 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 		local ally_template = loc("friendly_fire_line1_ally")
 		message = safe_format(ally_template, "Player %s damaged you", tostring(name or unknown_name))
 	end
-	if show_total and total_damage and total_damage > damage_amount then
-		local total_value = Text.apply_color_to_text(format_number(total_damage or 0), Color.ui_orange_light(255, true)) or format_number(total_damage or 0)
-		local total_template = loc("friendly_fire_total_suffix")
-		damage_line = safe_format("%s" .. total_template, "%s (total %s)", damage_line, tostring(total_value or "0"))
+	if source_text and source_text ~= "" then
+		local source_suffix = loc("friendly_fire_source_suffix")
+		damage_line = safe_format("%s " .. source_suffix, "%s (%s)", damage_line, tostring(source_text))
 	end
 	
 	local line2 = damage_line
 	local line3 = ""
+	local line4 = ""
+
+	if show_total and total_damage and total_damage > damage_amount then
+		local total_value = Text.apply_color_to_text(format_number(total_damage or 0), Color.ui_orange_light(255, true)) or format_number(total_damage or 0)
+		local total_template = loc("friendly_fire_total_line")
+		line3 = safe_format(total_template, "Total damage from player: %s", tostring(total_value or "0"))
+	end
 
 	if not is_self_damage then
 		local allies_total = team_total_damage or 0
@@ -221,7 +265,7 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 		if allies_total > 0 then
 			local allies_value = Text.apply_color_to_text(format_number(allies_total or 0), Color.ui_orange_light(255, true)) or format_number(allies_total or 0)
 				local team_template = loc("friendly_fire_team_total")
-			line3 = safe_format(team_template, "Team total damage: %s", tostring(allies_value or "0"))
+			line4 = safe_format(team_template, "Team total damage: %s", tostring(allies_value or "0"))
 		end
 	end
 	
@@ -239,6 +283,7 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 			line_1 = message,
 			line_2 = line2,
 			line_3 = line3,
+			line_4 = line4,
 			color = Color.terminal_corner_selected(60, true),
 		}
 
@@ -320,6 +365,7 @@ mod:hook_safe(AttackReportManager, "_process_attack_result", function(self, buff
 	local player_unit_spawn_manager = Managers.state and Managers.state.player_unit_spawn
 	local attacked_player = player_unit_spawn_manager and attacked_unit and player_unit_spawn_manager:owner(attacked_unit)
 	local local_player = Managers.player and Managers.player:local_player(1)
+	local source_text = resolve_source_text(buffer_data)
 
 	if not attacked_player or not local_player or attacked_player ~= local_player then
 		return
@@ -331,7 +377,6 @@ mod:hook_safe(AttackReportManager, "_process_attack_result", function(self, buff
 
 	-- resolve owner
 	local resolved_owner_unit = attacking_unit
-	local source_text = ""
 
 	if not resolved_owner_unit and attacking_unit then
 		local AttackingUnitResolver = mod:original_require("scripts/utilities/attack/attacking_unit_resolver")
@@ -384,6 +429,9 @@ mod:hook_safe(AttackReportManager, "_process_attack_result", function(self, buff
 		else
 		end
 	else
+		if attack_result == attack_results.friendly_fire then
+			mod.add_friendly_fire_damage(nil, damage, loc("friendly_fire_unknown_player"), false, source_text, local_player, nil)
+		end
 	end
 end)
 
