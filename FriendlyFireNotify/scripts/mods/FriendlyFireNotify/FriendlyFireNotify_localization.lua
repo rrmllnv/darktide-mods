@@ -1,4 +1,6 @@
-return {
+local InputUtils = require("scripts/managers/input/input_utils")
+
+local localizations = {
 	mod_title = {
 		en = "Friendly Fire Notify",
 		ru = "Уведомления об уроне союзников",
@@ -18,10 +20,6 @@ return {
 	notification_coalesce_time = {
 		en = "Damage aggregation window (sec)",
 		ru = "Окно агрегации урона (сек)",
-	},
-	notification_duration_time = {
-		en = "Notification display time (sec)",
-		ru = "Время показа уведомления (сек)",
 	},
 	notification_background_color = {
 		en = "Notification background color",
@@ -149,3 +147,23 @@ return {
 	},
 }
 
+local function readable(text)
+	local readable_string = ""
+	for token in string.gmatch(text, "([^_]+)") do
+		local first = string.sub(token, 1, 1)
+		token = string.format("%s%s", string.upper(first), string.sub(token, 2))
+		readable_string = string.trim(string.format("%s %s", readable_string, token))
+	end
+	return readable_string
+end
+
+local color_names = Color.list
+for _, color_name in ipairs(color_names) do
+	local color_values = Color[color_name](100, true)
+	local text = InputUtils.apply_color_to_input_text(readable(color_name), color_values)
+	localizations[color_name] = {
+		en = text,
+	}
+end
+
+return localizations

@@ -39,14 +39,8 @@ return {
 			{
 				setting_id = "notification_coalesce_time",
 				type = "numeric",
-				default_value  = 4,
+				default_value  = 3,
 				range = {1, 10},
-			},
-			{
-				setting_id = "notification_duration_time",
-				type = "numeric",
-				default_value  = 8,
-				range = {1, 20},
 			},
 			{
 				setting_id = "notification_background_color",
