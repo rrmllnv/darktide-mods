@@ -312,11 +312,17 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 	else
 		local unknown_name = loc("friendly_fire_unknown_player")
 		local name = player_name or unknown_name
-		if name and not string.find(name, "{#") then
+		local is_unknown = name == unknown_name
+		if name and not string.find(name, "{#") and not is_unknown then
 			name = Text.apply_color_to_text(name, Color.ui_orange_light(255, true))
 		end
-		local ally_template = loc("friendly_fire_line1_ally")
-		message = safe_format(ally_template, "Player %s damaged you", tostring(name or unknown_name))
+		if is_unknown then
+			local unknown_template = loc("friendly_fire_line1_unknown")
+			message = safe_format(unknown_template, "Unknown source damaged you")
+		else
+			local ally_template = loc("friendly_fire_line1_ally")
+			message = safe_format(ally_template, "Player %s damaged you", tostring(name or unknown_name))
+		end
 	end
 	local line2 = damage_line
 	local line3 = ""
@@ -585,6 +591,10 @@ mod:hook_safe(AttackReportManager, "_process_attack_result", function(self, buff
 			end
 		end
 
+		-- если профиль отслеживаемый (бочки/лужи и т.п.), но владельца союзника не нашли
+		if profile_is_tracked then
+			mod.add_friendly_fire_damage(nil, damage, loc("friendly_fire_unknown_player"), false, source_text, local_player, nil)
+		end
 	end
 end)
 

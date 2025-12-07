@@ -41,6 +41,10 @@ local localizations = {
 		en = "Player %s damaged you",
 		ru = "Игрок %s нанес вам",
 	},
+	friendly_fire_line1_unknown = {
+		en = "You took incidental damage",
+		ru = "Вы получили побочный урон",
+	},
 	friendly_fire_damage_suffix = {
 		en = "%s damage",
 		ru = "%s урона",
