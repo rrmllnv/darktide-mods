@@ -73,6 +73,26 @@ local localizations = {
 		en = "Team total kills %s",
 		ru = "Общие убийства от команды %s",
 	},
+	friendly_fire_outgoing_line1_ally = {
+		en = "You damaged player %s",
+		ru = "Вы нанесли урон игроку %s",
+	},
+	friendly_fire_outgoing_line1_unknown = {
+		en = "You dealt incidental damage",
+		ru = "Вы нанесли побочный урон",
+	},
+	friendly_fire_outgoing_team_total = {
+		en = "Your total team damage: %s",
+		ru = "Ваш общий урон по союзникам: %s",
+	},
+	friendly_fire_outgoing_kill_line1_ally = {
+		en = "You killed player %s",
+		ru = "Вы убили игрока %s",
+	},
+	friendly_fire_outgoing_kill_team_total = {
+		en = "Your total team kills %s",
+		ru = "Ваши убийства союзников всего %s",
+	},
 	friendly_fire_damage_word_one = {
 		en = "damage",
 		ru = "урон",
