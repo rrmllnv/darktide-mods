@@ -16,6 +16,11 @@ mod.friendly_fire_kills = {} -- account_id -> kills
 mod.team_kills_total = 0
 mod.pending_notifications = {} -- key -> payload для коалесса уведомлений
 mod.NOTIFICATION_COALESCE_TIME = 0.75
+-- Цвета для отображения урона
+mod.COLOR_DAMAGE = Color.ui_orange_light(255, true) -- цвет единичного урона
+mod.COLOR_TOTAL_DAMAGE = Color.ui_orange_light(255, true) -- цвет суммарного урона (любого)
+mod.COLOR_PLAYER_TOTAL = Color.ui_orange_light(255, true) -- цвет общего урона от игрока
+mod.COLOR_TEAM_TOTAL = Color.ui_orange_light(255, true) -- цвет общего урона от команды
 mod.DEBUG = true
 
 local function reset_stats()
@@ -147,7 +152,7 @@ local function resolve_source_text(buffer_data)
 end
 
 local function make_damage_phrase(amount)
-	local damage_value = Text.apply_color_to_text(format_number(amount), Color.ui_orange_light(255, true))
+	local damage_value = Text.apply_color_to_text(format_number(amount), mod.COLOR_DAMAGE)
 	local localization_manager = Managers.localization
 	local language = localization_manager and localization_manager:language() or "en"
 
@@ -272,7 +277,7 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 	local line4 = ""
 
 	if show_total and total_damage and total_damage > damage_amount then
-		local total_value = Text.apply_color_to_text(format_number(total_damage or 0), Color.ui_orange_light(255, true)) or format_number(total_damage or 0)
+		local total_value = Text.apply_color_to_text(format_number(total_damage or 0), mod.COLOR_PLAYER_TOTAL) or format_number(total_damage or 0)
 		local total_template = loc("friendly_fire_total_line")
 		line3 = safe_format(total_template, "Total damage from player: %s", tostring(total_value or "0"))
 	end
@@ -281,7 +286,7 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 		local allies_total = team_total_damage or 0
 
 		if allies_total > 0 then
-			local allies_value = Text.apply_color_to_text(format_number(allies_total or 0), Color.ui_orange_light(255, true)) or format_number(allies_total or 0)
+			local allies_value = Text.apply_color_to_text(format_number(allies_total or 0), mod.COLOR_TEAM_TOTAL) or format_number(allies_total or 0)
 				local team_template = loc("friendly_fire_team_total")
 			line4 = safe_format(team_template, "Team total damage: %s", tostring(allies_value or "0"))
 		end
