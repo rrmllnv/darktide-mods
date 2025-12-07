@@ -1,0 +1,407 @@
+local mod = get_mod("FriendlyFireDamage")
+
+local Breed = mod:original_require("scripts/utilities/breed")
+local UISoundEvents = require("scripts/settings/ui/ui_sound_events")
+local UISettings = mod:original_require("scripts/settings/ui/ui_settings")
+local Text = mod:original_require("scripts/utilities/ui/text")
+local AttackSettings = require("scripts/settings/damage/attack_settings")
+local AttackReportManager = mod:original_require("scripts/managers/attack_report/attack_report_manager")
+local Damage = mod:original_require("scripts/utilities/attack/damage")
+local ConstantElementNotificationFeed = mod:original_require("scripts/ui/constant_elements/elements/notification_feed/constant_element_notification_feed")
+local attack_types = AttackSettings.attack_types
+local attack_results = AttackSettings.attack_results
+mod.friendly_fire_damage = {} -- account_id -> damage
+mod.self_damage_total = 0 -- Общий урон от собственных взрывов
+mod.friendly_fire_kills = {} -- account_id -> kills
+mod.team_kills_total = 0
+mod.DEBUG = true
+
+local function reset_stats()
+	mod.friendly_fire_damage = {}
+	mod.self_damage_total = 0
+	mod.friendly_fire_kills = {}
+	mod.team_kills_total = 0
+end
+
+mod.on_all_mods_loaded = function()
+	reset_stats()
+end
+
+mod:hook(ConstantElementNotificationFeed, "_generate_notification_data", function(func, self, message_type, data)
+	local notification_data = func(self, message_type, data)
+
+	if message_type == "custom" and notification_data and data then
+		if data.use_player_portrait then
+			notification_data.use_player_portrait = true
+			notification_data.player = data.player
+		end
+
+		if data.item then
+			notification_data.item = data.item
+		end
+	end
+
+	return notification_data
+end)
+
+function mod.on_game_state_changed(status, state_name)
+	if state_name == 'GameplayStateRun' or state_name == "StateGameplay" and status == "enter" then
+		reset_stats()
+	end
+end
+
+local function format_number(number)
+	local num = math.floor(number)
+	if num < 1000 then
+		return tostring(num)
+	end
+	
+	local formatted = tostring(num)
+	local k
+	while true do
+		formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
+		if k == 0 then
+			break
+		end
+	end
+	return formatted
+end
+
+local function loc(key)
+	local value = mod:localize(key, "%s") -- передаем плейсхолдер, чтобы не падало форматирование локализации
+	if value and value ~= "" and not string.find(value, "^<") then
+		return value
+	end
+	return key or ""
+end
+
+local function safe_format(template, fallback, ...)
+	local t = template or fallback or "%s"
+	local ok, result = pcall(string.format, tostring(t), ...)
+	if ok then
+		return result
+	end
+
+	local ok_fallback, result_fallback = pcall(string.format, tostring(fallback or "%s"), ...)
+	if ok_fallback then
+		return result_fallback
+	end
+
+	return tostring(fallback or "")
+end
+
+local function make_damage_phrase(amount)
+	local damage_value = Text.apply_color_to_text(format_number(amount), Color.ui_orange_light(255, true))
+	local localization_manager = Managers.localization
+	local language = localization_manager and localization_manager:language() or "en"
+
+	if language == "ru" then
+		local n = math.abs(math.floor(amount or 0))
+		local last_two = n % 100
+		local last = n % 10
+		local word_key
+
+		if last_two >= 11 and last_two <= 14 then
+			word_key = "friendly_fire_damage_word_other"
+		elseif last == 1 then
+			word_key = "friendly_fire_damage_word_one"
+		else
+			word_key = "friendly_fire_damage_word_other"
+		end
+
+		local word = loc(word_key)
+		return safe_format("%s %s", "%s %s", damage_value, word)
+	else
+		local damage_suffix = loc("friendly_fire_damage_suffix")
+		return safe_format(damage_suffix, "%s damage", damage_value)
+	end
+end
+
+local function show_friendly_fire_kill_notification(player_name, total_killer_kills, team_total_kills, notification_player, portrait_player)
+	local message_name = player_name or loc("friendly_fire_unknown_player")
+	if message_name and not string.find(message_name, "{#") then
+		message_name = Text.apply_color_to_text(message_name, Color.ui_orange_light(255, true))
+	end
+
+	local line1_template = loc("friendly_fire_kill_line1_ally")
+	local line1 = safe_format(line1_template, "Player %s killed you", tostring(message_name or ""))
+
+	local killer_total_value = Text.apply_color_to_text(format_number(total_killer_kills or 0), Color.ui_orange_light(255, true)) or format_number(total_killer_kills or 0)
+	local line2_template = loc("friendly_fire_kill_total")
+	local line2 = safe_format(line2_template, "total %s", tostring(killer_total_value or "0"))
+
+	local team_total_value = Text.apply_color_to_text(format_number(team_total_kills or 0), Color.ui_orange_light(255, true)) or format_number(team_total_kills or 0)
+	local line3_template = loc("friendly_fire_kill_team_total")
+	local line3 = safe_format(line3_template, "Team total kills %s", tostring(team_total_value or "0"))
+
+	if Managers.event then
+		local local_player = notification_player or (Managers.player and Managers.player:local_player(1))
+		local portrait_target = portrait_player or local_player
+		local profile = portrait_target and portrait_target:profile()
+		local frame_item = profile and profile.loadout and profile.loadout.slot_portrait_frame
+
+		local notification_data = {
+			show_shine = false,
+			icon = "content/ui/materials/base/ui_portrait_frame_base",
+			icon_size = "large_item",
+			line_1 = line1,
+			line_2 = line2,
+			line_3 = line3,
+			color = Color.terminal_corner_selected(60, true),
+		}
+
+		local has_portrait = portrait_target and profile
+
+		if has_portrait then
+			notification_data.use_player_portrait = true
+			notification_data.player = portrait_target
+		end
+
+		if frame_item then
+			notification_data.item = frame_item
+		end
+
+		Managers.event:trigger(
+			"event_add_notification_message",
+			"custom",
+			notification_data,
+			nil,
+			UISoundEvents.notification_matchmaking_failed
+		)
+	end
+end
+
+local function total_friendly_fire_all()
+	local total = 0
+	for _, value in pairs(mod.friendly_fire_damage) do
+		local numeric = tonumber(value) or 0
+		if numeric > 0 then
+			total = total + numeric
+		end
+	end
+	return total
+end
+
+local function show_friendly_fire_notification(player_name, damage_amount, total_damage, is_self_damage, source_text, notification_player, portrait_player, team_total_damage)
+	local min_damage_threshold = mod:get("min_damage_threshold")
+	if min_damage_threshold == nil then
+		min_damage_threshold = 0
+	end
+	if damage_amount <= min_damage_threshold then
+		return
+	end
+	
+	local show_total = mod:get("show_total_damage") ~= false
+	local message
+	local damage_line = make_damage_phrase(damage_amount)
+	if is_self_damage then
+		local self_template = loc("friendly_fire_line1_self")
+		message = safe_format(self_template, "You damaged yourself")
+	else
+		local unknown_name = loc("friendly_fire_unknown_player")
+		local name = player_name or unknown_name
+		if name and not string.find(name, "{#") then
+			name = Text.apply_color_to_text(name, Color.ui_orange_light(255, true))
+		end
+		local ally_template = loc("friendly_fire_line1_ally")
+		message = safe_format(ally_template, "Player %s damaged you", tostring(name or unknown_name))
+	end
+	if show_total and total_damage and total_damage > damage_amount then
+		local total_value = Text.apply_color_to_text(format_number(total_damage or 0), Color.ui_orange_light(255, true)) or format_number(total_damage or 0)
+		local total_template = loc("friendly_fire_total_suffix")
+		damage_line = safe_format("%s" .. total_template, "%s (total %s)", damage_line, tostring(total_value or "0"))
+	end
+	
+	local line2 = damage_line
+	local line3 = ""
+
+	if not is_self_damage then
+		local allies_total = team_total_damage or 0
+
+		if allies_total > 0 then
+			local allies_value = Text.apply_color_to_text(format_number(allies_total or 0), Color.ui_orange_light(255, true)) or format_number(allies_total or 0)
+				local team_template = loc("friendly_fire_team_total")
+			line3 = safe_format(team_template, "Team total damage: %s", tostring(allies_value or "0"))
+		end
+	end
+	
+	if Managers.event then
+		local local_player = notification_player or (Managers.player and Managers.player:local_player(1))
+		local portrait_target = portrait_player or local_player
+
+		local profile = portrait_target and portrait_target:profile()
+		local frame_item = profile and profile.loadout and profile.loadout.slot_portrait_frame
+
+		local notification_data = {
+			show_shine = false,
+			icon = "content/ui/materials/base/ui_portrait_frame_base",
+			icon_size = "large_item",
+			line_1 = message,
+			line_2 = line2,
+			line_3 = line3,
+			color = Color.terminal_corner_selected(60, true),
+		}
+
+		local has_portrait = portrait_target and profile
+
+		if has_portrait then
+			notification_data.use_player_portrait = true
+			notification_data.player = portrait_target
+		end
+
+		if frame_item then
+			notification_data.item = frame_item
+		end
+
+		Managers.event:trigger(
+			"event_add_notification_message",
+			"custom",
+			notification_data,
+			nil,
+			UISoundEvents.notification_matchmaking_failed
+		)
+	end
+end
+
+mod.add_friendly_fire_damage = function(account_id, amount, player_name, is_self_damage, source_text, notification_player, attacker_player)
+	if not amount then
+		return
+	end
+	
+	local clamped_amount = math.max(0, amount)
+		local safe_player_name = player_name or mod:localize("friendly_fire_unknown_player") or "friendly_fire_unknown_player"
+		local safe_account_id = account_id or mod:localize("friendly_fire_unknown_account") or "friendly_fire_unknown_account"
+	local safe_source = source_text or ""
+	
+	if is_self_damage then
+		mod.self_damage_total = mod.self_damage_total + clamped_amount
+		show_friendly_fire_notification(nil, clamped_amount, mod.self_damage_total, true, safe_source, notification_player, attacker_player, nil)
+	else
+		if not mod.friendly_fire_damage[safe_account_id] then
+			mod.friendly_fire_damage[safe_account_id] = 0
+		end
+		local old_total = mod.friendly_fire_damage[safe_account_id]
+		mod.friendly_fire_damage[safe_account_id] = old_total + clamped_amount
+		local allies_total = total_friendly_fire_all()
+		
+		show_friendly_fire_notification(
+			safe_player_name,
+			clamped_amount,
+			mod.friendly_fire_damage[safe_account_id],
+			false,
+			safe_source,
+			notification_player,
+			attacker_player,
+			allies_total
+		)
+	end
+end
+
+mod.player_from_unit = function(self, unit)
+	if unit then
+		local player_manager = Managers.player
+		local players = player_manager:players()
+		for _, player in pairs(players) do
+			if player and player.player_unit == unit then
+				return player
+			end
+		end
+	end
+	return nil
+end
+
+mod:hook_safe(AttackReportManager, "_process_attack_result", function(self, buffer_data)
+	local attacked_unit = buffer_data.attacked_unit
+	local attacking_unit = buffer_data.attacking_unit
+	local attack_result = buffer_data.attack_result
+	local attack_type = buffer_data.attack_type
+	local damage = buffer_data.damage
+
+	local player_unit_spawn_manager = Managers.state and Managers.state.player_unit_spawn
+	local attacked_player = player_unit_spawn_manager and attacked_unit and player_unit_spawn_manager:owner(attacked_unit)
+	local local_player = Managers.player and Managers.player:local_player(1)
+
+	if not attacked_player or not local_player or attacked_player ~= local_player then
+		return
+	end
+
+	if not damage or damage <= 0 then
+		return
+	end
+
+	-- resolve owner
+	local resolved_owner_unit = attacking_unit
+	local source_text = ""
+
+	if not resolved_owner_unit and attacking_unit then
+		local AttackingUnitResolver = mod:original_require("scripts/utilities/attack/attacking_unit_resolver")
+		resolved_owner_unit = AttackingUnitResolver.resolve(attacking_unit)
+	end
+
+	if resolved_owner_unit and resolved_owner_unit == attacked_unit then
+		mod.add_friendly_fire_damage(nil, damage, nil, true, source_text, local_player)
+		return
+	end
+
+	if not resolved_owner_unit and attacking_unit and attacking_unit == attacked_unit then
+		mod.add_friendly_fire_damage(nil, damage, nil, true, source_text, local_player)
+		return
+	end
+
+	if resolved_owner_unit then
+		local side_system = Managers.state.extension:system("side_system")
+		local is_ally = side_system:is_ally(resolved_owner_unit, attacked_unit)
+
+		if is_ally or attack_result == attack_results.friendly_fire then
+			local attacking_player = mod:player_from_unit(resolved_owner_unit)
+
+			if not attacking_player then
+				return
+			end
+
+			local account_id = attacking_player:account_id() or attacking_player:name() or loc("friendly_fire_unknown_account")
+			local player_name = attacking_player:name() or attacking_player:character_name() or loc("friendly_fire_unknown_player")
+			local player_slot = attacking_player.slot and attacking_player:slot()
+			local player_slot_colors = UISettings.player_slot_colors
+			local player_slot_color = player_slot and player_slot_colors and player_slot_colors[player_slot]
+
+			if player_name and player_slot_color then
+				player_name = Text.apply_color_to_text(player_name, player_slot_color)
+			end
+
+			if attack_result == attack_results.died then
+				if not mod.friendly_fire_kills[account_id] then
+					mod.friendly_fire_kills[account_id] = 0
+				end
+
+				mod.friendly_fire_kills[account_id] = mod.friendly_fire_kills[account_id] + 1
+				mod.team_kills_total = (mod.team_kills_total or 0) + 1
+
+				show_friendly_fire_kill_notification(player_name, mod.friendly_fire_kills[account_id], mod.team_kills_total, local_player, attacking_player)
+			else
+				mod.add_friendly_fire_damage(account_id, damage, player_name, false, source_text, local_player, attacking_player)
+			end
+		else
+		end
+	else
+	end
+end)
+
+mod:command("ffd", "Test FriendlyFireDamage notification (damage/kill)", function(mode)
+	if not mod.DEBUG then
+		return
+	end
+
+	local local_player = Managers.player and Managers.player:local_player(1)
+
+	if not local_player or not Managers.event then
+		return
+	end
+
+	if mode == "kill" then
+		show_friendly_fire_kill_notification("Тестовый игрок", 4, 5, local_player, local_player)
+	else
+		show_friendly_fire_notification("Тестовый игрок", 123, 456, false, "", local_player, local_player, 789)
+	end
+end)
+

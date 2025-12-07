@@ -1,0 +1,24 @@
+local mod = get_mod("FriendlyFireDamage")
+
+return {
+	name = mod:localize("mod_title"),
+	description = mod:localize("mod_description"),
+	is_togglable = true,
+	allow_rehooking = true,
+	options = {
+		widgets = {
+			{
+				setting_id = "min_damage_threshold",
+				type = "numeric",
+				default_value = 1,
+				range = {0, 100},
+			},
+			{
+				setting_id = "show_total_damage",
+				type = "checkbox",
+				default_value = true,
+			},
+		},
+	},
+}
+
