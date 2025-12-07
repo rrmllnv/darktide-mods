@@ -255,7 +255,7 @@ local function show_friendly_fire_kill_notification(player_name, total_killer_ki
 		local frame_item = profile and profile.loadout and profile.loadout.slot_portrait_frame
 
 		local notification_data = {
-			show_shine = false,
+			show_shine = true,
 			icon = "content/ui/materials/base/ui_portrait_frame_base",
 			icon_size = "portrait_frame",
 			line_1 = line1,
@@ -354,7 +354,7 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 		local frame_item = profile and profile.loadout and profile.loadout.slot_portrait_frame
 
 		local notification_data = {
-			show_shine = false,
+			show_shine = true,
 			icon = "content/ui/materials/base/ui_portrait_frame_base",
 			icon_size = "large_item",
 			line_1 = message,
