@@ -11,7 +11,7 @@ return {
 				setting_id = "min_damage_threshold",
 				type = "numeric",
 				default_value = 1,
-				range = {0, 100},
+				range = {1, 100},
 			},
 			{
 				setting_id = "show_total_damage",

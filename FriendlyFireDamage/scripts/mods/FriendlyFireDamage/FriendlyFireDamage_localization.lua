@@ -87,6 +87,30 @@ return {
 		en = "barrel explosion",
 		ru = "взрыв бочки",
 	},
+	liquid_area_fire_burning_barrel = {
+		en = "barrel fire",
+		ru = "огонь от бочки",
+	},
+	liquid_area_fire_burning = {
+		en = "fire",
+		ru = "огонь",
+	},
+	flame_grenade_liquid_area_fire_burning = {
+		en = "fire",
+		ru = "огонь",
+	},
+	grenadier_liquid_fire_burning = {
+		en = "fire",
+		ru = "огонь",
+	},
+	cultist_flamer_liquid_fire_burning = {
+		en = "fire",
+		ru = "огонь",
+	},
+	renegade_flamer_liquid_fire_burning = {
+		en = "fire",
+		ru = "огонь",
+	},
 	flamer_backpack_explosion = {
 		en = "flamer backpack explosion",
 		ru = "взрыв ранца огнемета",
@@ -105,11 +129,11 @@ return {
 	},
 	poxwalker_explosion = {
 		en = "poxburster explosion",
-		ru = "взрыв боксбурстера",
+		ru = "взрыв чумного взрывуна",
 	},
 	poxwalker_explosion_close = {
 		en = "poxburster explosion",
-		ru = "взрыв боксбурстера",
+		ru = "взрыв чумного взрывуна",
 	},
 }
 

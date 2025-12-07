@@ -14,6 +14,8 @@ mod.friendly_fire_damage = {} -- account_id -> damage
 mod.self_damage_total = 0 -- Общий урон от собственных взрывов
 mod.friendly_fire_kills = {} -- account_id -> kills
 mod.team_kills_total = 0
+mod.pending_notifications = {} -- key -> payload для коалесса уведомлений
+mod.NOTIFICATION_COALESCE_TIME = 0.75
 mod.DEBUG = true
 
 local function reset_stats()
@@ -21,6 +23,7 @@ local function reset_stats()
 	mod.self_damage_total = 0
 	mod.friendly_fire_kills = {}
 	mod.team_kills_total = 0
+	mod.pending_notifications = {}
 end
 
 mod.on_all_mods_loaded = function()
@@ -96,6 +99,14 @@ local PROFILE_EXCEPTIONS = {
 	fire_barrel_explosion_close = true, -- ближний радиус бочки
 	barrel_explosion_close = true, -- ближний радиус (нейм другой схемы)
 	barrel_explosion = true, -- дальний радиус (нейм другой схемы)
+	
+	-- Горячие лужи/поджоги
+	liquid_area_fire_burning = true,
+	liquid_area_fire_burning_barrel = true, -- горящая лужа от бочки
+	flame_grenade_liquid_area_fire_burning = true,
+	grenadier_liquid_fire_burning = true,
+	cultist_flamer_liquid_fire_burning = true,
+	renegade_flamer_liquid_fire_burning = true,
 	-- Взрывун (poxburster)
 	poxwalker_explosion_close = true, -- ближний радиус
 	poxwalker_explosion = true, -- дальний радиус
@@ -105,6 +116,13 @@ local PROFILE_EXCEPTIONS = {
 	interrupted_flamer_backpack_explosion = true, -- детон при прерывании
 	interrupted_flamer_backpack_explosion_close = true, -- детон при прерывании (ближний)
 }
+
+local function now()
+	if Managers.time and Managers.time:has_timer("gameplay") then
+		return Managers.time:time("gameplay")
+	end
+	return os.clock()
+end
 
 local function resolve_source_text(buffer_data)
 	local damage_profile = buffer_data and buffer_data.damage_profile
@@ -308,6 +326,60 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 	end
 end
 
+local function queue_friendly_fire_notification(account_id, damage_amount, total_damage, player_name, is_self_damage, source_text, notification_player, attacker_player, team_total_damage)
+	local key = table.concat({
+		is_self_damage and "self" or (account_id or "unknown"),
+		source_text or "",
+	}, "|")
+
+	local entry = mod.pending_notifications[key]
+	if not entry then
+		entry = {
+			damage = 0,
+			player_name = player_name,
+			account_id = account_id,
+			is_self_damage = is_self_damage,
+			source_text = source_text,
+			notification_player = notification_player,
+			attacker_player = attacker_player,
+		}
+		mod.pending_notifications[key] = entry
+	end
+
+	entry.damage = (entry.damage or 0) + (damage_amount or 0)
+	entry.total_damage = total_damage
+	entry.team_total_damage = team_total_damage
+	entry.player_name = player_name or entry.player_name
+	entry.notification_player = notification_player or entry.notification_player
+	entry.attacker_player = attacker_player or entry.attacker_player
+	entry.last_update = now()
+end
+
+mod.update = function()
+	if not next(mod.pending_notifications) then
+		return
+	end
+
+	local t = now()
+
+	for key, entry in pairs(mod.pending_notifications) do
+		if entry.last_update and t - entry.last_update >= mod.NOTIFICATION_COALESCE_TIME then
+			show_friendly_fire_notification(
+				entry.player_name,
+				entry.damage,
+				entry.total_damage,
+				entry.is_self_damage,
+				entry.source_text,
+				entry.notification_player,
+				entry.attacker_player,
+				entry.team_total_damage
+			)
+
+			mod.pending_notifications[key] = nil
+		end
+	end
+end
+
 mod.add_friendly_fire_damage = function(account_id, amount, player_name, is_self_damage, source_text, notification_player, attacker_player)
 	if not amount then
 		return
@@ -320,7 +392,7 @@ mod.add_friendly_fire_damage = function(account_id, amount, player_name, is_self
 	
 	if is_self_damage then
 		mod.self_damage_total = mod.self_damage_total + clamped_amount
-		show_friendly_fire_notification(nil, clamped_amount, mod.self_damage_total, true, safe_source, notification_player, attacker_player, nil)
+		queue_friendly_fire_notification(nil, clamped_amount, mod.self_damage_total, nil, true, safe_source, notification_player, attacker_player, nil)
 	else
 		if not mod.friendly_fire_damage[safe_account_id] then
 			mod.friendly_fire_damage[safe_account_id] = 0
@@ -329,10 +401,11 @@ mod.add_friendly_fire_damage = function(account_id, amount, player_name, is_self
 		mod.friendly_fire_damage[safe_account_id] = old_total + clamped_amount
 		local allies_total = total_friendly_fire_all()
 		
-		show_friendly_fire_notification(
-			safe_player_name,
+		queue_friendly_fire_notification(
+			safe_account_id,
 			clamped_amount,
 			mod.friendly_fire_damage[safe_account_id],
+			safe_player_name,
 			false,
 			safe_source,
 			notification_player,
