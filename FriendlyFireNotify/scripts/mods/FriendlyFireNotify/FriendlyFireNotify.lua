@@ -20,10 +20,29 @@ mod.COLOR_DAMAGE = Color.ui_orange_light(255, true) -- цвет единично
 mod.COLOR_TOTAL_DAMAGE = Color.ui_orange_light(255, true) -- цвет суммарного урона (любого)
 mod.COLOR_PLAYER_TOTAL = Color.ui_orange_light(255, true) -- цвет общего урона от игрока
 mod.COLOR_TEAM_TOTAL = Color.ui_orange_light(255, true) -- цвет общего урона от команды
+mod.COLOR_BACKGROUND = Color.terminal_corner_selected(60, true) -- цвет фона уведомления
 -- Настройки времени
 mod.DEFAULT_NOTIFICATION_COALESCE_TIME = 4
 mod.DEFAULT_NOTIFICATION_DURATION_TIME = 8
+mod.settings = {}
 mod.DEBUG = true
+
+local function refresh_settings()
+	local min_threshold = tonumber(mod:get("min_damage_threshold")) or 0
+	local show_total = mod:get("show_total_damage")
+	local coalesce_time = tonumber(mod:get("notification_coalesce_time")) or mod.DEFAULT_NOTIFICATION_COALESCE_TIME
+	local note_time = tonumber(mod:get("notification_duration_time")) or mod.DEFAULT_NOTIFICATION_DURATION_TIME
+	local bg_setting = mod:get("notification_background_color")
+	local bg_color = (bg_setting and Color[bg_setting]) and Color[bg_setting](60, true) or mod.COLOR_BACKGROUND
+
+	mod.settings = {
+		min_damage_threshold = min_threshold,
+		show_total_damage = show_total ~= false,
+		notification_coalesce_time = coalesce_time,
+		notification_duration_time = note_time,
+		notification_background_color = bg_color,
+	}
+end
 
 local function reset_stats()
 	mod.friendly_fire_damage = {}
@@ -35,6 +54,18 @@ end
 
 mod.on_all_mods_loaded = function()
 	reset_stats()
+	refresh_settings()
+end
+
+mod.on_setting_changed = function(setting_id)
+	if setting_id == "min_damage_threshold"
+		or setting_id == "show_total_damage"
+		or setting_id == "notification_coalesce_time"
+		or setting_id == "notification_duration_time"
+		or setting_id == "notification_background_color"
+	then
+		refresh_settings()
+	end
 end
 
 mod:hook(ConstantElementNotificationFeed, "_generate_notification_data", function(func, self, message_type, data)
@@ -57,6 +88,7 @@ end)
 function mod.on_game_state_changed(status, state_name)
 	if state_name == 'GameplayStateRun' or state_name == "StateGameplay" and status == "enter" then
 		reset_stats()
+		refresh_settings()
 	end
 end
 
@@ -210,7 +242,7 @@ local function show_friendly_fire_kill_notification(player_name, total_killer_ki
 			line_1 = line1,
 			line_2 = line2,
 			line_3 = line3,
-			color = Color.terminal_corner_selected(60, true),
+			color = mod.COLOR_BACKGROUND,
 		}
 
 		local has_portrait = portrait_target and profile
@@ -246,15 +278,12 @@ local function total_friendly_fire_all()
 end
 
 local function show_friendly_fire_notification(player_name, damage_amount, total_damage, is_self_damage, source_text, notification_player, portrait_player, team_total_damage)
-	local min_damage_threshold = mod:get("min_damage_threshold")
-	if min_damage_threshold == nil then
-		min_damage_threshold = 0
-	end
+	local min_damage_threshold = mod.settings.min_damage_threshold or 0
 	if damage_amount < min_damage_threshold then
 		return
 	end
 	
-	local show_total = mod:get("show_total_damage") ~= false
+	local show_total = mod.settings.show_total_damage ~= false
 	local message
 	local damage_line = make_damage_phrase(damage_amount)
 	if is_self_damage then
@@ -277,6 +306,10 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 	local line2 = damage_line
 	local line3 = ""
 	local line4 = ""
+
+	local function background_color()
+		return mod.settings.notification_background_color or mod.COLOR_BACKGROUND
+	end
 
 	if show_total and total_damage and total_damage > damage_amount then
 		local total_value = Text.apply_color_to_text(format_number(total_damage or 0), mod.COLOR_PLAYER_TOTAL) or format_number(total_damage or 0)
@@ -309,8 +342,8 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 			line_2 = line2,
 			line_3 = line3,
 			line_4 = line4,
-			color = Color.terminal_corner_selected(60, true),
-			duration = mod:get("notification_duration_time") or mod.DEFAULT_NOTIFICATION_DURATION_TIME,
+			color = background_color(),
+			duration = mod.settings.notification_duration_time or mod.DEFAULT_NOTIFICATION_DURATION_TIME,
 		}
 
 		local has_portrait = portrait_target and profile
@@ -369,7 +402,7 @@ mod.update = function()
 	end
 
 	local t = now()
-	local coalesce_time = tonumber(mod:get("notification_coalesce_time")) or mod.DEFAULT_NOTIFICATION_COALESCE_TIME
+	local coalesce_time = mod.settings.notification_coalesce_time or mod.DEFAULT_NOTIFICATION_COALESCE_TIME
 
 	for key, entry in pairs(mod.pending_notifications) do
 		if entry.last_update and t - entry.last_update >= coalesce_time then

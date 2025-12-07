@@ -23,6 +23,10 @@ return {
 		en = "Notification display time (sec)",
 		ru = "Время показа уведомления (сек)",
 	},
+	notification_background_color = {
+		en = "Notification background color",
+		ru = "Цвет фона уведомления",
+	},
 	friendly_fire_line1_self = {
 		en = "You damaged yourself",
 		ru = "Вы нанесли себе",
