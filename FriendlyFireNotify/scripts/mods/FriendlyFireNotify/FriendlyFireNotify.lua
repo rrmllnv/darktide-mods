@@ -325,11 +325,6 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 		local ally_template = loc("friendly_fire_line1_ally")
 		message = safe_format(ally_template, "Player %s damaged you", tostring(name or unknown_name))
 	end
-	if source_text and source_text ~= "" then
-		local source_suffix = loc("friendly_fire_source_suffix")
-		damage_line = safe_format("%s " .. source_suffix, "%s (%s)", damage_line, tostring(source_text))
-	end
-	
 	local line2 = damage_line
 	local line3 = ""
 
@@ -341,6 +336,11 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 		local total_value = Text.apply_color_to_text(format_number(total_damage or 0), mod.COLOR_PLAYER_TOTAL) or format_number(total_damage or 0)
 		local total_template = loc("friendly_fire_total_suffix")
 		line2 = safe_format("%s" .. total_template, "%s (total %s)", line2, tostring(total_value or "0"))
+	end
+
+	if source_text and source_text ~= "" then
+		local source_suffix = loc("friendly_fire_source_suffix")
+		line2 = safe_format("%s " .. source_suffix, "%s (%s)", line2, tostring(source_text))
 	end
 
 	if not is_self_damage then
@@ -522,16 +522,6 @@ mod:hook_safe(AttackReportManager, "_process_attack_result", function(self, buff
 		resolved_owner_unit = AttackingUnitResolver.resolve(attacking_unit)
 	end
 
-	if resolved_owner_unit and resolved_owner_unit == attacked_unit then
-		mod.add_friendly_fire_damage(nil, damage, nil, true, source_text, local_player)
-		return
-	end
-
-	if not resolved_owner_unit and attacking_unit and attacking_unit == attacked_unit then
-		mod.add_friendly_fire_damage(nil, damage, nil, true, source_text, local_player)
-		return
-	end
-
 	if resolved_owner_unit then
 		local side_system = Managers.state.extension:system("side_system")
 		local is_ally = side_system:is_ally(resolved_owner_unit, attacked_unit)
@@ -568,9 +558,32 @@ mod:hook_safe(AttackReportManager, "_process_attack_result", function(self, buff
 		else
 		end
 	else
-		if attack_result == attack_results.friendly_fire then
-			mod.add_friendly_fire_damage(nil, damage, loc("friendly_fire_unknown_player"), false, source_text, local_player, nil)
+		local side_system = Managers.state.extension and Managers.state.extension:system("side_system")
+		local profile_name = buffer_data.damage_profile and buffer_data.damage_profile.name
+		local profile_is_tracked = profile_name and PROFILE_EXCEPTIONS[profile_name]
+
+		if attacking_unit and side_system then
+			local is_ally = side_system:is_ally(attacking_unit, attacked_unit)
+			if is_ally then
+				local attacking_player = mod:player_from_unit(attacking_unit)
+				if attacking_player then
+					local account_id = attacking_player:account_id() or attacking_player:name() or loc("friendly_fire_unknown_account")
+					local player_name = attacking_player:name() or attacking_player:character_name() or loc("friendly_fire_unknown_player")
+					local player_slot = attacking_player.slot and attacking_player:slot()
+					local player_slot_colors = UISettings.player_slot_colors
+					local player_slot_color = player_slot and player_slot_colors and player_slot_colors[player_slot]
+
+					if player_name and player_slot_color then
+						player_name = Text.apply_color_to_text(player_name, player_slot_color)
+					end
+
+					mod.add_friendly_fire_damage(account_id, damage, player_name, false, source_text, local_player, attacking_player)
+					return
+				end
+			end
 		end
+
+		-- если нет владельца или это не союзник — не считаем friendly fire
 	end
 end)
 
