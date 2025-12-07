@@ -261,7 +261,7 @@ local function show_friendly_fire_kill_notification(player_name, total_killer_ki
 		local notification_data = {
 			show_shine = false,
 			icon = "content/ui/materials/base/ui_portrait_frame_base",
-			icon_size = "large_item",
+			icon_size = "portrait_frame",
 			line_1 = line1,
 			line_2 = line2,
 			line_3 = line3,
@@ -334,7 +334,7 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 		return mod.settings.notification_background_color or mod.COLOR_BACKGROUND
 	end
 
-	if show_total and total_damage and total_damage > damage_amount then
+	if show_total and total_damage and total_damage > 0 then
 		local total_value = Text.apply_color_to_text(format_number(total_damage or 0), mod.COLOR_PLAYER_TOTAL) or format_number(total_damage or 0)
 		local total_template = loc("friendly_fire_total_line")
 		line3 = safe_format(total_template, "Total damage from player: %s", tostring(total_value or "0"))
@@ -587,7 +587,7 @@ mod:command("ffd", "Test FriendlyFireNotify notification (damage/kill)", functio
 	if mode == "kill" then
 		show_friendly_fire_kill_notification("Тестовый игрок", 4, 5, local_player, local_player)
 	else
-		show_friendly_fire_notification("Тестовый игрок", 123, 456, false, "", local_player, local_player, 789)
+		show_friendly_fire_notification("Тестовый игрок", 123, 10, false, "", local_player, local_player, 789)
 	end
 end)
 
