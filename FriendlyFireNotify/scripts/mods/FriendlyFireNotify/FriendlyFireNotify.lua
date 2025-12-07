@@ -26,7 +26,7 @@ mod.DEFAULT_NOTIFICATION_COALESCE_TIME = 3
 mod.DEFAULT_NOTIFICATION_DURATION_TIME = 8
 mod.settings = {}
 local NotificationFeed = nil
-mod.DEBUG = true
+mod.DEBUG = false
 
 local function apply_notification_duration(duration)
 	if not NotificationFeed or not NotificationFeed._notification_templates or not NotificationFeed._notification_templates.custom then
