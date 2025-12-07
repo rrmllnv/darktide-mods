@@ -243,7 +243,7 @@ local function show_friendly_fire_notification(player_name, damage_amount, total
 	if min_damage_threshold == nil then
 		min_damage_threshold = 0
 	end
-	if damage_amount <= min_damage_threshold then
+	if damage_amount < min_damage_threshold then
 		return
 	end
 	
