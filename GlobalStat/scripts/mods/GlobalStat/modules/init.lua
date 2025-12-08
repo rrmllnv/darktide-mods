@@ -19,9 +19,9 @@ init.setup = function(mod, VIEW_NAME, view_templates, views_module, utilities)
 			return
 		end
 
-		if not mod._is_in_hub() then
-			return
-		end
+		-- if not mod._is_in_hub() then
+		-- 	return
+		-- end
 
 		local UIManager = Managers.ui
 
