@@ -69,7 +69,7 @@ return {
 							{
 								setting_id = "ready_countdown_color",
 								type = "dropdown",
-								default_value = "item_rarity_2",
+								default_value = "ui_hud_green_light",
 								options = get_color_options(),
 								disabled = function()
 									return mod:get("enable_ready_color_override") ~= true
@@ -78,7 +78,7 @@ return {
 							{
 								setting_id = "ready_icon_color",
 								type = "dropdown",
-								default_value = "item_rarity_2",
+								default_value = "ui_hud_green_light",
 								options = get_color_options(),
 								disabled = function()
 									return mod:get("enable_ready_color_override") ~= true
@@ -95,7 +95,7 @@ return {
 							{
 								setting_id = "active_countdown_color",
 								type = "dropdown",
-								default_value = "ui_input_color",
+								default_value = "ui_terminal_highlight",
 								options = get_color_options(),
 								disabled = function()
 									return mod:get("enable_active_color_override") ~= true
@@ -104,7 +104,7 @@ return {
 							{
 								setting_id = "active_icon_color",
 								type = "dropdown",
-								default_value = "ui_input_color",
+								default_value = "ui_terminal_highlight",
 								options = get_color_options(),
 								disabled = function()
 									return mod:get("enable_active_color_override") ~= true
@@ -145,9 +145,9 @@ return {
 						tooltip = "enable_notification_color_override_tooltip",
 						sub_widgets = {
 							{
-								setting_id = "notification_line_color",
+								setting_id = "notification_text_color",
 								type = "dropdown",
-								default_value = "terminal_corner_selected",
+								default_value = "terminal_text_body",
 								options = get_color_options(),
 								disabled = function()
 									return mod:get("enable_notification_color_override") ~= true
@@ -166,6 +166,15 @@ return {
 								setting_id = "notification_background_color",
 								type = "dropdown",
 								default_value = "terminal_grid_background",
+								options = get_color_options(),
+								disabled = function()
+									return mod:get("enable_notification_color_override") ~= true
+								end,
+							},
+							{
+								setting_id = "notification_line_color",
+								type = "dropdown",
+								default_value = "terminal_corner_selected",
 								options = get_color_options(),
 								disabled = function()
 									return mod:get("enable_notification_color_override") ~= true

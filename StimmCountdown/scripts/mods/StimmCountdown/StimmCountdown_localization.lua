@@ -124,6 +124,10 @@ local localizations = {
 		en = "Notification background color",
 		ru = "Цвет фона уведомления",
 	},
+	notification_text_color = {
+		en = "Notification text color",
+		ru = "Цвет текста уведомления",
+	},
 	default_ready_color_option = {
 		en = "Default (ready timer)",
 		ru = "По умолчанию (таймер готовности)",

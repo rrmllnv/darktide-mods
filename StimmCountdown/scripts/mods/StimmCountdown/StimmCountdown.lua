@@ -14,6 +14,8 @@ local STIMM_ICON_MATERIAL = "content/ui/materials/icons/pocketables/hud/syringe_
 local ACTIVE_COLOR = UIHudSettings.color_tint_main_1  -- Светлый (как кол-во гранат)
 local COOLDOWN_COLOR = UIHudSettings.color_tint_alert_2  -- Красный
 local READY_ICON_COLOR = UIHudSettings.color_tint_main_2
+local DEFAULT_SLOT_LINE_COLOR = Color.terminal_corner(nil, true)
+local DEFAULT_SLOT_BACKGROUND_COLOR = Color.terminal_background_gradient(255, true)
 
 local function get_color_from_setting(setting_id, fallback)
 	local name = mod:get(setting_id)
@@ -34,7 +36,6 @@ local function clone_color(color)
 end
 
 local function argb_to_abgr(color)
-	-- background expects BGR order; keep alpha
 	return {
 		color[1],
 		color[4],
@@ -43,8 +44,8 @@ local function argb_to_abgr(color)
 	}
 end
 
-local function apply_icon_and_background_colors(icon_widget, background_widget, color)
-	if not color then
+local function apply_icon_and_background_colors(icon_widget, background_widget, icon_color, line_color, bg_color)
+	if not icon_color then
 		return
 	end
 
@@ -65,15 +66,15 @@ local function apply_icon_and_background_colors(icon_widget, background_widget, 
 		local icon_done_style = icon_widget.style.icon_cooldown_done
 
 		if icon_style then
-			set_existing_rgba(icon_style.color, color)
-			set_existing_rgba(icon_style.default_color, color)
-			set_existing_rgba(icon_style.highlight_color, color)
+			set_existing_rgba(icon_style.color, icon_color)
+			set_existing_rgba(icon_style.default_color, icon_color)
+			set_existing_rgba(icon_style.highlight_color, icon_color)
 		end
 
 		if icon_done_style then
-			set_existing_rgba(icon_done_style.color, color)
-			set_existing_rgba(icon_done_style.default_color, color)
-			set_existing_rgba(icon_done_style.highlight_color, color)
+			set_existing_rgba(icon_done_style.color, icon_color)
+			set_existing_rgba(icon_done_style.default_color, icon_color)
+			set_existing_rgba(icon_done_style.highlight_color, icon_color)
 		end
 
 		icon_widget.dirty = true
@@ -83,14 +84,14 @@ local function apply_icon_and_background_colors(icon_widget, background_widget, 
 		local line_style = background_widget.style.line
 		local bg_style = background_widget.style.background
 
-		if line_style then
-			set_existing_rgba(line_style.color, color)
-			set_existing_rgba(line_style.default_color, color)
-			set_existing_rgba(line_style.highlight_color, color)
+		if line_style and line_color then
+			set_existing_rgba(line_style.color, line_color)
+			set_existing_rgba(line_style.default_color, line_color)
+			set_existing_rgba(line_style.highlight_color, line_color)
 		end
 
-		if bg_style and bg_style.color then
-			local converted = argb_to_abgr(color)
+		if bg_style and bg_style.color and bg_color then
+			local converted = argb_to_abgr(bg_color)
 			bg_style.color[1] = converted[1]
 			bg_style.color[2] = converted[2]
 			bg_style.color[3] = converted[3]
@@ -237,7 +238,10 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 	local notification_line_color = get_color_from_setting("notification_line_color", Color.terminal_corner_selected(255, true))
 	local notification_icon_color = get_color_from_setting("notification_icon_color", READY_ICON_COLOR)
 	local notification_background_color = get_color_from_setting("notification_background_color", Color.terminal_grid_background(180, true))
+	local notification_text_color = get_color_from_setting("notification_text_color", Color.terminal_corner_selected(255, true))
 	local icon_color_to_apply = nil
+	local line_color_to_apply = nil
+	local bg_color_to_apply = nil
 	local icon_widget = self._widgets_by_name and self._widgets_by_name.icon
 	local background_widget = self._widgets_by_name and self._widgets_by_name.background
 
@@ -263,15 +267,15 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 			display_text = string.format("%.0f", math.ceil(remaining_buff_time))
 		end
 		display_color = enable_active_override and active_countdown_color or ACTIVE_COLOR
-		if enable_active_override then
-			icon_color_to_apply = active_icon_color
-		end
+		icon_color_to_apply = enable_active_override and active_icon_color or READY_ICON_COLOR
+		line_color_to_apply = enable_active_override and active_icon_color or DEFAULT_SLOT_LINE_COLOR
+		bg_color_to_apply = enable_active_override and active_icon_color or DEFAULT_SLOT_BACKGROUND_COLOR
 		should_show = true
 	elseif is_ready then
 		-- Нет бафа и кулдауна — готов
-		if enable_ready_override then
-			icon_color_to_apply = ready_icon_color
-		end
+		icon_color_to_apply = enable_ready_override and ready_icon_color or READY_ICON_COLOR
+		line_color_to_apply = enable_ready_override and ready_countdown_color or DEFAULT_SLOT_LINE_COLOR
+		bg_color_to_apply = enable_ready_override and ready_countdown_color or DEFAULT_SLOT_BACKGROUND_COLOR
 		should_show = false
 	elseif show_cooldown then
 		-- Проверяем кулдаун только для брокер-сиренги
@@ -290,9 +294,9 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 				display_text = string.format("%.0f", math.ceil(remaining_cooldown))
 			end
 			display_color = enable_cooldown_override and cooldown_countdown_color or COOLDOWN_COLOR
-			if enable_cooldown_override then
-				icon_color_to_apply = cooldown_icon_color
-			end
+			icon_color_to_apply = enable_cooldown_override and cooldown_icon_color or READY_ICON_COLOR
+			line_color_to_apply = enable_cooldown_override and cooldown_countdown_color or DEFAULT_SLOT_LINE_COLOR
+			bg_color_to_apply = enable_cooldown_override and cooldown_countdown_color or DEFAULT_SLOT_BACKGROUND_COLOR
 			should_show = true
 		end
 	end
@@ -313,13 +317,19 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 					or READY_ICON_COLOR
 				local background_color = enable_notification_override and notification_background_color
 					or Color.terminal_grid_background(180, true)
+				local text_color = enable_notification_override and notification_text_color
+					or Color.terminal_corner_selected(255, true)
+				local line_1_text = mod:localize("stimm_ready_notification")
+				if enable_notification_override and text_color then
+					line_1_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", text_color[2], text_color[3], text_color[4], line_1_text)
+				end
 
 				Managers.event:trigger("event_add_notification_message", "custom", {
 					icon = STIMM_ICON_MATERIAL,
 					icon_size = "currency",
 					color = clone_color(background_color),
 					line_color = clone_color(line_color),
-					line_1 = mod:localize("stimm_ready_notification"),
+					line_1 = line_1_text,
 					icon_color = clone_color(icon_color),
 					show_shine = true,
 				})
@@ -331,8 +341,10 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 	end
 
 	if icon_color_to_apply then
-		local color_to_set = clone_color(icon_color_to_apply)
-		apply_icon_and_background_colors(icon_widget, background_widget, color_to_set)
+		local icon_set = clone_color(icon_color_to_apply)
+		local line_set = line_color_to_apply and clone_color(line_color_to_apply) or nil
+		local bg_set = bg_color_to_apply and clone_color(bg_color_to_apply) or nil
+		apply_icon_and_background_colors(icon_widget, background_widget, icon_set, line_set, bg_set)
 	end
 
 	-- Скрываем виджет если не должно показываться
