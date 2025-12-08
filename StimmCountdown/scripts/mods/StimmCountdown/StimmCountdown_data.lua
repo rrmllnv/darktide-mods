@@ -66,15 +66,15 @@ return {
 						default_value = false,
 						tooltip = "enable_ready_color_override_tooltip",
 						sub_widgets = {
-							{
-								setting_id = "ready_countdown_color",
-								type = "dropdown",
-								default_value = "ui_hud_green_light",
-								options = get_color_options(),
-								disabled = function()
-									return mod:get("enable_ready_color_override") ~= true
-								end,
-							},
+							-- {
+							-- 	setting_id = "ready_countdown_color",
+							-- 	type = "dropdown",
+							-- 	default_value = "ui_hud_green_light",
+							-- 	options = get_color_options(),
+							-- 	disabled = function()
+							-- 		return mod:get("enable_ready_color_override") ~= true
+							-- 	end,
+							-- },
 							{
 								setting_id = "ready_icon_color",
 								type = "dropdown",
