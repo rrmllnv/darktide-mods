@@ -6,8 +6,8 @@ return {
 
 	-- Враги - Боссы
 	stats_bosses = {
-		en = "BOSSES",
-		ru = "БОССЫ",
+		en = "BOSS KILLS",
+		ru = "Убийств боссов",
 	},
 	stats_beast_of_nurgle = {
 		en = "Beast of Nurgle",
@@ -28,8 +28,8 @@ return {
 
 	-- Враги - Элиты
 	stats_elites = {
-		en = "ELITES",
-		ru = "ЭЛИТЫ",
+		en = "ELITE KILLS",
+		ru = "Убийств элит",
 	},
 	stats_ogryn_gunner = {
 		en = "Ogryn Gunner",
@@ -54,24 +54,24 @@ return {
 
 	-- Враги - Специальные
 	stats_specials = {
-		en = "SPECIALS",
-		ru = "СПЕЦИАЛИСТЫ",
+		en = "SPECIAL KILLS",
+		ru = "Убийств специалистов",
 	},
 
 	-- Враги - Орда
 	stats_horde = {
-		en = "HORDE",
-		ru = "ОРДА",
+		en = "HORDE KILLS",
+		ru = "Убийств орды",
 	},
 
 	-- Враги - Roamers
 	stats_roamers = {
-		en = "ROAMERS",
-		ru = "БРОДЯГИ",
+		en = "ROAMER KILLS",
+		ru = "Убийств бродяг",
 	},
 	stats_poxburster = {
 		en = "Poxburster",
-		ru = "Поксбурстер",
+		ru = "Чумной взрывун",
 	},
 	stats_hound = {
 		en = "Chaos Hound",
