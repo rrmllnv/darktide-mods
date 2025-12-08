@@ -33,6 +33,18 @@ local localizations = {
 		en = "Notification background color",
 		ru = "Цвет фона уведомления",
 	},
+	notification_background_color_outgoing = {
+		en = "Outgoing notification background",
+		ru = "Фон уведомлений (урон союзникам)",
+	},
+	show_incoming_notifications = {
+		en = "Show notifications from teammates",
+		ru = "Показывать урон от союзников",
+	},
+	show_outgoing_notifications = {
+		en = "Show notifications to teammates",
+		ru = "Показывать урон по союзникам",
+	},
 	friendly_fire_line1_self = {
 		en = "You damaged yourself",
 		ru = "Вы нанесли себе",

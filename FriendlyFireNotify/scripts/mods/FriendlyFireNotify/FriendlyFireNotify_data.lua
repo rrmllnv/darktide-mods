@@ -59,6 +59,22 @@ return {
 				default_value = "terminal_corner_selected",
 				options = get_color_options(),
 			},
+			{
+				setting_id = "notification_background_color_outgoing",
+				type = "dropdown",
+				default_value = "terminal_corner_selected",
+				options = get_color_options(),
+			},
+			{
+				setting_id = "show_incoming_notifications",
+				type = "checkbox",
+				default_value = true,
+			},
+			{
+				setting_id = "show_outgoing_notifications",
+				type = "checkbox",
+				default_value = true,
+			},
 		},
 	},
 }

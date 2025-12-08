@@ -69,6 +69,10 @@ function notifications.refresh_settings()
 	local note_time = tonumber(mod:get("notification_duration_time")) or mod.DEFAULT_NOTIFICATION_DURATION_TIME
 	local bg_setting = mod:get("notification_background_color")
 	local bg_color = (bg_setting and Color[bg_setting]) and Color[bg_setting](60, true) or mod.COLOR_BACKGROUND
+	local bg_setting_outgoing = mod:get("notification_background_color_outgoing")
+	local bg_color_outgoing = (bg_setting_outgoing and Color[bg_setting_outgoing]) and Color[bg_setting_outgoing](60, true) or mod.COLOR_BACKGROUND
+	local show_incoming = mod:get("show_incoming_notifications")
+	local show_outgoing = mod:get("show_outgoing_notifications")
 
 	mod.settings = {
 		min_damage_threshold = min_threshold,
@@ -77,6 +81,9 @@ function notifications.refresh_settings()
 		notification_coalesce_time = coalesce_time,
 		notification_duration_time = note_time,
 		notification_background_color = bg_color,
+		notification_background_color_outgoing = bg_color_outgoing,
+		show_incoming_notifications = show_incoming ~= false,
+		show_outgoing_notifications = show_outgoing ~= false,
 	}
 
 	apply_notification_duration(note_time)
@@ -255,6 +262,10 @@ function notifications.push(lines, options)
 end
 
 function notifications.show_incoming_kill(player_name, total_killer_kills, team_total_kills, notification_player, portrait_player)
+	if mod.settings.show_incoming_notifications == false then
+		return
+	end
+
 	local message_name = player_name or notifications.loc("friendly_fire_unknown_player")
 	if message_name and not string.find(message_name, "{#") then
 		message_name = Text.apply_color_to_text(message_name, Color.ui_orange_light(255, true))
@@ -278,7 +289,7 @@ function notifications.show_incoming_kill(player_name, total_killer_kills, team_
 			line3 = line3,
 		},
 		{
-			background_color = mod.COLOR_BACKGROUND,
+			background_color = mod.settings.notification_background_color_outgoing or mod.settings.notification_background_color or mod.COLOR_BACKGROUND,
 			notification_player = notification_player,
 			portrait_player = portrait_player,
 			icon_size = "portrait_frame",
@@ -287,6 +298,10 @@ function notifications.show_incoming_kill(player_name, total_killer_kills, team_
 end
 
 function notifications.show_incoming_damage(args)
+	if mod.settings.show_incoming_notifications == false then
+		return
+	end
+
 	local damage_amount = args.damage_amount
 	local total_damage = args.total_damage
 	local team_total_damage = args.team_total_damage
@@ -364,6 +379,10 @@ function notifications.show_incoming_damage(args)
 end
 
 function notifications.show_outgoing_kill(player_name, target_kills, total_team_kills, notification_player, portrait_player)
+	if mod.settings.show_outgoing_notifications == false then
+		return
+	end
+
 	local display_name = player_name or notifications.loc("friendly_fire_unknown_player")
 	if display_name and not string.find(display_name, "{#") then
 		display_name = Text.apply_color_to_text(display_name, Color.ui_orange_light(255, true))
@@ -396,6 +415,10 @@ function notifications.show_outgoing_kill(player_name, target_kills, total_team_
 end
 
 function notifications.show_outgoing_damage(args)
+	if mod.settings.show_outgoing_notifications == false then
+		return
+	end
+
 	local damage_amount = args.damage_amount
 	local total_damage = args.total_damage
 	local team_total_damage = args.team_total_damage
@@ -449,7 +472,7 @@ function notifications.show_outgoing_damage(args)
 			line3 = line3,
 		},
 		{
-			background_color = mod.settings.notification_background_color,
+			background_color = mod.settings.notification_background_color_outgoing or mod.settings.notification_background_color,
 			notification_player = notification_player,
 			portrait_player = portrait_player,
 		}
