@@ -4,8 +4,8 @@ return {
 		ru = "Глобальная статистика",
 	},
 	mod_description = {
-		en = "Display your global player statistics in the hub. Press hotkey to toggle visibility.",
-		ru = "Отображает вашу глобальную статистику игрока в хабе. Нажмите горячую клавишу для переключения видимости.",
+		en = "Displays your global player stats: total kills by faction, missions completed, and more.",
+		ru = "Отображает вашу глобальную статистику игрока: всего убийств за всю игру (по фракциям), пройденные миссии и многое другое.",
 	},
 	player_progress_stats_button = {
 		en = "Player Statistics",
