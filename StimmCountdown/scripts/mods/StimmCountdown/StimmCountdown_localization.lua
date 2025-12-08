@@ -1,4 +1,6 @@
-return {
+local InputUtils = require("scripts/managers/input/input_utils")
+
+local localizations = {
 	mod_name = {
 		en = "Stimm Countdown",
 		ru = "Счётчик Стимма",
@@ -45,4 +47,72 @@ return {
 		en = "Stimm ready",
 		ru = "Стим готов",
 	},
+	enable_ready_color_override = {
+		en = "Enable ready stimm color override",
+		ru = "Включить изменение цвета готового стимма",
+	},
+	enable_ready_color_override_tooltip = {
+		en = "Custom colors for ready state countdown and icon.",
+		ru = "Использовать свои цвета для готового стимма (таймер и иконка).",
+	},
+	ready_countdown_color = {
+		en = "Ready countdown color",
+		ru = "Цвет обратного отсчета (готов)",
+	},
+	ready_icon_color = {
+		en = "Ready icon color",
+		ru = "Цвет иконки (готов)",
+	},
+	enable_active_color_override = {
+		en = "Enable active stimm color override",
+		ru = "Включить изменение цвета активного стимма",
+	},
+	enable_active_color_override_tooltip = {
+		en = "Custom colors for active stimm countdown and icon.",
+		ru = "Использовать свои цвета для активного стимма (таймер и иконка).",
+	},
+	active_countdown_color = {
+		en = "Active countdown color",
+		ru = "Цвет обратного отсчета (активный)",
+	},
+	active_icon_color = {
+		en = "Active icon color",
+		ru = "Цвет иконки (активный)",
+	},
+	enable_cooldown_color_override = {
+		en = "Enable used stimm color override",
+		ru = "Включить изменение цвета использованного стимма",
+	},
+	enable_cooldown_color_override_tooltip = {
+		en = "Custom colors for stimm cooldown countdown and icon.",
+		ru = "Использовать свои цвета для перезарядки стимма (таймер и иконка).",
+	},
+	cooldown_countdown_color = {
+		en = "Cooldown countdown color",
+		ru = "Цвет обратного отсчета (перезарядка)",
+	},
+	cooldown_icon_color = {
+		en = "Cooldown icon color",
+		ru = "Цвет иконки (перезарядка)",
+	},
 }
+
+local function readable(text)
+	local readable_string = ""
+	for token in string.gmatch(text, "([^_]+)") do
+		local first = string.sub(token, 1, 1)
+		token = string.format("%s%s", string.upper(first), string.sub(token, 2))
+		readable_string = string.trim(string.format("%s %s", readable_string, token))
+	end
+	return readable_string
+end
+
+for _, color_name in ipairs(Color.list) do
+	local color_values = Color[color_name](100, true)
+	local text = InputUtils.apply_color_to_input_text(readable(color_name), color_values)
+	localizations[color_name] = {
+		en = text,
+	}
+end
+
+return localizations

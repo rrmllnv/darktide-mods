@@ -15,6 +15,73 @@ local ACTIVE_COLOR = UIHudSettings.color_tint_main_1  -- Светлый (как 
 local COOLDOWN_COLOR = UIHudSettings.color_tint_alert_2  -- Красный
 local READY_ICON_COLOR = UIHudSettings.color_tint_main_2
 
+local function get_color_from_setting(setting_id, fallback)
+	local name = mod:get(setting_id)
+	if type(name) == "string" and Color[name] then
+		return Color[name](255, true)
+	end
+
+	return fallback
+end
+
+local function clone_color(color)
+	return {
+		color[1],
+		color[2],
+		color[3],
+		color[4],
+	}
+end
+
+local function apply_icon_and_background_colors(icon_widget, background_widget, color)
+	if not color then
+		return
+	end
+
+	local function set_existing_rgba(target, source)
+		if not target then
+			return
+		end
+
+		local alpha = target[1] or source[1] or 255
+		target[1] = alpha
+		target[2] = source[2]
+		target[3] = source[3]
+		target[4] = source[4]
+	end
+
+	if icon_widget and icon_widget.style then
+		local icon_style = icon_widget.style.icon
+		local icon_done_style = icon_widget.style.icon_cooldown_done
+
+		if icon_style then
+			set_existing_rgba(icon_style.color, color)
+			set_existing_rgba(icon_style.default_color, color)
+			set_existing_rgba(icon_style.highlight_color, color)
+		end
+
+		if icon_done_style then
+			set_existing_rgba(icon_done_style.color, color)
+			set_existing_rgba(icon_done_style.default_color, color)
+			set_existing_rgba(icon_done_style.highlight_color, color)
+		end
+
+		icon_widget.dirty = true
+	end
+
+	if background_widget and background_widget.style then
+		local line_style = background_widget.style.line
+
+		if line_style then
+			set_existing_rgba(line_style.color, color)
+			set_existing_rgba(line_style.default_color, color)
+			set_existing_rgba(line_style.highlight_color, color)
+		end
+
+		background_widget.dirty = true
+	end
+end
+
 -- Добавляем виджет в определения родителя
 local add_definitions = function(definitions)
 	if not definitions then
@@ -137,6 +204,20 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 	local show_cooldown = mod:get("show_cooldown") ~= false
 	local show_ready_notification = mod:get("show_ready_notification") ~= false
 
+	local enable_ready_override = mod:get("enable_ready_color_override") == true
+	local enable_active_override = mod:get("enable_active_color_override") == true
+	local enable_cooldown_override = mod:get("enable_cooldown_color_override") == true
+
+	local ready_countdown_color = get_color_from_setting("ready_countdown_color", Color.terminal_corner_selected(255, true))
+	local ready_icon_color = get_color_from_setting("ready_icon_color", READY_ICON_COLOR)
+	local active_countdown_color = get_color_from_setting("active_countdown_color", ACTIVE_COLOR)
+	local active_icon_color = get_color_from_setting("active_icon_color", ACTIVE_COLOR)
+	local cooldown_countdown_color = get_color_from_setting("cooldown_countdown_color", COOLDOWN_COLOR)
+	local cooldown_icon_color = get_color_from_setting("cooldown_icon_color", COOLDOWN_COLOR)
+	local icon_color_to_apply = nil
+	local icon_widget = self._widgets_by_name and self._widgets_by_name.icon
+	local background_widget = self._widgets_by_name and self._widgets_by_name.background
+
 	-- Предварительно получаем данные по способностям
 	local ability_extension = self._ability_extension
 	local equipped_abilities = ability_extension and ability_extension:equipped_abilities()
@@ -144,13 +225,12 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 	local has_broker_syringe = pocketable_ability and pocketable_ability.ability_group == "broker_syringe"
 	local remaining_cooldown = has_broker_syringe and ability_extension and ability_extension:remaining_ability_cooldown(STIMM_ABILITY_TYPE)
 	local has_cooldown = remaining_cooldown and remaining_cooldown >= 0.05
-	local cooldown_known_ready = remaining_cooldown ~= nil and not has_cooldown
 
 	-- Проверяем активный баф стима
 	local remaining_buff_time = get_buff_remaining_time(buff_extension, STIMM_BUFF_NAME)
 	local has_active_buff = remaining_buff_time and remaining_buff_time >= 0.05
-	-- Ready считаем только если знаем кулдаун (remaining_cooldown не nil) и нет бафа
-	local is_ready = has_broker_syringe and cooldown_known_ready and not has_active_buff
+	-- Ready: нет активного бафа и нет кулдауна (nil или <= 0)
+	local is_ready = has_broker_syringe and not has_active_buff and not has_cooldown
 
 	if show_active and has_active_buff then
 		-- Стим активен
@@ -159,8 +239,13 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 		else
 			display_text = string.format("%.0f", math.ceil(remaining_buff_time))
 		end
-		display_color = ACTIVE_COLOR
+		display_color = enable_active_override and active_countdown_color or ACTIVE_COLOR
+		icon_color_to_apply = enable_active_override and active_icon_color or ACTIVE_COLOR
 		should_show = true
+	elseif is_ready then
+		-- Нет бафа и кулдауна — готов
+		icon_color_to_apply = enable_ready_override and ready_icon_color or READY_ICON_COLOR
+		should_show = false
 	elseif show_cooldown then
 		-- Проверяем кулдаун только для брокер-сиренги
 		if not has_broker_syringe then
@@ -177,7 +262,8 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 			else
 				display_text = string.format("%.0f", math.ceil(remaining_cooldown))
 			end
-			display_color = COOLDOWN_COLOR
+			display_color = enable_cooldown_override and cooldown_countdown_color or COOLDOWN_COLOR
+			icon_color_to_apply = enable_cooldown_override and cooldown_icon_color or COOLDOWN_COLOR
 			should_show = true
 		end
 	end
@@ -192,13 +278,16 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 			local became_ready_after_cooldown = is_ready and not self._stimm_ready_prev and (self._stimm_prev_has_cooldown or has_cooldown)
 
 			if became_ready_after_cooldown then
+				local line_color = enable_ready_override and ready_countdown_color or Color.terminal_corner_selected(255, true)
+				local icon_color = enable_ready_override and ready_icon_color or READY_ICON_COLOR
+
 				Managers.event:trigger("event_add_notification_message", "custom", {
 					icon = STIMM_ICON_MATERIAL,
 					icon_size = "currency",
 					color = Color.terminal_grid_background(180, true),
-					line_color = Color.terminal_corner_selected(255, true),
+					line_color = clone_color(line_color),
 					line_1 = mod:localize("stimm_ready_notification"),
-					icon_color = READY_ICON_COLOR,
+					icon_color = clone_color(icon_color),
 					show_shine = true,
 				})
 			end
@@ -206,6 +295,11 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 			self._stimm_ready_prev = is_ready
 			self._stimm_prev_has_cooldown = has_cooldown
 		end
+	end
+
+	if icon_color_to_apply then
+		local color_to_set = clone_color(icon_color_to_apply)
+		apply_icon_and_background_colors(icon_widget, background_widget, color_to_set)
 	end
 
 	-- Скрываем виджет если не должно показываться
@@ -234,3 +328,4 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 
 	widget.dirty = true
 end)
+

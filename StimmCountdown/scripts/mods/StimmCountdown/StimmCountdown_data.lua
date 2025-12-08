@@ -1,5 +1,25 @@
 local mod = get_mod("StimmCountdown")
 
+local color_options = {}
+
+for _, color_name in ipairs(Color.list) do
+	table.insert(
+		color_options,
+		{
+			text = color_name,
+			value = color_name,
+		}
+	)
+end
+
+table.sort(color_options, function(a, b)
+	return a.text < b.text
+end)
+
+local function get_color_options()
+	return table.clone(color_options)
+end
+
 return {
 	name = mod:localize("mod_name"),
 	description = mod:localize("mod_description"),
@@ -29,6 +49,78 @@ return {
 				type = "checkbox",
 				default_value = true,
 				tooltip = "show_ready_notification_tooltip",
+			},
+			{
+				setting_id = "enable_ready_color_override",
+				type = "checkbox",
+				default_value = false,
+				tooltip = "enable_ready_color_override_tooltip",
+			},
+			{
+				setting_id = "ready_countdown_color",
+				type = "dropdown",
+				default_value = "terminal_corner_selected",
+				options = get_color_options(),
+				disabled = function()
+					return mod:get("enable_ready_color_override") ~= true
+				end,
+			},
+			{
+				setting_id = "ready_icon_color",
+				type = "dropdown",
+				default_value = "terminal_corner_selected",
+				options = get_color_options(),
+				disabled = function()
+					return mod:get("enable_ready_color_override") ~= true
+				end,
+			},
+			{
+				setting_id = "enable_active_color_override",
+				type = "checkbox",
+				default_value = false,
+				tooltip = "enable_active_color_override_tooltip",
+			},
+			{
+				setting_id = "active_countdown_color",
+				type = "dropdown",
+				default_value = "terminal_corner_selected",
+				options = get_color_options(),
+				disabled = function()
+					return mod:get("enable_active_color_override") ~= true
+				end,
+			},
+			{
+				setting_id = "active_icon_color",
+				type = "dropdown",
+				default_value = "terminal_corner_selected",
+				options = get_color_options(),
+				disabled = function()
+					return mod:get("enable_active_color_override") ~= true
+				end,
+			},
+			{
+				setting_id = "enable_cooldown_color_override",
+				type = "checkbox",
+				default_value = false,
+				tooltip = "enable_cooldown_color_override_tooltip",
+			},
+			{
+				setting_id = "cooldown_countdown_color",
+				type = "dropdown",
+				default_value = "terminal_corner_selected",
+				options = get_color_options(),
+				disabled = function()
+					return mod:get("enable_cooldown_color_override") ~= true
+				end,
+			},
+			{
+				setting_id = "cooldown_icon_color",
+				type = "dropdown",
+				default_value = "terminal_corner_selected",
+				options = get_color_options(),
+				disabled = function()
+					return mod:get("enable_cooldown_color_override") ~= true
+				end,
 			},
 		},
 	},
