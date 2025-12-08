@@ -10,6 +10,15 @@ local localizations = {
 		ru = "Показывает таймер действия и перезарядки стимма для класса Hive Scum (Broker).",
 	},
 
+	display_group = {
+		en = "Display",
+		ru = "Отображение",
+	},
+	colors_group = {
+		en = "Colors",
+		ru = "Цвета",
+	},
+
 	-- Настройки
 	show_active = {
 		en = "Show Active Timer",

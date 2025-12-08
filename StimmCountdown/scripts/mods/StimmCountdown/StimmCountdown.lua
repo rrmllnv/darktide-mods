@@ -240,11 +240,15 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 			display_text = string.format("%.0f", math.ceil(remaining_buff_time))
 		end
 		display_color = enable_active_override and active_countdown_color or ACTIVE_COLOR
-		icon_color_to_apply = enable_active_override and active_icon_color or ACTIVE_COLOR
+		if enable_active_override then
+			icon_color_to_apply = active_icon_color
+		end
 		should_show = true
 	elseif is_ready then
 		-- Нет бафа и кулдауна — готов
-		icon_color_to_apply = enable_ready_override and ready_icon_color or READY_ICON_COLOR
+		if enable_ready_override then
+			icon_color_to_apply = ready_icon_color
+		end
 		should_show = false
 	elseif show_cooldown then
 		-- Проверяем кулдаун только для брокер-сиренги
@@ -263,7 +267,9 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 				display_text = string.format("%.0f", math.ceil(remaining_cooldown))
 			end
 			display_color = enable_cooldown_override and cooldown_countdown_color or COOLDOWN_COLOR
-			icon_color_to_apply = enable_cooldown_override and cooldown_icon_color or COOLDOWN_COLOR
+			if enable_cooldown_override then
+				icon_color_to_apply = cooldown_icon_color
+			end
 			should_show = true
 		end
 	end
