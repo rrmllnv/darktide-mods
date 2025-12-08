@@ -38,7 +38,7 @@ init.setup = function(mod, VIEW_NAME, view_templates, views_module, utilities)
 
 	mod.on_all_mods_loaded = function()
 		views_module.register_views(mod, view_templates)
-		views_module.inject_system_view(mod, VIEW_NAME)
+		-- views_module.inject_system_view(mod, VIEW_NAME)
 	end
 
 	mod.on_setting_changed = function()

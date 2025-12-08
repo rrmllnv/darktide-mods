@@ -8,7 +8,6 @@ local function merge(into, from)
 end
 
 local function load(path)
-	-- mod:io_dofile сам добавляет .lua и ищет в папке мода
 	local chunk = mod:io_dofile(path)
 	if chunk then
 		merge(localization, chunk)
