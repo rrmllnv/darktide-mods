@@ -138,6 +138,41 @@ return {
 							},
 						},
 					},
+					{
+						setting_id = "enable_notification_color_override",
+						type = "checkbox",
+						default_value = false,
+						tooltip = "enable_notification_color_override_tooltip",
+						sub_widgets = {
+							{
+								setting_id = "notification_line_color",
+								type = "dropdown",
+								default_value = "terminal_corner_selected",
+								options = get_color_options(),
+								disabled = function()
+									return mod:get("enable_notification_color_override") ~= true
+								end,
+							},
+							{
+								setting_id = "notification_icon_color",
+								type = "dropdown",
+								default_value = "terminal_text_body",
+								options = get_color_options(),
+								disabled = function()
+									return mod:get("enable_notification_color_override") ~= true
+								end,
+							},
+							{
+								setting_id = "notification_background_color",
+								type = "dropdown",
+								default_value = "terminal_grid_background",
+								options = get_color_options(),
+								disabled = function()
+									return mod:get("enable_notification_color_override") ~= true
+								end,
+							},
+						},
+					},
 				},
 			},
 		},

@@ -233,6 +233,10 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 	local active_icon_color = get_color_from_setting("active_icon_color", ACTIVE_COLOR)
 	local cooldown_countdown_color = get_color_from_setting("cooldown_countdown_color", COOLDOWN_COLOR)
 	local cooldown_icon_color = get_color_from_setting("cooldown_icon_color", COOLDOWN_COLOR)
+	local enable_notification_override = mod:get("enable_notification_color_override") == true
+	local notification_line_color = get_color_from_setting("notification_line_color", Color.terminal_corner_selected(255, true))
+	local notification_icon_color = get_color_from_setting("notification_icon_color", READY_ICON_COLOR)
+	local notification_background_color = get_color_from_setting("notification_background_color", Color.terminal_grid_background(180, true))
 	local icon_color_to_apply = nil
 	local icon_widget = self._widgets_by_name and self._widgets_by_name.icon
 	local background_widget = self._widgets_by_name and self._widgets_by_name.background
@@ -303,13 +307,17 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 			local became_ready_after_cooldown = is_ready and not self._stimm_ready_prev and (self._stimm_prev_has_cooldown or has_cooldown)
 
 			if became_ready_after_cooldown then
-				local line_color = enable_ready_override and ready_countdown_color or Color.terminal_corner_selected(255, true)
-				local icon_color = enable_ready_override and ready_icon_color or READY_ICON_COLOR
+				local line_color = enable_notification_override and notification_line_color
+					or Color.terminal_corner_selected(255, true)
+				local icon_color = enable_notification_override and notification_icon_color
+					or READY_ICON_COLOR
+				local background_color = enable_notification_override and notification_background_color
+					or Color.terminal_grid_background(180, true)
 
 				Managers.event:trigger("event_add_notification_message", "custom", {
 					icon = STIMM_ICON_MATERIAL,
 					icon_size = "currency",
-					color = Color.terminal_grid_background(180, true),
+					color = clone_color(background_color),
 					line_color = clone_color(line_color),
 					line_1 = mod:localize("stimm_ready_notification"),
 					icon_color = clone_color(icon_color),

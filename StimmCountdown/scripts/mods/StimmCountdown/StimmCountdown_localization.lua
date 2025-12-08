@@ -104,6 +104,26 @@ local localizations = {
 		en = "Cooldown icon color",
 		ru = "Цвет иконки (перезарядка)",
 	},
+	enable_notification_color_override = {
+		en = "Enable notification colors",
+		ru = "Включить цвета уведомления",
+	},
+	enable_notification_color_override_tooltip = {
+		en = "Use custom colors for ready notification.",
+		ru = "Использовать свои цвета для уведомления о готовности.",
+	},
+	notification_line_color = {
+		en = "Notification border color",
+		ru = "Цвет рамки уведомления",
+	},
+	notification_icon_color = {
+		en = "Notification icon color",
+		ru = "Цвет иконки уведомления",
+	},
+	notification_background_color = {
+		en = "Notification background color",
+		ru = "Цвет фона уведомления",
+	},
 }
 
 local function readable(text)
