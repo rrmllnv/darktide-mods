@@ -124,6 +124,42 @@ local localizations = {
 		en = "Notification background color",
 		ru = "Цвет фона уведомления",
 	},
+	default_ready_color_option = {
+		en = "Default (ready timer)",
+		ru = "По умолчанию (таймер готовности)",
+	},
+	default_ready_icon_option = {
+		en = "Default (ready icon)",
+		ru = "По умолчанию (иконка готовности)",
+	},
+	default_active_color_option = {
+		en = "Default (active timer)",
+		ru = "По умолчанию (таймер активности)",
+	},
+	default_active_icon_option = {
+		en = "Default (active icon)",
+		ru = "По умолчанию (иконка активности)",
+	},
+	default_cooldown_color_option = {
+		en = "Default (cooldown timer)",
+		ru = "По умолчанию (таймер перезарядки)",
+	},
+	default_cooldown_icon_option = {
+		en = "Default (cooldown icon)",
+		ru = "По умолчанию (иконка перезарядки)",
+	},
+	default_notification_line_option = {
+		en = "Default (notification border)",
+		ru = "По умолчанию (рамка уведомления)",
+	},
+	default_notification_icon_option = {
+		en = "Default (notification icon)",
+		ru = "По умолчанию (иконка уведомления)",
+	},
+	default_notification_background_option = {
+		en = "Default (notification background)",
+		ru = "По умолчанию (фон уведомления)",
+	},
 }
 
 local function readable(text)
