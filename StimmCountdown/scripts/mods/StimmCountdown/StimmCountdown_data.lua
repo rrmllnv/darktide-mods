@@ -69,7 +69,7 @@ return {
 							{
 								setting_id = "ready_countdown_color",
 								type = "dropdown",
-								default_value = "terminal_corner_selected",
+								default_value = "item_rarity_2",
 								options = get_color_options(),
 								disabled = function()
 									return mod:get("enable_ready_color_override") ~= true
@@ -78,7 +78,7 @@ return {
 							{
 								setting_id = "ready_icon_color",
 								type = "dropdown",
-								default_value = "terminal_corner_selected",
+								default_value = "item_rarity_2",
 								options = get_color_options(),
 								disabled = function()
 									return mod:get("enable_ready_color_override") ~= true
@@ -95,7 +95,7 @@ return {
 							{
 								setting_id = "active_countdown_color",
 								type = "dropdown",
-								default_value = "terminal_corner_selected",
+								default_value = "ui_input_color",
 								options = get_color_options(),
 								disabled = function()
 									return mod:get("enable_active_color_override") ~= true
@@ -104,7 +104,7 @@ return {
 							{
 								setting_id = "active_icon_color",
 								type = "dropdown",
-								default_value = "terminal_corner_selected",
+								default_value = "ui_input_color",
 								options = get_color_options(),
 								disabled = function()
 									return mod:get("enable_active_color_override") ~= true
@@ -121,7 +121,7 @@ return {
 							{
 								setting_id = "cooldown_countdown_color",
 								type = "dropdown",
-								default_value = "terminal_corner_selected",
+								default_value = "ui_interaction_critical",
 								options = get_color_options(),
 								disabled = function()
 									return mod:get("enable_cooldown_color_override") ~= true
@@ -130,7 +130,7 @@ return {
 							{
 								setting_id = "cooldown_icon_color",
 								type = "dropdown",
-								default_value = "terminal_corner_selected",
+								default_value = "ui_interaction_critical",
 								options = get_color_options(),
 								disabled = function()
 									return mod:get("enable_cooldown_color_override") ~= true

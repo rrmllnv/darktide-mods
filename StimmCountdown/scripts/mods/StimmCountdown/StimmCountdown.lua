@@ -33,6 +33,16 @@ local function clone_color(color)
 	}
 end
 
+local function argb_to_abgr(color)
+	-- background expects BGR order; keep alpha
+	return {
+		color[1],
+		color[4],
+		color[3],
+		color[2],
+	}
+end
+
 local function apply_icon_and_background_colors(icon_widget, background_widget, color)
 	if not color then
 		return
@@ -71,11 +81,20 @@ local function apply_icon_and_background_colors(icon_widget, background_widget, 
 
 	if background_widget and background_widget.style then
 		local line_style = background_widget.style.line
+		local bg_style = background_widget.style.background
 
 		if line_style then
 			set_existing_rgba(line_style.color, color)
 			set_existing_rgba(line_style.default_color, color)
 			set_existing_rgba(line_style.highlight_color, color)
+		end
+
+		if bg_style and bg_style.color then
+			local converted = argb_to_abgr(color)
+			bg_style.color[1] = converted[1]
+			bg_style.color[2] = converted[2]
+			bg_style.color[3] = converted[3]
+			bg_style.color[4] = converted[4]
 		end
 
 		background_widget.dirty = true

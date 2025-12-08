@@ -57,48 +57,48 @@ local localizations = {
 		ru = "Стим готов",
 	},
 	enable_ready_color_override = {
-		en = "Enable ready stimm color override",
-		ru = "Включить изменение цвета готового стимма",
+		en = "Enable ready colors",
+		ru = "Включить цвета готовности",
 	},
 	enable_ready_color_override_tooltip = {
-		en = "Custom colors for ready state countdown and icon.",
-		ru = "Использовать свои цвета для готового стимма (таймер и иконка).",
+		en = "Use custom colors for ready state timer and icon.",
+		ru = "Использовать свои цвета таймера и иконки в состоянии готовности.",
 	},
 	ready_countdown_color = {
 		en = "Ready countdown color",
-		ru = "Цвет обратного отсчета (готов)",
+		ru = "Цвет таймера (готов)",
 	},
 	ready_icon_color = {
 		en = "Ready icon color",
 		ru = "Цвет иконки (готов)",
 	},
 	enable_active_color_override = {
-		en = "Enable active stimm color override",
-		ru = "Включить изменение цвета активного стимма",
+		en = "Enable active colors",
+		ru = "Включить цвета активности",
 	},
 	enable_active_color_override_tooltip = {
-		en = "Custom colors for active stimm countdown and icon.",
-		ru = "Использовать свои цвета для активного стимма (таймер и иконка).",
+		en = "Use custom colors for active timer and icon.",
+		ru = "Использовать свои цвета таймера и иконки в активности.",
 	},
 	active_countdown_color = {
 		en = "Active countdown color",
-		ru = "Цвет обратного отсчета (активный)",
+		ru = "Цвет таймера (активен)",
 	},
 	active_icon_color = {
 		en = "Active icon color",
-		ru = "Цвет иконки (активный)",
+		ru = "Цвет иконки (активен)",
 	},
 	enable_cooldown_color_override = {
-		en = "Enable used stimm color override",
-		ru = "Включить изменение цвета использованного стимма",
+		en = "Enable cooldown colors",
+		ru = "Включить цвета перезарядки",
 	},
 	enable_cooldown_color_override_tooltip = {
-		en = "Custom colors for stimm cooldown countdown and icon.",
-		ru = "Использовать свои цвета для перезарядки стимма (таймер и иконка).",
+		en = "Use custom colors for cooldown timer and icon.",
+		ru = "Использовать свои цвета таймера и иконки в перезарядке.",
 	},
 	cooldown_countdown_color = {
 		en = "Cooldown countdown color",
-		ru = "Цвет обратного отсчета (перезарядка)",
+		ru = "Цвет таймера (перезарядка)",
 	},
 	cooldown_icon_color = {
 		en = "Cooldown icon color",
