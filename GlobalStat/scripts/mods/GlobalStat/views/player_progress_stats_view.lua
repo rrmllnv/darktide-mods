@@ -1,6 +1,6 @@
-local PlayerProgressStatsView = class("PlayerProgressStatsView", "BaseView")
+local GlobalStatView = class("GlobalStatView", "BaseView")
 
-local mod = get_mod("PlayerProgressStats")
+local mod = get_mod("GlobalStat")
 
 -- 🔧 РЕЖИМ ОТЛАДКИ: установите true для отладки локализации
 -- При DEBUG = true появляется дополнительная вкладка "🔍 LOCALIZATION"
@@ -19,12 +19,12 @@ local ButtonPassTemplates = require("scripts/ui/pass_templates/button_pass_templ
 local UIWorkspaceSettings = require("scripts/settings/ui/ui_workspace_settings")
 
 -- Импорт модулей вкладок
-local TabGeneral = mod:io_dofile("PlayerProgressStats/scripts/mods/PlayerProgressStats/views/tabs/tab_general")
-local TabEnemies = mod:io_dofile("PlayerProgressStats/scripts/mods/PlayerProgressStats/views/tabs/tab_enemies")
-local TabMissions = mod:io_dofile("PlayerProgressStats/scripts/mods/PlayerProgressStats/views/tabs/tab_missions")
-local TabRecords = mod:io_dofile("PlayerProgressStats/scripts/mods/PlayerProgressStats/views/tabs/tab_records")
+local TabGeneral = mod:io_dofile("GlobalStat/scripts/mods/GlobalStat/views/tabs/tab_general")
+local TabEnemies = mod:io_dofile("GlobalStat/scripts/mods/GlobalStat/views/tabs/tab_enemies")
+local TabMissions = mod:io_dofile("GlobalStat/scripts/mods/GlobalStat/views/tabs/tab_missions")
+local TabRecords = mod:io_dofile("GlobalStat/scripts/mods/GlobalStat/views/tabs/tab_records")
 -- Отладочные вкладки (только если DEBUG = true)
-local TabLocalizationDebug = DEBUG and mod:io_dofile("PlayerProgressStats/scripts/mods/PlayerProgressStats/views/tabs/tab_localization_debug") or nil
+local TabLocalizationDebug = DEBUG and mod:io_dofile("GlobalStat/scripts/mods/GlobalStat/views/tabs/tab_localization_debug") or nil
 
 local Color = Color
 local hud_body_font_settings = UIFontSettings.hud_body or {}
@@ -508,14 +508,14 @@ local definitions = {
     legend_inputs = legend_inputs,
 }
 
-PlayerProgressStatsView.init = function(self, settings, context)
-    PlayerProgressStatsView.super.init(self, definitions, settings, context)
+GlobalStatView.init = function(self, settings, context)
+    GlobalStatView.super.init(self, definitions, settings, context)
     self._context = context
     self._active_tab_index = 1
 end
 
-PlayerProgressStatsView.on_enter = function(self)
-    PlayerProgressStatsView.super.on_enter(self)
+GlobalStatView.on_enter = function(self)
+    GlobalStatView.super.on_enter(self)
 
     self:_setup_input_legend()
     self:_setup_tab_buttons()
@@ -525,7 +525,7 @@ PlayerProgressStatsView.on_enter = function(self)
     self:_update_title()
 end
 
-PlayerProgressStatsView._setup_tab_buttons = function(self)
+GlobalStatView._setup_tab_buttons = function(self)
     for index, tab in ipairs(tabs_definitions) do
         local button_widget = self._widgets_by_name["tab_button_" .. index]
 
@@ -546,7 +546,7 @@ PlayerProgressStatsView._setup_tab_buttons = function(self)
     end
 end
 
-PlayerProgressStatsView._setup_stats_grid = function(self)
+GlobalStatView._setup_stats_grid = function(self)
     local grid_settings = {
         scrollbar_width = scrollbar_width,
         grid_spacing = {0, 5},
@@ -566,7 +566,7 @@ PlayerProgressStatsView._setup_stats_grid = function(self)
     self:_update_grid_content()
 end
 
-PlayerProgressStatsView._update_tab_selection = function(self)
+GlobalStatView._update_tab_selection = function(self)
     for i = 1, #tabs_definitions do
         local button_widget = self._widgets_by_name["tab_button_" .. i]
 
@@ -577,13 +577,13 @@ PlayerProgressStatsView._update_tab_selection = function(self)
     end
 end
 
-PlayerProgressStatsView._on_tab_pressed = function(self, index)
+GlobalStatView._on_tab_pressed = function(self, index)
     self._active_tab_index = index
     self:_update_tab_selection()
     self:_update_grid_content()
 end
 
-PlayerProgressStatsView._update_title = function(self)
+GlobalStatView._update_title = function(self)
     local title_widget = self._widgets_by_name.title_text
 
     if not title_widget then
@@ -603,7 +603,7 @@ PlayerProgressStatsView._update_title = function(self)
     title_widget.dirty = true
 end
 
-PlayerProgressStatsView._update_grid_content = function(self)
+GlobalStatView._update_grid_content = function(self)
     if not self._stats_grid then
         return
     end
@@ -612,7 +612,7 @@ PlayerProgressStatsView._update_grid_content = function(self)
     self._stats_grid:present_grid_layout(layout, blueprints)
 end
 
-PlayerProgressStatsView._create_stat_layout = function(self)
+GlobalStatView._create_stat_layout = function(self)
     local function safe_read_stat(stat_name)
         if not Managers or not Managers.stats or not Managers.stats.read_user_stat then
             return 0
@@ -688,7 +688,7 @@ PlayerProgressStatsView._create_stat_layout = function(self)
     return {}
 end
 
-PlayerProgressStatsView._setup_input_legend = function(self)
+GlobalStatView._setup_input_legend = function(self)
     self._input_legend_element = self:_add_element(ViewElementInputLegend, "input_legend", 10)
     local legend_inputs = definitions.legend_inputs
 
@@ -700,20 +700,20 @@ PlayerProgressStatsView._setup_input_legend = function(self)
     end
 end
 
-PlayerProgressStatsView.cb_on_back_pressed = function(self)
+GlobalStatView.cb_on_back_pressed = function(self)
     if Managers and Managers.ui then
         Managers.ui:close_view(self.view_name)
     end
 end
 
-PlayerProgressStatsView.update = function(self, dt, t, input_service)
+GlobalStatView.update = function(self, dt, t, input_service)
     if Managers and Managers.ui and Managers.ui:view_instance("dmf_options_view") then
         Managers.ui:close_view(self.view_name)
 
         return
     end
 
-    PlayerProgressStatsView.super.update(self, dt, t, input_service)
+    GlobalStatView.super.update(self, dt, t, input_service)
 
     if input_service and input_service:get("back_released") then
         if Managers and Managers.ui then
@@ -722,14 +722,14 @@ PlayerProgressStatsView.update = function(self, dt, t, input_service)
     end
 end
 
-PlayerProgressStatsView.on_exit = function(self)
+GlobalStatView.on_exit = function(self)
     if self._input_legend_element then
         self._input_legend_element = nil
         self:_remove_element("input_legend")
     end
     
-    PlayerProgressStatsView.super.on_exit(self)
+    GlobalStatView.super.on_exit(self)
 end
 
-return PlayerProgressStatsView
+return GlobalStatView
 

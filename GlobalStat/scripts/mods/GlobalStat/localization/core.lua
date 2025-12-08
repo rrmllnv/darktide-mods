@@ -1,7 +1,7 @@
 return {
 	mod_title = {
-		en = "Player Progress Stats",
-		ru = "Статистика прогресса игрока",
+		en = "Global Stats",
+		ru = "Глобальная статистика",
 	},
 	mod_description = {
 		en = "Display your global player statistics in the hub. Press hotkey to toggle visibility.",

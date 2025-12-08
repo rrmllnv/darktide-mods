@@ -1,6 +1,6 @@
 local Color = Color
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
-local constants = get_mod("PlayerProgressStats"):io_dofile("PlayerProgressStats/scripts/mods/PlayerProgressStats/views/view_constants")
+local constants = get_mod("GlobalStat"):io_dofile("GlobalStat/scripts/mods/GlobalStat/views/view_constants")
 
 local grid_size = constants.grid_size
 

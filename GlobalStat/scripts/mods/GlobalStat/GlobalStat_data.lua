@@ -1,4 +1,4 @@
-local mod = get_mod("PlayerProgressStats")
+local mod = get_mod("GlobalStat")
 
 return {
 	name = mod:localize("mod_title"),
@@ -19,4 +19,5 @@ return {
 		},
 	},
 }
+
 

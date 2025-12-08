@@ -5,7 +5,7 @@ local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local Color = Color
 
-local constants = get_mod("PlayerProgressStats"):io_dofile("PlayerProgressStats/scripts/mods/PlayerProgressStats/views/view_constants")
+local constants = get_mod("GlobalStat"):io_dofile("GlobalStat/scripts/mods/GlobalStat/views/view_constants")
 
 local category_panel_size = constants.category_panel_size
 local stats_panel_size = constants.stats_panel_size

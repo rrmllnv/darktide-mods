@@ -1,6 +1,6 @@
-local ViewMain = class("PlayerProgressStatsView", "BaseView")
+local ViewMain = class("GlobalStatView", "BaseView")
 
-local mod = get_mod("PlayerProgressStats")
+local mod = get_mod("GlobalStat")
 
 local ViewElementGrid = require("scripts/ui/view_elements/view_element_grid/view_element_grid")
 local ViewElementInputLegend = require("scripts/ui/view_elements/view_element_input_legend/view_element_input_legend")
@@ -9,11 +9,11 @@ local UIFonts = require("scripts/managers/ui/ui_fonts")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIRenderer = require("scripts/managers/ui/ui_renderer")
 
-local constants = mod:io_dofile("PlayerProgressStats/scripts/mods/PlayerProgressStats/views/view_constants")
-local blueprints = mod:io_dofile("PlayerProgressStats/scripts/mods/PlayerProgressStats/views/view_blueprints")
-local scenegraph_module = mod:io_dofile("PlayerProgressStats/scripts/mods/PlayerProgressStats/views/view_scenegraph")
-local tab_modules = mod:io_dofile("PlayerProgressStats/scripts/mods/PlayerProgressStats/views/view_tabs")
-local Layout = mod:io_dofile("PlayerProgressStats/scripts/mods/PlayerProgressStats/views/view_layout")
+local constants = mod:io_dofile("GlobalStat/scripts/mods/GlobalStat/views/view_constants")
+local blueprints = mod:io_dofile("GlobalStat/scripts/mods/GlobalStat/views/view_blueprints")
+local scenegraph_module = mod:io_dofile("GlobalStat/scripts/mods/GlobalStat/views/view_scenegraph")
+local tab_modules = mod:io_dofile("GlobalStat/scripts/mods/GlobalStat/views/view_tabs")
+local Layout = mod:io_dofile("GlobalStat/scripts/mods/GlobalStat/views/view_layout")
 
 local hud_body_font_settings = UIFontSettings.hud_body or {}
 local tabs_definitions = constants.tabs_definitions

@@ -12,8 +12,8 @@ local view_templates = {
             state_bound = true,
             disable_game_world = false,
             game_world_blur = 1.1,
-            path = [[PlayerProgressStats\scripts\mods\PlayerProgressStats\views\view_main]],
-            class = "PlayerProgressStatsView",
+            path = [[GlobalStat\scripts\mods\GlobalStat\views\view_main]],
+            class = "GlobalStatView",
             load_always = true,
             enter_sound_events = {
                 UISoundEvents.system_menu_enter,
