@@ -2,6 +2,7 @@ local mod = get_mod("QuickDeploy")
 
 local POCKETABLE_SLOT = "slot_pocketable"
 local POCKETABLE_SMALL_SLOT = "slot_pocketable_small"
+local BROKER_SYRINGE_ITEM = "content/items/pocketable/syringe_broker_pocketable"
 
 local DEPLOY_STAGES = {
 	NONE = 0,
@@ -17,6 +18,7 @@ local current_wield_slot = nil
 local inject_mode = "self"  -- "self" или "ally"
 local deploy_stage_start_time = 0  -- Время начала стадии
 local DEPLOY_TIMEOUT = 2.0  -- Таймаут в секундах
+local auto_use_pocketable_small = false
 
 local _get_player_unit = function()
 	local plr = Managers.player and Managers.player:local_player_safe(1)
@@ -29,6 +31,8 @@ local _start_quick_deploy = function(slot_name, mode)
 		return
 	end
 	
+	auto_use_pocketable_small = false
+	
 	local unit_data_extension = plr_unit and ScriptUnit.extension(plr_unit, "unit_data_system")
 	if not unit_data_extension then
 		return
@@ -40,6 +44,7 @@ local _start_quick_deploy = function(slot_name, mode)
 	end
 	
 	local pocketable_name = inventory_component[slot_name]
+	auto_use_pocketable_small = slot_name == POCKETABLE_SMALL_SLOT and pocketable_name == BROKER_SYRINGE_ITEM
 	
 	if pocketable_name and pocketable_name ~= "not_equipped" then
 		target_slot = slot_name
@@ -83,13 +88,27 @@ mod:hook_safe(CLASS.PlayerUnitWeaponExtension, "on_slot_wielded", function(self,
 			target_slot = nil
 			inject_mode = "self"
 			deploy_stage_start_time = 0
+			auto_use_pocketable_small = false
 		end
 	end
 end)
 
 -- Хук на InputService для подмены входных данных
 local _input_action_hook = function(func, self, action_name)
-	local val = func(self, action_name)
+	local ok, result = pcall(func, self, action_name)
+	if not ok then
+		local action_rule = self._actions and self._actions[action_name]
+		if action_rule and action_rule.default_func then
+			local ok_default, default_val = pcall(action_rule.default_func, action_rule.default_value)
+			if ok_default then
+				return default_val
+			end
+		end
+		
+		return false
+	end
+	
+	local val = result
 	
 	-- ВАЖНО: Глобально блокируем ПКМ для стимов в режиме "self" во всех стадиях
 	if inject_mode == "self" and target_slot == POCKETABLE_SMALL_SLOT and action_name == "action_two_hold" then
@@ -119,7 +138,9 @@ local _input_action_hook = function(func, self, action_name)
 	
 	-- Размещение/использование (ЛКМ)
 	if deploy_stage == DEPLOY_STAGES.PLACE and action_name == "action_one_pressed" then
-		return true
+		if not auto_use_pocketable_small or target_slot ~= POCKETABLE_SMALL_SLOT then
+			return true
+		end
 	end
 	
 	-- Введение стима союзнику (нажимаем ЛКМ, ПКМ уже держится глобально)
@@ -152,6 +173,7 @@ mod.update = function(dt)
 		target_slot = nil
 		inject_mode = "self"
 		deploy_stage_start_time = 0
+		auto_use_pocketable_small = false
 	end
 end
 
@@ -164,6 +186,7 @@ mod:hook_safe(CLASS.ActionHandler, "start_action", function(self, id, action_obj
 			target_slot = nil
 			inject_mode = "self"
 			deploy_stage_start_time = 0
+			auto_use_pocketable_small = false
 		end
 		
 		-- Когда начинается использование стима на себя
@@ -172,6 +195,7 @@ mod:hook_safe(CLASS.ActionHandler, "start_action", function(self, id, action_obj
 			target_slot = nil
 			inject_mode = "self"
 			deploy_stage_start_time = 0
+			auto_use_pocketable_small = false
 		end
 		
 		-- Когда начинается прицеливание для передачи союзнику (action_aim или action_flair)
@@ -186,6 +210,7 @@ mod:hook_safe(CLASS.ActionHandler, "start_action", function(self, id, action_obj
 			target_slot = nil
 			inject_mode = "self"
 			deploy_stage_start_time = 0
+			auto_use_pocketable_small = false
 		end
 	end
 end)
@@ -203,6 +228,7 @@ mod.deploy_pocketable = function()
 		target_slot = nil
 		inject_mode = "self"
 		deploy_stage_start_time = 0
+		auto_use_pocketable_small = false
 		return
 	end
 	_start_quick_deploy(POCKETABLE_SLOT, "self")
@@ -220,6 +246,7 @@ mod.deploy_pocketable_small = function()
 		target_slot = nil
 		inject_mode = "self"
 		deploy_stage_start_time = 0
+		auto_use_pocketable_small = false
 		return
 	end
 	_start_quick_deploy(POCKETABLE_SMALL_SLOT, "self")
@@ -237,6 +264,7 @@ mod.inject_ally_small = function()
 		target_slot = nil
 		inject_mode = "self"
 		deploy_stage_start_time = 0
+		auto_use_pocketable_small = false
 		return
 	end
 	_start_quick_deploy(POCKETABLE_SMALL_SLOT, "ally")
@@ -249,6 +277,7 @@ mod.on_game_state_changed = function(status, state_name)
 		target_slot = nil
 		inject_mode = "self"
 		deploy_stage_start_time = 0
+		auto_use_pocketable_small = false
 	end
 end
 
