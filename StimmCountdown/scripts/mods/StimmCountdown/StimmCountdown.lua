@@ -49,6 +49,13 @@ local function apply_icon_and_background_colors(icon_widget, background_widget, 
 		return
 	end
 
+	local function clone_color_table(style_table, key)
+		if style_table and style_table[key] then
+			-- Клонируем таблицу цвета, чтобы не трогать общие ссылки в дефолтных стилях
+			style_table[key] = table.clone(style_table[key])
+		end
+	end
+
 	local function set_existing_rgba(target, source)
 		if not target then
 			return
@@ -64,6 +71,13 @@ local function apply_icon_and_background_colors(icon_widget, background_widget, 
 	if icon_widget and icon_widget.style then
 		local icon_style = icon_widget.style.icon
 		local icon_done_style = icon_widget.style.icon_cooldown_done
+
+		clone_color_table(icon_style, "color")
+		clone_color_table(icon_style, "default_color")
+		clone_color_table(icon_style, "highlight_color")
+		clone_color_table(icon_done_style, "color")
+		clone_color_table(icon_done_style, "default_color")
+		clone_color_table(icon_done_style, "highlight_color")
 
 		if icon_style then
 			set_existing_rgba(icon_style.color, icon_color)
@@ -83,6 +97,11 @@ local function apply_icon_and_background_colors(icon_widget, background_widget, 
 	if background_widget and background_widget.style then
 		local line_style = background_widget.style.line
 		local bg_style = background_widget.style.background
+
+		clone_color_table(line_style, "color")
+		clone_color_table(line_style, "default_color")
+		clone_color_table(line_style, "highlight_color")
+		clone_color_table(bg_style, "color")
 
 		if line_style and line_color then
 			set_existing_rgba(line_style.color, line_color)
