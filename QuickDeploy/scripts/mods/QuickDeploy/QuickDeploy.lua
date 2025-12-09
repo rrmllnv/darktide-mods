@@ -44,7 +44,11 @@ local _start_quick_deploy = function(slot_name, mode)
 	end
 	
 	local pocketable_name = inventory_component[slot_name]
-	auto_use_pocketable_small = slot_name == POCKETABLE_SMALL_SLOT and pocketable_name == BROKER_SYRINGE_ITEM
+	-- Авто-юз только для не-брокерских стимов; брокер оставляем игре
+	auto_use_pocketable_small = slot_name == POCKETABLE_SMALL_SLOT
+		and pocketable_name
+		and pocketable_name ~= "not_equipped"
+		and pocketable_name ~= BROKER_SYRINGE_ITEM
 	
 	if pocketable_name and pocketable_name ~= "not_equipped" then
 		target_slot = slot_name
@@ -138,7 +142,12 @@ local _input_action_hook = function(func, self, action_name)
 	
 	-- Размещение/использование (ЛКМ)
 	if deploy_stage == DEPLOY_STAGES.PLACE and action_name == "action_one_pressed" then
-		if not auto_use_pocketable_small or target_slot ~= POCKETABLE_SMALL_SLOT then
+		if target_slot == POCKETABLE_SMALL_SLOT then
+			-- Для не-брокерских стимов имитируем авто-юз
+			if auto_use_pocketable_small then
+				return true
+			end
+		else
 			return true
 		end
 	end
