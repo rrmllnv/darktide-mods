@@ -120,6 +120,24 @@ local function should_track_breed(breed)
 	return false, false
 end
 
+-- Страховка: сбрасываем активный smart tag, если у маркера нет smart_tag_system (вешаем один раз)
+if not mod._hooked_handle_interaction_draw then
+	mod._hooked_handle_interaction_draw = true
+
+	mod:hook_safe("HudElementSmartTagging", "_handle_interaction_draw", function(self, dt, t, input_service, ui_renderer, render_settings)
+		local active = self._active_interaction_data
+		local marker = active and active.marker
+
+		if marker then
+			local unit = marker.unit
+			if not (unit and ScriptUnit.has_extension(unit, "smart_tag_system")) then
+				self._active_interaction_data = nil
+				return
+			end
+		end
+	end)
+end
+
 local function remove_marker(unit, entry)
 	if entry and entry.marker_id then
 		Managers.event:trigger("remove_world_marker", entry.marker_id)
@@ -128,31 +146,32 @@ local function remove_marker(unit, entry)
 	mod._tracked_markers[unit] = nil
 end
 
-local function register_marker(unit, breed, is_boss, allow_queue, allow_pending)
+local function enqueue_unit(unit, breed, is_boss)
+	if not unit then
+		return
+	end
+
 	if mod._tracked_markers[unit] then
 		return
 	end
 
-	if allow_pending == nil then
-		allow_pending = true
+	if mod._pending_smart_tag[unit] then
+		return
 	end
 
-	-- Маркер ставим только если юнит имеет smart_tag_extension; иначе откладываем попытку
-	local has_smart_tag_ext = unit and ScriptUnit.has_extension(unit, "smart_tag_system")
+	mod._pending_smart_tag[unit] = {
+		breed = breed,
+		is_boss = is_boss,
+		attempts = 0,
+	}
+end
 
-	if not has_smart_tag_ext then
-		if allow_pending then
-			local pending = mod._pending_smart_tag
-
-			if not pending[unit] then
-				pending[unit] = {
-					breed = breed,
-					is_boss = is_boss,
-					attempts = 0,
-				}
-			end
-		end
-
+local function register_marker(unit, breed, is_boss)
+	if mod._tracked_markers[unit] then
+		return
+	end
+	-- Требуем готовый smart_tag_extension; иначе выходим (ожидание происходит в очереди)
+	if not (unit and ScriptUnit.has_extension(unit, "smart_tag_system")) then
 		return
 	end
 
@@ -211,7 +230,7 @@ local function try_track_unit(unit_or_position_or_id)
 	local should_track, is_boss = should_track_breed(breed)
 
 	if should_track then
-		register_marker(unit, breed, is_boss)
+		enqueue_unit(unit, breed, is_boss)
 	end
 end
 
@@ -259,7 +278,7 @@ mod:hook_safe(CLASS.UnitSpawnerManager, "_add_network_unit", function(self, unit
 			local should_track, is_boss = should_track_breed(breed)
 
 			if should_track then
-				register_marker(unit, breed, is_boss)
+				enqueue_unit(unit, breed, is_boss)
 				return
 			end
 		end
@@ -295,7 +314,7 @@ mod:hook_safe(CLASS.UnitSpawnerManager, "spawn_husk_unit", function(self, game_o
 			local should_track, is_boss = should_track_breed(breed)
 
 			if should_track then
-				register_marker(unit, breed, is_boss)
+				enqueue_unit(unit, breed, is_boss)
 				return
 			end
 		end
@@ -319,7 +338,7 @@ function mod.update(dt)
 				data.attempts = (data.attempts or 0) + 1
 
 				if ScriptUnit.has_extension(unit, "smart_tag_system") then
-					register_marker(unit, data.breed, data.is_boss, nil, false)
+					register_marker(unit, data.breed, data.is_boss)
 					pending[unit] = nil
 				elseif data.attempts > 300 then
 					-- бросаем попытки после ~5 минут при 60fps
