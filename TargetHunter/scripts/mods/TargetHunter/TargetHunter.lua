@@ -138,6 +138,26 @@ if not mod._hooked_handle_interaction_draw then
 	end)
 end
 
+-- Жёсткая обёртка: не вызываем оригинал, если нет smart_tag_extension (исключает падения)
+if not mod._hooked_handle_interaction_draw_wrap then
+	mod._hooked_handle_interaction_draw_wrap = true
+
+	mod:hook("HudElementSmartTagging", "_handle_interaction_draw", function(func, self, dt, t, input_service, ui_renderer, render_settings)
+		local active = self._active_interaction_data
+		local marker = active and active.marker
+
+		if marker then
+			local unit = marker.unit
+			if not (unit and ScriptUnit.has_extension(unit, "smart_tag_system")) then
+				self._active_interaction_data = nil
+				return
+			end
+		end
+
+		return func(self, dt, t, input_service, ui_renderer, render_settings)
+	end)
+end
+
 local function remove_marker(unit, entry)
 	if entry and entry.marker_id then
 		Managers.event:trigger("remove_world_marker", entry.marker_id)
@@ -238,6 +258,12 @@ local function cleanup_dead_units()
 	for unit, entry in pairs(mod._tracked_markers) do
 		if not is_unit(unit) then
 			remove_marker(unit, entry)
+		else
+			-- если юнит мёртв, снимаем маркер
+			local health_ext = ScriptUnit.has_extension(unit, "health_system")
+			if health_ext and type(health_ext.is_dead) == "function" and health_ext:is_dead() then
+				remove_marker(unit, entry)
+			end
 		end
 	end
 end
