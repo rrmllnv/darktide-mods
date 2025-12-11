@@ -131,6 +131,29 @@ local function register_marker(unit, breed, is_boss, allow_queue)
 		return
 	end
 
+	-- проверяем дистанцию перед созданием, если игрок уже известен
+	local max_distance = tonumber(mod:get("max_distance")) or DEFAULT_MAX_DISTANCE
+	local player_manager = Managers.player
+	local connection_manager = Managers.connection
+
+	if player_manager and connection_manager and connection_manager:is_initialized() then
+		local player = player_manager.local_player_safe and player_manager:local_player_safe(1) or player_manager:local_player(1)
+		local player_unit = player and player.player_unit
+		local player_pos = player_unit and POSITION_LOOKUP[player_unit]
+
+		if player_pos and max_distance and max_distance > 0 and is_unit(unit) then
+			local unit_pos = POSITION_LOOKUP[unit]
+
+			if unit_pos then
+				local dist = Vector3.distance(player_pos, unit_pos)
+
+				if dist > max_distance then
+					return
+				end
+			end
+		end
+	end
+
 	mod._marker_seq = mod._marker_seq + 1
 
 	local tag_id = string.format("target_hunter_%s_%d", breed.name or "enemy", mod._marker_seq)
@@ -139,6 +162,9 @@ local function register_marker(unit, breed, is_boss, allow_queue)
 	local data = {
 		tag_id = tag_id,
 		visual_type = "default",
+		template_settings_overrides = {
+			max_distance = max_distance,
+		},
 	}
 
 	local function cb(marker_id)
@@ -197,11 +223,14 @@ mod:hook("HudElementSmartTagging", "_find_best_smart_tag_interaction", function(
 	-- Защита: если у маркера нет smart_tag_extension и нет готового tag_id, отбрасываем (независимо от того, чей это маркер)
 	if best_marker then
 		local marker_data = best_marker.data
-		local tag_id = marker_data and marker_data.tag_id
+		local marker_template = best_marker.template
+		local tag_id = best_marker.tag_id
+			or (marker_data and marker_data.tag_id)
+			or (marker_template and marker_template.get_smart_tag_id and marker_template.get_smart_tag_id(best_marker))
 		local unit = best_marker.unit
 		local has_ext = unit and ScriptUnit.has_extension(unit, "smart_tag_system")
 
-		if not tag_id and not has_ext then
+		if not has_ext then
 			best_marker = nil
 			best_unit = nil
 		end
@@ -219,16 +248,26 @@ mod:hook("HudElementSmartTagging", "_handle_interaction_draw", function(func, se
 	if marker then
 		local unit = marker.unit
 		local has_ext = unit and ScriptUnit.has_extension(unit, "smart_tag_system")
-		local tag_id = marker_data and marker_data.tag_id
 
-		if not tag_id and not has_ext then
+		if not has_ext then
 			-- сбрасываем активный маркер и выходим, чтобы не вызвать nil:*
 			self._active_interaction_data = nil
 			return
 		end
 	end
 
-	return func(self, dt, t, input_service, ui_renderer, render_settings)
+	local ok, result = pcall(func, self, dt, t, input_service, ui_renderer, render_settings)
+
+	if not ok then
+		-- защита от падений, когда tag/extension успели исчезнуть между кадрами
+		self._active_interaction_data = nil
+
+		--mod:echo(string.format("[TargetHunter] SmartTag draw skipped: %s", tostring(result)))
+
+		return
+	end
+
+	return result
 end)
 
 -- Ставим маркер сразу при спавне (через событие minion_unit_spawned)
@@ -242,6 +281,53 @@ function mod.update(dt)
 	reset_if_in_hub()
 	cleanup_dead_units()
 
+	local player_manager = Managers.player
+	local connection_manager = Managers.connection
+
+	if not player_manager or not connection_manager or not connection_manager:is_initialized() then
+		return
+	end
+
+	local player = player_manager:local_player_safe(1)
+
+	if not player and player_manager.local_player then
+		-- fallback для старых версий, если safe отсутствует
+		player = player_manager:local_player(1)
+	end
+
+	if not player then
+		return
+	end
+
+	local player_unit = player.player_unit
+	if not player_unit or not player:unit_is_alive() then
+		return
+	end
+
+	local player_pos = POSITION_LOOKUP[player_unit]
+
+	if not player_pos then
+		local camera_manager = Managers.state and Managers.state.camera
+		player_pos = camera_manager and camera_manager:camera_position()
+	end
+
+	local max_distance = tonumber(mod:get("max_distance")) or DEFAULT_MAX_DISTANCE
+
+	if player_pos and max_distance and max_distance > 0 then
+		for unit, entry in pairs(mod._tracked_markers) do
+			local unit_pos = is_unit(unit) and POSITION_LOOKUP[unit]
+
+			if unit_pos then
+				local dist = Vector3.distance(player_pos, unit_pos)
+
+				if dist > max_distance then
+					remove_marker(unit, entry)
+				end
+			else
+				remove_marker(unit, entry)
+			end
+		end
+	end
 end
 
 function mod.on_setting_changed(setting_id)
