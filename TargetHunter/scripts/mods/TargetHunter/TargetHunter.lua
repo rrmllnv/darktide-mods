@@ -1,4 +1,5 @@
 local mod = get_mod("TargetHunter")
+local Breeds = require("scripts/settings/breed/breeds")
 
 mod._tracked_markers = {}
 mod._marker_seq = 0
@@ -162,9 +163,6 @@ local function register_marker(unit, breed, is_boss, allow_queue)
 	local data = {
 		tag_id = tag_id,
 		visual_type = "default",
-		template_settings_overrides = {
-			max_distance = max_distance,
-		},
 	}
 
 	local function cb(marker_id)
@@ -211,65 +209,6 @@ local function reset_if_in_hub()
 	end
 end
 
--- Игнорируем наши маркеры в smart tagging, если на юните нет smart_tag_extension
-mod:hook("HudElementSmartTagging", "_find_best_smart_tag_interaction", function(func, self, ui_renderer, render_settings, force_update_targets)
-	-- если оригинал недоступен (неожиданный конфликт), не трогаем
-	if type(func) ~= "function" then
-		return func
-	end
-
-	local best_marker, best_unit, extra = func(self, ui_renderer, render_settings, force_update_targets)
-
-	-- Защита: если у маркера нет smart_tag_extension и нет готового tag_id, отбрасываем (независимо от того, чей это маркер)
-	if best_marker then
-		local marker_data = best_marker.data
-		local marker_template = best_marker.template
-		local tag_id = best_marker.tag_id
-			or (marker_data and marker_data.tag_id)
-			or (marker_template and marker_template.get_smart_tag_id and marker_template.get_smart_tag_id(best_marker))
-		local unit = best_marker.unit
-		local has_ext = unit and ScriptUnit.has_extension(unit, "smart_tag_system")
-
-		if not has_ext then
-			best_marker = nil
-			best_unit = nil
-		end
-	end
-
-	return best_marker, best_unit, extra
-end)
-
--- Блокируем отрисовку интеракции, если активный маркер без smart_tag_extension (любые маркеры)
-mod:hook("HudElementSmartTagging", "_handle_interaction_draw", function(func, self, dt, t, input_service, ui_renderer, render_settings)
-	local active = self._active_interaction_data
-	local marker = active and active.marker
-	local marker_data = marker and marker.data
-
-	if marker then
-		local unit = marker.unit
-		local has_ext = unit and ScriptUnit.has_extension(unit, "smart_tag_system")
-
-		if not has_ext then
-			-- сбрасываем активный маркер и выходим, чтобы не вызвать nil:*
-			self._active_interaction_data = nil
-			return
-		end
-	end
-
-	local ok, result = pcall(func, self, dt, t, input_service, ui_renderer, render_settings)
-
-	if not ok then
-		-- защита от падений, когда tag/extension успели исчезнуть между кадрами
-		self._active_interaction_data = nil
-
-		--mod:echo(string.format("[TargetHunter] SmartTag draw skipped: %s", tostring(result)))
-
-		return
-	end
-
-	return result
-end)
-
 -- Ставим маркер сразу при спавне (через событие minion_unit_spawned)
 mod:hook_safe(Managers.event, "trigger", function(self, event_name, unit, ...)
 	if event_name == "minion_unit_spawned" and unit then
@@ -277,9 +216,85 @@ mod:hook_safe(Managers.event, "trigger", function(self, event_name, unit, ...)
 	end
 end)
 
+-- Дополнительный ловец спавнов, аналогично SpecialsTracker: хостовые сети
+mod:hook_safe(CLASS.UnitSpawnerManager, "_add_network_unit", function(self, unit, game_object_id, is_husk)
+	if not unit then
+		return
+	end
+
+	-- Пытаемся взять breed из game_session (как в SpecialsTracker), чтобы не зависеть от наличия unit_data_extension в момент спавна
+	local game_session_manager = Managers.state and Managers.state.game_session
+	local game_session = game_session_manager and game_session_manager:game_session()
+
+	if game_session and GameSession.has_game_object_field(game_session, game_object_id, "breed_id") then
+		local breed_id = GameSession.game_object_field(game_session, game_object_id, "breed_id")
+		local breed_name = NetworkLookup.breed_names[breed_id]
+		local breed = breed_name and Breeds[breed_name]
+
+		if breed then
+			local should_track, is_boss = should_track_breed(breed)
+
+			if should_track then
+				register_marker(unit, breed, is_boss)
+				return
+			end
+		end
+	end
+
+	-- Фолбэк: если breed не извлекли, пробуем как раньше
+	try_track_unit(unit)
+end)
+
+-- Дополнительный ловец спавнов для публичных игр (husk)
+mod:hook_safe(CLASS.UnitSpawnerManager, "spawn_husk_unit", function(self, game_object_id, owner_id)
+	local unit_spawner_manager = Managers.state.unit_spawner
+	if not unit_spawner_manager then
+		return
+	end
+
+	local unit = unit_spawner_manager._network_units and unit_spawner_manager._network_units[game_object_id]
+
+	if not unit then
+		return
+	end
+
+	-- breed через game_session (как в SpecialsTracker)
+	local game_session_manager = Managers.state and Managers.state.game_session
+	local game_session = game_session_manager and game_session_manager:game_session()
+
+	if game_session and GameSession.has_game_object_field(game_session, game_object_id, "breed_id") then
+		local breed_id = GameSession.game_object_field(game_session, game_object_id, "breed_id")
+		local breed_name = NetworkLookup.breed_names[breed_id]
+		local breed = breed_name and Breeds[breed_name]
+
+		if breed then
+			local should_track, is_boss = should_track_breed(breed)
+
+			if should_track then
+				register_marker(unit, breed, is_boss)
+				return
+			end
+		end
+	end
+
+	-- Фолбэк
+	try_track_unit(unit)
+end)
+
 function mod.update(dt)
 	reset_if_in_hub()
 	cleanup_dead_units()
+
+	-- Защита от испорченного fixed_time_step (некоторые моды могут подменять)
+	if not mod._fixed_time_step_guard_done then
+		local game_session = Managers.state and Managers.state.game_session
+		local fixed_time_step = game_session and game_session.fixed_time_step
+
+		if game_session and type(fixed_time_step) ~= "number" then
+			game_session.fixed_time_step = (GameParameters and GameParameters.fixed_time_step) or 1 / 60
+			mod._fixed_time_step_guard_done = true
+		end
+	end
 
 	local player_manager = Managers.player
 	local connection_manager = Managers.connection
@@ -315,7 +330,7 @@ function mod.update(dt)
 
 	if player_pos and max_distance and max_distance > 0 then
 		for unit, entry in pairs(mod._tracked_markers) do
-			local unit_pos = is_unit(unit) and POSITION_LOOKUP[unit]
+			local unit_pos = is_unit(unit) and (POSITION_LOOKUP[unit] or (Unit and Unit.alive and Unit.alive(unit) and Unit.world_position(unit, 1)))
 
 			if unit_pos then
 				local dist = Vector3.distance(player_pos, unit_pos)
