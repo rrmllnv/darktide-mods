@@ -3,6 +3,7 @@ local Breeds = require("scripts/settings/breed/breeds")
 
 mod._tracked_markers = {}
 mod._marker_seq = 0
+mod._pending_smart_tag = {}
 local DEFAULT_MAX_DISTANCE = 40
 local COLOR_FALLBACK_BOSS = Color.ui_hud_yellow_medium(255, true)
 local COLOR_FALLBACK_ELITE = Color.ui_hud_red_light(255, true)
@@ -127,8 +128,31 @@ local function remove_marker(unit, entry)
 	mod._tracked_markers[unit] = nil
 end
 
-local function register_marker(unit, breed, is_boss, allow_queue)
+local function register_marker(unit, breed, is_boss, allow_queue, allow_pending)
 	if mod._tracked_markers[unit] then
+		return
+	end
+
+	if allow_pending == nil then
+		allow_pending = true
+	end
+
+	-- Маркер ставим только если юнит имеет smart_tag_extension; иначе откладываем попытку
+	local has_smart_tag_ext = unit and ScriptUnit.has_extension(unit, "smart_tag_system")
+
+	if not has_smart_tag_ext then
+		if allow_pending then
+			local pending = mod._pending_smart_tag
+
+			if not pending[unit] then
+				pending[unit] = {
+					breed = breed,
+					is_boss = is_boss,
+					attempts = 0,
+				}
+			end
+		end
+
 		return
 	end
 
@@ -284,6 +308,26 @@ end)
 function mod.update(dt)
 	reset_if_in_hub()
 	cleanup_dead_units()
+
+	-- Повторные попытки навесить маркер на юниты, у которых extension появляется с задержкой
+	local pending = mod._pending_smart_tag
+	if next(pending) then
+		for unit, data in pairs(pending) do
+			if not is_unit(unit) then
+				pending[unit] = nil
+			else
+				data.attempts = (data.attempts or 0) + 1
+
+				if ScriptUnit.has_extension(unit, "smart_tag_system") then
+					register_marker(unit, data.breed, data.is_boss, nil, false)
+					pending[unit] = nil
+				elseif data.attempts > 300 then
+					-- бросаем попытки после ~5 минут при 60fps
+					pending[unit] = nil
+				end
+			end
+		end
+	end
 
 	-- Защита от испорченного fixed_time_step (некоторые моды могут подменять)
 	if not mod._fixed_time_step_guard_done then

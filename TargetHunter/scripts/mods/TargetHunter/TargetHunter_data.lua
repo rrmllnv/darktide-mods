@@ -40,7 +40,7 @@ return {
 				setting_id = "max_distance",
 				type = "numeric",
 				default_value = 40,
-				range = { 10, 100 },
+				range = { 10, 1000 },
 			},
 			{
 				setting_id = "bosses_group",
