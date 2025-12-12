@@ -258,24 +258,58 @@ local function create_team_kill_text()
     local lines = {}
 
     local mode = mod.hud_counter_mode or mod:get("hud_counter_mode") or 1
-    local show_team_summary = mod.show_team_summary or mod:get("show_team_summary") or 1
+    local display_mode = mod.display_mode or mod:get("display_mode") or 1
+    local team_summary_setting = mod.show_team_summary or mod:get("show_team_summary") or 1
+    local show_team_summary = team_summary_setting == 1
+    local show_player_lines = display_mode ~= 3
+    local show_only_me = display_mode == 2
+    local exclude_me = display_mode == 4
 
-    local players = Managers.player:players()
-
-    -- Сортируем игроков по количеству убийств
-    local sorted_players = {}
-    for _, player in pairs(players) do
-        local account_id = player:account_id() or player:name() or "Player"
-        table.insert(sorted_players, {
-            player = player,
-            account_id = account_id,
-            kills = mod.player_kills[account_id] or 0,
-            damage = mod.player_damage[account_id] or 0,
-            last_damage = mod.player_last_damage[account_id] or 0,
-        })
+    local total_kills = 0
+    local total_damage = 0
+    local total_last_damage = 0
+    local players_with_kills = {}
+    local local_account_id
+    do
+        local local_player = Managers.player and Managers.player:local_player(1)
+        if local_player then
+            local_account_id = local_player:account_id() or local_player:name()
+        end
     end
 
-    table.sort(sorted_players, function(a, b)
+    -- Получаем список текущих игроков в команде
+    local current_players = {}
+    if Managers.player then
+        local players = Managers.player:players()
+        for _, player in pairs(players) do
+            if player then
+                local account_id = player:account_id() or player:name()
+                local character_name = player.character_name and player:character_name()
+                if account_id then
+                    current_players[account_id] = character_name or player:name() or account_id
+                end
+            end
+        end
+    end
+
+    -- Собираем убийства только текущих игроков с убийствами > 0
+    for account_id, kills in pairs(mod.player_kills or {}) do
+        local display_name = current_players[account_id]
+        if kills > 0 and display_name then
+            total_kills = total_kills + kills
+            local damage = (mod.player_damage and mod.player_damage[account_id]) or 0
+            total_damage = total_damage + math.floor(damage)
+            local last_damage = (mod.player_last_damage and mod.player_last_damage[account_id]) or 0
+            total_last_damage = total_last_damage + math.floor(last_damage)
+            table.insert(players_with_kills, {name = display_name, kills = kills, damage = damage, last_damage = last_damage, account_id = account_id})
+        end
+    end
+
+    -- Сортируем по убийствам (больше сверху), при равенстве по урону
+    table.sort(players_with_kills, function(a, b)
+        if a.kills == b.kills then
+            return (a.damage or 0) > (b.damage or 0)
+        end
         return a.kills > b.kills
     end)
 
@@ -284,64 +318,49 @@ local function create_team_kill_text()
     local last_damage_color = mod.get_last_damage_color_string()
     local reset_color = "{#reset()}"
 
-    local function should_show_player(account_id)
-        if mod.display_mode == 2 then -- only me
-            return account_id == (Managers.player:local_player() and Managers.player:local_player():account_id())
-        elseif mod.display_mode == 3 then -- hide all
-            return false
-        elseif mod.display_mode == 4 then -- everyone except me
-            return account_id ~= (Managers.player:local_player() and Managers.player:local_player():account_id())
+    if show_team_summary then
+        if mode == 1 then
+            table.insert(lines, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " (" .. damage_color .. mod.format_number(total_damage) .. reset_color .. ")")
+        elseif mode == 2 then
+            table.insert(lines, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color)
+        elseif mode == 3 then
+            table.insert(lines, "TEAM DAMAGE: " .. damage_color .. mod.format_number(total_damage) .. reset_color)
+        elseif mode == 4 then
+            table.insert(lines, "TEAM LAST DAMAGE: " .. last_damage_color .. mod.format_number(total_last_damage) .. reset_color)
+        elseif mode == 5 then
+            table.insert(lines, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " [" .. last_damage_color .. mod.format_number(total_last_damage) .. reset_color .. "]")
+        elseif mode == 6 then
+            table.insert(lines, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " (" .. damage_color .. mod.format_number(total_damage) .. reset_color .. ") [" .. last_damage_color .. mod.format_number(total_last_damage) .. reset_color .. "]")
         end
-        return true -- mode 1: show all
     end
 
-    local total_kills = 0
-    local total_damage = 0
-    local total_last_damage = 0
-
-    for _, data in ipairs(sorted_players) do
-        total_kills = total_kills + data.kills
-        total_damage = total_damage + data.damage
-        total_last_damage = total_last_damage + data.last_damage
-
-        if should_show_player(data.account_id) then
-            local name = data.player and data.player:name() or "Player"
-            local dmg = math.floor(data.damage or 0)
-            local last_dmg = math.floor(data.last_damage or 0)
-
-            local line = ""
-
-            if mode == 1 then -- kills + total damage
-                line = name .. ": " .. kills_color .. data.kills .. reset_color .. " (" .. damage_color .. mod.format_number(dmg) .. reset_color .. ")"
-            elseif mode == 2 then -- kills only
-                line = name .. ": " .. kills_color .. data.kills .. reset_color
-            elseif mode == 3 then -- total damage only
-                line = name .. ": " .. damage_color .. mod.format_number(dmg) .. reset_color
-            elseif mode == 4 then -- last hit damage only
-                line = name .. ": [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]"
-            elseif mode == 5 then -- kills + last damage
-                line = name .. ": " .. kills_color .. data.kills .. reset_color .. " [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]"
-            elseif mode == 6 then -- kills + total + last
-                line = name .. ": " .. kills_color .. data.kills .. reset_color .. " (" .. damage_color .. mod.format_number(dmg) .. reset_color .. ") [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]"
+    if show_player_lines and #players_with_kills > 0 then
+        for _, player in ipairs(players_with_kills) do
+            if show_only_me and (not local_account_id or player.account_id ~= local_account_id) then
+                goto continue
             end
 
-            table.insert(lines, line)
-        end
-    end
+            if exclude_me and local_account_id and player.account_id == local_account_id then
+                goto continue
+            end
 
-    if show_team_summary == 1 then
-        if mode == 1 then
-            table.insert(lines, 1, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " (" .. damage_color .. mod.format_number(total_damage) .. reset_color .. ")")
-        elseif mode == 2 then
-            table.insert(lines, 1, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color)
-        elseif mode == 3 then
-            table.insert(lines, 1, "TEAM DAMAGE: " .. damage_color .. mod.format_number(total_damage) .. reset_color)
-        elseif mode == 4 then
-            table.insert(lines, 1, "TEAM LAST DAMAGE: " .. last_damage_color .. mod.format_number(total_last_damage) .. reset_color)
-        elseif mode == 5 then
-            table.insert(lines, 1, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " [" .. last_damage_color .. mod.format_number(total_last_damage) .. reset_color .. "]")
-        elseif mode == 6 then
-            table.insert(lines, 1, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " (" .. damage_color .. mod.format_number(total_damage) .. reset_color .. ") [" .. last_damage_color .. mod.format_number(total_last_damage) .. reset_color .. "]")
+            local dmg = math.floor(player.damage or 0)
+            local last_dmg = math.floor(player.last_damage or 0)
+
+            if mode == 1 then
+                table.insert(lines, player.name .. ": " .. kills_color .. player.kills .. reset_color .. " (" .. damage_color .. mod.format_number(dmg) .. reset_color .. ")")
+            elseif mode == 2 then
+                table.insert(lines, player.name .. ": " .. kills_color .. player.kills .. reset_color)
+            elseif mode == 3 then
+                table.insert(lines, player.name .. ": " .. damage_color .. mod.format_number(dmg) .. reset_color)
+            elseif mode == 4 then
+                table.insert(lines, player.name .. ": [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]")
+            elseif mode == 5 then
+                table.insert(lines, player.name .. ": " .. kills_color .. player.kills .. reset_color .. " [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]")
+            elseif mode == 6 then
+                table.insert(lines, player.name .. ": " .. kills_color .. player.kills .. reset_color .. " (" .. damage_color .. mod.format_number(dmg) .. reset_color .. ") [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]")
+            end
+            ::continue::
         end
     end
 
@@ -397,9 +416,17 @@ HudElementPlayerStats.force_update = function(self)
 	local style = widget.style
 
 	local lines = create_team_kill_text()
+
+	-- Скрываем виджет если нет строк для отображения
+	if #lines == 0 then
+		widget.content.visible = false
+		widget.content.text = ""
+		return
+	end
+
 	local text = table.concat(lines, "\n")
 	content.text = text
-	content.visible = text ~= ""
+	content.visible = true
 
 	local line_count = #lines
 	local panel_height = calculate_panel_height(line_count)
