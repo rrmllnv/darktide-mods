@@ -163,5 +163,17 @@ return {
 		en = "Opacity",
 		ru = "Прозрачность",
 	},
+	show_killstreaks = {
+		en = "Show killstreak",
+		ru = "Показывать серию убийств",
+	},
+	show_killstreaks_show = {
+		en = "Show",
+		ru = "Показать",
+	},
+	show_killstreaks_hide = {
+		en = "Hide",
+		ru = "Скрыть",
+	},
 }
 

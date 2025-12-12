@@ -130,6 +130,15 @@ return {
 				default_value = 100,
 				range = {0, 100},
 			},
+			{
+				setting_id = "show_killstreaks",
+				type = "dropdown",
+				default_value = 1,
+				options = {
+					{text = "show_killstreaks_show", value = 1},
+					{text = "show_killstreaks_hide", value = 2},
+				},
+			},
         },
 	},
 }

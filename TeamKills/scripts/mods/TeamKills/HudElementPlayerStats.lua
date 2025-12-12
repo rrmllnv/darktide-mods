@@ -265,6 +265,8 @@ HudElementPlayerStats.update = function(self, dt, t, ui_renderer, render_setting
 	
 	local widget = self._widgets_by_name.TeamKillsWidget
 
+	mod.update_killstreak_timers(dt)
+
 	if self.is_in_hub then
 		widget.content.visible = false
 		widget.content.text = ""
@@ -366,19 +368,25 @@ HudElementPlayerStats.update = function(self, dt, t, ui_renderer, render_setting
 
             local dmg = math.floor(player.damage or 0)
             local last_dmg = math.floor(player.last_damage or 0)
+            local streak_label = mod.get_killstreak_label(player.account_id)
+            local name = player.name
+
+            if streak_label then
+                name = "+" .. streak_label .. "  " .. name
+            end
 
             if mode == 1 then
-                table.insert(lines, player.name .. ": " .. kills_color .. player.kills .. reset_color .. " (" .. damage_color .. mod.format_number(dmg) .. reset_color .. ")")
+                table.insert(lines, name .. ": " .. kills_color .. player.kills .. reset_color .. " (" .. damage_color .. mod.format_number(dmg) .. reset_color .. ")")
             elseif mode == 2 then
-                table.insert(lines, player.name .. ": " .. kills_color .. player.kills .. reset_color)
+                table.insert(lines, name .. ": " .. kills_color .. player.kills .. reset_color)
             elseif mode == 3 then
-                table.insert(lines, player.name .. ": " .. damage_color .. mod.format_number(dmg) .. reset_color)
+                table.insert(lines, name .. ": " .. damage_color .. mod.format_number(dmg) .. reset_color)
             elseif mode == 4 then
-                table.insert(lines, player.name .. ": [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]")
+                table.insert(lines, name .. ": [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]")
             elseif mode == 5 then
-                table.insert(lines, player.name .. ": " .. kills_color .. player.kills .. reset_color .. " [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]")
+                table.insert(lines, name .. ": " .. kills_color .. player.kills .. reset_color .. " [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]")
             elseif mode == 6 then
-                table.insert(lines, player.name .. ": " .. kills_color .. player.kills .. reset_color .. " (" .. damage_color .. mod.format_number(dmg) .. reset_color .. ") [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]")
+                table.insert(lines, name .. ": " .. kills_color .. player.kills .. reset_color .. " (" .. damage_color .. mod.format_number(dmg) .. reset_color .. ") [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]")
             end
             ::continue::
         end

@@ -16,6 +16,9 @@ mod.player_kills = {}
 mod.player_damage = {}
 mod.player_last_damage = {}
 mod.killed_units = {}
+mod.player_killstreak = {}
+mod.player_killstreak_timer = {}
+mod.killstreak_duration_seconds = 1
 mod.display_mode = mod:get("display_mode") or 1
 mod.show_background = mod:get("show_background") or 1
 mod.opacity = mod:get("opacity") or 100
@@ -109,8 +112,11 @@ local function recreate_hud()
     mod.player_damage = {}
     mod.player_last_damage = {}
     mod.killed_units = {}
+    mod.player_killstreak = {}
+    mod.player_killstreak_timer = {}
     mod.display_mode = mod:get("display_mode") or 1
     mod.hud_counter_mode = mod:get("hud_counter_mode") or 1
+    mod.show_killstreaks = mod:get("show_killstreaks") or 1
     mod.kills_color = mod:get("kills_color") or "white"
     mod.damage_color = mod:get("damage_color") or "orange"
     mod.last_damage_color = mod:get("last_damage_color") or "orange"
@@ -127,6 +133,7 @@ mod.on_setting_changed = function()
     mod.display_mode = mod:get("display_mode") or 1
     mod.hud_counter_mode = mod:get("hud_counter_mode") or 1
     mod.show_team_summary = mod:get("show_team_summary") or 1
+    mod.show_killstreaks = mod:get("show_killstreaks") or 1
     mod.kills_color = mod:get("kills_color") or "white"
     mod.damage_color = mod:get("damage_color") or "orange"
     mod.last_damage_color = mod:get("last_damage_color") or "orange"
@@ -167,6 +174,47 @@ mod.add_to_damage = function(account_id, amount)
     local clamped_amount = math.max(0, amount)
     mod.player_damage[account_id] = mod.player_damage[account_id] + clamped_amount
     mod.player_last_damage[account_id] = math.ceil(clamped_amount)
+end
+
+mod.add_to_killstreak_counter = function(account_id)
+	if not account_id then
+		return
+	end
+
+	mod.player_killstreak[account_id] = (mod.player_killstreak[account_id] or 0) + 1
+	mod.player_killstreak_timer[account_id] = 0
+end
+
+mod.update_killstreak_timers = function(dt)
+	if not dt then
+		return
+	end
+
+	for account_id, timer in pairs(mod.player_killstreak_timer) do
+		timer = timer + dt
+
+		if timer > mod.killstreak_duration_seconds then
+			mod.player_killstreak[account_id] = 0
+			mod.player_killstreak_timer[account_id] = nil
+		else
+			mod.player_killstreak_timer[account_id] = timer
+		end
+	end
+end
+
+mod.get_killstreak_label = function(account_id)
+	if mod.show_killstreaks ~= 1 then
+		return nil
+	end
+
+	local count = mod.player_killstreak[account_id]
+
+	if not count or count < 2 then
+		return nil
+	end
+
+	-- Просто возвращаем число серии
+	return tostring(count)
 end
 
 -- Получаем игрока по юниту (проверяем всех игроков)
@@ -224,6 +272,7 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                 if not mod.killed_units[attacked_unit] then
                     mod.killed_units[attacked_unit] = true
                     mod.add_to_killcounter(account_id)
+                    mod.add_to_killstreak_counter(account_id)
                 end
                 
             elseif attack_result == "damaged" then
