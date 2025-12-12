@@ -282,6 +282,7 @@ local function create_team_kill_text()
     local kills_color = mod.get_kills_color_string()
     local damage_color = mod.get_damage_color_string()
     local last_damage_color = mod.get_last_damage_color_string()
+    local reset_color = "{#reset()}"
 
     local function should_show_player(account_id)
         if mod.display_mode == 2 then -- only me
@@ -305,24 +306,23 @@ local function create_team_kill_text()
 
         if should_show_player(data.account_id) then
             local name = data.player and data.player:name() or "Player"
-            local kills_str = string.format("%s%s{#color(255,255,255)}", kills_color, mod.format_number(data.kills))
-            local damage_str = string.format("%s%s{#color(255,255,255)}", damage_color, mod.format_number(data.damage))
-            local last_damage_str = string.format("%s%s{#color(255,255,255)}", last_damage_color, mod.format_number(data.last_damage))
+            local dmg = math.floor(data.damage or 0)
+            local last_dmg = math.floor(data.last_damage or 0)
 
             local line = ""
 
             if mode == 1 then -- kills + total damage
-                line = string.format("%s: Kills %s / Dmg %s", name, kills_str, damage_str)
+                line = name .. ": " .. kills_color .. data.kills .. reset_color .. " (" .. damage_color .. mod.format_number(dmg) .. reset_color .. ")"
             elseif mode == 2 then -- kills only
-                line = string.format("%s: Kills %s", name, kills_str)
+                line = name .. ": " .. kills_color .. data.kills .. reset_color
             elseif mode == 3 then -- total damage only
-                line = string.format("%s: Dmg %s", name, damage_str)
+                line = name .. ": " .. damage_color .. mod.format_number(dmg) .. reset_color
             elseif mode == 4 then -- last hit damage only
-                line = string.format("%s: Last %s", name, last_damage_str)
+                line = name .. ": [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]"
             elseif mode == 5 then -- kills + last damage
-                line = string.format("%s: Kills %s / Last %s", name, kills_str, last_damage_str)
+                line = name .. ": " .. kills_color .. data.kills .. reset_color .. " [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]"
             elseif mode == 6 then -- kills + total + last
-                line = string.format("%s: Kills %s / Dmg %s / Last %s", name, kills_str, damage_str, last_damage_str)
+                line = name .. ": " .. kills_color .. data.kills .. reset_color .. " (" .. damage_color .. mod.format_number(dmg) .. reset_color .. ") [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]"
             end
 
             table.insert(lines, line)
@@ -330,12 +330,19 @@ local function create_team_kill_text()
     end
 
     if show_team_summary == 1 then
-        local kills_str = string.format("%s%s{#color(255,255,255)}", kills_color, mod.format_number(total_kills))
-        local damage_str = string.format("%s%s{#color(255,255,255)}", damage_color, mod.format_number(total_damage))
-        local last_damage_str = string.format("%s%s{#color(255,255,255)}", last_damage_color, mod.format_number(total_last_damage))
-
-        local summary_line = string.format("TEAM KILLS: %s / DMG: %s / LAST: %s", kills_str, damage_str, last_damage_str)
-        table.insert(lines, 1, summary_line)
+        if mode == 1 then
+            table.insert(lines, 1, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " (" .. damage_color .. mod.format_number(total_damage) .. reset_color .. ")")
+        elseif mode == 2 then
+            table.insert(lines, 1, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color)
+        elseif mode == 3 then
+            table.insert(lines, 1, "TEAM DAMAGE: " .. damage_color .. mod.format_number(total_damage) .. reset_color)
+        elseif mode == 4 then
+            table.insert(lines, 1, "TEAM LAST DAMAGE: " .. last_damage_color .. mod.format_number(total_last_damage) .. reset_color)
+        elseif mode == 5 then
+            table.insert(lines, 1, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " [" .. last_damage_color .. mod.format_number(total_last_damage) .. reset_color .. "]")
+        elseif mode == 6 then
+            table.insert(lines, 1, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " (" .. damage_color .. mod.format_number(total_damage) .. reset_color .. ") [" .. last_damage_color .. mod.format_number(total_last_damage) .. reset_color .. "]")
+        end
     end
 
     return lines
