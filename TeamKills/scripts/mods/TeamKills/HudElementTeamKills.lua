@@ -250,18 +250,18 @@ local widget_definitions = {
 	),
 }
 
-local HudElementPlayerStats = class("HudElementPlayerStats", "HudElementBase")
+local HudElementTeamKills = class("HudElementTeamKills", "HudElementBase")
 
-HudElementPlayerStats.init = function(self, parent, draw_layer, start_scale)
-	HudElementPlayerStats.super.init(self, parent, draw_layer, start_scale, {
+HudElementTeamKills.init = function(self, parent, draw_layer, start_scale)
+	HudElementTeamKills.super.init(self, parent, draw_layer, start_scale, {
 		scenegraph_definition = scenegraph_definition,
 		widget_definitions = widget_definitions,
 	})
 	self.is_in_hub = mod._is_in_hub()
 end
 
-HudElementPlayerStats.update = function(self, dt, t, ui_renderer, render_settings, input_service)
-	HudElementPlayerStats.super.update(self, dt, t, ui_renderer, render_settings, input_service)
+HudElementTeamKills.update = function(self, dt, t, ui_renderer, render_settings, input_service)
+	HudElementTeamKills.super.update(self, dt, t, ui_renderer, render_settings, input_service)
 	
 	local widget = self._widgets_by_name.TeamKillsWidget
 
@@ -407,5 +407,6 @@ HudElementPlayerStats.update = function(self, dt, t, ui_renderer, render_setting
     self._widgets_by_name.TeamKillsWidget.content.text = display_text
 end
 
-return HudElementPlayerStats
+return HudElementTeamKills
+
 

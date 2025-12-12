@@ -4,8 +4,8 @@ local Breed = mod:original_require("scripts/utilities/breed")
 
 local hud_elements = {
 	{
-		filename = "TeamKills/scripts/mods/TeamKills/HudElementPlayerStats",
-		class_name = "HudElementPlayerStats",
+		filename = "TeamKills/scripts/mods/TeamKills/HudElementTeamKills",
+		class_name = "HudElementTeamKills",
 		visibility_groups = {
 			"alive",
 		},
