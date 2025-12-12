@@ -34,7 +34,7 @@ local function apply_panel_height(self, panel_height)
 
 	self:_set_scenegraph_size("teamKillContainer", width, panel_height)
 
-	local widget = self._widgets_by_name.teamKillCounter
+	local widget = self._widgets_by_name.TeamKillsWidget
 	local styles = widget.style
 	local panel_background = styles.panel_background
 
@@ -163,7 +163,7 @@ local function calculate_panel_height(line_count)
 end
 
 local widget_definitions = {
-	teamKillCounter = UIWidget.create_definition(
+	TeamKillsWidget = UIWidget.create_definition(
 		{
 			{
 				value = "content/ui/materials/hud/backgrounds/terminal_background_team_panels",
@@ -240,31 +240,42 @@ local widget_definitions = {
 				end,
 			},
 			{
-				pass_type = "text",
-				value = "",
 				value_id = "text",
 				style_id = "text",
+				pass_type = "text",
 				style = get_team_kill_style(),
-				visibility_function = function (content)
-					return content.visible
-				end,
 			},
 		},
 		"teamKillContainer"
 	),
 }
 
-local function create_team_kill_text()
-    local lines = {}
+local HudElementPlayerStats = class("HudElementPlayerStats", "HudElementBase")
 
-    local mode = mod.hud_counter_mode or mod:get("hud_counter_mode") or 1
-    local display_mode = mod.display_mode or mod:get("display_mode") or 1
-    local team_summary_setting = mod.show_team_summary or mod:get("show_team_summary") or 1
-    local show_team_summary = team_summary_setting == 1
-    local show_player_lines = display_mode ~= 3
-    local show_only_me = display_mode == 2
-    local exclude_me = display_mode == 4
+HudElementPlayerStats.init = function(self, parent, draw_layer, start_scale)
+	HudElementPlayerStats.super.init(self, parent, draw_layer, start_scale, {
+		scenegraph_definition = scenegraph_definition,
+		widget_definitions = widget_definitions,
+	})
+	self.is_in_hub = mod._is_in_hub()
+end
 
+HudElementPlayerStats.update = function(self, dt, t, ui_renderer, render_settings, input_service)
+	HudElementPlayerStats.super.update(self, dt, t, ui_renderer, render_settings, input_service)
+	
+	local widget = self._widgets_by_name.TeamKillsWidget
+
+	if self.is_in_hub then
+		widget.content.visible = false
+		widget.content.text = ""
+
+		return
+	else
+		widget.content.visible = true
+	end
+	
+    -- Сдвиг по стилю текста, если скрыты строки пользователей, но показывается строка Team Kills
+    -- Обновление текста
     local total_kills = 0
     local total_damage = 0
     local total_last_damage = 0
@@ -276,23 +287,23 @@ local function create_team_kill_text()
             local_account_id = local_player:account_id() or local_player:name()
         end
     end
-
-    -- Получаем список текущих игроков в команде
-    local current_players = {}
+	
+	-- Получаем список текущих игроков в команде
+	local current_players = {}
     if Managers.player then
         local players = Managers.player:players()
         for _, player in pairs(players) do
             if player then
                 local account_id = player:account_id() or player:name()
-                local character_name = player.character_name and player:character_name()
+				local character_name = player.character_name and player:character_name()
                 if account_id then
                     current_players[account_id] = character_name or player:name() or account_id
                 end
             end
         end
     end
-
-    -- Собираем убийства только текущих игроков с убийствами > 0
+	
+	-- Собираем убийства только текущих игроков с убийствами > 0
     for account_id, kills in pairs(mod.player_kills or {}) do
         local display_name = current_players[account_id]
         if kills > 0 and display_name then
@@ -304,20 +315,29 @@ local function create_team_kill_text()
             table.insert(players_with_kills, {name = display_name, kills = kills, damage = damage, last_damage = last_damage, account_id = account_id})
         end
     end
-
-    -- Сортируем по убийствам (больше сверху), при равенстве по урону
+	
+	-- Сортируем по убийствам (больше сверху)
     table.sort(players_with_kills, function(a, b)
         if a.kills == b.kills then
             return (a.damage or 0) > (b.damage or 0)
         end
         return a.kills > b.kills
     end)
-
+	
+    -- Формируем текст с учетом настроек
+	local lines = {}
+    local mode = mod.hud_counter_mode or mod:get("hud_counter_mode") or 1
+    local display_mode = mod.display_mode or mod:get("display_mode") or 1
+    local team_summary_setting = mod.show_team_summary or mod:get("show_team_summary") or 1
+    local show_team_summary = team_summary_setting == 1
+    local show_player_lines = display_mode ~= 3
+    local show_only_me = display_mode == 2
+    local exclude_me = display_mode == 4
     local kills_color = mod.get_kills_color_string()
     local damage_color = mod.get_damage_color_string()
     local last_damage_color = mod.get_last_damage_color_string()
     local reset_color = "{#reset()}"
-
+    
     if show_team_summary then
         if mode == 1 then
             table.insert(lines, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " (" .. damage_color .. mod.format_number(total_damage) .. reset_color .. ")")
@@ -364,59 +384,6 @@ local function create_team_kill_text()
         end
     end
 
-    return lines
-end
-
-local HudElementPlayerStats = class("HudElementPlayerStats", "HudElementBase")
-
-HudElementPlayerStats.init = function(self, parent, draw_layer, start_scale, definitions)
-	local definitions = definitions or {}
-	definitions = table.clone(definitions)
-	definitions.scenegraph_definition = scenegraph_definition
-	definitions.widget_definitions = widget_definitions
-
-	HudElementPlayerStats.super.init(self, parent, draw_layer, start_scale, definitions)
-
-	mod.hud_element = self
-
-	self:force_update()
-end
-
-HudElementPlayerStats.destroy = function(self, ui_renderer)
-	mod.hud_element = nil
-	HudElementPlayerStats.super.destroy(self, ui_renderer)
-end
-
-HudElementPlayerStats.update = function(self, dt, t, ui_renderer, render_settings, input_service)
-	if mod._is_in_hub() then
-		self:set_widgets_visibility(false)
-		return
-	end
-    
-	if self._dirty then
-		self:force_update()
-	end
-
-	HudElementPlayerStats.super.update(self, dt, t, ui_renderer, render_settings, input_service)
-end
-
-HudElementPlayerStats.set_dirty = function(self)
-	if self._dirty then
-		return
-	end
-
-	self._dirty = true
-end
-
-HudElementPlayerStats.force_update = function(self)
-	self._dirty = false
-
-	local widget = self._widgets_by_name.teamKillCounter
-	local content = widget.content
-	local style = widget.style
-
-	local lines = create_team_kill_text()
-
 	-- Скрываем виджет если нет строк для отображения
 	if #lines == 0 then
 		widget.content.visible = false
@@ -424,22 +391,12 @@ HudElementPlayerStats.force_update = function(self)
 		return
 	end
 
-	local text = table.concat(lines, "\n")
-	content.text = text
-	content.visible = true
+	local panel_height = calculate_panel_height(#lines)
 
-	local line_count = #lines
-	local panel_height = calculate_panel_height(line_count)
+    apply_panel_height(self, panel_height)
 
-	apply_panel_height(self, panel_height)
-
-	widget.dirty = true
-end
-
-HudElementPlayerStats.set_widgets_visibility = function(self, visible)
-	local widget = self._widgets_by_name.teamKillCounter
-	widget.content.visible = visible
-	widget.dirty = true
+    local display_text = table.concat(lines, "\n")
+    self._widgets_by_name.TeamKillsWidget.content.text = display_text
 end
 
 return HudElementPlayerStats
