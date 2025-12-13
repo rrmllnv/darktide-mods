@@ -19,6 +19,58 @@ mod.killed_units = {}
 mod.player_killstreak = {}
 mod.player_killstreak_timer = {}
 mod.killstreak_duration_seconds = 2.5
+-- Категории целей (из ovenproof_scoreboard_plugin)
+mod.melee_lessers = {
+	"chaos_newly_infected",
+	"chaos_poxwalker",
+	"cultist_melee",
+	"renegade_melee",
+}
+mod.ranged_lessers = {
+	"cultist_assault",
+	"renegade_assault",
+	"renegade_rifleman",
+}
+mod.melee_elites = {
+	"cultist_berzerker",
+	"renegade_berzerker",
+	"renegade_executor",
+	"chaos_ogryn_bulwark",
+	"chaos_ogryn_executor",
+}
+mod.ranged_elites = {
+	"cultist_gunner",
+	"renegade_gunner",
+	"cultist_shocktrooper",
+	"renegade_shocktrooper",
+	"chaos_ogryn_gunner",
+}
+mod.specials = {
+	"chaos_poxwalker_bomber",
+	"renegade_grenadier",
+	"cultist_grenadier",
+	"renegade_sniper",
+	"renegade_flamer",
+	"cultist_flamer",
+}
+mod.disablers = {
+	"chaos_hound",
+	"chaos_hound_mutator",
+	"cultist_mutant",
+	"renegade_netgunner",
+}
+mod.bosses = {
+	"chaos_beast_of_nurgle",
+	"chaos_daemonhost",
+	"chaos_spawn",
+	"chaos_plague_ogryn",
+	"chaos_plague_ogryn_sprayer",
+	"renegade_captain",
+	"renegade_twin_captain",
+	"renegade_twin_captain_two",
+}
+mod.kills_by_category = {}
+mod.damage_by_category = {}
 mod.display_mode = mod:get("display_mode") or 1
 mod.show_background = mod:get("show_background") or 1
 mod.opacity = mod:get("opacity") or 100
@@ -114,6 +166,8 @@ local function recreate_hud()
     mod.killed_units = {}
     mod.player_killstreak = {}
     mod.player_killstreak_timer = {}
+    mod.kills_by_category = {}
+    mod.damage_by_category = {}
     mod.display_mode = mod:get("display_mode") or 1
     mod.hud_counter_mode = mod:get("hud_counter_mode") or 1
     mod.show_killstreaks = mod:get("show_killstreaks") or 1
@@ -234,6 +288,30 @@ mod.get_killstreak_label = function(account_id)
 	return tostring(count)
 end
 
+local function categorize_breed(breed_name)
+	if not breed_name then
+		return nil
+	end
+
+	local lists = {
+		melee_lessers = mod.melee_lessers,
+		ranged_lessers = mod.ranged_lessers,
+		melee_elites = mod.melee_elites,
+		ranged_elites = mod.ranged_elites,
+		specials = mod.specials,
+		disablers = mod.disablers,
+		bosses = mod.bosses,
+	}
+
+	for category, list in pairs(lists) do
+		if table.find(list, breed_name) then
+			return category
+		end
+	end
+
+	return nil
+end
+
 -- Получаем игрока по юниту (проверяем всех игроков)
 mod.player_from_unit = function(self, unit)
 	if unit then
@@ -290,6 +368,12 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                     mod.killed_units[attacked_unit] = true
                     mod.add_to_killcounter(account_id)
                     mod.add_to_killstreak_counter(account_id)
+
+                    local category = categorize_breed(breed_or_nil.name)
+                    if category then
+                        mod.kills_by_category[account_id] = mod.kills_by_category[account_id] or {}
+                        mod.kills_by_category[account_id][category] = (mod.kills_by_category[account_id][category] or 0) + 1
+                    end
                 end
                 
             elseif attack_result == "damaged" then
@@ -299,6 +383,12 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
             
             if health_damage > 0 then
                 mod.add_to_damage(account_id, health_damage)
+
+                local category = categorize_breed(breed_or_nil and breed_or_nil.name)
+                if category then
+                    mod.damage_by_category[account_id] = mod.damage_by_category[account_id] or {}
+                    mod.damage_by_category[account_id][category] = (mod.damage_by_category[account_id][category] or 0) + math.floor(health_damage)
+                end
             end
         end
     end
