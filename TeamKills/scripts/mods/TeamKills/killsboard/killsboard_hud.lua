@@ -14,41 +14,135 @@ local categories = {
 }
 
 local function build_lines()
+	if not mod.get_kills_color_string or not mod.get_damage_color_string or not mod.format_number then
+		return ""
+	end
+
 	local kills_color = mod.get_kills_color_string()
 	local damage_color = mod.get_damage_color_string()
 	local reset = "{#reset()}"
 
-	local lines = {}
-	local total_kills = 0
-	local total_damage = 0
-
-	for _, data in ipairs(categories) do
-		local key, label = data[1], data[2]
-		local kills_sum = 0
-		local dmg_sum = 0
-
-		for _, account_data in pairs(mod.kills_by_category or {}) do
-			kills_sum = kills_sum + (account_data[key] or 0)
+	-- Получаем список игроков с проверками
+	local players = {}
+	if Managers and Managers.player then
+		local player_manager = Managers.player
+		if player_manager and player_manager.players then
+			local all_players = player_manager:players()
+			if all_players then
+				for _, player in pairs(all_players) do
+					if player and type(player) == "table" then
+						local account_id = nil
+						if player.account_id then
+							account_id = player:account_id()
+						end
+						
+						if account_id then
+							local name = "Unknown"
+							if player.character_name then
+								name = player:character_name() or name
+							elseif player.name then
+								name = player:name() or name
+							end
+							
+							table.insert(players, {
+								account_id = account_id,
+								name = name
+							})
+						end
+					end
+				end
+			end
 		end
-		for _, account_data in pairs(mod.damage_by_category or {}) do
-			dmg_sum = dmg_sum + (account_data[key] or 0)
-		end
-
-		total_kills = total_kills + kills_sum
-		total_damage = total_damage + dmg_sum
-
-		table.insert(lines, string.format("%s: %s%d%s (%s%s%s)", label, kills_color, kills_sum, reset, damage_color, mod.format_number(dmg_sum), reset))
 	end
 
-	table.insert(lines, 1, string.format("TOTAL: %s%d%s (%s%s%s)", kills_color, total_kills, reset, damage_color, mod.format_number(total_damage), reset))
+	-- Ограничиваем до 4 игроков
+	if #players > 4 then
+		local temp = {}
+		for i = 1, 4 do
+			if players[i] then
+				table.insert(temp, players[i])
+			end
+		end
+		players = temp
+	end
+
+	local lines = {}
+	
+	-- Заголовок: название категории + столбцы для каждого игрока
+	local header = string.format("%-20s", "Category")
+	for i = 1, 4 do
+		if players[i] and players[i].name then
+			local name = players[i].name
+			if string.len(name) > 10 then
+				name = string.sub(name, 1, 10)
+			end
+			header = header .. string.format("  %-15s", name)
+		else
+			header = header .. string.format("  %-15s", "")
+		end
+	end
+	table.insert(lines, header)
+	table.insert(lines, string.rep("-", 80))
+
+	-- Строки для каждой категории
+	for _, data in ipairs(categories) do
+		local key, label = data[1], data[2]
+		local row = string.format("%-20s", label)
+		
+		for i = 1, 4 do
+			if players[i] and players[i].account_id then
+				local account_id = players[i].account_id
+				local kills = 0
+				local dmg = 0
+				
+				if mod.kills_by_category and mod.kills_by_category[account_id] and mod.kills_by_category[account_id][key] then
+					kills = mod.kills_by_category[account_id][key] or 0
+				end
+				
+				if mod.damage_by_category and mod.damage_by_category[account_id] and mod.damage_by_category[account_id][key] then
+					dmg = mod.damage_by_category[account_id][key] or 0
+				end
+				
+				row = row .. string.format("  %5d/%-10s", kills, mod.format_number(dmg))
+			else
+				row = row .. string.format("  %-15s", "")
+			end
+		end
+		
+		table.insert(lines, row)
+	end
+
+	-- Строка TOTAL
+	local total_row = string.format("%-20s", "TOTAL")
+	for i = 1, 4 do
+		if players[i] and players[i].account_id then
+			local account_id = players[i].account_id
+			local total_kills = 0
+			local total_dmg = 0
+			
+			if mod.player_kills and mod.player_kills[account_id] then
+				total_kills = mod.player_kills[account_id] or 0
+			end
+			
+			if mod.player_damage and mod.player_damage[account_id] then
+				total_dmg = mod.player_damage[account_id] or 0
+			end
+			
+			total_row = total_row .. string.format("  %5d/%-10s", total_kills, mod.format_number(total_dmg))
+		else
+			total_row = total_row .. string.format("  %-15s", "")
+		end
+	end
+	table.insert(lines, string.rep("-", 80))
+	table.insert(lines, total_row)
 
 	return table.concat(lines, "\n")
 end
 
 -- Добавляем слой в тактический оверлей (TAB)
 mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_overlay_definitions", function(instance)
-	local width = 800
-	local height = 500
+	local width = 1000
+	local height = 600
 	instance.scenegraph_definition.killsboard = {
 		vertical_alignment = "center",
 		parent = "screen",
@@ -77,7 +171,7 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 				vertical_alignment = "top",
 				horizontal_alignment = "left",
 				font_type = "machine_medium",
-				font_size = 22,
+				font_size = 16,
 				text_horizontal_alignment = "left",
 				text_vertical_alignment = "top",
 				text_color = UIHudSettings.color_tint_1,
