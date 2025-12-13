@@ -61,9 +61,11 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 		{
 			pass_type = "rect",
 			style = {
+				vertical_alignment = "center",
+				horizontal_alignment = "center",
 				color = {160, 10, 10, 10},
 				size = {width, height},
-				offset = {-width / 2, -height / 2, 0},
+				offset = {0, 0, 0},
 			},
 		},
 		{
@@ -72,13 +74,14 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 			style_id = "text",
 			value = "",
 			style = {
+				vertical_alignment = "top",
+				horizontal_alignment = "left",
 				font_type = "machine_medium",
 				font_size = 22,
 				text_horizontal_alignment = "left",
 				text_vertical_alignment = "top",
 				text_color = UIHudSettings.color_tint_1,
-				-- Отступы внутрь фона
-				offset = {-width / 2 + 10, height / 2 - 20, 1},
+				offset = {10, -20, 1},
 				size = {width - 20, height - 40},
 			},
 		},
