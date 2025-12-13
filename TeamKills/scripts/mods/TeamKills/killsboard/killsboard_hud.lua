@@ -4,13 +4,57 @@ local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 
 local categories = {
-	{"melee_lessers", "Melee lessers"},
-	{"ranged_lessers", "Ranged lessers"},
-	{"melee_elites", "Melee elites"},
-	{"ranged_elites", "Ranged elites"},
-	{"specials", "Specials"},
-	{"disablers", "Disablers"},
-	{"bosses", "Bosses"},
+	-- Melee lessers
+	{"chaos_newly_infected", "Chaos Newly Infected"},
+	{"chaos_poxwalker", "Chaos Poxwalker"},
+	{"chaos_mutated_poxwalker", "Chaos Mutated Poxwalker"},
+	{"chaos_armored_infected", "Chaos Armored Infected"},
+	{"cultist_melee", "Cultist Melee"},
+	{"cultist_ritualist", "Cultist Ritualist"},
+	{"renegade_melee", "Renegade Melee"},
+	-- Ranged lessers
+	{"chaos_lesser_mutated_poxwalker", "Chaos Lesser Mutated Poxwalker"},
+	{"cultist_assault", "Cultist Assault"},
+	{"renegade_assault", "Renegade Assault"},
+	{"renegade_rifleman", "Renegade Rifleman"},
+	-- Melee elites
+	{"cultist_berzerker", "Cultist Berzerker"},
+	{"renegade_berzerker", "Renegade Berzerker"},
+	{"renegade_executor", "Renegade Executor"},
+	{"chaos_ogryn_bulwark", "Chaos Ogryn Bulwark"},
+	{"chaos_ogryn_executor", "Chaos Ogryn Executor"},
+	-- Ranged elites
+	{"cultist_gunner", "Cultist Gunner"},
+	{"renegade_gunner", "Renegade Gunner"},
+	{"renegade_plasma_gunner", "Renegade Plasma Gunner"},
+	{"renegade_radio_operator", "Renegade Radio Operator"},
+	{"cultist_shocktrooper", "Cultist Shocktrooper"},
+	{"renegade_shocktrooper", "Renegade Shocktrooper"},
+	{"chaos_ogryn_gunner", "Chaos Ogryn Gunner"},
+	-- Specials
+	{"chaos_poxwalker_bomber", "Chaos Poxwalker Bomber"},
+	{"renegade_grenadier", "Renegade Grenadier"},
+	{"cultist_grenadier", "Cultist Grenadier"},
+	{"renegade_sniper", "Renegade Sniper"},
+	{"renegade_flamer", "Renegade Flamer"},
+	{"renegade_flamer_mutator", "Renegade Flamer Mutator"},
+	{"cultist_flamer", "Cultist Flamer"},
+	-- Disablers
+	{"chaos_hound", "Chaos Hound"},
+	{"chaos_hound_mutator", "Chaos Hound Mutator"},
+	{"cultist_mutant", "Cultist Mutant"},
+	{"cultist_mutant_mutator", "Cultist Mutant Mutator"},
+	{"renegade_netgunner", "Renegade Netgunner"},
+	-- Bosses
+	{"chaos_beast_of_nurgle", "Chaos Beast of Nurgle"},
+	{"chaos_daemonhost", "Chaos Daemonhost"},
+	{"chaos_spawn", "Chaos Spawn"},
+	{"chaos_plague_ogryn", "Chaos Plague Ogryn"},
+	{"chaos_plague_ogryn_sprayer", "Chaos Plague Ogryn Sprayer"},
+	{"renegade_captain", "Renegade Captain"},
+	{"cultist_captain", "Cultist Captain"},
+	{"renegade_twin_captain", "Renegade Twin Captain"},
+	{"renegade_twin_captain_two", "Renegade Twin Captain Two"},
 }
 
 local function build_lines()

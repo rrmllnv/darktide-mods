@@ -19,14 +19,19 @@ mod.killed_units = {}
 mod.player_killstreak = {}
 mod.player_killstreak_timer = {}
 mod.killstreak_duration_seconds = 2.5
--- Категории целей (из ovenproof_scoreboard_plugin)
+mod.last_enemy_interaction = {} -- Отслеживание последнего взаимодействия с врагом
+-- Категории целей (из ovenproof_scoreboard_plugin и Power_DI)
 mod.melee_lessers = {
 	"chaos_newly_infected",
 	"chaos_poxwalker",
+	"chaos_mutated_poxwalker",
+	"chaos_armored_infected",
 	"cultist_melee",
+	"cultist_ritualist",
 	"renegade_melee",
 }
 mod.ranged_lessers = {
+	"chaos_lesser_mutated_poxwalker",
 	"cultist_assault",
 	"renegade_assault",
 	"renegade_rifleman",
@@ -41,6 +46,8 @@ mod.melee_elites = {
 mod.ranged_elites = {
 	"cultist_gunner",
 	"renegade_gunner",
+	"renegade_plasma_gunner",
+	"renegade_radio_operator",
 	"cultist_shocktrooper",
 	"renegade_shocktrooper",
 	"chaos_ogryn_gunner",
@@ -51,12 +58,14 @@ mod.specials = {
 	"cultist_grenadier",
 	"renegade_sniper",
 	"renegade_flamer",
+	"renegade_flamer_mutator",
 	"cultist_flamer",
 }
 mod.disablers = {
 	"chaos_hound",
 	"chaos_hound_mutator",
 	"cultist_mutant",
+	"cultist_mutant_mutator",
 	"renegade_netgunner",
 }
 mod.bosses = {
@@ -66,6 +75,7 @@ mod.bosses = {
 	"chaos_plague_ogryn",
 	"chaos_plague_ogryn_sprayer",
 	"renegade_captain",
+	"cultist_captain",
 	"renegade_twin_captain",
 	"renegade_twin_captain_two",
 }
@@ -166,6 +176,7 @@ local function recreate_hud()
     mod.killed_units = {}
     mod.player_killstreak = {}
     mod.player_killstreak_timer = {}
+    mod.last_enemy_interaction = {}
     mod.kills_by_category = {}
     mod.damage_by_category = {}
     mod.display_mode = mod:get("display_mode") or 1
@@ -288,28 +299,35 @@ mod.get_killstreak_label = function(account_id)
 	return tostring(count)
 end
 
-local function categorize_breed(breed_name)
+local function is_valid_breed(breed_name)
 	if not breed_name then
-		return nil
+		return false
 	end
 
-	local lists = {
-		melee_lessers = mod.melee_lessers,
-		ranged_lessers = mod.ranged_lessers,
-		melee_elites = mod.melee_elites,
-		ranged_elites = mod.ranged_elites,
-		specials = mod.specials,
-		disablers = mod.disablers,
-		bosses = mod.bosses,
-	}
-
-	for category, list in pairs(lists) do
-		if table.find(list, breed_name) then
-			return category
-		end
+	local all_breeds = {}
+	for _, breed in ipairs(mod.melee_lessers or {}) do
+		all_breeds[breed] = true
+	end
+	for _, breed in ipairs(mod.ranged_lessers or {}) do
+		all_breeds[breed] = true
+	end
+	for _, breed in ipairs(mod.melee_elites or {}) do
+		all_breeds[breed] = true
+	end
+	for _, breed in ipairs(mod.ranged_elites or {}) do
+		all_breeds[breed] = true
+	end
+	for _, breed in ipairs(mod.specials or {}) do
+		all_breeds[breed] = true
+	end
+	for _, breed in ipairs(mod.disablers or {}) do
+		all_breeds[breed] = true
+	end
+	for _, breed in ipairs(mod.bosses or {}) do
+		all_breeds[breed] = true
 	end
 
-	return nil
+	return all_breeds[breed_name] == true
 end
 
 -- Получаем игрока по юниту (проверяем всех игроков)
@@ -337,6 +355,16 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
 	attack_result, attack_type, damage_efficiency, ...)
 
     local player = mod:player_from_unit(attacking_unit)
+    
+    -- Если attacking_unit не игрок (например, при взрыве Pox Burster), 
+    -- проверяем last_enemy_interaction для этого врага
+    if not player and attacked_unit then
+        if mod.last_enemy_interaction[attacked_unit] then
+            local last_player_unit = mod.last_enemy_interaction[attacked_unit]
+            player = mod:player_from_unit(last_player_unit)
+        end
+    end
+    
     if player then
         local unit_data_extension = ScriptUnit.has_extension(attacked_unit, "unit_data_system")
         local breed_or_nil = unit_data_extension and unit_data_extension:breed()
@@ -344,6 +372,10 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
         
         if target_is_minion then
             local account_id = player:account_id() or player:name() or "Player"
+            
+            -- Сохраняем последнее взаимодействие с врагом (как в scoreboard)
+            mod.last_enemy_interaction[attacked_unit] = attacking_unit
+            
             local unit_health_extension = ScriptUnit.has_extension(attacked_unit, "health_system")
             
             -- Логика подсчёта урона из Power_DI
@@ -364,15 +396,19 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                 end
                 
                 -- Килл: считаем один раз на юнит
-                if not mod.killed_units[attacked_unit] then
-                    mod.killed_units[attacked_unit] = true
+                -- Используем комбинацию unit + breed_name для более надежного отслеживания
+                local breed_name = breed_or_nil and breed_or_nil.name
+                local unit_key = attacked_unit
+                
+                -- Дополнительная проверка: если unit уже был удален, используем breed_name как ключ
+                if not mod.killed_units[unit_key] then
+                    mod.killed_units[unit_key] = true
                     mod.add_to_killcounter(account_id)
                     mod.add_to_killstreak_counter(account_id)
 
-                    local category = categorize_breed(breed_or_nil.name)
-                    if category then
+                    if breed_name and is_valid_breed(breed_name) then
                         mod.kills_by_category[account_id] = mod.kills_by_category[account_id] or {}
-                        mod.kills_by_category[account_id][category] = (mod.kills_by_category[account_id][category] or 0) + 1
+                        mod.kills_by_category[account_id][breed_name] = (mod.kills_by_category[account_id][breed_name] or 0) + 1
                     end
                 end
                 
@@ -384,10 +420,10 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
             if health_damage > 0 then
                 mod.add_to_damage(account_id, health_damage)
 
-                local category = categorize_breed(breed_or_nil and breed_or_nil.name)
-                if category then
+                local breed_name = breed_or_nil and breed_or_nil.name
+                if breed_name and is_valid_breed(breed_name) then
                     mod.damage_by_category[account_id] = mod.damage_by_category[account_id] or {}
-                    mod.damage_by_category[account_id][category] = (mod.damage_by_category[account_id][category] or 0) + math.floor(health_damage)
+                    mod.damage_by_category[account_id][breed_name] = (mod.damage_by_category[account_id][breed_name] or 0) + math.floor(health_damage)
                 end
             end
         end
