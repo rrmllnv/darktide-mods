@@ -188,58 +188,6 @@ local widget_definitions = {
 				end,
 			},
 			{
-				value = "content/ui/materials/frames/dropshadow_medium",
-				pass_type = "texture",
-				style_id = "hit_indicator",
-				style = {
-					horizontal_alignment = "center",
-					scale_to_material = true,
-					vertical_alignment = "center",
-					color = color_copy({}, UIHudSettings.color_tint_6, 0),
-					size_addition = {
-						20,
-						20,
-					},
-					default_size_addition = {
-						20,
-						20,
-					},
-					offset = {
-						0,
-						0,
-						1,
-					},
-				},
-				visibility_function = function (content)
-					local show_background = mod.show_background or mod:get("show_background") or 1
-					return content.visible and show_background == 1
-				end,
-			},
-			{
-				value = "content/ui/materials/frames/inner_shadow_medium",
-				pass_type = "texture",
-				style_id = "hit_indicator_armor_break",
-				style = {
-					horizontal_alignment = "center",
-					scale_to_material = true,
-					vertical_alignment = "center",
-					color = color_copy({}, UIHudSettings.color_tint_6, 0),
-					size_addition = {
-						0,
-						0,
-					},
-					offset = {
-						0,
-						0,
-						1,
-					},
-				},
-				visibility_function = function (content)
-					local show_background = mod.show_background or mod:get("show_background") or 1
-					return content.visible and show_background == 1
-				end,
-			},
-			{
 				value_id = "text",
 				style_id = "text",
 				pass_type = "text",
