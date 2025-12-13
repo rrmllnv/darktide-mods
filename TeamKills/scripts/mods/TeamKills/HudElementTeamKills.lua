@@ -32,7 +32,7 @@ local base_size = {width, get_default_panel_height()}
 local function apply_panel_height(self, panel_height)
 	local width = base_size[1]
 
-	self:_set_scenegraph_size("teamKillContainer", width, panel_height)
+	self:_set_scenegraph_size("TeamKillsContainer", width, panel_height)
 
 	local widget = self._widgets_by_name.TeamKillsWidget
 	local styles = widget.style
@@ -111,7 +111,7 @@ end
 
 local scenegraph_definition = {
 	screen = UIWorkspaceSettings.screen,
-	teamKillContainer = {
+TeamKillsContainer = {
 		parent = "screen",
 		scale = "fit",
 		vertical_alignment = "bottom",
@@ -246,7 +246,7 @@ local widget_definitions = {
 				style = get_team_kill_style(),
 			},
 		},
-		"teamKillContainer"
+		"TeamKillsContainer"
 	),
 }
 
