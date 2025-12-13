@@ -4,6 +4,15 @@ local KillsboardViewSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/k
 
 local base_z = 0
 local FONT_SIZE = KillsboardViewSettings.killsboard_font_size
+-- Вычисляем центрирование фона относительно столбцов K и D
+-- Для каждого игрока: центр столбцов K и D = killsboard_column_header_width + offset_player + killsboard_column_width / 2
+-- Начало фона = центр - bg_width / 2
+local function get_bg_offset(player_index)
+    local k_start = KillsboardViewSettings.killsboard_column_header_width + (KillsboardViewSettings.killsboard_column_player_width * (player_index - 1))
+    local d_end = k_start + KillsboardViewSettings.killsboard_column_width
+    local center = (k_start + d_end) / 2
+    return center - (KillsboardViewSettings.killsboard_column_player_bg_width / 2)
+end
 
 local blueprints = {
     killsboard_row = {
@@ -76,8 +85,8 @@ local blueprints = {
                     disabled_color = Color.black(255, true),
                     default_color = Color.black(255, true),
                     hover_color = Color.black(255, true),
-                    offset = {KillsboardViewSettings.killsboard_column_header_width, 0, base_z},
-                    size = {KillsboardViewSettings.killsboard_column_player_width, KillsboardViewSettings.killsboard_row_height},
+                    offset = {get_bg_offset(1), 0, base_z},
+                    size = {KillsboardViewSettings.killsboard_column_player_bg_width, KillsboardViewSettings.killsboard_row_height},
                     visible = false,
                 }
             },
@@ -127,8 +136,8 @@ local blueprints = {
                     disabled_color = Color.black(200, true),
                     default_color = Color.black(200, true),
                     hover_color = Color.black(200, true),
-                    offset = {KillsboardViewSettings.killsboard_column_header_width + KillsboardViewSettings.killsboard_column_player_width, 0, base_z},
-                    size = {KillsboardViewSettings.killsboard_column_player_width, KillsboardViewSettings.killsboard_row_height},
+                    offset = {get_bg_offset(2), 0, base_z},
+                    size = {KillsboardViewSettings.killsboard_column_player_bg_width, KillsboardViewSettings.killsboard_row_height},
                     visible = false,
                 }
             },
@@ -178,8 +187,8 @@ local blueprints = {
                     disabled_color = Color.black(255, true),
                     default_color = Color.black(255, true),
                     hover_color = Color.black(255, true),
-                    offset = {KillsboardViewSettings.killsboard_column_header_width + KillsboardViewSettings.killsboard_column_player_width * 2, 0, base_z},
-                    size = {KillsboardViewSettings.killsboard_column_player_width, KillsboardViewSettings.killsboard_row_height},
+                    offset = {get_bg_offset(3), 0, base_z},
+                    size = {KillsboardViewSettings.killsboard_column_player_bg_width, KillsboardViewSettings.killsboard_row_height},
                     visible = false,
                 }
             },
@@ -229,8 +238,8 @@ local blueprints = {
                     disabled_color = Color.black(200, true),
                     default_color = Color.black(200, true),
                     hover_color = Color.black(200, true),
-                    offset = {KillsboardViewSettings.killsboard_column_header_width + KillsboardViewSettings.killsboard_column_player_width * 3, 0, base_z},
-                    size = {KillsboardViewSettings.killsboard_column_player_width, KillsboardViewSettings.killsboard_row_height},
+                    offset = {get_bg_offset(4), 0, base_z},
+                    size = {KillsboardViewSettings.killsboard_column_player_bg_width, KillsboardViewSettings.killsboard_row_height},
                     visible = false,
                 }
             },

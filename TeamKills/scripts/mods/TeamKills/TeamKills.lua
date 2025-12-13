@@ -182,6 +182,8 @@ local function recreate_hud()
     mod.damage_by_category = {}
     mod.last_kill_time_by_category = {}  -- {account_id: {category_key: time}}
     mod.highlighted_categories = {}  -- {account_id: {category_key: true}} - категории для подсветки
+    mod.killstreak_kills_by_category = {}  -- {account_id: {category_key: count}} - убийства в текущем killstreak
+    mod.killstreak_damage_by_category = {}  -- {account_id: {category_key: damage}} - урон в текущем killstreak
     mod.display_mode = mod:get("display_mode") or 1
     mod.hud_counter_mode = mod:get("hud_counter_mode") or 1
     mod.show_killstreaks = mod:get("show_killstreaks") or 1
@@ -270,9 +272,11 @@ mod.add_to_killstreak_counter = function(account_id)
 	mod.player_killstreak[account_id] = killstreak_before + 1
 	mod.player_killstreak_timer[account_id] = 0
 	
-	-- Если killstreak начал собираться заново (был 0, стал 1), очищаем массив подсвечиваемых категорий для этого игрока
+	-- Если killstreak начал собираться заново (был 0, стал 1), очищаем массивы подсвечиваемых категорий и killstreak статистики для этого игрока
 	if killstreak_before == 0 then
 		mod.highlighted_categories[account_id] = {}
+		mod.killstreak_kills_by_category[account_id] = {}
+		mod.killstreak_damage_by_category[account_id] = {}
 	end
 end
 
@@ -424,11 +428,14 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                         mod.last_kill_time_by_category[account_id] = mod.last_kill_time_by_category[account_id] or {}
                         mod.last_kill_time_by_category[account_id][breed_name] = Managers.time:time("gameplay")
                         
-                        -- Если killstreak активен, добавляем категорию в массив для подсветки
+                        -- Если killstreak активен, добавляем категорию в массив для подсветки и увеличиваем счетчик killstreak убийств
                         local current_killstreak = mod.player_killstreak[account_id] or 0
                         if current_killstreak > 0 then
                             mod.highlighted_categories[account_id] = mod.highlighted_categories[account_id] or {}
                             mod.highlighted_categories[account_id][breed_name] = true
+                            
+                            mod.killstreak_kills_by_category[account_id] = mod.killstreak_kills_by_category[account_id] or {}
+                            mod.killstreak_kills_by_category[account_id][breed_name] = (mod.killstreak_kills_by_category[account_id][breed_name] or 0) + 1
                         end
                     end
                 end
@@ -445,6 +452,13 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                 if breed_name and is_valid_breed(breed_name) then
                     mod.damage_by_category[account_id] = mod.damage_by_category[account_id] or {}
                     mod.damage_by_category[account_id][breed_name] = (mod.damage_by_category[account_id][breed_name] or 0) + math.floor(health_damage)
+                    
+                    -- Если killstreak активен, увеличиваем счетчик killstreak урона
+                    local current_killstreak = mod.player_killstreak[account_id] or 0
+                    if current_killstreak > 0 then
+                        mod.killstreak_damage_by_category[account_id] = mod.killstreak_damage_by_category[account_id] or {}
+                        mod.killstreak_damage_by_category[account_id][breed_name] = (mod.killstreak_damage_by_category[account_id][breed_name] or 0) + math.floor(health_damage)
+                    end
                 end
             end
         end
