@@ -164,7 +164,7 @@ return {
 		ru = "Прозрачность",
 	},
 	show_killstreaks = {
-		en = "Show killstreak",
+		en = "Show kill streak",
 		ru = "Показывать серию убийств",
 	},
 	show_killstreaks_show = {
@@ -174,6 +174,22 @@ return {
 	show_killstreaks_hide = {
 		en = "Hide",
 		ru = "Скрыть",
+	},
+	killstreak_difficulty = {
+		en = "Kill streak difficulty",
+		ru = "Сложность серии убийств",
+	},
+	killstreak_difficulty_recruit = {
+		en = "Recruit (4s)",
+		ru = "Новобранец (4 c)",
+	},
+	killstreak_difficulty_veteran = {
+		en = "Veteran (2.5s)",
+		ru = "Закалённый (2.5 c)",
+	},
+	killstreak_difficulty_ruthless = {
+		en = "Ruthless (1s)",
+		ru = "Безжалостный (1 c)",
 	},
 }
 

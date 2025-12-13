@@ -139,6 +139,16 @@ return {
 					{text = "show_killstreaks_hide", value = 2},
 				},
 			},
+			{
+				setting_id = "killstreak_difficulty",
+				type = "dropdown",
+				default_value = 2,
+				options = {
+					{text = "killstreak_difficulty_recruit", value = 1},
+					{text = "killstreak_difficulty_veteran", value = 2},
+					{text = "killstreak_difficulty_ruthless", value = 3},
+				},
+			},
         },
 	},
 }

@@ -111,7 +111,7 @@ end
 
 local scenegraph_definition = {
 	screen = UIWorkspaceSettings.screen,
-TeamKillsContainer = {
+	TeamKillsContainer = {
 		parent = "screen",
 		scale = "fit",
 		vertical_alignment = "bottom",
@@ -146,6 +146,18 @@ local function get_team_kill_style()
 			0,
 		},
 	}
+end
+
+local function get_streak_style()
+	local style = get_team_kill_style()
+	style.text_horizontal_alignment = "left"
+	style.offset = {
+		BORDER_PADDING - 40,
+		BORDER_PADDING,
+		0,
+	}
+	style.text_color = table.clone(UIHudSettings.color_tint_6)
+	return style
 end
 
 local function calculate_panel_height(line_count)
@@ -188,10 +200,18 @@ local widget_definitions = {
 				end,
 			},
 			{
+				value = "",
 				value_id = "text",
 				style_id = "text",
 				pass_type = "text",
 				style = get_team_kill_style(),
+			},
+			{
+				value = "",
+				value_id = "streak",
+				style_id = "streak",
+				pass_type = "text",
+				style = get_streak_style(),
 			},
 		},
 		"TeamKillsContainer"
@@ -275,7 +295,8 @@ HudElementTeamKills.update = function(self, dt, t, ui_renderer, render_settings,
     end)
 	
     -- Формируем текст с учетом настроек
-	local lines = {}
+    local lines = {}
+    local streak_lines = {}
     local mode = mod.hud_counter_mode or mod:get("hud_counter_mode") or 1
     local display_mode = mod.display_mode or mod:get("display_mode") or 1
     local team_summary_setting = mod.show_team_summary or mod:get("show_team_summary") or 1
@@ -291,16 +312,22 @@ HudElementTeamKills.update = function(self, dt, t, ui_renderer, render_settings,
     if show_team_summary then
         if mode == 1 then
             table.insert(lines, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " (" .. damage_color .. mod.format_number(total_damage) .. reset_color .. ")")
+            table.insert(streak_lines, "")
         elseif mode == 2 then
             table.insert(lines, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color)
+            table.insert(streak_lines, "")
         elseif mode == 3 then
             table.insert(lines, "TEAM DAMAGE: " .. damage_color .. mod.format_number(total_damage) .. reset_color)
+            table.insert(streak_lines, "")
         elseif mode == 4 then
             table.insert(lines, "TEAM LAST DAMAGE: " .. last_damage_color .. mod.format_number(total_last_damage) .. reset_color)
+            table.insert(streak_lines, "")
         elseif mode == 5 then
             table.insert(lines, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " [" .. last_damage_color .. mod.format_number(total_last_damage) .. reset_color .. "]")
+            table.insert(streak_lines, "")
         elseif mode == 6 then
             table.insert(lines, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " (" .. damage_color .. mod.format_number(total_damage) .. reset_color .. ") [" .. last_damage_color .. mod.format_number(total_last_damage) .. reset_color .. "]")
+            table.insert(streak_lines, "")
         end
     end
 
@@ -318,10 +345,7 @@ HudElementTeamKills.update = function(self, dt, t, ui_renderer, render_settings,
             local last_dmg = math.floor(player.last_damage or 0)
             local streak_label = mod.get_killstreak_label(player.account_id)
             local name = player.name
-
-            if streak_label then
-                name = "+" .. streak_label .. "  " .. name
-            end
+            table.insert(streak_lines, streak_label and ("+" .. streak_label) or "")
 
             if mode == 1 then
                 table.insert(lines, name .. ": " .. kills_color .. player.kills .. reset_color .. " (" .. damage_color .. mod.format_number(dmg) .. reset_color .. ")")
@@ -351,8 +375,8 @@ HudElementTeamKills.update = function(self, dt, t, ui_renderer, render_settings,
 
     apply_panel_height(self, panel_height)
 
-    local display_text = table.concat(lines, "\n")
-    self._widgets_by_name.TeamKillsWidget.content.text = display_text
+    self._widgets_by_name.TeamKillsWidget.content.text = table.concat(lines, "\n")
+    self._widgets_by_name.TeamKillsWidget.content.streak = table.concat(streak_lines, "\n")
 end
 
 return HudElementTeamKills

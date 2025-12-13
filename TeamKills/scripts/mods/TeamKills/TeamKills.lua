@@ -18,7 +18,7 @@ mod.player_last_damage = {}
 mod.killed_units = {}
 mod.player_killstreak = {}
 mod.player_killstreak_timer = {}
-mod.killstreak_duration_seconds = 1
+mod.killstreak_duration_seconds = 2.5
 mod.display_mode = mod:get("display_mode") or 1
 mod.show_background = mod:get("show_background") or 1
 mod.opacity = mod:get("opacity") or 100
@@ -117,6 +117,14 @@ local function recreate_hud()
     mod.display_mode = mod:get("display_mode") or 1
     mod.hud_counter_mode = mod:get("hud_counter_mode") or 1
     mod.show_killstreaks = mod:get("show_killstreaks") or 1
+    local ks_diff = mod:get("killstreak_difficulty") or 2
+    if ks_diff == 1 then
+        mod.killstreak_duration_seconds = 4
+    elseif ks_diff == 2 then
+        mod.killstreak_duration_seconds = 2.5
+    elseif ks_diff == 3 then
+        mod.killstreak_duration_seconds = 1
+    end
     mod.kills_color = mod:get("kills_color") or "white"
     mod.damage_color = mod:get("damage_color") or "orange"
     mod.last_damage_color = mod:get("last_damage_color") or "orange"
@@ -135,6 +143,14 @@ mod.on_setting_changed = function()
     mod.hud_counter_mode = mod:get("hud_counter_mode") or 1
     mod.show_team_summary = mod:get("show_team_summary") or 1
     mod.show_killstreaks = mod:get("show_killstreaks") or 1
+    local ks_diff = mod:get("killstreak_difficulty") or 2
+    if ks_diff == 1 then
+        mod.killstreak_duration_seconds = 4
+    elseif ks_diff == 2 then
+        mod.killstreak_duration_seconds = 2.5
+    elseif ks_diff == 3 then
+        mod.killstreak_duration_seconds = 1
+    end
     mod.kills_color = mod:get("kills_color") or "white"
     mod.damage_color = mod:get("damage_color") or "orange"
     mod.last_damage_color = mod:get("last_damage_color") or "orange"
