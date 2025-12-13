@@ -205,7 +205,7 @@ end
 
 mod.on_all_mods_loaded = function()
 	recreate_hud()
-mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killsboard_hud")
+	mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killsboard_hud")
 end
 
 mod.on_setting_changed = function()

@@ -41,7 +41,7 @@ local blueprints = {
             },
             -- Player 1: K and D
             {value_id = "k1", -- 2 = Kills for player 1
-                value = "k1",
+                value = "",
                 pass_type = "text",
                 style = {
                     offset = {KillsboardViewSettings.killsboard_column_header_width, 0, base_z + 1},
@@ -59,7 +59,7 @@ local blueprints = {
                 custom = true,
             },
             {value_id = "d1", -- 3 = Damage for player 1
-                value = "d1",
+                value = "",
                 pass_type = "text",
                 style = {
                     offset = {KillsboardViewSettings.killsboard_column_header_width + KillsboardViewSettings.killsboard_column_width, 0, base_z + 1},
