@@ -181,6 +181,7 @@ local function recreate_hud()
     mod.kills_by_category = {}
     mod.damage_by_category = {}
     mod.last_kill_time_by_category = {}  -- {account_id: {category_key: time}}
+    mod.highlighted_categories = {}  -- {account_id: {category_key: true}} - категории для подсветки
     mod.display_mode = mod:get("display_mode") or 1
     mod.hud_counter_mode = mod:get("hud_counter_mode") or 1
     mod.show_killstreaks = mod:get("show_killstreaks") or 1
@@ -265,8 +266,14 @@ mod.add_to_killstreak_counter = function(account_id)
 		return
 	end
 
-	mod.player_killstreak[account_id] = (mod.player_killstreak[account_id] or 0) + 1
+	local killstreak_before = mod.player_killstreak[account_id] or 0
+	mod.player_killstreak[account_id] = killstreak_before + 1
 	mod.player_killstreak_timer[account_id] = 0
+	
+	-- Если killstreak начал собираться заново (был 0, стал 1), очищаем массив подсвечиваемых категорий для этого игрока
+	if killstreak_before == 0 then
+		mod.highlighted_categories[account_id] = {}
+	end
 end
 
 mod.update_killstreak_timers = function(dt)
@@ -280,6 +287,7 @@ mod.update_killstreak_timers = function(dt)
 		if timer > mod.killstreak_duration_seconds then
 			mod.player_killstreak[account_id] = 0
 			mod.player_killstreak_timer[account_id] = nil
+			-- НЕ очищаем highlighted_categories - строки остаются подсвеченными
 		else
 			mod.player_killstreak_timer[account_id] = timer
 		end
@@ -415,6 +423,13 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                         -- Сохраняем время последнего убийства для этой категории
                         mod.last_kill_time_by_category[account_id] = mod.last_kill_time_by_category[account_id] or {}
                         mod.last_kill_time_by_category[account_id][breed_name] = Managers.time:time("gameplay")
+                        
+                        -- Если killstreak активен, добавляем категорию в массив для подсветки
+                        local current_killstreak = mod.player_killstreak[account_id] or 0
+                        if current_killstreak > 0 then
+                            mod.highlighted_categories[account_id] = mod.highlighted_categories[account_id] or {}
+                            mod.highlighted_categories[account_id][breed_name] = true
+                        end
                     end
                 end
                 
