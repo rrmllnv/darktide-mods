@@ -131,6 +131,35 @@ local function build_lines()
 	-- Строки для каждой категории
 	for _, data in ipairs(categories) do
 		local key, label = data[1], data[2]
+		
+		-- Проверяем, есть ли хотя бы одно убийство или урон у любого игрока для этой категории
+		local has_data = false
+		for i = 1, 4 do
+			if players[i] and players[i].account_id then
+				local account_id = players[i].account_id
+				local kills = 0
+				local dmg = 0
+				
+				if mod.kills_by_category and mod.kills_by_category[account_id] and mod.kills_by_category[account_id][key] then
+					kills = mod.kills_by_category[account_id][key] or 0
+				end
+				
+				if mod.damage_by_category and mod.damage_by_category[account_id] and mod.damage_by_category[account_id][key] then
+					dmg = mod.damage_by_category[account_id][key] or 0
+				end
+				
+				if kills > 0 or dmg > 0 then
+					has_data = true
+					break
+				end
+			end
+		end
+		
+		-- Пропускаем категорию, если нет убийств и урона
+		if not has_data then
+			goto continue
+		end
+		
 		local row = string.format("%-20s", label)
 		
 		for i = 1, 4 do
@@ -154,6 +183,7 @@ local function build_lines()
 		end
 		
 		table.insert(lines, row)
+		::continue::
 	end
 
 	-- Строка TOTAL
