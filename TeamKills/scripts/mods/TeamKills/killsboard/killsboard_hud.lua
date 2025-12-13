@@ -106,14 +106,14 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 		parent = "screen",
 		horizontal_alignment = "center",
 		size = {KillsboardViewSettings.killsboard_size[1], KillsboardViewSettings.killsboard_size[2]},
-		position = {base_x, 0, base_z}
+		position = {0, 0, base_z}
 	}
 	instance.scenegraph_definition.killsboard_rows = {
 		vertical_alignment = "top",
 		parent = "killsboard",
 		horizontal_alignment = "center",
 		size = {KillsboardViewSettings.killsboard_size[1], KillsboardViewSettings.killsboard_size[2] - 100},
-		position = {base_x, 40, base_z - 1}
+		position = {0, 40, base_z - 1}
 	}
 	instance.widget_definitions.killsboard = UIWidget.create_definition({
 		{
@@ -123,7 +123,7 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 				vertical_alignment = "center",
 				scale_to_material = true,
 				horizontal_alignment = "center",
-				offset = {base_x, 0, base_z},
+				offset = {0, 0, base_z},
 				size = {KillsboardViewSettings.killsboard_size[1] - 4, KillsboardViewSettings.killsboard_size[2]},
 				color = Color.black(255, true),
 				disabled_color = Color.black(255, true),
@@ -152,6 +152,14 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	-- Используем размер шрифта из settings
 	local font_size = header and _settings.killsboard_font_size_header or _settings.killsboard_font_size
 	
+	-- Вычисляем отступ для центрирования контента
+	-- Ширина контента: column_header_width (300) + column_player_width * 4 (130 * 4 = 520) = 820
+	-- Ширина строки: killsboard_size[1] (900)
+	-- Отступ слева: (900 - 820) / 2 = 40
+	local content_width = _settings.killsboard_column_header_width + (_settings.killsboard_column_player_width * 4)
+	local row_width = _settings.killsboard_size[1]
+	local left_offset = (row_width - content_width) / 2
+	
 	-- Map для столбцов: k1, d1, k2, d2, k3, d3, k4, d4
 	local k_pass_map = {2, 5, 8, 11}  -- k1, k2, k3, k4
 	local d_pass_map = {3, 6, 9, 12}  -- d1, d2, d3, d4
@@ -159,17 +167,39 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	
 	local players = loaded_players or get_players()
 	
-	-- Set styles
+	-- Set styles и применяем left_offset для центрирования
 	pass_template[1].style.font_size = font_size
 	pass_template[1].style.size[2] = row_height
+	pass_template[1].style.offset[1] = left_offset + 30  -- текст категории с отступом 30
+	
 	for _, i in pairs(k_pass_map) do
 		pass_template[i].style.font_size = font_size
 		pass_template[i].style.size[2] = row_height
+		-- offset будет установлен ниже для каждого столбца
 	end
 	for _, i in pairs(d_pass_map) do
 		pass_template[i].style.font_size = font_size
 		pass_template[i].style.size[2] = row_height
+		-- offset будет установлен ниже для каждого столбца
 	end
+	
+	-- Применяем left_offset ко всем столбцам
+	-- k1 (pass 2)
+	pass_template[2].style.offset[1] = left_offset + _settings.killsboard_column_header_width
+	-- d1 (pass 3)
+	pass_template[3].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_width
+	-- k2 (pass 5)
+	pass_template[5].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width
+	-- d2 (pass 6)
+	pass_template[6].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width + _settings.killsboard_column_width
+	-- k3 (pass 8)
+	pass_template[8].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 2
+	-- d3 (pass 9)
+	pass_template[9].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 2 + _settings.killsboard_column_width
+	-- k4 (pass 11)
+	pass_template[11].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 3
+	-- d4 (pass 12)
+	pass_template[12].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 3 + _settings.killsboard_column_width
 	
 	-- Header row
 	if header then
@@ -264,12 +294,62 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		end
 		pass_template[14].style.visible = false
 	else
-		-- Показываем фоны столбцов для всех строк данных
-		for _, i in pairs(background_pass_map) do
-			pass_template[i].style.size[2] = row_height
-			pass_template[i].style.visible = true
-		end
-		pass_template[14].style.visible = false
+		-- Определяем четность строки (visible_rows уже учитывает header и subheader)
+		local is_even_row = visible_rows % 2 == 0
+		
+		-- Цвета для четных и нечетных строк
+		-- ВСЯ строка (все столбцы) должна иметь один цвет
+		local color_dark = Color.black(200, true)  -- черный
+		local color_light = Color.black(100, true)  -- темно-серый
+		
+		-- Для четных строк: все столбцы - темный
+		-- Для нечетных строк: все столбцы - светлый
+		local row_color = is_even_row and color_dark or color_light
+		
+		-- bg_category (столбец категорий) - индекс 14
+		pass_template[14].style.size[2] = row_height
+		pass_template[14].style.visible = true
+		pass_template[14].style.color = row_color
+		pass_template[14].style.disabled_color = row_color
+		pass_template[14].style.default_color = row_color
+		pass_template[14].style.hover_color = row_color
+		pass_template[14].style.offset[1] = left_offset
+		
+		-- bg1 (столбец 1) - индекс 4
+		pass_template[4].style.size[2] = row_height
+		pass_template[4].style.visible = true
+		pass_template[4].style.color = row_color
+		pass_template[4].style.disabled_color = row_color
+		pass_template[4].style.default_color = row_color
+		pass_template[4].style.hover_color = row_color
+		pass_template[4].style.offset[1] = left_offset + _settings.killsboard_column_header_width
+		
+		-- bg2 (столбец 2) - индекс 7
+		pass_template[7].style.size[2] = row_height
+		pass_template[7].style.visible = true
+		pass_template[7].style.color = row_color
+		pass_template[7].style.disabled_color = row_color
+		pass_template[7].style.default_color = row_color
+		pass_template[7].style.hover_color = row_color
+		pass_template[7].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width
+		
+		-- bg3 (столбец 3) - индекс 10
+		pass_template[10].style.size[2] = row_height
+		pass_template[10].style.visible = true
+		pass_template[10].style.color = row_color
+		pass_template[10].style.disabled_color = row_color
+		pass_template[10].style.default_color = row_color
+		pass_template[10].style.hover_color = row_color
+		pass_template[10].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 2
+		
+		-- bg4 (столбец 4) - индекс 13
+		pass_template[13].style.size[2] = row_height
+		pass_template[13].style.visible = true
+		pass_template[13].style.color = row_color
+		pass_template[13].style.disabled_color = row_color
+		pass_template[13].style.default_color = row_color
+		pass_template[13].style.hover_color = row_color
+		pass_template[13].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 3
 	end
 	
 	-- Create widget

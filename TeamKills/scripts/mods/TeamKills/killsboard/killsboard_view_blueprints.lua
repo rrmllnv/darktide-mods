@@ -8,7 +8,7 @@ local FONT_SIZE = KillsboardViewSettings.killsboard_font_size
 local blueprints = {
     killsboard_row = {
         size = {
-            900,
+            KillsboardViewSettings.killsboard_size[1],
             KillsboardViewSettings.killsboard_row_height,
         },
         pass_template = {
@@ -17,7 +17,7 @@ local blueprints = {
                 pass_type = "text",
                 style = {
                     offset = {30, 0, base_z + 1},
-                    size = {KillsboardViewSettings.killsboard_column_header_width - 30, KillsboardViewSettings.killsboard_row_height},
+                    size = {KillsboardViewSettings.killsboard_column_header_width , KillsboardViewSettings.killsboard_row_height},
                     font_size = FONT_SIZE,
                     text_horizontal_alignment = "left",
                     text_vertical_alignment = "center",
@@ -234,17 +234,17 @@ local blueprints = {
                     visible = false,
                 }
             },
-            {value_id = "bg", -- 14 = Row background
+            {value_id = "bg_category", -- 14 = Category column background
                 value = "",
                 pass_type = "texture",
                 style = {
                     horizontal_alignment = "left",
-                    color = Color.terminal_frame(200, true),
-                    disabled_color = Color.terminal_frame(200, true),
-                    default_color = Color.terminal_frame(200, true),
-                    hover_color = Color.terminal_frame(200, true),
-                    size = {900 - 32, 0},
-                    offset = {16, 0, base_z},
+                    color = Color.black(255, true),
+                    disabled_color = Color.black(255, true),
+                    default_color = Color.black(255, true),
+                    hover_color = Color.black(255, true),
+                    size = {KillsboardViewSettings.killsboard_column_header_width, KillsboardViewSettings.killsboard_row_height},
+                    offset = {0, 0, base_z},
                     visible = false,
                 }
             },
