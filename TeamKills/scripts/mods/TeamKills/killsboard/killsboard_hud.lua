@@ -140,10 +140,10 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 				horizontal_alignment = "center",
 				offset = {base_x, 0, base_z + 100},
 				size = {KillsboardViewSettings.killsboard_size[1] - 24, KillsboardViewSettings.killsboard_size[2] - 28},
-				color = Color.terminal_grid_background(255, true),
-				disabled_color = Color.terminal_grid_background(255, true),
-				default_color = Color.terminal_grid_background(255, true),
-				hover_color = Color.terminal_grid_background(255, true),
+				color = Color.black(255, true),
+				disabled_color = Color.black(255, true),
+				default_color = Color.black(255, true),
+				hover_color = Color.black(255, true),
 			}
 		},
 		{
@@ -155,10 +155,10 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 				horizontal_alignment = "center",
 				offset = {base_x, 0, base_z},
 				size = {KillsboardViewSettings.killsboard_size[1] - 4, KillsboardViewSettings.killsboard_size[2]},
-				color = Color.terminal_grid_background(255, true),
-				disabled_color = Color.terminal_grid_background(255, true),
-				default_color = Color.terminal_grid_background(255, true),
-				hover_color = Color.terminal_grid_background(255, true),
+				color = Color.black(255, true),
+				disabled_color = Color.black(255, true),
+				default_color = Color.black(255, true),
+				hover_color = Color.black(255, true),
 			}
 		},
 	}, "killsboard")
