@@ -291,6 +291,13 @@ mod.update_killstreak_timers = function(dt)
 		if timer > mod.killstreak_duration_seconds then
 			mod.player_killstreak[account_id] = 0
 			mod.player_killstreak_timer[account_id] = nil
+			-- Очищаем killstreak статистику при окончании killstreak
+			if mod.killstreak_damage_by_category[account_id] then
+				--mod.killstreak_damage_by_category[account_id] = nil
+			end
+			if mod.killstreak_kills_by_category[account_id] then
+				--mod.killstreak_kills_by_category[account_id] = nil
+			end
 			-- НЕ очищаем highlighted_categories - строки остаются подсвеченными
 		else
 			mod.player_killstreak_timer[account_id] = timer
@@ -453,12 +460,9 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                     mod.damage_by_category[account_id] = mod.damage_by_category[account_id] or {}
                     mod.damage_by_category[account_id][breed_name] = (mod.damage_by_category[account_id][breed_name] or 0) + math.floor(health_damage)
                     
-                    -- Если killstreak активен, увеличиваем счетчик killstreak урона
-                    local current_killstreak = mod.player_killstreak[account_id] or 0
-                    if current_killstreak > 0 then
-                        mod.killstreak_damage_by_category[account_id] = mod.killstreak_damage_by_category[account_id] or {}
-                        mod.killstreak_damage_by_category[account_id][breed_name] = (mod.killstreak_damage_by_category[account_id][breed_name] or 0) + math.floor(health_damage)
-                    end
+                    -- увеличиваем счетчик killstreak урона
+					mod.killstreak_damage_by_category[account_id] = mod.killstreak_damage_by_category[account_id] or {}
+					mod.killstreak_damage_by_category[account_id][breed_name] = (mod.killstreak_damage_by_category[account_id][breed_name] or 0) + math.floor(health_damage)
                 end
             end
         end
