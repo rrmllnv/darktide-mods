@@ -6,7 +6,7 @@ local Managers = Managers
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 
 local KillsboardViewSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killsboard_view_settings")
-local base_z = 100
+local base_z = 100  -- Как в scoreboard
 local base_x = 0
 
 local categories = {
@@ -521,22 +521,6 @@ mod.adjust_killsboard_size = function(self, total_height, killsboard_widget, sce
 	killsboard_graph.size[2] = height
 end
 
-mod:hook(CLASS.HudElementTacticalOverlay, "_draw_widgets", function(func, self, dt, t, input_service, ui_renderer, render_settings, ...)
-	func(self, dt, t, input_service, ui_renderer, render_settings, ...)
-	
-	local killsboard_widget = self._widgets_by_name["killsboard"]
-	if killsboard_widget then
-		killsboard_widget.alpha_multiplier = self._alpha_multiplier or 1
-	end
-	
-	if self.killsboard_row_widgets then
-		for _, widget in pairs(self.killsboard_row_widgets) do
-			widget.alpha_multiplier = self._alpha_multiplier or 1
-			UIWidget.draw(widget, ui_renderer)
-		end
-	end
-end)
-
 local function _is_in_hub()
 	local game_mode_name = Managers.state.game_mode:game_mode_name()
 	local is_in_hub = game_mode_name == "hub"
@@ -548,6 +532,28 @@ local function _is_in_prologue_hub()
 	local is_in_hub = game_mode_name == "prologue_hub"
 	return is_in_hub
 end
+
+-- Хук для отрисовки виджетов после основной отрисовки, чтобы они были поверх всех элементов
+-- Делаем точно как в scoreboard - без изменения start_layer, просто рисуем после func()
+mod:hook(CLASS.HudElementTacticalOverlay, "_draw_widgets", function(func, self, dt, t, input_service, ui_renderer, render_settings, ...)
+	func(self, dt, t, input_service, ui_renderer, render_settings, ...)
+	
+	local killsboard_widget = self._widgets_by_name["killsboard"]
+	if killsboard_widget then
+		-- Устанавливаем alpha_multiplier для основного виджета (он рисуется автоматически)
+		killsboard_widget.alpha_multiplier = self._alpha_multiplier or 1
+	end
+	
+	-- Рисуем строки killsboard после основной отрисовки
+	if self.killsboard_row_widgets then
+		for _, widget in pairs(self.killsboard_row_widgets) do
+			if widget and widget.visible then
+				widget.alpha_multiplier = self._alpha_multiplier or 1
+				UIWidget.draw(widget, ui_renderer)
+			end
+		end
+	end
+end)
 
 mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, ui_renderer, render_settings, input_service, ...)
 	func(self, dt, t, ui_renderer, render_settings, input_service, ...)
