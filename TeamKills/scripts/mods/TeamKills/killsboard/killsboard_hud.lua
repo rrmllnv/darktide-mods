@@ -302,9 +302,32 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		local color_dark = Color.black(200, true)  -- черный
 		local color_light = Color.black(100, true)  -- темно-серый
 		
+		-- Проверяем, было ли убийство в этой категории в течение killstreak_duration_seconds
+		local has_recent_kill = false
+		if row_data.type == "data" and row_data.key then
+			local category_key = row_data.key
+			local current_time = Managers.time:time("gameplay")
+			
+			for _, player_data in pairs(players) do
+				if player_data and player_data.account_id then
+					local account_id = player_data.account_id
+					if mod.last_kill_time_by_category and mod.last_kill_time_by_category[account_id] and mod.last_kill_time_by_category[account_id][category_key] then
+						local last_kill_time = mod.last_kill_time_by_category[account_id][category_key]
+						local time_since_kill = current_time - last_kill_time
+						if time_since_kill <= mod.killstreak_duration_seconds then
+							has_recent_kill = true
+							break
+						end
+					end
+				end
+			end
+		end
+		
 		-- Для четных строк: все столбцы - темный
 		-- Для нечетных строк: все столбцы - светлый
-		local row_color = is_even_row and color_dark or color_light
+		-- Если было недавнее убийство, используем более яркий цвет для подсветки
+		local base_row_color = is_even_row and color_dark or color_light
+		local row_color = has_recent_kill and Color.terminal_frame(150, true) or base_row_color
 		
 		-- bg_category (столбец категорий) - индекс 14
 		pass_template[14].style.size[2] = row_height

@@ -19,6 +19,7 @@ mod.killed_units = {}
 mod.player_killstreak = {}
 mod.player_killstreak_timer = {}
 mod.killstreak_duration_seconds = 2.5
+mod.last_kill_time_by_category = {}  -- {account_id: {category_key: time}}
 mod.last_enemy_interaction = {} -- Отслеживание последнего взаимодействия с врагом
 -- Категории целей (из ovenproof_scoreboard_plugin и Power_DI)
 mod.melee_lessers = {
@@ -179,6 +180,7 @@ local function recreate_hud()
     mod.last_enemy_interaction = {}
     mod.kills_by_category = {}
     mod.damage_by_category = {}
+    mod.last_kill_time_by_category = {}  -- {account_id: {category_key: time}}
     mod.display_mode = mod:get("display_mode") or 1
     mod.hud_counter_mode = mod:get("hud_counter_mode") or 1
     mod.show_killstreaks = mod:get("show_killstreaks") or 1
@@ -409,6 +411,10 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                     if breed_name and is_valid_breed(breed_name) then
                         mod.kills_by_category[account_id] = mod.kills_by_category[account_id] or {}
                         mod.kills_by_category[account_id][breed_name] = (mod.kills_by_category[account_id][breed_name] or 0) + 1
+                        
+                        -- Сохраняем время последнего убийства для этой категории
+                        mod.last_kill_time_by_category[account_id] = mod.last_kill_time_by_category[account_id] or {}
+                        mod.last_kill_time_by_category[account_id][breed_name] = Managers.time:time("gameplay")
                     end
                 end
                 
