@@ -117,36 +117,6 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 	}
 	instance.widget_definitions.killsboard = UIWidget.create_definition({
 		{
-			pass_type = "texture",
-			value = "content/ui/materials/frames/dropshadow_heavy",
-			style = {
-				vertical_alignment = "center",
-				scale_to_material = true,
-				horizontal_alignment = "center",
-				offset = {base_x, 0, base_z + 200},
-				size = {KillsboardViewSettings.killsboard_size[1] - 4, KillsboardViewSettings.killsboard_size[2] - 3},
-				color = Color.black(255, true),
-				disabled_color = Color.black(255, true),
-				default_color = Color.black(255, true),
-				hover_color = Color.black(255, true),
-			}
-		},
-		{
-			pass_type = "texture",
-			value = "content/ui/materials/frames/inner_shadow_medium",
-			style = {
-				vertical_alignment = "center",
-				scale_to_material = true,
-				horizontal_alignment = "center",
-				offset = {base_x, 0, base_z + 100},
-				size = {KillsboardViewSettings.killsboard_size[1] - 24, KillsboardViewSettings.killsboard_size[2] - 28},
-				color = Color.black(255, true),
-				disabled_color = Color.black(255, true),
-				default_color = Color.black(255, true),
-				hover_color = Color.black(255, true),
-			}
-		},
-		{
 			value = "content/ui/materials/backgrounds/terminal_basic",
 			pass_type = "texture",
 			style = {
@@ -179,12 +149,13 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	local total = row_data.type == "total"
 	
 	local row_height = header and _settings.killsboard_row_header_height or _settings.killsboard_row_height
-	local font_size = header and 20 or 16
+	-- Используем размер шрифта из settings
+	local font_size = header and _settings.killsboard_font_size_header or _settings.killsboard_font_size
 	
 	-- Map для столбцов: k1, d1, k2, d2, k3, d3, k4, d4
-	local k_pass_map = {2, 5, 7, 10}  -- k1, k2, k3, k4
-	local d_pass_map = {3, 6, 8, 11}  -- d1, d2, d3, d4
-	local background_pass_map = {["2"] = 4, ["7"] = 9}  -- bg1, bg3
+	local k_pass_map = {2, 5, 8, 11}  -- k1, k2, k3, k4
+	local d_pass_map = {3, 6, 9, 12}  -- d1, d2, d3, d4
+	local background_pass_map = {4, 7, 10, 13}  -- bg1 (темный), bg2 (светлый), bg3 (темный), bg4 (светлый)
 	
 	local players = loaded_players or get_players()
 	
@@ -202,7 +173,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	
 	-- Header row
 	if header then
-		pass_template[1].value = "CATEGORY"
+		pass_template[1].value = "KILLS BOARD"
 		local num_players = 0
 		for i = 1, 4 do
 			pass_template[k_pass_map[i]].value = ""
@@ -228,8 +199,8 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		pass_template[1].value = ""
 		for i = 1, 4 do
 			if players[i] then
-				pass_template[k_pass_map[i]].value = "K"
-				pass_template[d_pass_map[i]].value = "D"
+				pass_template[k_pass_map[i]].value = "Kills"
+				pass_template[d_pass_map[i]].value = "Damage"
 			else
 				pass_template[k_pass_map[i]].value = ""
 				pass_template[d_pass_map[i]].value = ""
@@ -285,26 +256,20 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		end
 	end
 	
-	-- Alternate row background
+	-- Column backgrounds
 	if header or subheader or total then
 		-- Скрываем все фоны для header, subheader и total
 		for _, i in pairs(background_pass_map) do
 			pass_template[i].style.visible = false
 		end
-		pass_template[12].style.visible = false
+		pass_template[14].style.visible = false
 	else
-		local alternate_row = visible_rows % 2 == 0
-		if alternate_row then
-			for _, i in pairs(background_pass_map) do
-				pass_template[i].style.visible = false
-			end
-			pass_template[12].style.size[2] = row_height
-		else
-			for _, i in pairs(background_pass_map) do
-				pass_template[i].style.size[2] = row_height
-			end
-			pass_template[12].style.visible = false
+		-- Показываем фоны столбцов для всех строк данных
+		for _, i in pairs(background_pass_map) do
+			pass_template[i].style.size[2] = row_height
+			pass_template[i].style.visible = true
 		end
+		pass_template[14].style.visible = false
 	end
 	
 	-- Create widget
@@ -411,9 +376,7 @@ end
 mod.adjust_killsboard_size = function(self, total_height, killsboard_widget, scenegraph, row_widgets)
 	local height = total_height + 75
 	height = math.min(height, 900)
-	killsboard_widget.style.style_id_1.size[2] = height - 3
-	killsboard_widget.style.style_id_2.size[2] = height - 28
-	killsboard_widget.style.style_id_3.size[2] = height - 3
+	killsboard_widget.style.style_id_1.size[2] = height - 3 -- удалить если захочу вернуть тень
 	
 	local killsboard_graph = scenegraph.killsboard
 	killsboard_graph.size[2] = height
