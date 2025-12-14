@@ -327,6 +327,12 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		-- Используем left выравнивание, как для обычных строк категорий, чтобы все тексты начинались с одной позиции
 		pass_template[1].style.text_horizontal_alignment = "left"
 		pass_template[1].style.offset[1] = left_offset + _settings.killsboard_category_text_offset + 30
+		-- Устанавливаем цвет для заголовков групп (более яркий цвет для выделения)
+		pass_template[1].style.text_color = Color.terminal_text_body_sub_header(255, true)
+		pass_template[1].style.color = Color.terminal_text_body_sub_header(255, true)
+		pass_template[1].style.default_color = Color.terminal_text_body_sub_header(255, true)
+		pass_template[1].style.hover_color = Color.terminal_text_body_sub_header(255, true)
+		pass_template[1].style.disabled_color = Color.terminal_text_body_sub_header(255, true)
 		for i = 1, 4 do
 			pass_template[k_pass_map[i]].value = ""
 			pass_template[d_pass_map[i]].value = ""
