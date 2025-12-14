@@ -67,57 +67,57 @@ local function localize_group(group_name)
 end
 
 local categories = {
-	-- Melee lessers
-	{"chaos_newly_infected", "loc_breed_display_name_chaos_newly_infected", "Melee Lessers"},
-	{"chaos_poxwalker", "loc_breed_display_name_chaos_poxwalker", "Melee Lessers"},
-	{"chaos_mutated_poxwalker", "loc_breed_display_name_chaos_mutated_poxwalker", "Melee Lessers"},
-	{"chaos_armored_infected", "loc_chaos_armored_infected_breed_name", "Melee Lessers"},
-	{"cultist_melee", "loc_breed_display_name_cultist_melee", "Melee Lessers"},
-	{"cultist_ritualist", "loc_breed_display_name_cultist_ritualist", "Melee Lessers"},
-	{"renegade_melee", "loc_breed_display_name_renegade_melee", "Melee Lessers"},
-	-- Ranged lessers
-	{"chaos_lesser_mutated_poxwalker", "loc_breed_display_name_chaos_lesser_mutated_poxwalker", "Ranged Lessers"},
-	{"cultist_assault", "loc_breed_display_name_cultist_assault", "Ranged Lessers"},
-	{"renegade_assault", "loc_breed_display_name_renegade_assault", "Ranged Lessers"},
-	{"renegade_rifleman", "loc_breed_display_name_renegade_rifleman", "Ranged Lessers"},
-	-- Melee elites
-	{"cultist_berzerker", "loc_breed_display_name_cultist_berzerker", "Melee Elites"},
-	{"renegade_berzerker", "loc_breed_display_name_renegade_berzerker", "Melee Elites"},
-	{"renegade_executor", "loc_breed_display_name_renegade_executor", "Melee Elites"},
-	{"chaos_ogryn_bulwark", "loc_breed_display_name_chaos_ogryn_bulwark", "Melee Elites"},
-	{"chaos_ogryn_executor", "loc_breed_display_name_chaos_ogryn_executor", "Melee Elites"},
-	-- Ranged elites
-	{"cultist_gunner", "loc_breed_display_name_cultist_gunner", "Ranged Elites"},
-	{"renegade_gunner", "loc_breed_display_name_renegade_gunner", "Ranged Elites"},
-	{"renegade_plasma_gunner", "loc_breed_display_name_renegade_plasma_gunner", "Ranged Elites"},
-	{"renegade_radio_operator", "loc_breed_display_name_renegade_radio_operator", "Ranged Elites"},
-	{"cultist_shocktrooper", "loc_breed_display_name_cultist_shocktrooper", "Ranged Elites"},
-	{"renegade_shocktrooper", "loc_breed_display_name_renegade_shocktrooper", "Ranged Elites"},
-	{"chaos_ogryn_gunner", "loc_breed_display_name_chaos_ogryn_gunner", "Ranged Elites"},
-	-- Specials
-	{"chaos_poxwalker_bomber", "loc_breed_display_name_chaos_poxwalker_bomber", "Specials"},
-	{"renegade_grenadier", "loc_breed_display_name_renegade_grenadier", "Specials"},
-	{"cultist_grenadier", "loc_breed_display_name_cultist_grenadier", "Specials"},
-	{"renegade_sniper", "loc_breed_display_name_renegade_sniper", "Specials"},
-	{"renegade_flamer", "loc_breed_display_name_renegade_flamer", "Specials"},
-	{"renegade_flamer_mutator", "loc_breed_display_name_renegade_flamer", "Specials"},
-	{"cultist_flamer", "loc_breed_display_name_cultist_flamer", "Specials"},
-	-- Disablers
-	{"chaos_hound", "loc_breed_display_name_chaos_hound", "Disablers"},
-	{"chaos_hound_mutator", "loc_breed_display_name_chaos_hound", "Disablers"},
-	{"cultist_mutant", "loc_breed_display_name_cultist_mutant", "Disablers"},
-	{"cultist_mutant_mutator", "loc_breed_display_name_cultist_mutant", "Disablers"},
-	{"renegade_netgunner", "loc_breed_display_name_renegade_netgunner", "Disablers"},
 	-- Bosses
-	{"chaos_beast_of_nurgle", "loc_breed_display_name_chaos_beast_of_nurgle", "Bosses"},
-	{"chaos_daemonhost", "loc_breed_display_name_chaos_daemonhost", "Bosses"},
-	{"chaos_spawn", "loc_breed_display_name_chaos_spawn", "Bosses"},
-	{"chaos_plague_ogryn", "loc_breed_display_name_chaos_plage_ogryn", "Bosses"},
-	{"chaos_plague_ogryn_sprayer", "loc_breed_display_name_chaos_plage_ogryn", "Bosses"},
-	{"renegade_captain", "loc_breed_display_name_renegade_captain", "Bosses"},
-	{"cultist_captain", "loc_breed_display_name_cultist_captain", "Bosses"},
-	{"renegade_twin_captain", "loc_breed_display_name_renegade_twin_captain", "Bosses"},
 	{"renegade_twin_captain_two", "loc_breed_display_name_renegade_twin_captain_two", "Bosses"},
+	{"renegade_twin_captain", "loc_breed_display_name_renegade_twin_captain", "Bosses"},
+	{"cultist_captain", "loc_breed_display_name_cultist_captain", "Bosses"},
+	{"renegade_captain", "loc_breed_display_name_renegade_captain", "Bosses"},
+	{"chaos_plague_ogryn_sprayer", "loc_breed_display_name_chaos_plage_ogryn", "Bosses"},
+	{"chaos_plague_ogryn", "loc_breed_display_name_chaos_plage_ogryn", "Bosses"},
+	{"chaos_spawn", "loc_breed_display_name_chaos_spawn", "Bosses"},
+	{"chaos_daemonhost", "loc_breed_display_name_chaos_daemonhost", "Bosses"},
+	{"chaos_beast_of_nurgle", "loc_breed_display_name_chaos_beast_of_nurgle", "Bosses"},
+	-- Disablers
+	{"renegade_netgunner", "loc_breed_display_name_renegade_netgunner", "Disablers"},
+	{"cultist_mutant_mutator", "loc_breed_display_name_cultist_mutant", "Disablers"},
+	{"cultist_mutant", "loc_breed_display_name_cultist_mutant", "Disablers"},
+	{"chaos_hound_mutator", "loc_breed_display_name_chaos_hound", "Disablers"},
+	{"chaos_hound", "loc_breed_display_name_chaos_hound", "Disablers"},
+	-- Specials
+	{"cultist_flamer", "loc_breed_display_name_cultist_flamer", "Specials"},
+	{"renegade_flamer_mutator", "loc_breed_display_name_renegade_flamer", "Specials"},
+	{"renegade_flamer", "loc_breed_display_name_renegade_flamer", "Specials"},
+	{"renegade_sniper", "loc_breed_display_name_renegade_sniper", "Specials"},
+	{"cultist_grenadier", "loc_breed_display_name_cultist_grenadier", "Specials"},
+	{"renegade_grenadier", "loc_breed_display_name_renegade_grenadier", "Specials"},
+	{"chaos_poxwalker_bomber", "loc_breed_display_name_chaos_poxwalker_bomber", "Specials"},
+	-- Ranged elites
+	{"chaos_ogryn_gunner", "loc_breed_display_name_chaos_ogryn_gunner", "Ranged Elites"},
+	{"renegade_shocktrooper", "loc_breed_display_name_renegade_shocktrooper", "Ranged Elites"},
+	{"cultist_shocktrooper", "loc_breed_display_name_cultist_shocktrooper", "Ranged Elites"},
+	{"renegade_radio_operator", "loc_breed_display_name_renegade_radio_operator", "Ranged Elites"},
+	{"renegade_plasma_gunner", "loc_breed_display_name_renegade_plasma_gunner", "Ranged Elites"},
+	{"renegade_gunner", "loc_breed_display_name_renegade_gunner", "Ranged Elites"},
+	{"cultist_gunner", "loc_breed_display_name_cultist_gunner", "Ranged Elites"},
+	-- Melee elites
+	{"chaos_ogryn_executor", "loc_breed_display_name_chaos_ogryn_executor", "Melee Elites"},
+	{"chaos_ogryn_bulwark", "loc_breed_display_name_chaos_ogryn_bulwark", "Melee Elites"},
+	{"renegade_executor", "loc_breed_display_name_renegade_executor", "Melee Elites"},
+	{"renegade_berzerker", "loc_breed_display_name_renegade_berzerker", "Melee Elites"},
+	{"cultist_berzerker", "loc_breed_display_name_cultist_berzerker", "Melee Elites"},
+	-- Ranged lessers
+	{"renegade_rifleman", "loc_breed_display_name_renegade_rifleman", "Ranged Lessers"},
+	{"renegade_assault", "loc_breed_display_name_renegade_assault", "Ranged Lessers"},
+	{"cultist_assault", "loc_breed_display_name_cultist_assault", "Ranged Lessers"},
+	{"chaos_lesser_mutated_poxwalker", "loc_breed_display_name_chaos_lesser_mutated_poxwalker", "Ranged Lessers"},
+	-- Melee lessers
+	{"renegade_melee", "loc_breed_display_name_renegade_melee", "Melee Lessers"},
+	{"cultist_ritualist", "loc_breed_display_name_cultist_ritualist", "Melee Lessers"},
+	{"cultist_melee", "loc_breed_display_name_cultist_melee", "Melee Lessers"},
+	{"chaos_armored_infected", "loc_chaos_armored_infected_breed_name", "Melee Lessers"},
+	{"chaos_mutated_poxwalker", "loc_breed_display_name_chaos_mutated_poxwalker", "Melee Lessers"},
+	{"chaos_poxwalker", "loc_breed_display_name_chaos_poxwalker", "Melee Lessers"},
+	{"chaos_newly_infected", "loc_breed_display_name_chaos_newly_infected", "Melee Lessers"},
 }
 
 local function get_players()
@@ -289,6 +289,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	local subheader = row_data.type == "subheader"
 	local total = row_data.type == "total"
 	local group_header = row_data.type == "group_header"
+	local spacer = row_data.type == "spacer"
 	
 	local row_height = (header or group_header) and _settings.killsboard_row_header_height or _settings.killsboard_row_height
 	-- Используем размер шрифта из settings
@@ -457,6 +458,13 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 			end
 			player_num = player_num + 1
 		end
+	elseif spacer then
+		-- Empty spacer row
+		pass_template[1].value = ""
+		for i = 1, 4 do
+			pass_template[k_pass_map[i]].value = ""
+			pass_template[d_pass_map[i]].value = ""
+		end
 	else
 		-- Data row
 		local category_key = row_data.key
@@ -510,8 +518,8 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	end
 	
 	-- Column backgrounds
-	if header or subheader or total or group_header then
-		-- Скрываем все фоны для header, subheader, total и group_header
+	if header or subheader or total or group_header or spacer then
+		-- Скрываем все фоны для header, subheader, total, group_header и spacer
 		for _, i in pairs(background_pass_map) do
 			pass_template[i].style.visible = false
 		end
@@ -523,7 +531,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		-- Цвета для четных и нечетных строк
 		-- ВСЯ строка (все столбцы) должна иметь один цвет
 		local color_dark = Color.black(200, true)  -- черный
-		local color_light = Color.black(100, true)  -- темно-серый
+		local color_light = Color.black(150, true)  -- темно-серый
 		
 		-- Проверяем, нужно ли подсвечивать эту категорию (из массива highlighted_categories)
 		local has_recent_kill = false
@@ -652,10 +660,10 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 					dmg = mod.damage_by_category[account_id][key] or 0
 				end
 				
-				-- if kills > 0 or dmg > 0 then
+				if kills > 0 or dmg > 0 then
 					has_data = true
 					break
-				-- end
+				end
 			end
 		end
 		
@@ -723,6 +731,16 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 	if widget then
 		row_widgets[#row_widgets + 1] = widget
 		widgets_by_name["killsboard_row_total"] = widget
+		current_offset = current_offset + row_height
+	end
+	index = index + 1
+	
+	-- Empty row after total
+	local empty_row = {type = "spacer", name = "empty_after_total"}
+	widget, row_height = self:create_killsboard_row_widget(index, current_offset, visible_rows, empty_row, widgets_by_name, players, _obj, _create_widget_callback, ui_renderer)
+	if widget then
+		row_widgets[#row_widgets + 1] = widget
+		widgets_by_name["killsboard_row_empty_after_total"] = widget
 		current_offset = current_offset + row_height
 	end
 	
