@@ -576,7 +576,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		-- Для нечетных строк: все столбцы - светлый
 		-- Если было недавнее убийство, используем более яркий цвет для подсветки
 		local base_row_color = is_even_row and color_dark or color_light
-		row_color = has_recent_kill and Color.terminal_frame(150, true) or base_row_color
+		row_color = has_recent_kill and Color.terminal_frame(_settings.killsboard_row_color_highlight_alpha, true) or base_row_color
 	end
 	
 	-- Применяем фоны для всех типов строк
