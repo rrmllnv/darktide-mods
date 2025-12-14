@@ -380,14 +380,16 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 				end
 				
 				-- Формируем строку с killstreak значениями в скобках
+				local orange_color = mod.get_damage_color_string and mod.get_damage_color_string() or "{#color(255,183,44)}"
+				local reset_color = "{#reset()}"
 				local kills_text = tostring(total_kills)
 				if total_killstreak_kills > 0 then
-					kills_text = kills_text .. " (+" .. tostring(total_killstreak_kills) .. ")"
+					kills_text = kills_text .. " (" .. orange_color .. "+" .. tostring(total_killstreak_kills) .. reset_color .. ")"
 				end
 				
 				local dmg_text = mod.format_number and mod.format_number(total_dmg) or tostring(total_dmg)
 				if total_killstreak_dmg > 0 then
-					dmg_text = dmg_text .. " (+" .. (mod.format_number and mod.format_number(total_killstreak_dmg) or tostring(total_killstreak_dmg)) .. ")"
+					dmg_text = dmg_text .. " (" .. orange_color .. "+" .. (mod.format_number and mod.format_number(total_killstreak_dmg) or tostring(total_killstreak_dmg)) .. reset_color .. ")"
 				end
 				
 				pass_template[k_pass_map[player_num]].value = kills_text
@@ -428,14 +430,16 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 				end
 				
 				-- Формируем строку с killstreak значениями в скобках
+				local orange_color = mod.get_damage_color_string and mod.get_damage_color_string() or "{#color(255,183,44)}"
+				local reset_color = "{#reset()}"
 				local kills_text = tostring(kills)
 				if killstreak_kills > 0 then
-					kills_text = kills_text .. " (+" .. tostring(killstreak_kills) .. ")"
+					kills_text = kills_text .. " (" .. orange_color .. "+" .. tostring(killstreak_kills) .. reset_color .. ")"
 				end
 				
 				local dmg_text = mod.format_number and mod.format_number(dmg) or tostring(dmg)
 				if killstreak_dmg > 0 then
-					dmg_text = dmg_text .. " (+" .. (mod.format_number and mod.format_number(killstreak_dmg) or tostring(killstreak_dmg)) .. ")"
+					dmg_text = dmg_text .. " (" .. orange_color .. "+" .. (mod.format_number and mod.format_number(killstreak_dmg) or tostring(killstreak_dmg)) .. reset_color .. ")"
 				end
 				
 				pass_template[k_pass_map[player_num]].value = kills_text
