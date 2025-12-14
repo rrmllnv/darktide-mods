@@ -385,8 +385,8 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		pass_template[1].value = ""
 		for i = 1, 4 do
 			if players[i] then
-				pass_template[k_pass_map[i]].value = "Kills"
-				pass_template[d_pass_map[i]].value = "Damage"
+				pass_template[k_pass_map[i]].value = mod:localize("killsboard_kills")
+				pass_template[d_pass_map[i]].value = mod:localize("killsboard_damage")
 			else
 				pass_template[k_pass_map[i]].value = ""
 				pass_template[d_pass_map[i]].value = ""

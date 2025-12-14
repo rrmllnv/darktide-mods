@@ -223,6 +223,14 @@ return {
 		en = "TOTAL",
 		ru = "ИТОГО",
 	},
+	killsboard_kills = {
+		en = "Kills",
+		ru = "Убийства",
+	},
+	killsboard_damage = {
+		en = "Damage",
+		ru = "Урон",
+	},
 	show_killsboard = {
 		en = "Show KillStreak board",
 		ru = "Показать KillStreak board",
