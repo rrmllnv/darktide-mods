@@ -243,6 +243,17 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 			}
 		},
 		{
+			value = "content/ui/materials/backgrounds/hud/tactical_overlay_background",
+			pass_type = "texture",
+			style = {
+				vertical_alignment = "center",
+				horizontal_alignment = "center",
+				offset = {base_x, 0, base_z - 1},
+				size = {KillsboardViewSettings.killsboard_size[1] - 4 - (KillsboardViewSettings.killsboard_background_width_offset * 2), KillsboardViewSettings.killsboard_size[2]},
+				color = Color.black(KillsboardViewSettings.killsboard_background_alpha, true),
+			}
+		},
+		{
 			pass_type = "texture",
 			value = "content/ui/materials/frames/premium_store/details_upper",
 			style = {
@@ -534,7 +545,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		-- Фон для заголовков групп
 		row_color = Color.black(_settings.killsboard_group_header_bg_alpha, true)
 	elseif spacer then
-		-- Фон для пустой строки (прозрачный)
+		-- Фон для пустой строки (настраивается через killsboard_spacer_bg_alpha, по умолчанию 0 = прозрачный)
 		row_color = Color.black(_settings.killsboard_spacer_bg_alpha, true)
 	else
 		-- Определяем четность строки (visible_rows уже учитывает header и subheader)
@@ -761,13 +772,15 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 end
 
 mod.adjust_killsboard_size = function(self, total_height, killsboard_widget, scenegraph, row_widgets)
+	local _settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killsboard_view_settings")
 	local height = total_height + 75
 	height = math.min(height, 990)
 	killsboard_widget.style.style_id_1.size[2] = height - 3 -- удалить если захочу вернуть тень
 	killsboard_widget.style.style_id_2.size[2] = height - 28 -- inner_shadow_medium
 	killsboard_widget.style.style_id_3.size[2] = height - 4 -- terminal_basic
-	killsboard_widget.style.style_id_4.offset[2] = -height / 2 -- details_upper
-	killsboard_widget.style.style_id_5.offset[2] = height / 2 - 50 -- details_lower_basic
+	killsboard_widget.style.style_id_4.size[2] = height -- черная подложка фона
+	killsboard_widget.style.style_id_5.offset[2] = -height / 2 -- details_upper
+	killsboard_widget.style.style_id_6.offset[2] = height / 2 - 50 -- details_lower_basic
 	
 	local killsboard_graph = scenegraph.killsboard
 	killsboard_graph.size[2] = height
