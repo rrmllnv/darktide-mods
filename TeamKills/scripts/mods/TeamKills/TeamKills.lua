@@ -207,6 +207,13 @@ local function recreate_hud()
 end
 
 mod.on_all_mods_loaded = function()
+	-- Load packages for materials
+	local package_manager = Managers.package
+	if package_manager then
+		if not package_manager:is_loading("packages/ui/views/store_item_detail_view/store_item_detail_view") and not package_manager:has_loaded("packages/ui/views/store_item_detail_view/store_item_detail_view") then
+			package_manager:load("packages/ui/views/store_item_detail_view/store_item_detail_view", "TeamKills", nil, true)
+		end
+	end
 	recreate_hud()
 	mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killsboard_hud")
 end

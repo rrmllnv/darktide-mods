@@ -197,8 +197,36 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 		position = {0, 40, base_z - 1}
 	}
 	instance.widget_definitions.killsboard = UIWidget.create_definition({
-
-		-- Фон
+		{
+			pass_type = "texture",
+			value = "content/ui/materials/frames/dropshadow_heavy",
+			style = {
+				vertical_alignment = "center",
+				scale_to_material = true,
+				horizontal_alignment = "center",
+				offset = {base_x, 0, base_z + 200},
+				size = {KillsboardViewSettings.killsboard_size[1] - 4, KillsboardViewSettings.killsboard_size[2] - 3},
+				color = Color.black(255, true),
+				disabled_color = Color.black(255, true),
+				default_color = Color.black(255, true),
+				hover_color = Color.black(255, true),
+			}
+		},
+		{
+			pass_type = "texture",
+			value = "content/ui/materials/frames/inner_shadow_medium",
+			style = {
+				vertical_alignment = "center",
+				scale_to_material = true,
+				horizontal_alignment = "center",
+				offset = {base_x, 0, base_z + 100},
+				size = {KillsboardViewSettings.killsboard_size[1] - 24, KillsboardViewSettings.killsboard_size[2] - 28},
+				color = Color.black(255, true),
+				disabled_color = Color.black(255, true),
+				default_color = Color.black(255, true),
+				hover_color = Color.black(255, true),
+			}
+		},
 		{
 			value = "content/ui/materials/backgrounds/terminal_basic",
 			pass_type = "texture",
@@ -206,12 +234,42 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 				vertical_alignment = "center",
 				scale_to_material = true,
 				horizontal_alignment = "center",
-				offset = {0, 0, base_z},
+				offset = {base_x, 0, base_z},
 				size = {KillsboardViewSettings.killsboard_size[1] - 4, KillsboardViewSettings.killsboard_size[2]},
-				color = Color.black(220, true),
-				disabled_color = Color.black(220, true),
-				default_color = Color.black(220, true),
-				hover_color = Color.black(220, true),
+				color = Color.black(255, true),
+				disabled_color = Color.black(255, true),
+				default_color = Color.black(255, true),
+				hover_color = Color.black(255, true),
+			}
+		},
+		{
+			pass_type = "texture",
+			value = "content/ui/materials/frames/premium_store/details_upper",
+			style = {
+				vertical_alignment = "center",
+				scale_to_material = true,
+				horizontal_alignment = "center",
+				offset = {base_x, -KillsboardViewSettings.killsboard_size[2] / 2, base_z + 200},
+				size = {KillsboardViewSettings.killsboard_size[1], 80},
+				color = Color.gray(255, true),
+				disabled_color = Color.gray(255, true),
+				default_color = Color.gray(255, true),
+				hover_color = Color.gray(255, true),
+			}
+		},
+		{
+			pass_type = "texture",
+			value = "content/ui/materials/frames/premium_store/details_lower_basic",
+			style = {
+				vertical_alignment = "center",
+				scale_to_material = true,
+				horizontal_alignment = "center",
+				offset = {base_x, KillsboardViewSettings.killsboard_size[2] / 2 - 50, base_z + 200},
+				size = {KillsboardViewSettings.killsboard_size[1] + 50, 120},
+				color = Color.gray(255, true),
+				disabled_color = Color.gray(255, true),
+				default_color = Color.gray(255, true),
+				hover_color = Color.gray(255, true),
 			}
 		},
 	}, "killsboard")
@@ -594,10 +652,10 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 					dmg = mod.damage_by_category[account_id][key] or 0
 				end
 				
-				if kills > 0 or dmg > 0 then
+				-- if kills > 0 or dmg > 0 then
 					has_data = true
 					break
-				end
+				-- end
 			end
 		end
 		
@@ -673,8 +731,12 @@ end
 
 mod.adjust_killsboard_size = function(self, total_height, killsboard_widget, scenegraph, row_widgets)
 	local height = total_height + 75
-	height = math.min(height, 900)
+	height = math.min(height, 990)
 	killsboard_widget.style.style_id_1.size[2] = height - 3 -- удалить если захочу вернуть тень
+	killsboard_widget.style.style_id_2.size[2] = height - 28 -- inner_shadow_medium
+	killsboard_widget.style.style_id_3.size[2] = height - 4 -- terminal_basic
+	killsboard_widget.style.style_id_4.offset[2] = -height / 2 -- details_upper
+	killsboard_widget.style.style_id_5.offset[2] = height / 2 - 50 -- details_lower_basic
 	
 	local killsboard_graph = scenegraph.killsboard
 	killsboard_graph.size[2] = height

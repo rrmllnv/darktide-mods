@@ -193,7 +193,7 @@ return {
 	},
 	stats_bosses = {
 		en = "BOSSES",
-		ru = "Боссы",
+		ru = "БОССЫ",
 	},
 	stats_melee_lessers = {
 		en = "MELEE LESSERS",
