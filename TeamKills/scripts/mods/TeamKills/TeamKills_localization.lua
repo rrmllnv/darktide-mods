@@ -191,5 +191,33 @@ return {
 		en = "Ruthless (1s)",
 		ru = "Безжалостный (1 c)",
 	},
+	stats_bosses = {
+		en = "Bosses",
+		ru = "Боссы",
+	},
+	stats_melee_lessers = {
+		en = "Melee lessers",
+		ru = "Младшие бойцы ближнего боя",
+	},
+	stats_ranged_lessers = {
+		en = "Ranged lessers",
+		ru = "Младшие бойцы дальнего боя",
+	},
+	stats_melee_elites = {
+		en = "Melee elites",
+		ru = "Элиты ближнего боя",
+	},
+	stats_ranged_elites = {
+		en = "Ranged elites",
+		ru = "Элиты дальнего боя",
+	},
+	stats_specials = {
+		en = "Specials",
+		ru = "Специалисты",
+	},
+	stats_disablers = {
+		en = "Disablers",
+		ru = "Обездвиживающие",
+	},
 }
 

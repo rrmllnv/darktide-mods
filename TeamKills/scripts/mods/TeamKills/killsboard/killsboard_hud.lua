@@ -22,6 +22,50 @@ local function localize_enemy(key)
 	return key
 end
 
+-- Маппинг названий групп на ключи локализации
+local group_localization_map = {
+	["Melee Lessers"] = "stats_melee_lessers",
+	["Ranged Lessers"] = "stats_ranged_lessers",
+	["Melee Elites"] = "stats_melee_elites",
+	["Ranged Elites"] = "stats_ranged_elites",
+	["Specials"] = "stats_specials",
+	["Disablers"] = "stats_disablers",
+	["Bosses"] = "stats_bosses",
+}
+
+-- Функция локализации для групп
+local function localize_group(group_name)
+	if group_name and group_localization_map[group_name] then
+		local loc_key = group_localization_map[group_name]
+		
+		-- Пробуем через mod:localize() (как в GlobalStat)
+		local success, result = pcall(function()
+			return mod:localize(loc_key)
+		end)
+		if success and result and result ~= "" then
+			return result
+		end
+		
+		-- Пробуем с префиксом "loc_" через Localize()
+		local loc_key_with_prefix = "loc_" .. loc_key
+		success, result = pcall(function()
+			return Localize(loc_key_with_prefix)
+		end)
+		if success and result and result ~= "" and result ~= loc_key_with_prefix then
+			return result
+		end
+		
+		-- Пробуем без префикса через Localize()
+		success, result = pcall(function()
+			return Localize(loc_key)
+		end)
+		if success and result and result ~= "" and result ~= loc_key then
+			return result
+		end
+	end
+	return group_name or ""
+end
+
 local categories = {
 	-- Melee lessers
 	{"chaos_newly_infected", "loc_breed_display_name_chaos_newly_infected", "Melee Lessers"},
@@ -278,10 +322,11 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		end
 	elseif group_header then
 		local group_name = row_data.group_name or ""
-		pass_template[1].value = group_name
-		-- Центрируем текст заголовка группы в столбце категорий
-		pass_template[1].style.text_horizontal_alignment = "center"
-		pass_template[1].style.offset[1] = left_offset + _settings.killsboard_column_header_width / 2 - (string.len(group_name) * font_size / 2) / 2
+		local localized_group_name = localize_group(group_name)
+		pass_template[1].value = localized_group_name
+		-- Используем left выравнивание, как для обычных строк категорий, чтобы все тексты начинались с одной позиции
+		pass_template[1].style.text_horizontal_alignment = "left"
+		pass_template[1].style.offset[1] = left_offset + _settings.killsboard_category_text_offset + 30
 		for i = 1, 4 do
 			pass_template[k_pass_map[i]].value = ""
 			pass_template[d_pass_map[i]].value = ""
