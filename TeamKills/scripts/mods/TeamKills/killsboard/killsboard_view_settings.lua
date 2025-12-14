@@ -14,6 +14,8 @@ local killsboard_view_settings = {
     killsboard_fade_length = 0.1,
     killsboard_font_size = 12, -- размер шрифта для обычных строк
     killsboard_font_size_header = 13, -- размер шрифта для заголовка
+    killsboard_row_color_dark_alpha = 200, -- альфа-канал для темного цвета четных строк (черный)
+    killsboard_row_color_light_alpha = 150, -- альфа-канал для светлого цвета нечетных строк (темно-серый)
 }
 return settings("KillsboardViewSettings", killsboard_view_settings)
 
