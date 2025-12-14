@@ -195,15 +195,17 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	-- Set styles и применяем left_offset для центрирования
 	pass_template[1].style.font_size = font_size
 	pass_template[1].style.size[2] = row_height
-	pass_template[1].style.offset[1] = left_offset + 30  -- текст категории с отступом 30
+	pass_template[1].style.offset[1] = left_offset + _settings.killsboard_category_text_offset
 	
 	for _, i in pairs(k_pass_map) do
 		pass_template[i].style.font_size = font_size
+		pass_template[i].style.size[1] = _settings.killsboard_column_kills_width
 		pass_template[i].style.size[2] = row_height
 		-- offset будет установлен ниже для каждого столбца
 	end
 	for _, i in pairs(d_pass_map) do
 		pass_template[i].style.font_size = font_size
+		pass_template[i].style.size[1] = _settings.killsboard_column_damage_width
 		pass_template[i].style.size[2] = row_height
 		-- offset будет установлен ниже для каждого столбца
 	end
@@ -212,19 +214,19 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	-- k1 (pass 2)
 	pass_template[2].style.offset[1] = left_offset + _settings.killsboard_column_header_width
 	-- d1 (pass 3)
-	pass_template[3].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_width
+	pass_template[3].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_kills_width
 	-- k2 (pass 5)
 	pass_template[5].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width
 	-- d2 (pass 6)
-	pass_template[6].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width + _settings.killsboard_column_width
+	pass_template[6].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width + _settings.killsboard_column_kills_width
 	-- k3 (pass 8)
 	pass_template[8].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 2
 	-- d3 (pass 9)
-	pass_template[9].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 2 + _settings.killsboard_column_width
+	pass_template[9].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 2 + _settings.killsboard_column_kills_width
 	-- k4 (pass 11)
 	pass_template[11].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 3
 	-- d4 (pass 12)
-	pass_template[12].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 3 + _settings.killsboard_column_width
+	pass_template[12].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 3 + _settings.killsboard_column_kills_width
 	
 	-- Header row
 	if header then
@@ -392,13 +394,15 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 
 		-- Вычисляем центрирование фона относительно столбцов K и D
 		-- K1 начинается: left_offset + killsboard_column_header_width
-		-- D1 заканчивается: left_offset + killsboard_column_header_width + killsboard_column_width * 2
-		-- Центр K1+D1: left_offset + killsboard_column_header_width + killsboard_column_width
+		-- D1 заканчивается: left_offset + killsboard_column_header_width + killsboard_column_kills_width + killsboard_column_damage_width
+		-- Центр K1+D1: left_offset + killsboard_column_header_width + (kills_width + damage_width) / 2
 		-- Начало фона: центр - bg_width / 2
+		
+		local total_column_width = _settings.killsboard_column_kills_width + _settings.killsboard_column_damage_width
 		
 		-- bg1 (столбец 1) - индекс 4
 		local k1_start = left_offset + _settings.killsboard_column_header_width
-		local d1_end = k1_start + _settings.killsboard_column_width * 2
+		local d1_end = k1_start + total_column_width
 		local center_k1_d1 = (k1_start + d1_end) / 2
 		pass_template[4].style.size[2] = row_height
 		pass_template[4].style.visible = true
@@ -410,7 +414,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 
 		-- bg2 (столбец 2) - индекс 7
 		local k2_start = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width
-		local d2_end = k2_start + _settings.killsboard_column_width * 2
+		local d2_end = k2_start + total_column_width
 		local center_k2_d2 = (k2_start + d2_end) / 2
 		pass_template[7].style.size[2] = row_height
 		pass_template[7].style.visible = true
@@ -422,7 +426,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 
 		-- bg3 (столбец 3) - индекс 10
 		local k3_start = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 2
-		local d3_end = k3_start + _settings.killsboard_column_width * 2
+		local d3_end = k3_start + total_column_width
 		local center_k3_d3 = (k3_start + d3_end) / 2
 		pass_template[10].style.size[2] = row_height
 		pass_template[10].style.visible = true
@@ -434,7 +438,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 
 		-- bg4 (столбец 4) - индекс 13
 		local k4_start = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 3
-		local d4_end = k4_start + _settings.killsboard_column_width * 2
+		local d4_end = k4_start + total_column_width
 		local center_k4_d4 = (k4_start + d4_end) / 2
 		pass_template[13].style.size[2] = row_height
 		pass_template[13].style.visible = true
@@ -484,10 +488,10 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 					dmg = mod.damage_by_category[account_id][key] or 0
 				end
 				
-				if kills > 0 or dmg > 0 then
+				-- if kills > 0 or dmg > 0 then
 					has_data = true
 					break
-				end
+				-- end
 			end
 		end
 		
