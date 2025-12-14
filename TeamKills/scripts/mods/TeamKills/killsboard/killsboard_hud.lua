@@ -338,7 +338,17 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 			pass_template[d_pass_map[i]].value = ""
 		end
 	elseif total then
-		pass_template[1].value = "TOTAL"
+		-- Используем локализацию для "TOTAL"
+		local total_text = mod:localize("killsboard_total")
+		pass_template[1].value = total_text
+		-- Устанавливаем цвет для строки TOTAL (такой же, как для заголовков групп)
+		pass_template[1].style.text_color = Color.terminal_text_body_sub_header(255, true)
+		pass_template[1].style.color = Color.terminal_text_body_sub_header(255, true)
+		pass_template[1].style.default_color = Color.terminal_text_body_sub_header(255, true)
+		pass_template[1].style.hover_color = Color.terminal_text_body_sub_header(255, true)
+		pass_template[1].style.disabled_color = Color.terminal_text_body_sub_header(255, true)
+		-- Устанавливаем offset такой же, как у заголовков групп
+		pass_template[1].style.offset[1] = left_offset + _settings.killsboard_category_text_offset + 30
 		local player_num = 1
 		for _, player_data in pairs(players) do
 			if player_num <= 4 then

@@ -192,32 +192,36 @@ return {
 		ru = "Безжалостный (1 c)",
 	},
 	stats_bosses = {
-		en = "Bosses",
+		en = "BOSSES",
 		ru = "Боссы",
 	},
 	stats_melee_lessers = {
-		en = "Melee lessers",
-		ru = "Младшие бойцы ближнего боя",
+		en = "MELEE LESSERS",
+		ru = "МЛАДШИЕ БОЙЦЫ БЛИЖНЕГО БОЯ",
 	},
 	stats_ranged_lessers = {
-		en = "Ranged lessers",
-		ru = "Младшие бойцы дальнего боя",
+		en = "RANGED LESSERS",
+		ru = "МЛАДШИЕ БОЙЦЫ ДАЛЬНЕГО БОЯ",
 	},
 	stats_melee_elites = {
-		en = "Melee elites",
-		ru = "Элиты ближнего боя",
+		en = "MELEE ELITES",
+		ru = "ЭЛИТЫ БЛИЖНЕГО БОЯ",
 	},
 	stats_ranged_elites = {
-		en = "Ranged elites",
-		ru = "Элиты дальнего боя",
+		en = "RANGED ELITES",
+		ru = "ЭЛИТЫ ДАЛЬНЕГО БОЯ",
 	},
 	stats_specials = {
-		en = "Specials",
-		ru = "Специалисты",
+		en = "SPECIALS",
+		ru = "СПЕЦИАЛИСТЫ",
 	},
 	stats_disablers = {
-		en = "Disablers",
-		ru = "Обездвиживающие",
+		en = "DISABLERS",
+		ru = "ОБЕЗДВИЖИВАЮЩИЕ",
+	},
+	killsboard_total = {
+		en = "TOTAL",
+		ru = "ИТОГО",
 	},
 }
 
