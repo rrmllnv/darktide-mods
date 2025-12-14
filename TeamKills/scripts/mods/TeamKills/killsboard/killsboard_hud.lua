@@ -65,11 +65,23 @@ local categories = {
 
 local function get_players()
 	local players = {}
+	local local_account_id = nil
+	
+	-- Получаем локального игрока
+	if Managers and Managers.player then
+		local local_player = Managers.player:local_player(1)
+		if local_player then
+			local_account_id = local_player:account_id() or local_player:name()
+		end
+	end
+	
 	if Managers and Managers.player then
 		local player_manager = Managers.player
 		if player_manager and player_manager.players then
 			local all_players = player_manager:players()
 			if all_players then
+				local local_player_data = nil
+				
 				for _, player in pairs(all_players) do
 					if player and type(player) == "table" then
 						local account_id = nil
@@ -85,13 +97,25 @@ local function get_players()
 								name = player:name() or name
 							end
 							
-							table.insert(players, {
+							local player_data = {
 								account_id = account_id,
 								name = name,
 								player = player
-							})
+							}
+							
+							-- Если это локальный игрок, сохраняем отдельно
+							if local_account_id and account_id == local_account_id then
+								local_player_data = player_data
+							else
+								table.insert(players, player_data)
+							end
 						end
 					end
+				end
+				
+				-- Вставляем локального игрока первым
+				if local_player_data then
+					table.insert(players, 1, local_player_data)
 				end
 			end
 		end
