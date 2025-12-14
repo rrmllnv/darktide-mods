@@ -10,7 +10,7 @@ local killsboard_view_settings = {
     killsboard_column_player_bg_width = 220, -- ширина фона столбца игрока
     killsboard_column_header_width = 220,
     killsboard_fade_length = 0.1,
-    killsboard_font_size = 13, -- размер шрифта для обычных строк
+    killsboard_font_size = 12, -- размер шрифта для обычных строк
     killsboard_font_size_header = 13, -- размер шрифта для заголовка
 }
 return settings("KillsboardViewSettings", killsboard_view_settings)
