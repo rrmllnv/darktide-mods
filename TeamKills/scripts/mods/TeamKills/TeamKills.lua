@@ -21,7 +21,7 @@ mod.player_killstreak_timer = {}
 mod.killstreak_duration_seconds = 2.5
 mod.last_kill_time_by_category = {}  -- {account_id: {category_key: time}}
 mod.last_enemy_interaction = {} -- Отслеживание последнего взаимодействия с врагом
--- Категории целей (из ovenproof_scoreboard_plugin и Power_DI)
+-- Категории целей
 mod.melee_lessers = {
 	"chaos_newly_infected",
 	"chaos_poxwalker",
