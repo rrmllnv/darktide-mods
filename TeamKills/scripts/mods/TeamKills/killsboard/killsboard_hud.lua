@@ -356,27 +356,26 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		pass_template[14].style.offset[1] = left_offset
 
 		-- Вычисляем центрирование фона относительно столбцов K и D
-		-- Столбцы K и D для игрока 1: K1 начинается с left_offset + killsboard_column_header_width, D1 заканчивается на left_offset + killsboard_column_header_width + killsboard_column_width
-		-- Центр столбцов: left_offset + killsboard_column_header_width + killsboard_column_width / 2
+		-- K1 начинается: left_offset + killsboard_column_header_width
+		-- D1 заканчивается: left_offset + killsboard_column_header_width + killsboard_column_width * 2
+		-- Центр K1+D1: left_offset + killsboard_column_header_width + killsboard_column_width
 		-- Начало фона: центр - bg_width / 2
-		local k1_start = left_offset + _settings.killsboard_column_header_width
-		local d1_end = k1_start + _settings.killsboard_column_width
-		local center_k1_d1 = (k1_start + d1_end) / 2
-		local bg_offset_correction = center_k1_d1 - (_settings.killsboard_column_player_bg_width / 2)
-
+		
 		-- bg1 (столбец 1) - индекс 4
+		local k1_start = left_offset + _settings.killsboard_column_header_width
+		local d1_end = k1_start + _settings.killsboard_column_width * 2
+		local center_k1_d1 = (k1_start + d1_end) / 2
 		pass_template[4].style.size[2] = row_height
 		pass_template[4].style.visible = true
 		pass_template[4].style.color = row_color
 		pass_template[4].style.disabled_color = row_color
 		pass_template[4].style.default_color = row_color
 		pass_template[4].style.hover_color = row_color
-		pass_template[4].style.offset[1] = bg_offset_correction
+		pass_template[4].style.offset[1] = center_k1_d1 - (_settings.killsboard_column_player_bg_width / 2)
 
 		-- bg2 (столбец 2) - индекс 7
-		-- Центр столбцов K2 и D2: left_offset + killsboard_column_header_width + killsboard_column_player_width + killsboard_column_width / 2
 		local k2_start = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width
-		local d2_end = k2_start + _settings.killsboard_column_width
+		local d2_end = k2_start + _settings.killsboard_column_width * 2
 		local center_k2_d2 = (k2_start + d2_end) / 2
 		pass_template[7].style.size[2] = row_height
 		pass_template[7].style.visible = true
@@ -388,7 +387,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 
 		-- bg3 (столбец 3) - индекс 10
 		local k3_start = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 2
-		local d3_end = k3_start + _settings.killsboard_column_width
+		local d3_end = k3_start + _settings.killsboard_column_width * 2
 		local center_k3_d3 = (k3_start + d3_end) / 2
 		pass_template[10].style.size[2] = row_height
 		pass_template[10].style.visible = true
@@ -400,7 +399,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 
 		-- bg4 (столбец 4) - индекс 13
 		local k4_start = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 3
-		local d4_end = k4_start + _settings.killsboard_column_width
+		local d4_end = k4_start + _settings.killsboard_column_width * 2
 		local center_k4_d4 = (k4_start + d4_end) / 2
 		pass_template[13].style.size[2] = row_height
 		pass_template[13].style.visible = true
