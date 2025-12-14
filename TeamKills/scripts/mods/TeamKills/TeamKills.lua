@@ -182,8 +182,10 @@ local function recreate_hud()
     mod.damage_by_category = {}
     mod.last_kill_time_by_category = {}  -- {account_id: {category_key: time}}
     mod.highlighted_categories = {}  -- {account_id: {category_key: true}} - категории для подсветки
-    mod.killstreak_kills_by_category = {}  -- {account_id: {category_key: count}} - убийства в текущем killstreak
-    mod.killstreak_damage_by_category = {}  -- {account_id: {category_key: damage}} - урон в текущем killstreak
+    mod.killstreak_kills_by_category = {}  -- {account_id: {category_key: count}} - убийства в текущем killstreak (рабочий)
+    mod.killstreak_damage_by_category = {}  -- {account_id: {category_key: damage}} - урон в текущем killstreak (рабочий)
+    mod.display_killstreak_kills_by_category = {}  -- {account_id: {category_key: count}} - убийства для отображения
+    mod.display_killstreak_damage_by_category = {}  -- {account_id: {category_key: damage}} - урон для отображения
     mod.display_mode = mod:get("display_mode") or 1
     mod.hud_counter_mode = mod:get("hud_counter_mode") or 1
     mod.show_killstreaks = mod:get("show_killstreaks") or 1
@@ -272,11 +274,13 @@ mod.add_to_killstreak_counter = function(account_id)
 	mod.player_killstreak[account_id] = killstreak_before + 1
 	mod.player_killstreak_timer[account_id] = 0
 	
-	-- Если killstreak начал собираться заново (был 0, стал 1), очищаем массивы подсвечиваемых категорий и killstreak статистики для этого игрока
+	-- Если killstreak начал собираться заново (был 0, стал 1), очищаем только display массивы для нового подсчета
+	-- Рабочие массивы НЕ очищаем - они продолжают накапливать урон
 	if killstreak_before == 0 then
 		mod.highlighted_categories[account_id] = {}
-		mod.killstreak_kills_by_category[account_id] = {}
-		mod.killstreak_damage_by_category[account_id] = {}
+		-- Очищаем только display массивы при начале нового killstreak, чтобы начать новый подсчет для отображения
+		mod.display_killstreak_kills_by_category[account_id] = {}
+		mod.display_killstreak_damage_by_category[account_id] = {}
 	end
 end
 
@@ -291,16 +295,30 @@ mod.update_killstreak_timers = function(dt)
 		if timer > mod.killstreak_duration_seconds then
 			mod.player_killstreak[account_id] = 0
 			mod.player_killstreak_timer[account_id] = nil
-			-- Очищаем killstreak статистику при окончании killstreak
+			-- Очищаем только рабочие массивы при окончании killstreak, display остаются для отображения
 			if mod.killstreak_damage_by_category[account_id] then
-				--mod.killstreak_damage_by_category[account_id] = nil
+				mod.killstreak_damage_by_category[account_id] = nil
 			end
 			if mod.killstreak_kills_by_category[account_id] then
-				--mod.killstreak_kills_by_category[account_id] = nil
+				mod.killstreak_kills_by_category[account_id] = nil
 			end
 			-- НЕ очищаем highlighted_categories - строки остаются подсвеченными
+			-- НЕ очищаем display массивы - они остаются для отображения
 		else
 			mod.player_killstreak_timer[account_id] = timer
+			-- Во время активного killstreak копируем данные из рабочих массивов в display
+			if mod.killstreak_kills_by_category[account_id] then
+				mod.display_killstreak_kills_by_category[account_id] = mod.display_killstreak_kills_by_category[account_id] or {}
+				for category_key, count in pairs(mod.killstreak_kills_by_category[account_id]) do
+					mod.display_killstreak_kills_by_category[account_id][category_key] = count
+				end
+			end
+			if mod.killstreak_damage_by_category[account_id] then
+				mod.display_killstreak_damage_by_category[account_id] = mod.display_killstreak_damage_by_category[account_id] or {}
+				for category_key, damage in pairs(mod.killstreak_damage_by_category[account_id]) do
+					mod.display_killstreak_damage_by_category[account_id][category_key] = damage
+				end
+			end
 		end
 	end
 end
@@ -435,14 +453,15 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                         mod.last_kill_time_by_category[account_id] = mod.last_kill_time_by_category[account_id] or {}
                         mod.last_kill_time_by_category[account_id][breed_name] = Managers.time:time("gameplay")
                         
-                        -- Если killstreak активен, добавляем категорию в массив для подсветки и увеличиваем счетчик killstreak убийств
+                        -- Всегда увеличиваем счетчик killstreak убийств в рабочем массиве
+                        mod.killstreak_kills_by_category[account_id] = mod.killstreak_kills_by_category[account_id] or {}
+                        mod.killstreak_kills_by_category[account_id][breed_name] = (mod.killstreak_kills_by_category[account_id][breed_name] or 0) + 1
+                        
+                        -- Если killstreak активен, добавляем категорию в массив для подсветки
                         local current_killstreak = mod.player_killstreak[account_id] or 0
                         if current_killstreak > 0 then
                             mod.highlighted_categories[account_id] = mod.highlighted_categories[account_id] or {}
                             mod.highlighted_categories[account_id][breed_name] = true
-                            
-                            mod.killstreak_kills_by_category[account_id] = mod.killstreak_kills_by_category[account_id] or {}
-                            mod.killstreak_kills_by_category[account_id][breed_name] = (mod.killstreak_kills_by_category[account_id][breed_name] or 0) + 1
                         end
                     end
                 end
@@ -460,9 +479,9 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                     mod.damage_by_category[account_id] = mod.damage_by_category[account_id] or {}
                     mod.damage_by_category[account_id][breed_name] = (mod.damage_by_category[account_id][breed_name] or 0) + math.floor(health_damage)
                     
-                    -- увеличиваем счетчик killstreak урона
-					mod.killstreak_damage_by_category[account_id] = mod.killstreak_damage_by_category[account_id] or {}
-					mod.killstreak_damage_by_category[account_id][breed_name] = (mod.killstreak_damage_by_category[account_id][breed_name] or 0) + math.floor(health_damage)
+                    -- Всегда увеличиваем счетчик killstreak урона в рабочем массиве (будет скопирован в display во время активного killstreak)
+                    mod.killstreak_damage_by_category[account_id] = mod.killstreak_damage_by_category[account_id] or {}
+                    mod.killstreak_damage_by_category[account_id][breed_name] = (mod.killstreak_damage_by_category[account_id][breed_name] or 0) + math.floor(health_damage)
                 end
             end
         end

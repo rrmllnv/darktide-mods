@@ -281,13 +281,13 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 					dmg = mod.damage_by_category[account_id][category_key] or 0
 				end
 				
-				-- Получаем killstreak значения
-				if mod.killstreak_kills_by_category and mod.killstreak_kills_by_category[account_id] and mod.killstreak_kills_by_category[account_id][category_key] then
-					killstreak_kills = mod.killstreak_kills_by_category[account_id][category_key] or 0
+				-- Получаем killstreak значения из display массивов
+				if mod.display_killstreak_kills_by_category and mod.display_killstreak_kills_by_category[account_id] and mod.display_killstreak_kills_by_category[account_id][category_key] then
+					killstreak_kills = mod.display_killstreak_kills_by_category[account_id][category_key] or 0
 				end
 				
-				if mod.killstreak_damage_by_category and mod.killstreak_damage_by_category[account_id] and mod.killstreak_damage_by_category[account_id][category_key] then
-					killstreak_dmg = mod.killstreak_damage_by_category[account_id][category_key] or 0
+				if mod.display_killstreak_damage_by_category and mod.display_killstreak_damage_by_category[account_id] and mod.display_killstreak_damage_by_category[account_id][category_key] then
+					killstreak_dmg = mod.display_killstreak_damage_by_category[account_id][category_key] or 0
 				end
 				
 				-- Формируем строку с killstreak значениями в скобках
