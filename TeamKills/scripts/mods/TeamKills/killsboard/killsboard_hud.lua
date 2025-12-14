@@ -9,58 +9,71 @@ local KillsboardViewSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/k
 local base_z = 100  -- Как в scoreboard
 local base_x = 0
 
+-- Функция локализации для врагов
+local function localize_enemy(key)
+	if key:match("^loc_") then
+		local success, result = pcall(function()
+			return Localize(key)
+		end)
+		if success and result and result ~= "" and result ~= key then
+			return result
+		end
+	end
+	return key
+end
+
 local categories = {
 	-- Melee lessers
-	{"chaos_newly_infected", "Chaos Newly Infected", "Melee Lessers"},
-	{"chaos_poxwalker", "Chaos Poxwalker", "Melee Lessers"},
-	{"chaos_mutated_poxwalker", "Chaos Mutated Poxwalker", "Melee Lessers"},
-	{"chaos_armored_infected", "Chaos Armored Infected", "Melee Lessers"},
-	{"cultist_melee", "Cultist Melee", "Melee Lessers"},
-	{"cultist_ritualist", "Cultist Ritualist", "Melee Lessers"},
-	{"renegade_melee", "Renegade Melee", "Melee Lessers"},
+	{"chaos_newly_infected", "loc_breed_display_name_chaos_newly_infected", "Melee Lessers"},
+	{"chaos_poxwalker", "loc_breed_display_name_chaos_poxwalker", "Melee Lessers"},
+	{"chaos_mutated_poxwalker", "loc_breed_display_name_chaos_mutated_poxwalker", "Melee Lessers"},
+	{"chaos_armored_infected", "loc_chaos_armored_infected_breed_name", "Melee Lessers"},
+	{"cultist_melee", "loc_breed_display_name_cultist_melee", "Melee Lessers"},
+	{"cultist_ritualist", "loc_breed_display_name_cultist_ritualist", "Melee Lessers"},
+	{"renegade_melee", "loc_breed_display_name_renegade_melee", "Melee Lessers"},
 	-- Ranged lessers
-	{"chaos_lesser_mutated_poxwalker", "Chaos Lesser Mutated Poxwalker", "Ranged Lessers"},
-	{"cultist_assault", "Cultist Assault", "Ranged Lessers"},
-	{"renegade_assault", "Renegade Assault", "Ranged Lessers"},
-	{"renegade_rifleman", "Renegade Rifleman", "Ranged Lessers"},
+	{"chaos_lesser_mutated_poxwalker", "loc_breed_display_name_chaos_lesser_mutated_poxwalker", "Ranged Lessers"},
+	{"cultist_assault", "loc_breed_display_name_cultist_assault", "Ranged Lessers"},
+	{"renegade_assault", "loc_breed_display_name_renegade_assault", "Ranged Lessers"},
+	{"renegade_rifleman", "loc_breed_display_name_renegade_rifleman", "Ranged Lessers"},
 	-- Melee elites
-	{"cultist_berzerker", "Cultist Berzerker", "Melee Elites"},
-	{"renegade_berzerker", "Renegade Berzerker", "Melee Elites"},
-	{"renegade_executor", "Renegade Executor", "Melee Elites"},
-	{"chaos_ogryn_bulwark", "Chaos Ogryn Bulwark", "Melee Elites"},
-	{"chaos_ogryn_executor", "Chaos Ogryn Executor", "Melee Elites"},
+	{"cultist_berzerker", "loc_breed_display_name_cultist_berzerker", "Melee Elites"},
+	{"renegade_berzerker", "loc_breed_display_name_renegade_berzerker", "Melee Elites"},
+	{"renegade_executor", "loc_breed_display_name_renegade_executor", "Melee Elites"},
+	{"chaos_ogryn_bulwark", "loc_breed_display_name_chaos_ogryn_bulwark", "Melee Elites"},
+	{"chaos_ogryn_executor", "loc_breed_display_name_chaos_ogryn_executor", "Melee Elites"},
 	-- Ranged elites
-	{"cultist_gunner", "Cultist Gunner", "Ranged Elites"},
-	{"renegade_gunner", "Renegade Gunner", "Ranged Elites"},
-	{"renegade_plasma_gunner", "Renegade Plasma Gunner", "Ranged Elites"},
-	{"renegade_radio_operator", "Renegade Radio Operator", "Ranged Elites"},
-	{"cultist_shocktrooper", "Cultist Shocktrooper", "Ranged Elites"},
-	{"renegade_shocktrooper", "Renegade Shocktrooper", "Ranged Elites"},
-	{"chaos_ogryn_gunner", "Chaos Ogryn Gunner", "Ranged Elites"},
+	{"cultist_gunner", "loc_breed_display_name_cultist_gunner", "Ranged Elites"},
+	{"renegade_gunner", "loc_breed_display_name_renegade_gunner", "Ranged Elites"},
+	{"renegade_plasma_gunner", "loc_breed_display_name_renegade_plasma_gunner", "Ranged Elites"},
+	{"renegade_radio_operator", "loc_breed_display_name_renegade_radio_operator", "Ranged Elites"},
+	{"cultist_shocktrooper", "loc_breed_display_name_cultist_shocktrooper", "Ranged Elites"},
+	{"renegade_shocktrooper", "loc_breed_display_name_renegade_shocktrooper", "Ranged Elites"},
+	{"chaos_ogryn_gunner", "loc_breed_display_name_chaos_ogryn_gunner", "Ranged Elites"},
 	-- Specials
-	{"chaos_poxwalker_bomber", "Chaos Poxwalker Bomber", "Specials"},
-	{"renegade_grenadier", "Renegade Grenadier", "Specials"},
-	{"cultist_grenadier", "Cultist Grenadier", "Specials"},
-	{"renegade_sniper", "Renegade Sniper", "Specials"},
-	{"renegade_flamer", "Renegade Flamer", "Specials"},
-	{"renegade_flamer_mutator", "Renegade Flamer Mutator", "Specials"},
-	{"cultist_flamer", "Cultist Flamer", "Specials"},
+	{"chaos_poxwalker_bomber", "loc_breed_display_name_chaos_poxwalker_bomber", "Specials"},
+	{"renegade_grenadier", "loc_breed_display_name_renegade_grenadier", "Specials"},
+	{"cultist_grenadier", "loc_breed_display_name_cultist_grenadier", "Specials"},
+	{"renegade_sniper", "loc_breed_display_name_renegade_sniper", "Specials"},
+	{"renegade_flamer", "loc_breed_display_name_renegade_flamer", "Specials"},
+	{"renegade_flamer_mutator", "loc_breed_display_name_renegade_flamer", "Specials"},
+	{"cultist_flamer", "loc_breed_display_name_cultist_flamer", "Specials"},
 	-- Disablers
-	{"chaos_hound", "Chaos Hound", "Disablers"},
-	{"chaos_hound_mutator", "Chaos Hound Mutator", "Disablers"},
-	{"cultist_mutant", "Cultist Mutant", "Disablers"},
-	{"cultist_mutant_mutator", "Cultist Mutant Mutator", "Disablers"},
-	{"renegade_netgunner", "Renegade Netgunner", "Disablers"},
+	{"chaos_hound", "loc_breed_display_name_chaos_hound", "Disablers"},
+	{"chaos_hound_mutator", "loc_breed_display_name_chaos_hound", "Disablers"},
+	{"cultist_mutant", "loc_breed_display_name_cultist_mutant", "Disablers"},
+	{"cultist_mutant_mutator", "loc_breed_display_name_cultist_mutant", "Disablers"},
+	{"renegade_netgunner", "loc_breed_display_name_renegade_netgunner", "Disablers"},
 	-- Bosses
-	{"chaos_beast_of_nurgle", "Chaos Beast of Nurgle", "Bosses"},
-	{"chaos_daemonhost", "Chaos Daemonhost", "Bosses"},
-	{"chaos_spawn", "Chaos Spawn", "Bosses"},
-	{"chaos_plague_ogryn", "Chaos Plague Ogryn", "Bosses"},
-	{"chaos_plague_ogryn_sprayer", "Chaos Plague Ogryn Sprayer", "Bosses"},
-	{"renegade_captain", "Renegade Captain", "Bosses"},
-	{"cultist_captain", "Cultist Captain", "Bosses"},
-	{"renegade_twin_captain", "Renegade Twin Captain", "Bosses"},
-	{"renegade_twin_captain_two", "Renegade Twin Captain Two", "Bosses"},
+	{"chaos_beast_of_nurgle", "loc_breed_display_name_chaos_beast_of_nurgle", "Bosses"},
+	{"chaos_daemonhost", "loc_breed_display_name_chaos_daemonhost", "Bosses"},
+	{"chaos_spawn", "loc_breed_display_name_chaos_spawn", "Bosses"},
+	{"chaos_plague_ogryn", "loc_breed_display_name_chaos_plage_ogryn", "Bosses"},
+	{"chaos_plague_ogryn_sprayer", "loc_breed_display_name_chaos_plage_ogryn", "Bosses"},
+	{"renegade_captain", "loc_breed_display_name_renegade_captain", "Bosses"},
+	{"cultist_captain", "loc_breed_display_name_cultist_captain", "Bosses"},
+	{"renegade_twin_captain", "loc_breed_display_name_renegade_twin_captain", "Bosses"},
+	{"renegade_twin_captain_two", "loc_breed_display_name_renegade_twin_captain_two", "Bosses"},
 }
 
 local function get_players()
@@ -501,7 +514,7 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 				table.insert(categories_to_show, {type = "group_header", name = "group_" .. group_name, group_name = group_name})
 				current_group = group_name
 			end
-			table.insert(categories_to_show, {type = "data", key = key, label = label})
+			table.insert(categories_to_show, {type = "data", key = key, label = localize_enemy(label)})
 		end
 	end
 	
