@@ -197,6 +197,8 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 		position = {0, 40, base_z - 1}
 	}
 	instance.widget_definitions.killsboard = UIWidget.create_definition({
+
+		-- Фон
 		{
 			value = "content/ui/materials/backgrounds/terminal_basic",
 			pass_type = "texture",
@@ -206,10 +208,10 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 				horizontal_alignment = "center",
 				offset = {0, 0, base_z},
 				size = {KillsboardViewSettings.killsboard_size[1] - 4, KillsboardViewSettings.killsboard_size[2]},
-				color = Color.black(255, true),
-				disabled_color = Color.black(255, true),
-				default_color = Color.black(255, true),
-				hover_color = Color.black(255, true),
+				color = Color.black(220, true),
+				disabled_color = Color.black(220, true),
+				default_color = Color.black(220, true),
+				hover_color = Color.black(220, true),
 			}
 		},
 	}, "killsboard")
