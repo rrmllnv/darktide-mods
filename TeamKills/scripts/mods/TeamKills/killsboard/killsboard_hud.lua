@@ -488,10 +488,10 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 					dmg = mod.damage_by_category[account_id][key] or 0
 				end
 				
-				-- if kills > 0 or dmg > 0 then
+				if kills > 0 or dmg > 0 then
 					has_data = true
 					break
-				-- end
+				end
 			end
 		end
 		
