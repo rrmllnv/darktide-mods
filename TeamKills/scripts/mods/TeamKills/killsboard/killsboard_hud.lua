@@ -294,6 +294,8 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 				local account_id = player_data.account_id
 				local total_kills = 0
 				local total_dmg = 0
+				local total_killstreak_kills = 0
+				local total_killstreak_dmg = 0
 				
 				if mod.player_kills and mod.player_kills[account_id] then
 					total_kills = mod.player_kills[account_id] or 0
@@ -303,8 +305,32 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 					total_dmg = mod.player_damage[account_id] or 0
 				end
 				
-				pass_template[k_pass_map[player_num]].value = tostring(total_kills)
-				pass_template[d_pass_map[player_num]].value = mod.format_number and mod.format_number(total_dmg) or tostring(total_dmg)
+				-- Суммируем все killstreak значения из display массивов
+				if mod.display_killstreak_kills_by_category and mod.display_killstreak_kills_by_category[account_id] then
+					for _, kills in pairs(mod.display_killstreak_kills_by_category[account_id]) do
+						total_killstreak_kills = total_killstreak_kills + (kills or 0)
+					end
+				end
+				
+				if mod.display_killstreak_damage_by_category and mod.display_killstreak_damage_by_category[account_id] then
+					for _, damage in pairs(mod.display_killstreak_damage_by_category[account_id]) do
+						total_killstreak_dmg = total_killstreak_dmg + (damage or 0)
+					end
+				end
+				
+				-- Формируем строку с killstreak значениями в скобках
+				local kills_text = tostring(total_kills)
+				if total_killstreak_kills > 0 then
+					kills_text = kills_text .. " (+" .. tostring(total_killstreak_kills) .. ")"
+				end
+				
+				local dmg_text = mod.format_number and mod.format_number(total_dmg) or tostring(total_dmg)
+				if total_killstreak_dmg > 0 then
+					dmg_text = dmg_text .. " (+" .. (mod.format_number and mod.format_number(total_killstreak_dmg) or tostring(total_killstreak_dmg)) .. ")"
+				end
+				
+				pass_template[k_pass_map[player_num]].value = kills_text
+				pass_template[d_pass_map[player_num]].value = dmg_text
 			end
 			player_num = player_num + 1
 		end
