@@ -219,7 +219,18 @@ local function notification_data(lines, options)
 	local notification_player = options and options.notification_player
 	local portrait_player = options and options.portrait_player
 	local portrait_target = portrait_player or notification_player or (Managers.player and Managers.player:local_player(1))
-	local profile = portrait_target and portrait_target:profile()
+	
+	-- Безопасное получение profile, проверяя что объект не уничтожен
+	local profile = nil
+	if portrait_target then
+		local success, result = pcall(function()
+			return portrait_target:profile()
+		end)
+		if success and result then
+			profile = result
+		end
+	end
+	
 	local frame_item = profile and profile.loadout and profile.loadout.slot_portrait_frame
 
 	local data = {
