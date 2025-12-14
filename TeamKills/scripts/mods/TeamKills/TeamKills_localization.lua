@@ -223,5 +223,17 @@ return {
 		en = "TOTAL",
 		ru = "ИТОГО",
 	},
+	show_killsboard = {
+		en = "Show KillStreak board",
+		ru = "Показать KillStreak board",
+	},
+	show_killsboard_show = {
+		en = "Show",
+		ru = "Показать",
+	},
+	show_killsboard_hide = {
+		en = "Hide",
+		ru = "Скрыть",
+	},
 }
 

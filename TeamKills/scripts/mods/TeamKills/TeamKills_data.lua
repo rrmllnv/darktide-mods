@@ -149,6 +149,15 @@ return {
 					{text = "killstreak_difficulty_ruthless", value = 3},
 				},
 			},
+			{
+				setting_id = "show_killsboard",
+				type = "dropdown",
+				default_value = 1,
+				options = {
+					{text = "show_killsboard_show", value = 1},
+					{text = "show_killsboard_hide", value = 2},
+				},
+			},
         },
 	},
 }

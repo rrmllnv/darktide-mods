@@ -203,6 +203,7 @@ local function recreate_hud()
     mod.font_size = mod:get("font_size") or 16
     mod.show_background = mod:get("show_background") or 1
     mod.opacity = mod:get("opacity") or 100
+    mod.show_killsboard = mod:get("show_killsboard") or 1
 end
 
 mod.on_all_mods_loaded = function()
@@ -229,6 +230,7 @@ mod.on_setting_changed = function()
     mod.font_size = mod:get("font_size") or 16
     mod.show_background = mod:get("show_background") or 1
     mod.opacity = mod:get("opacity") or 100
+    mod.show_killsboard = mod:get("show_killsboard") or 1
 
     if mod.hud_element then
         mod.hud_element:set_dirty()

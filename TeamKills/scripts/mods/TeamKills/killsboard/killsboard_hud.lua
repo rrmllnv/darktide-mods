@@ -718,10 +718,14 @@ mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, 
 	self.killsboard_row_widgets = self.killsboard_row_widgets or {}
 	local killsboard_widget = self._widgets_by_name["killsboard"]
 	
+	local show_killsboard = mod.show_killsboard or mod:get("show_killsboard") or 1
 	local delete = false
 	if self._active and not mod.killsboard_hud_active then
 		delete = true
 	elseif not self._active and mod.killsboard_hud_active then
+		delete = true
+	elseif show_killsboard ~= 1 and mod.killsboard_hud_active then
+		-- Удаляем виджеты, если настройка выключена
 		delete = true
 	end
 	
@@ -738,22 +742,25 @@ mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, 
 	end
 	
 	if self._active and not mod.killsboard_hud_active then
-		local players = get_players()
-		local row_widgets, total_height = mod:setup_killsboard_row_widgets(self.killsboard_row_widgets, self._widgets_by_name, players, self, "_create_widget", ui_renderer)
-		self.killsboard_row_widgets = row_widgets
-		
-		mod:adjust_killsboard_size(total_height, killsboard_widget, self._ui_scenegraph, self.killsboard_row_widgets)
+		if show_killsboard == 1 then
+			local players = get_players()
+			local row_widgets, total_height = mod:setup_killsboard_row_widgets(self.killsboard_row_widgets, self._widgets_by_name, players, self, "_create_widget", ui_renderer)
+			self.killsboard_row_widgets = row_widgets
+			
+			mod:adjust_killsboard_size(total_height, killsboard_widget, self._ui_scenegraph, self.killsboard_row_widgets)
+		end
 	end
 	
 	local in_hub = _is_in_hub()
 	local in_prologue_hub = _is_in_prologue_hub()
+	local should_show = show_killsboard == 1 and not in_hub and not in_prologue_hub
 	if killsboard_widget then
-		killsboard_widget.visible = not in_hub and not in_prologue_hub
+		killsboard_widget.visible = should_show
 	end
 	if self.killsboard_row_widgets then
 		for i = 1, #self.killsboard_row_widgets do
 			local widget = self.killsboard_row_widgets[i]
-			widget.visible = not in_hub and not in_prologue_hub
+			widget.visible = should_show
 		end
 	end
 	
