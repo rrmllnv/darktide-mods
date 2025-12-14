@@ -220,7 +220,6 @@ local function notification_data(lines, options)
 	local portrait_player = options and options.portrait_player
 	local portrait_target = portrait_player or notification_player or (Managers.player and Managers.player:local_player(1))
 	
-	-- Безопасное получение profile, проверяя что объект не уничтожен
 	local profile = nil
 	if portrait_target then
 		local success, result = pcall(function()
