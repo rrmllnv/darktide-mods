@@ -11,56 +11,56 @@ local base_x = 0
 
 local categories = {
 	-- Melee lessers
-	{"chaos_newly_infected", "Chaos Newly Infected"},
-	{"chaos_poxwalker", "Chaos Poxwalker"},
-	{"chaos_mutated_poxwalker", "Chaos Mutated Poxwalker"},
-	{"chaos_armored_infected", "Chaos Armored Infected"},
-	{"cultist_melee", "Cultist Melee"},
-	{"cultist_ritualist", "Cultist Ritualist"},
-	{"renegade_melee", "Renegade Melee"},
+	{"chaos_newly_infected", "Chaos Newly Infected", "Melee Lessers"},
+	{"chaos_poxwalker", "Chaos Poxwalker", "Melee Lessers"},
+	{"chaos_mutated_poxwalker", "Chaos Mutated Poxwalker", "Melee Lessers"},
+	{"chaos_armored_infected", "Chaos Armored Infected", "Melee Lessers"},
+	{"cultist_melee", "Cultist Melee", "Melee Lessers"},
+	{"cultist_ritualist", "Cultist Ritualist", "Melee Lessers"},
+	{"renegade_melee", "Renegade Melee", "Melee Lessers"},
 	-- Ranged lessers
-	{"chaos_lesser_mutated_poxwalker", "Chaos Lesser Mutated Poxwalker"},
-	{"cultist_assault", "Cultist Assault"},
-	{"renegade_assault", "Renegade Assault"},
-	{"renegade_rifleman", "Renegade Rifleman"},
+	{"chaos_lesser_mutated_poxwalker", "Chaos Lesser Mutated Poxwalker", "Ranged Lessers"},
+	{"cultist_assault", "Cultist Assault", "Ranged Lessers"},
+	{"renegade_assault", "Renegade Assault", "Ranged Lessers"},
+	{"renegade_rifleman", "Renegade Rifleman", "Ranged Lessers"},
 	-- Melee elites
-	{"cultist_berzerker", "Cultist Berzerker"},
-	{"renegade_berzerker", "Renegade Berzerker"},
-	{"renegade_executor", "Renegade Executor"},
-	{"chaos_ogryn_bulwark", "Chaos Ogryn Bulwark"},
-	{"chaos_ogryn_executor", "Chaos Ogryn Executor"},
+	{"cultist_berzerker", "Cultist Berzerker", "Melee Elites"},
+	{"renegade_berzerker", "Renegade Berzerker", "Melee Elites"},
+	{"renegade_executor", "Renegade Executor", "Melee Elites"},
+	{"chaos_ogryn_bulwark", "Chaos Ogryn Bulwark", "Melee Elites"},
+	{"chaos_ogryn_executor", "Chaos Ogryn Executor", "Melee Elites"},
 	-- Ranged elites
-	{"cultist_gunner", "Cultist Gunner"},
-	{"renegade_gunner", "Renegade Gunner"},
-	{"renegade_plasma_gunner", "Renegade Plasma Gunner"},
-	{"renegade_radio_operator", "Renegade Radio Operator"},
-	{"cultist_shocktrooper", "Cultist Shocktrooper"},
-	{"renegade_shocktrooper", "Renegade Shocktrooper"},
-	{"chaos_ogryn_gunner", "Chaos Ogryn Gunner"},
+	{"cultist_gunner", "Cultist Gunner", "Ranged Elites"},
+	{"renegade_gunner", "Renegade Gunner", "Ranged Elites"},
+	{"renegade_plasma_gunner", "Renegade Plasma Gunner", "Ranged Elites"},
+	{"renegade_radio_operator", "Renegade Radio Operator", "Ranged Elites"},
+	{"cultist_shocktrooper", "Cultist Shocktrooper", "Ranged Elites"},
+	{"renegade_shocktrooper", "Renegade Shocktrooper", "Ranged Elites"},
+	{"chaos_ogryn_gunner", "Chaos Ogryn Gunner", "Ranged Elites"},
 	-- Specials
-	{"chaos_poxwalker_bomber", "Chaos Poxwalker Bomber"},
-	{"renegade_grenadier", "Renegade Grenadier"},
-	{"cultist_grenadier", "Cultist Grenadier"},
-	{"renegade_sniper", "Renegade Sniper"},
-	{"renegade_flamer", "Renegade Flamer"},
-	{"renegade_flamer_mutator", "Renegade Flamer Mutator"},
-	{"cultist_flamer", "Cultist Flamer"},
+	{"chaos_poxwalker_bomber", "Chaos Poxwalker Bomber", "Specials"},
+	{"renegade_grenadier", "Renegade Grenadier", "Specials"},
+	{"cultist_grenadier", "Cultist Grenadier", "Specials"},
+	{"renegade_sniper", "Renegade Sniper", "Specials"},
+	{"renegade_flamer", "Renegade Flamer", "Specials"},
+	{"renegade_flamer_mutator", "Renegade Flamer Mutator", "Specials"},
+	{"cultist_flamer", "Cultist Flamer", "Specials"},
 	-- Disablers
-	{"chaos_hound", "Chaos Hound"},
-	{"chaos_hound_mutator", "Chaos Hound Mutator"},
-	{"cultist_mutant", "Cultist Mutant"},
-	{"cultist_mutant_mutator", "Cultist Mutant Mutator"},
-	{"renegade_netgunner", "Renegade Netgunner"},
+	{"chaos_hound", "Chaos Hound", "Disablers"},
+	{"chaos_hound_mutator", "Chaos Hound Mutator", "Disablers"},
+	{"cultist_mutant", "Cultist Mutant", "Disablers"},
+	{"cultist_mutant_mutator", "Cultist Mutant Mutator", "Disablers"},
+	{"renegade_netgunner", "Renegade Netgunner", "Disablers"},
 	-- Bosses
-	{"chaos_beast_of_nurgle", "Chaos Beast of Nurgle"},
-	{"chaos_daemonhost", "Chaos Daemonhost"},
-	{"chaos_spawn", "Chaos Spawn"},
-	{"chaos_plague_ogryn", "Chaos Plague Ogryn"},
-	{"chaos_plague_ogryn_sprayer", "Chaos Plague Ogryn Sprayer"},
-	{"renegade_captain", "Renegade Captain"},
-	{"cultist_captain", "Cultist Captain"},
-	{"renegade_twin_captain", "Renegade Twin Captain"},
-	{"renegade_twin_captain_two", "Renegade Twin Captain Two"},
+	{"chaos_beast_of_nurgle", "Chaos Beast of Nurgle", "Bosses"},
+	{"chaos_daemonhost", "Chaos Daemonhost", "Bosses"},
+	{"chaos_spawn", "Chaos Spawn", "Bosses"},
+	{"chaos_plague_ogryn", "Chaos Plague Ogryn", "Bosses"},
+	{"chaos_plague_ogryn_sprayer", "Chaos Plague Ogryn Sprayer", "Bosses"},
+	{"renegade_captain", "Renegade Captain", "Bosses"},
+	{"cultist_captain", "Cultist Captain", "Bosses"},
+	{"renegade_twin_captain", "Renegade Twin Captain", "Bosses"},
+	{"renegade_twin_captain_two", "Renegade Twin Captain Two", "Bosses"},
 }
 
 local function get_players()
@@ -171,10 +171,11 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	local header = row_data.type == "header"
 	local subheader = row_data.type == "subheader"
 	local total = row_data.type == "total"
+	local group_header = row_data.type == "group_header"
 	
-	local row_height = header and _settings.killsboard_row_header_height or _settings.killsboard_row_height
+	local row_height = (header or group_header) and _settings.killsboard_row_header_height or _settings.killsboard_row_height
 	-- Используем размер шрифта из settings
-	local font_size = header and _settings.killsboard_font_size_header or _settings.killsboard_font_size
+	local font_size = (header or group_header) and _settings.killsboard_font_size_header or _settings.killsboard_font_size
 	
 	-- Вычисляем отступ для центрирования контента
 	-- Ширина контента: column_header_width (300) + column_player_width * 4 (130 * 4 = 520) = 820
@@ -260,6 +261,16 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 				pass_template[d_pass_map[i]].value = ""
 			end
 		end
+	elseif group_header then
+		local group_name = row_data.group_name or ""
+		pass_template[1].value = group_name
+		-- Центрируем текст заголовка группы в столбце категорий
+		pass_template[1].style.text_horizontal_alignment = "center"
+		pass_template[1].style.offset[1] = left_offset + _settings.killsboard_column_header_width / 2 - (string.len(group_name) * font_size / 2) / 2
+		for i = 1, 4 do
+			pass_template[k_pass_map[i]].value = ""
+			pass_template[d_pass_map[i]].value = ""
+		end
 	elseif total then
 		pass_template[1].value = "TOTAL"
 		local player_num = 1
@@ -333,8 +344,8 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	end
 	
 	-- Column backgrounds
-	if header or subheader or total then
-		-- Скрываем все фоны для header, subheader и total
+	if header or subheader or total or group_header then
+		-- Скрываем все фоны для header, subheader, total и group_header
 		for _, i in pairs(background_pass_map) do
 			pass_template[i].style.visible = false
 		end
@@ -452,10 +463,11 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 	
 	local players = loaded_players or get_players()
 	
-	-- Собираем категории с данными
+	-- Собираем категории с данными и добавляем заголовки групп
 	local categories_to_show = {}
+	local current_group = nil
 	for _, data in ipairs(categories) do
-		local key, label = data[1], data[2]
+		local key, label, group_name = data[1], data[2], data[3]
 		local has_data = false
 		
 		for _, player_data in pairs(players) do
@@ -480,7 +492,12 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 		end
 		
 		if has_data then
-			table.insert(categories_to_show, {key = key, label = label})
+			-- Добавляем заголовок группы, если группа изменилась
+			if group_name and group_name ~= current_group then
+				table.insert(categories_to_show, {type = "group_header", name = "group_" .. group_name, group_name = group_name})
+				current_group = group_name
+			end
+			table.insert(categories_to_show, {type = "data", key = key, label = label})
 		end
 	end
 	
@@ -510,15 +527,24 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 	end
 	index = index + 1
 	
-	-- Data rows
+	-- Data rows и заголовки групп
 	for _, category_data in ipairs(categories_to_show) do
-		local row_data = {type = "data", name = category_data.key, key = category_data.key, label = category_data.label}
+		local row_data = category_data
+		if not row_data.type then
+			row_data.type = "data"
+		end
+		if not row_data.name then
+			row_data.name = row_data.key or row_data.group_name or "unknown"
+		end
 		widget, row_height = self:create_killsboard_row_widget(index, current_offset, visible_rows, row_data, widgets_by_name, players, _obj, _create_widget_callback, ui_renderer)
 		if widget then
 			row_widgets[#row_widgets + 1] = widget
-			widgets_by_name["killsboard_row_" .. category_data.key] = widget
+			widgets_by_name["killsboard_row_" .. row_data.name] = widget
 			current_offset = current_offset + row_height
-			visible_rows = visible_rows + 1
+			-- Увеличиваем visible_rows только для data строк (для чередования цветов)
+			if row_data.type == "data" then
+				visible_rows = visible_rows + 1
+			end
 		end
 		index = index + 1
 	end
