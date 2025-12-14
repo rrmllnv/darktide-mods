@@ -16,6 +16,11 @@ local killsboard_view_settings = {
     killsboard_font_size_header = 13, -- размер шрифта для заголовка
     killsboard_row_color_dark_alpha = 200, -- альфа-канал для темного цвета четных строк (черный)
     killsboard_row_color_light_alpha = 150, -- альфа-канал для светлого цвета нечетных строк (темно-серый)
+    killsboard_header_bg_alpha = 180, -- альфа-канал для фона заголовка "KILLSTREAK BOARD"
+    killsboard_subheader_bg_alpha = 180, -- альфа-канал для фона подзаголовка "Kills/Damage"
+    killsboard_total_bg_alpha = 180, -- альфа-канал для фона строки "TOTAL"
+    killsboard_group_header_bg_alpha = 160, -- альфа-канал для фона заголовков групп
+    killsboard_spacer_bg_alpha = 0, -- альфа-канал для фона пустой строки (0 = прозрачный)
 }
 return settings("KillsboardViewSettings", killsboard_view_settings)
 

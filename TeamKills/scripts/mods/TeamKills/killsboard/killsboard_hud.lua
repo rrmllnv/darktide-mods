@@ -518,12 +518,24 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	end
 	
 	-- Column backgrounds
-	if header or subheader or total or group_header or spacer then
-		-- Скрываем все фоны для header, subheader, total, group_header и spacer
-		for _, i in pairs(background_pass_map) do
-			pass_template[i].style.visible = false
-		end
-		pass_template[14].style.visible = false
+	local total_column_width = _settings.killsboard_column_kills_width + _settings.killsboard_column_damage_width
+	local row_color = nil
+	
+	if header then
+		-- Фон для заголовка
+		row_color = Color.black(_settings.killsboard_header_bg_alpha, true)
+	elseif subheader then
+		-- Фон для подзаголовка
+		row_color = Color.black(_settings.killsboard_subheader_bg_alpha, true)
+	elseif total then
+		-- Фон для строки TOTAL
+		row_color = Color.black(_settings.killsboard_total_bg_alpha, true)
+	elseif group_header then
+		-- Фон для заголовков групп
+		row_color = Color.black(_settings.killsboard_group_header_bg_alpha, true)
+	elseif spacer then
+		-- Фон для пустой строки (прозрачный)
+		row_color = Color.black(_settings.killsboard_spacer_bg_alpha, true)
 	else
 		-- Определяем четность строки (visible_rows уже учитывает header и subheader)
 		local is_even_row = visible_rows % 2 == 0
@@ -553,8 +565,11 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		-- Для нечетных строк: все столбцы - светлый
 		-- Если было недавнее убийство, используем более яркий цвет для подсветки
 		local base_row_color = is_even_row and color_dark or color_light
-		local row_color = has_recent_kill and Color.terminal_frame(150, true) or base_row_color
-		
+		row_color = has_recent_kill and Color.terminal_frame(150, true) or base_row_color
+	end
+	
+	-- Применяем фоны для всех типов строк
+	if row_color then
 		-- bg_category (столбец категорий) - индекс 14
 		pass_template[14].style.size[2] = row_height
 		pass_template[14].style.visible = true
@@ -569,8 +584,6 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		-- D1 заканчивается: left_offset + killsboard_column_header_width + killsboard_column_kills_width + killsboard_column_damage_width
 		-- Центр K1+D1: left_offset + killsboard_column_header_width + (kills_width + damage_width) / 2
 		-- Начало фона: центр - bg_width / 2
-		
-		local total_column_width = _settings.killsboard_column_kills_width + _settings.killsboard_column_damage_width
 		
 		-- bg1 (столбец 1) - индекс 4
 		local k1_start = left_offset + _settings.killsboard_column_header_width
