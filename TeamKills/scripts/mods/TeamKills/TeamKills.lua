@@ -470,12 +470,12 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
         if target_is_minion then
             local account_id = player:account_id() or player:name() or "Player"
             
-            -- Сохраняем последнее взаимодействие с врагом (как в scoreboard)
+            -- Сохраняем последнее взаимодействие с врагом
             mod.last_enemy_interaction[attacked_unit] = attacking_unit
             
             local unit_health_extension = ScriptUnit.has_extension(attacked_unit, "health_system")
             
-            -- Логика подсчёта урона из Power_DI
+            -- Логика подсчёта урона
             local health_damage = 0
             
             if attack_result == "died" then
@@ -630,7 +630,7 @@ mod:hook(CLASS.EndView, "on_exit", function(func, self, ...)
 	mod:close_killsboard_view()
 end)
 
--- Добавляем scenegraph для killsboard в EndPlayerView (как в scoreboard)
+-- Добавляем scenegraph для killsboard в EndPlayerView
 mod:hook_require("scripts/ui/views/end_player_view/end_player_view_definitions", function(instance)
 	local card_carousel = instance.scenegraph_definition.card_carousel
 	if card_carousel then

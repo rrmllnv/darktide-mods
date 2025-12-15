@@ -9,7 +9,7 @@ local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget")
 
 local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
-local base_z = 100  -- Как в scoreboard
+local base_z = 100
 local base_x = 0
 
 -- Используем функцию get_players из killstreak_widget
