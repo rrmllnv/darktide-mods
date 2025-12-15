@@ -24,13 +24,12 @@ local scenegraph_definition = {
     },
 }
 
--- Используем определение виджета из killsboard_hud.lua
--- Используем определение виджета из killsboard_hud.lua
--- Виджет создается через hook_require в killsboard_hud.lua
+-- Используем определение виджета из killstreak_tactical_overlay.lua
+-- Виджет создается через hook_require в killstreak_tactical_overlay.lua
 -- Здесь мы создаем копию для View
 local widget_definitions = {}
 
--- Создаем виджет killsboard используя то же определение, что и в killsboard_hud.lua
+-- Создаем виджет killsboard используя то же определение, что и в killstreak_tactical_overlay.lua
 local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
 local base_z = 100
 local base_x = 0

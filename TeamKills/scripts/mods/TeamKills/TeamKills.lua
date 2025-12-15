@@ -225,7 +225,7 @@ mod.on_all_mods_loaded = function()
 		end
 	end
 	recreate_hud()
-	mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killsboard_hud")
+	mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_tactical_overlay")
 	mod:register_killstreak_view()
 end
 
