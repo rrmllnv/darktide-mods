@@ -5,6 +5,7 @@ local CLASS = CLASS
 -- Добавляем пути для require
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_settings")
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_definitions")
+mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/HudElementCommandWheel")
 
 -- Загружаем settings, чтобы settings() зарегистрировал глобальный объект
 mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_settings")
@@ -64,11 +65,8 @@ mod._command_wheel_input_pressed = false
 mod._command_wheel_last_held_time = 0
 
 mod.command_wheel_held = function(self)
-	if not is_in_valid_lvl() then
-		return
-	end
-	
 	-- Устанавливаем флаг нажатия клавиши и обновляем время
+	-- Проверка уровня происходит в _handle_input, чтобы колесо могло открыться
 	mod._command_wheel_input_pressed = true
 	mod._command_wheel_last_held_time = os.clock()
 end

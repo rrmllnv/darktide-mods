@@ -16,6 +16,18 @@ local RESOLUTION_LOOKUP = RESOLUTION_LOOKUP
 
 local HOVER_GRACE_PERIOD = 0.4
 
+local valid_lvls = {
+	shooting_range = true,
+	hub = true,
+}
+
+local is_in_valid_lvl = function()
+	if Managers and Managers.state and Managers.state.game_mode then
+		return valid_lvls[Managers.state.game_mode:game_mode_name()] or false
+	end
+	return false
+end
+
 -- Определения кнопок
 local button_definitions = {
 	{
@@ -98,6 +110,8 @@ HudElementCommandWheel.init = function(self, parent, draw_layer, start_scale)
 		index = nil,
 		t = nil,
 	}
+	self._wheel_context = {}
+	self._close_delay = nil
 	
 	local wheel_slots = CommandWheelSettings.wheel_slots
 	self:_setup_entries(wheel_slots)
@@ -160,35 +174,6 @@ HudElementCommandWheel.update = function(self, dt, t, ui_renderer, render_settin
 	
 	self:_update_active_progress(dt)
 	self:_update_widget_locations()
-
-	-- Проверяем, нужно ли показывать колесо
-	local wheel_context = self._wheel_context or {}
-	local start_time = wheel_context.input_start_time
-	local draw_wheel = false
-
-	if start_time then
-		draw_wheel = self._wheel_active
-		local always_draw_t = start_time + 0.1 -- небольшая задержка
-
-		if always_draw_t < t then
-			draw_wheel = true
-		end
-	end
-
-	if draw_wheel and not self._wheel_active then
-		self._wheel_active = true
-
-		if UISoundEvents.emote_wheel_open then
-			Managers.ui:play_2d_sound(UISoundEvents.emote_wheel_open)
-		end
-
-		if not InputDevice.gamepad_active then
-			self:_push_cursor()
-		end
-	elseif not draw_wheel and self._wheel_active then
-		self._wheel_active = false
-		self._close_delay = InputDevice.gamepad_active and 0.15 or 0
-	end
 
 	if self._wheel_active then
 		self:_update_wheel_presentation(dt, t, ui_renderer, render_settings, input_service)
@@ -337,14 +322,30 @@ HudElementCommandWheel._is_wheel_entry_hovered = function(self, t)
 end
 
 HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render_settings, input_service)
+	if self._close_delay then
+		self._close_delay = self._close_delay - dt
+
+		if self._close_delay <= 0 then
+			self._close_delay = nil
+			self:_pop_cursor()
+		end
+
+		return
+	end
+
 	-- Проверяем, нажата ли клавиша открытия колеса
 	-- Для keybind с trigger "held" функция вызывается каждый кадр, пока клавиша удерживается
-	-- Если функция не вызывалась более 0.1 секунды, значит клавиша отпущена
+	-- Если функция не вызывалась более 0.2 секунды, значит клавиша отпущена
 	local current_time = os.clock()
 	local time_since_last_held = current_time - mod._command_wheel_last_held_time
-	local input_pressed = mod._command_wheel_input_pressed and time_since_last_held < 0.1
+	local input_pressed = mod._command_wheel_input_pressed and time_since_last_held < 0.2
 	
-	local wheel_context = self._wheel_context or {}
+	-- Проверяем, что мы в правильном уровне
+	if input_pressed and not is_in_valid_lvl() then
+		input_pressed = false
+	end
+	
+	local wheel_context = self._wheel_context
 	local start_time = wheel_context.input_start_time
 
 	if input_pressed and not start_time then
@@ -360,6 +361,34 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 			end
 		end
 		self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
+	end
+
+	-- Проверяем, нужно ли показывать колесо
+	local draw_wheel = false
+	local start_time = wheel_context.input_start_time
+
+	if start_time then
+		draw_wheel = self._wheel_active
+		local always_draw_t = start_time + 0.1 -- небольшая задержка
+
+		if always_draw_t < t then
+			draw_wheel = true
+		end
+	end
+
+	if draw_wheel and not self._wheel_active then
+		self._wheel_active = true
+
+		if UISoundEvents.emote_wheel_open then
+			Managers.ui:play_2d_sound(UISoundEvents.emote_wheel_open)
+		end
+
+		if not InputDevice.gamepad_active then
+			self:_push_cursor()
+		end
+	elseif not draw_wheel and self._wheel_active then
+		self._wheel_active = false
+		self._close_delay = InputDevice.gamepad_active and 0.15 or 0
 	end
 
 	if not self._wheel_active then
