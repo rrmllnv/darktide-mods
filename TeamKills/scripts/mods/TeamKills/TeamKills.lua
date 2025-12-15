@@ -261,7 +261,8 @@ mod.on_setting_changed = function()
 end
 
 function mod.on_game_state_changed(status, state_name)
-	if state_name == 'GameplayStateRun' or state_name == "StateGameplay" and status == "enter" then
+	-- Очистка данных при выходе из игрового состояния (окончание миссии)
+	if (state_name == 'GameplayStateRun' or state_name == "StateGameplay") and status == "exit" then
 		-- Сохраняем данные перед очисткой для использования в хабе
 		if mod.kills_by_category and next(mod.kills_by_category) then
 			mod.saved_kills_by_category = {}
@@ -294,6 +295,11 @@ function mod.on_game_state_changed(status, state_name)
 				mod.saved_player_damage[account_id] = damage
 			end
 		end
+		-- Очищаем все данные текущей миссии
+		recreate_hud()
+		mod.killsboard_show_in_end_view = false
+	elseif (state_name == 'GameplayStateRun' or state_name == "StateGameplay") and status == "enter" then
+		-- При входе в новую миссию также очищаем данные (на случай если они остались)
 		recreate_hud()
 		mod.killsboard_show_in_end_view = false
 	end
