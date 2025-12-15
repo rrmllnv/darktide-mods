@@ -8,23 +8,23 @@ mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget")
 
 local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
 
-local KillsboardView = class("KillsboardView", "BaseView")
+local KillstreakView = class("KillstreakView", "BaseView")
 
-KillsboardView.init = function(self, settings, context)
+KillstreakView.init = function(self, settings, context)
     self._definitions = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_definitions")
     self._settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
     self.end_view = context and context.end_view
     
-    KillsboardView.super.init(self, self._definitions, settings)
+    KillstreakView.super.init(self, self._definitions, settings)
     self._pass_draw = true
     self._pass_input = true
 end
 
-KillsboardView.on_enter = function(self)
+KillstreakView.on_enter = function(self)
     self._definitions = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_definitions")
     self._settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
     
-    KillsboardView.super.on_enter(self)
+    KillstreakView.super.on_enter(self)
     
     -- Виджет создается автоматически из определений через super.on_enter
     self.killsboard_widget = self._widgets_by_name["killsboard"]
@@ -77,7 +77,7 @@ KillsboardView.on_enter = function(self)
     end
 end
 
-KillsboardView.setup_row_widgets = function(self)
+KillstreakView.setup_row_widgets = function(self)
     -- Используем функцию get_players из killstreak_widget.lua
     local players = mod.get_players_for_killsboard()
     
@@ -118,7 +118,7 @@ KillsboardView.setup_row_widgets = function(self)
     end
 end
 
-KillsboardView.move_killsboard = function(self, from_offset_x, to_offset_x, callback)
+KillstreakView.move_killsboard = function(self, from_offset_x, to_offset_x, callback)
     -- Аналогично move_scoreboard из scoreboard
     self.killsboard_move_timer = 0.75
     self.killsboard_move_from_offset = from_offset_x
@@ -126,7 +126,7 @@ KillsboardView.move_killsboard = function(self, from_offset_x, to_offset_x, call
     self.killsboard_move_callback = callback
 end
 
-KillsboardView.update_killsboard = function(self, dt)
+KillstreakView.update_killsboard = function(self, dt)
     if self.killsboard_move_timer then
         if self.killsboard_move_timer <= 0 then
             self:update_killsboard_offset()
@@ -151,7 +151,7 @@ KillsboardView.update_killsboard = function(self, dt)
     end
 end
 
-KillsboardView.update_killsboard_offset = function(self)
+KillstreakView.update_killsboard_offset = function(self)
     local widgets = self._widgets_by_name
     for _, widget in pairs(widgets) do
         if widget then
@@ -168,20 +168,20 @@ KillsboardView.update_killsboard_offset = function(self)
     end
 end
 
-KillsboardView.update = function(self, dt, t, input_service, view_data)
+KillstreakView.update = function(self, dt, t, input_service, view_data)
     self:update_killsboard(dt)
-    return KillsboardView.super.update(self, dt, t, input_service)
+    return KillstreakView.super.update(self, dt, t, input_service)
 end
 
-KillsboardView.draw = function(self, dt, t, input_service, layer)
+KillstreakView.draw = function(self, dt, t, input_service, layer)
     self:_draw_elements(dt, t, self._ui_renderer, self._render_settings, input_service)
     self:_draw_widgets(dt, input_service)
 end
 
-KillsboardView._draw_widgets = function(self, dt, input_service)
+KillstreakView._draw_widgets = function(self, dt, input_service)
     UIRenderer.begin_pass(self._ui_renderer, self._ui_scenegraph, input_service, dt, self._render_settings)
     
-    -- Отрисовываем все виджеты из _widgets_by_name (включая killsboard и строки)
+    -- Отрисовываем все виджеты из _widgets_by_name (включая killstreak и строки)
     for name, widget in pairs(self._widgets_by_name) do
         if widget then
             UIWidget.draw(widget, self._ui_renderer)
@@ -201,9 +201,8 @@ KillsboardView._draw_widgets = function(self, dt, input_service)
     UIRenderer.end_pass(self._ui_renderer)
 end
 
-KillsboardView.on_exit = function(self)
-    KillsboardView.super.on_exit(self)
+KillstreakView.on_exit = function(self)
+    KillstreakView.super.on_exit(self)
 end
 
-return KillsboardView
-
+return KillstreakView

@@ -226,7 +226,7 @@ mod.on_all_mods_loaded = function()
 	end
 	recreate_hud()
 	mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killsboard_hud")
-	mod:register_killsboard_view()
+	mod:register_killstreak_view()
 end
 
 mod.on_setting_changed = function()
@@ -546,25 +546,25 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
     end
 end)
 
--- Регистрация killsboard view
-mod.register_killsboard_view = function(self)
-	self:add_require_path("TeamKills/scripts/mods/TeamKills/killsboard/killsboard_view")
+-- Регистрация killstreak view
+mod.register_killstreak_view = function(self)
+	self:add_require_path("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_view")
 	self:add_require_path("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_definitions")
 	self:add_require_path("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
 	self:register_view({
-		view_name = "killsboard_view",
+		view_name = "killstreak_view",
 		view_settings = {
 			init_view_function = function (ingame_ui_context)
 				return true
 			end,
-			class = "KillsboardView",
+			class = "KillstreakView",
 			disable_game_world = false,
-			display_name = "Killsboard",
+			display_name = "Killstreak",
 			game_world_blur = 0,
 			load_always = true,
 			load_in_hub = true,
 			package = "packages/ui/views/options_view/options_view",
-			path = "TeamKills/scripts/mods/TeamKills/killsboard/killsboard_view",
+			path = "TeamKills/scripts/mods/TeamKills/killsboard/killstreak_view",
 			state_bound = false,
 			enter_sound_events = {},
 			exit_sound_events = {},
@@ -578,27 +578,27 @@ mod.register_killsboard_view = function(self)
 			transition_time = nil
 		}
 	})
-	self:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killsboard_view")
+	self:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_view")
 end
 
-mod.show_killsboard_view = function(self, context)
-	self:close_killsboard_view()
+mod.show_killstreak_view = function(self, context)
+	self:close_killstreak_view()
 	local ui_manager = Managers.ui
 	if ui_manager then
-		ui_manager:open_view("killsboard_view", nil, false, false, nil, context or {}, {use_transition_ui = false})
+		ui_manager:open_view("killstreak_view", nil, false, false, nil, context or {}, {use_transition_ui = false})
 	end
 end
 
-mod.close_killsboard_view = function(self)
+mod.close_killstreak_view = function(self)
 	local ui_manager = Managers.ui
-	if ui_manager and ui_manager:view_active("killsboard_view") and not ui_manager:is_view_closing("killsboard_view") then
-		ui_manager:close_view("killsboard_view", true)
+	if ui_manager and ui_manager:view_active("killstreak_view") and not ui_manager:is_view_closing("killstreak_view") then
+		ui_manager:close_view("killstreak_view", true)
 	end
 end
 
-mod.killsboard_opened = function(self)
+mod.killstreak_opened = function(self)
 	local ui_manager = Managers.ui
-	return ui_manager and ui_manager:view_active("killsboard_view") and not ui_manager:is_view_closing("killsboard_view")
+	return ui_manager and ui_manager:view_active("killstreak_view") and not ui_manager:is_view_closing("killstreak_view")
 end
 
 function mod.open_killsboard()
@@ -607,27 +607,27 @@ function mod.open_killsboard()
 		-- return
 	end
 	
-	-- Открываем или закрываем killsboard view
-	if mod:killsboard_opened() then
-		mod:close_killsboard_view()
+	-- Открываем или закрываем killstreak view
+	if mod:killstreak_opened() then
+		mod:close_killstreak_view()
 	else
-		mod:show_killsboard_view()
+		mod:show_killstreak_view()
 	end
 end
 
--- Хук для отображения killsboard в конце миссии
+-- Хук для отображения killstreak в конце миссии
 mod:hook(CLASS.EndView, "on_enter", function(func, self, ...)
 	func(self, ...)
 	local show_killsboard_end_view = mod:get("show_killsboard_end_view") or 1
 	if show_killsboard_end_view == 1 then
-		mod:show_killsboard_view({end_view = true})
+		mod:show_killstreak_view({end_view = true})
 	end
 end)
 
--- Хук для скрытия killsboard при выходе из экрана окончания миссии
+-- Хук для скрытия killstreak при выходе из экрана окончания миссии
 mod:hook(CLASS.EndView, "on_exit", function(func, self, ...)
 	func(self, ...)
-	mod:close_killsboard_view()
+	mod:close_killstreak_view()
 end)
 
 -- Добавляем scenegraph для killsboard в EndPlayerView
@@ -643,7 +643,7 @@ mod:hook(CLASS.EndPlayerView, "on_enter", function(func, self, ...)
 	func(self, ...)
 	local ui_manager = Managers.ui
 	if ui_manager then
-		local view = ui_manager:view_instance("killsboard_view")
+		local view = ui_manager:view_instance("killstreak_view")
 		if view then view:move_killsboard(0, -300) end
 	end
 end)
@@ -652,7 +652,7 @@ mod:hook(CLASS.EndPlayerView, "on_exit", function(func, self, ...)
 	func(self, ...)
 	local ui_manager = Managers.ui
 	if ui_manager then
-		local view = ui_manager:view_instance("killsboard_view")
+		local view = ui_manager:view_instance("killstreak_view")
 		if view then view:move_killsboard(-300, 0) end
 	end
 end)
