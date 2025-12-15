@@ -253,7 +253,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	
 	-- Header row
 	if header then
-		pass_template[1].value = "KILLSTREAK BOARD"
+		pass_template[1].value = "" -- KILLSTREAK BOARD
 		local num_players = 0
 		for i = 1, 4 do
 			pass_template[k_pass_map[i]].value = ""
