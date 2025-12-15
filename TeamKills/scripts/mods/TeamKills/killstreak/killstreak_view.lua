@@ -4,15 +4,15 @@ local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local base_z = 100
 
 -- Загружаем общий виджет
-mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget")
+mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget")
 
-local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
+local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_settings")
 
 local KillstreakView = class("KillstreakView", "BaseView")
 
 KillstreakView.init = function(self, settings, context)
-    self._definitions = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_definitions")
-    self._settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
+    self._definitions = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_definitions")
+    self._settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_settings")
     self.end_view = context and context.end_view
     
     KillstreakView.super.init(self, self._definitions, settings)
@@ -21,8 +21,8 @@ KillstreakView.init = function(self, settings, context)
 end
 
 KillstreakView.on_enter = function(self)
-    self._definitions = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_definitions")
-    self._settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
+    self._definitions = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_definitions")
+    self._settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_settings")
     
     KillstreakView.super.on_enter(self)
     

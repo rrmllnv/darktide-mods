@@ -5,7 +5,7 @@ local Color = Color
 local Managers = Managers
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 
-local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
+local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_settings")
 local base_z = 100
 local base_x = 0
 
@@ -181,8 +181,8 @@ local function get_players()
 end
 
 mod.create_killsboard_row_widget = function(self, index, current_offset, visible_rows, row_data, widgets_by_name, loaded_players, _obj, _create_widget_callback, ui_renderer)
-	local _blueprints = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_blueprints")
-	local _settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
+	local _blueprints = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_blueprints")
+	local _settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_settings")
 	local killsboard_widget = widgets_by_name["killsboard"]
 	
 	local widget = nil
@@ -681,7 +681,7 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 end
 
 mod.adjust_killsboard_size = function(self, total_height, killsboard_widget, scenegraph, row_widgets)
-	local _settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
+	local _settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_settings")
 	local height = total_height + 75
 	height = math.min(height, 990)
 	killsboard_widget.style.style_id_1.size[2] = height - 3 -- удалить если захочу вернуть тень

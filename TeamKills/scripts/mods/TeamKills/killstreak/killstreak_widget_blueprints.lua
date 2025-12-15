@@ -1,6 +1,6 @@
 local mod = get_mod("TeamKills")
 
-local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
+local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_settings")
 
 local base_z = 0
 local FONT_SIZE = KillstreakWidgetSettings.killsboard_font_size
@@ -263,4 +263,3 @@ local blueprints = {
 }
 
 return settings("KillstreakWidgetBlueprints", blueprints)
-

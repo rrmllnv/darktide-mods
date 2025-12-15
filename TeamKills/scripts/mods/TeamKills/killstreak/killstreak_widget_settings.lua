@@ -26,4 +26,3 @@ local killstreak_widget_settings = {
     killsboard_background_width_offset = 10, -- уменьшение ширины подложки (вычитается с каждой стороны, итого -40 от общей ширины)
 }
 return settings("KillstreakWidgetSettings", killstreak_widget_settings)
-

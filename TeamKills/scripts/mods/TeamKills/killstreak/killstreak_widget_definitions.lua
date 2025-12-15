@@ -3,7 +3,7 @@ local mod = get_mod("TeamKills")
 local UIWorkspaceSettings = mod:original_require("scripts/settings/ui/ui_workspace_settings")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local Color = Color
-local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
+local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_settings")
 local base_z = 100
 
 local scenegraph_definition = {
@@ -30,7 +30,7 @@ local scenegraph_definition = {
 local widget_definitions = {}
 
 -- Создаем виджет killsboard используя то же определение, что и в killstreak_tactical_overlay.lua
-local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
+local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_settings")
 local base_z = 100
 local base_x = 0
 
@@ -129,4 +129,3 @@ local KillsboardViewDefinitions = {
 }
 
 return settings("KillstreakWidgetDefinitions", KillsboardViewDefinitions)
-
