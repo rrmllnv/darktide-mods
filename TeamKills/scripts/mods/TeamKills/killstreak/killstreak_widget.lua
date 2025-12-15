@@ -77,20 +77,6 @@ local categories = {
 	{"chaos_spawn", "loc_breed_display_name_chaos_spawn", "Bosses"},
 	{"chaos_daemonhost", "loc_breed_display_name_chaos_daemonhost", "Bosses"},
 	{"chaos_beast_of_nurgle", "loc_breed_display_name_chaos_beast_of_nurgle", "Bosses"},
-	-- Disablers
-	{"renegade_netgunner", "loc_breed_display_name_renegade_netgunner", "Disablers"},
-	{"cultist_mutant_mutator", "loc_breed_display_name_cultist_mutant", "Disablers"},
-	{"cultist_mutant", "loc_breed_display_name_cultist_mutant", "Disablers"},
-	{"chaos_hound_mutator", "loc_breed_display_name_chaos_hound", "Disablers"},
-	{"chaos_hound", "loc_breed_display_name_chaos_hound", "Disablers"},
-	-- Specials
-	{"cultist_flamer", "loc_breed_display_name_cultist_flamer", "Specials"},
-	{"renegade_flamer_mutator", "loc_breed_display_name_renegade_flamer", "Specials"},
-	{"renegade_flamer", "loc_breed_display_name_renegade_flamer", "Specials"},
-	{"renegade_sniper", "loc_breed_display_name_renegade_sniper", "Specials"},
-	{"cultist_grenadier", "loc_breed_display_name_cultist_grenadier", "Specials"},
-	{"renegade_grenadier", "loc_breed_display_name_renegade_grenadier", "Specials"},
-	{"chaos_poxwalker_bomber", "loc_breed_display_name_chaos_poxwalker_bomber", "Specials"},
 	-- Ranged elites
 	{"chaos_ogryn_gunner", "loc_breed_display_name_chaos_ogryn_gunner", "Ranged Elites"},
 	{"renegade_shocktrooper", "loc_breed_display_name_renegade_shocktrooper", "Ranged Elites"},
@@ -105,6 +91,20 @@ local categories = {
 	{"renegade_executor", "loc_breed_display_name_renegade_executor", "Melee Elites"},
 	{"renegade_berzerker", "loc_breed_display_name_renegade_berzerker", "Melee Elites"},
 	{"cultist_berzerker", "loc_breed_display_name_cultist_berzerker", "Melee Elites"},
+	-- Specials
+	{"cultist_flamer", "loc_breed_display_name_cultist_flamer", "Specials"},
+	{"renegade_flamer_mutator", "loc_breed_display_name_renegade_flamer", "Specials"},
+	{"renegade_flamer", "loc_breed_display_name_renegade_flamer", "Specials"},
+	{"renegade_sniper", "loc_breed_display_name_renegade_sniper", "Specials"},
+	{"cultist_grenadier", "loc_breed_display_name_cultist_grenadier", "Specials"},
+	{"renegade_grenadier", "loc_breed_display_name_renegade_grenadier", "Specials"},
+	{"chaos_poxwalker_bomber", "loc_breed_display_name_chaos_poxwalker_bomber", "Specials"},
+	-- Disablers
+	{"renegade_netgunner", "loc_breed_display_name_renegade_netgunner", "Disablers"},
+	{"cultist_mutant_mutator", "loc_breed_display_name_cultist_mutant", "Disablers"},
+	{"cultist_mutant", "loc_breed_display_name_cultist_mutant", "Disablers"},
+	{"chaos_hound_mutator", "loc_breed_display_name_chaos_hound", "Disablers"},
+	{"chaos_hound", "loc_breed_display_name_chaos_hound", "Disablers"},
 	-- Ranged lessers
 	{"renegade_rifleman", "loc_breed_display_name_renegade_rifleman", "Ranged Lessers"},
 	{"renegade_assault", "loc_breed_display_name_renegade_assault", "Ranged Lessers"},
