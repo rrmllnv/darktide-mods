@@ -28,6 +28,10 @@ KillsboardView.on_enter = function(self)
     
     -- Виджет создается автоматически из определений через super.on_enter
     self.killsboard_widget = self._widgets_by_name["killsboard"]
+    
+    -- В EndView увеличиваем z-позицию для отображения поверх игровых элементов
+    local end_view_z = self.end_view and 200 or base_z
+    
     if self.killsboard_widget then
         -- Устанавливаем видимость сразу, без анимации для view
         self.killsboard_widget.alpha_multiplier = 1
@@ -35,17 +39,41 @@ KillsboardView.on_enter = function(self)
         if not self.end_view then
             self.killsboard_widget.offset = {0, 0, base_z}
         else
-            self.killsboard_widget.offset = {0, -100, base_z}
+            -- В EndView опускаем рамку вниз, чтобы она совпадала с таблицей
+            self.killsboard_widget.offset = {0, 0, end_view_z}
+            -- Увеличиваем z-позицию для всех стилей виджета в EndView
+            if self.killsboard_widget.style then
+                for style_name, style in pairs(self.killsboard_widget.style) do
+                    if style.offset then
+                        style.offset[3] = (style.offset[3] or base_z) + (end_view_z - base_z)
+                    end
+                end
+            end
         end
     end
     
     self.row_widgets = {}
     self:setup_row_widgets()
     
-    -- В EndView нужно также сместить scenegraph killsboard_rows вместе с рамкой
-    if self.end_view and self._ui_scenegraph and self._ui_scenegraph.killsboard_rows then
-        -- Смещаем scenegraph на -100, чтобы компенсировать смещение рамки
-        self._ui_scenegraph.killsboard_rows.position[2] = self._ui_scenegraph.killsboard_rows.position[2] - 100
+    -- В EndView увеличиваем z-позицию для отображения поверх игровых элементов
+    if self.end_view then
+        -- Увеличиваем z-позицию для основного scenegraph killsboard
+        if self._ui_scenegraph and self._ui_scenegraph.killsboard then
+            self._ui_scenegraph.killsboard.position[3] = end_view_z
+        end
+        if self._ui_scenegraph and self._ui_scenegraph.killsboard_rows then
+            -- Увеличиваем z-позицию для scenegraph
+            self._ui_scenegraph.killsboard_rows.position[3] = end_view_z + 1
+        end
+        -- Увеличиваем z-позицию для всех строк
+        if self.row_widgets then
+            for i = 1, #self.row_widgets do
+                local widget = self.row_widgets[i]
+                if widget and widget.offset then
+                    widget.offset[3] = end_view_z + 1
+                end
+            end
+        end
     end
 end
 

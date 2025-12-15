@@ -428,7 +428,7 @@ local function is_valid_breed(breed_name)
 end
 
 -- Получаем игрока по юниту (проверяем всех игроков)
-mod.player_from_unit = function(self, unit)
+mod.player_from_unit = function(unit)
 	if unit then
 		local player_manager = Managers.player
 		local players = player_manager:players()
@@ -451,14 +451,14 @@ mod:hook_safe(CLASS.AttackReportManager, "add_attack_result",
 function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, hit_world_position, hit_weakspot, damage,
 	attack_result, attack_type, damage_efficiency, ...)
 
-    local player = mod:player_from_unit(attacking_unit)
+    local player = mod.player_from_unit(attacking_unit)
     
     -- Если attacking_unit не игрок (например, при взрыве Pox Burster), 
     -- проверяем last_enemy_interaction для этого врага
     if not player and attacked_unit then
         if mod.last_enemy_interaction[attacked_unit] then
             local last_player_unit = mod.last_enemy_interaction[attacked_unit]
-            player = mod:player_from_unit(last_player_unit)
+            player = mod.player_from_unit(last_player_unit)
         end
     end
     
