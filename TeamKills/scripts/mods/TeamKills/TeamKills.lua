@@ -82,6 +82,10 @@ mod.bosses = {
 }
 mod.kills_by_category = {}
 mod.damage_by_category = {}
+mod.saved_kills_by_category = {}
+mod.saved_damage_by_category = {}
+mod.saved_player_kills = {}
+mod.saved_player_damage = {}
 mod.display_mode = mod:get("display_mode") or 1
 mod.show_background = mod:get("show_background") or 1
 mod.opacity = mod:get("opacity") or 100
@@ -108,8 +112,11 @@ mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, para
 end)
 
 mod._is_in_hub = function()
-	local game_mode_name = Managers.state.game_mode:game_mode_name()
-	return game_mode_name == "hub"
+	if Managers.state and Managers.state.game_mode then
+		local game_mode_name = Managers.state.game_mode:game_mode_name()
+		return game_mode_name == "hub"
+	end
+	return false
 end
 
 -- Форматирование числа с разделителем тысяч (запятая)
@@ -213,9 +220,13 @@ mod.on_all_mods_loaded = function()
 		if not package_manager:is_loading("packages/ui/views/store_item_detail_view/store_item_detail_view") and not package_manager:has_loaded("packages/ui/views/store_item_detail_view/store_item_detail_view") then
 			package_manager:load("packages/ui/views/store_item_detail_view/store_item_detail_view", "TeamKills", nil, true)
 		end
+		if not package_manager:is_loading("packages/ui/views/end_player_view/end_player_view") and not package_manager:has_loaded("packages/ui/views/end_player_view/end_player_view") then
+			package_manager:load("packages/ui/views/end_player_view/end_player_view", "TeamKills", nil, true)
+		end
 	end
 	recreate_hud()
 	mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killsboard_hud")
+	mod:register_killsboard_view()
 end
 
 mod.on_setting_changed = function()
@@ -238,6 +249,11 @@ mod.on_setting_changed = function()
     mod.show_background = mod:get("show_background") or 1
     mod.opacity = mod:get("opacity") or 100
     mod.show_killsboard = mod:get("show_killsboard") or 1
+    local show_killsboard_end_view = mod:get("show_killsboard_end_view") or 1
+    -- Обновляем флаг, если мы уже в EndView
+    if mod.killsboard_show_in_end_view then
+        mod.killsboard_show_in_end_view = (show_killsboard_end_view == 1)
+    end
 
     if mod.hud_element then
         mod.hud_element:set_dirty()
@@ -246,7 +262,40 @@ end
 
 function mod.on_game_state_changed(status, state_name)
 	if state_name == 'GameplayStateRun' or state_name == "StateGameplay" and status == "enter" then
+		-- Сохраняем данные перед очисткой для использования в хабе
+		if mod.kills_by_category and next(mod.kills_by_category) then
+			mod.saved_kills_by_category = {}
+			for account_id, categories in pairs(mod.kills_by_category) do
+				mod.saved_kills_by_category[account_id] = {}
+				for category, count in pairs(categories) do
+					mod.saved_kills_by_category[account_id][category] = count
+				end
+			end
+		end
+		if mod.damage_by_category and next(mod.damage_by_category) then
+			mod.saved_damage_by_category = {}
+			for account_id, categories in pairs(mod.damage_by_category) do
+				mod.saved_damage_by_category[account_id] = {}
+				for category, damage in pairs(categories) do
+					mod.saved_damage_by_category[account_id][category] = damage
+				end
+			end
+		end
+		-- Сохраняем общие данные игроков
+		if mod.player_kills and next(mod.player_kills) then
+			mod.saved_player_kills = {}
+			for account_id, kills in pairs(mod.player_kills) do
+				mod.saved_player_kills[account_id] = kills
+			end
+		end
+		if mod.player_damage and next(mod.player_damage) then
+			mod.saved_player_damage = {}
+			for account_id, damage in pairs(mod.player_damage) do
+				mod.saved_player_damage[account_id] = damage
+			end
+		end
 		recreate_hud()
+		mod.killsboard_show_in_end_view = false
 	end
 end
 
@@ -496,4 +545,116 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
         end
     end
 end)
+
+-- Регистрация killsboard view
+mod.register_killsboard_view = function(self)
+	self:add_require_path("TeamKills/scripts/mods/TeamKills/killsboard/killsboard_view")
+	self:add_require_path("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_definitions")
+	self:add_require_path("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
+	self:register_view({
+		view_name = "killsboard_view",
+		view_settings = {
+			init_view_function = function (ingame_ui_context)
+				return true
+			end,
+			class = "KillsboardView",
+			disable_game_world = false,
+			display_name = "Killsboard",
+			game_world_blur = 0,
+			load_always = true,
+			load_in_hub = true,
+			package = "packages/ui/views/options_view/options_view",
+			path = "TeamKills/scripts/mods/TeamKills/killsboard/killsboard_view",
+			state_bound = false,
+			enter_sound_events = {},
+			exit_sound_events = {},
+			wwise_states = {},
+		},
+		view_transitions = {},
+		view_options = {
+			close_all = false,
+			close_previous = false,
+			close_transition_time = nil,
+			transition_time = nil
+		}
+	})
+	self:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killsboard_view")
+end
+
+mod.show_killsboard_view = function(self, context)
+	self:close_killsboard_view()
+	local ui_manager = Managers.ui
+	if ui_manager then
+		ui_manager:open_view("killsboard_view", nil, false, false, nil, context or {}, {use_transition_ui = false})
+	end
+end
+
+mod.close_killsboard_view = function(self)
+	local ui_manager = Managers.ui
+	if ui_manager and ui_manager:view_active("killsboard_view") and not ui_manager:is_view_closing("killsboard_view") then
+		ui_manager:close_view("killsboard_view", true)
+	end
+end
+
+mod.killsboard_opened = function(self)
+	local ui_manager = Managers.ui
+	return ui_manager and ui_manager:view_active("killsboard_view") and not ui_manager:is_view_closing("killsboard_view")
+end
+
+function mod.open_killsboard()
+	-- Проверяем, находимся ли мы в хабе
+	if not mod._is_in_hub() then
+		-- return
+	end
+	
+	-- Открываем или закрываем killsboard view
+	if mod:killsboard_opened() then
+		mod:close_killsboard_view()
+	else
+		mod:show_killsboard_view()
+	end
+end
+
+-- Хук для отображения killsboard в конце миссии
+mod:hook(CLASS.EndView, "on_enter", function(func, self, ...)
+	func(self, ...)
+	local show_killsboard_end_view = mod:get("show_killsboard_end_view") or 1
+	if show_killsboard_end_view == 1 then
+		mod:show_killsboard_view({end_view = true})
+	end
+end)
+
+-- Хук для скрытия killsboard при выходе из экрана окончания миссии
+mod:hook(CLASS.EndView, "on_exit", function(func, self, ...)
+	func(self, ...)
+	mod:close_killsboard_view()
+end)
+
+-- Добавляем scenegraph для killsboard в EndPlayerView (как в scoreboard)
+mod:hook_require("scripts/ui/views/end_player_view/end_player_view_definitions", function(instance)
+	local card_carousel = instance.scenegraph_definition.card_carousel
+	if card_carousel then
+		card_carousel.horizontal_alignment = "right"
+		card_carousel.position = {-130, 350, 0}
+	end
+end)
+
+mod:hook(CLASS.EndPlayerView, "on_enter", function(func, self, ...)
+	func(self, ...)
+	local ui_manager = Managers.ui
+	if ui_manager then
+		local view = ui_manager:view_instance("killsboard_view")
+		if view then view:move_killsboard(0, -300) end
+	end
+end)
+
+mod:hook(CLASS.EndPlayerView, "on_exit", function(func, self, ...)
+	func(self, ...)
+	local ui_manager = Managers.ui
+	if ui_manager then
+		local view = ui_manager:view_instance("killsboard_view")
+		if view then view:move_killsboard(-300, 0) end
+	end
+end)
+
 

@@ -1,6 +1,6 @@
 local mod = get_mod("TeamKills")
 
-local killsboard_view_settings = {
+local killstreak_widget_settings = {
     shading_environment = "content/shading_environments/ui/system_menu",
     killsboard_size = {1060, 900},
     killsboard_row_height = 16, -- 20
@@ -25,5 +25,5 @@ local killsboard_view_settings = {
     killsboard_background_alpha = 220, -- альфа-канал для черной подложки фона killsboard
     killsboard_background_width_offset = 10, -- уменьшение ширины подложки (вычитается с каждой стороны, итого -40 от общей ширины)
 }
-return settings("KillsboardViewSettings", killsboard_view_settings)
+return settings("KillstreakWidgetSettings", killstreak_widget_settings)
 

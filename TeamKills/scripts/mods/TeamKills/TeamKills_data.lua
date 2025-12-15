@@ -158,6 +158,23 @@ return {
 					{text = "show_killsboard_hide", value = 2},
 				},
 			},
+			{
+				setting_id = "show_killsboard_end_view",
+				type = "dropdown",
+				default_value = 1,
+				options = {
+					{text = "show_killsboard_end_view_show", value = 1},
+					{text = "show_killsboard_end_view_hide", value = 2},
+				},
+			},
+			{
+				setting_id = "open_killsboard",
+				type = "keybind",
+				default_value = {"f7"},
+				keybind_trigger = "pressed",
+				keybind_type = "function_call",
+				function_name = "open_killsboard",
+			},
         },
 	},
 }

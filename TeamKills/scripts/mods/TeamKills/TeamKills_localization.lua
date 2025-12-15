@@ -243,5 +243,21 @@ return {
 		en = "Hide",
 		ru = "Скрыть",
 	},
+	show_killsboard_end_view = {
+		en = "Show KillStreak board at end of mission",
+		ru = "Показать KillStreak board в конце миссии",
+	},
+	show_killsboard_end_view_show = {
+		en = "Show",
+		ru = "Показать",
+	},
+	show_killsboard_end_view_hide = {
+		en = "Hide",
+		ru = "Скрыть",
+	},
+	open_killsboard = {
+		en = "Open KillStreak board (Hub only)",
+		ru = "Открыть KillStreak board (только в хабе)",
+	},
 }
 

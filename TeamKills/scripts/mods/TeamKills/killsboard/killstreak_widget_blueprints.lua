@@ -1,25 +1,25 @@
 local mod = get_mod("TeamKills")
 
-local KillsboardViewSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killsboard_view_settings")
+local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killsboard/killstreak_widget_settings")
 
 local base_z = 0
-local FONT_SIZE = KillsboardViewSettings.killsboard_font_size
+local FONT_SIZE = KillstreakWidgetSettings.killsboard_font_size
 -- Вычисляем центрирование фона относительно столбцов K и D
 -- Для каждого игрока: центр столбцов K и D = killsboard_column_header_width + offset_player + (kills_width + damage_width) / 2
 -- Начало фона = центр - bg_width / 2
 local function get_bg_offset(player_index)
-    local total_column_width = KillsboardViewSettings.killsboard_column_kills_width + KillsboardViewSettings.killsboard_column_damage_width
-    local k_start = KillsboardViewSettings.killsboard_column_header_width + (KillsboardViewSettings.killsboard_column_player_width * (player_index - 1))
+    local total_column_width = KillstreakWidgetSettings.killsboard_column_kills_width + KillstreakWidgetSettings.killsboard_column_damage_width
+    local k_start = KillstreakWidgetSettings.killsboard_column_header_width + (KillstreakWidgetSettings.killsboard_column_player_width * (player_index - 1))
     local d_end = k_start + total_column_width
     local center = (k_start + d_end) / 2
-    return center - (KillsboardViewSettings.killsboard_column_player_bg_width / 2)
+    return center - (KillstreakWidgetSettings.killsboard_column_player_bg_width / 2)
 end
 
 local blueprints = {
     killsboard_row = {
         size = {
-            KillsboardViewSettings.killsboard_size[1],
-            KillsboardViewSettings.killsboard_row_height,
+            KillstreakWidgetSettings.killsboard_size[1],
+            KillstreakWidgetSettings.killsboard_row_height,
         },
         pass_template = {
             {value_id = "text", -- 1 = Row text (category name)
@@ -27,7 +27,7 @@ local blueprints = {
                 pass_type = "text",
                 style = {
                     offset = {30, 0, base_z + 1},
-                    size = {KillsboardViewSettings.killsboard_column_header_width + 200, KillsboardViewSettings.killsboard_row_height},
+                    size = {KillstreakWidgetSettings.killsboard_column_header_width + 200, KillstreakWidgetSettings.killsboard_row_height},
                     font_size = FONT_SIZE,
                     text_horizontal_alignment = "left",
                     text_vertical_alignment = "center",
@@ -45,8 +45,8 @@ local blueprints = {
                 value = "",
                 pass_type = "text",
                 style = {
-                    offset = {KillsboardViewSettings.killsboard_column_header_width, 0, base_z + 1},
-                    size = {KillsboardViewSettings.killsboard_column_kills_width, KillsboardViewSettings.killsboard_row_height},
+                    offset = {KillstreakWidgetSettings.killsboard_column_header_width, 0, base_z + 1},
+                    size = {KillstreakWidgetSettings.killsboard_column_kills_width, KillstreakWidgetSettings.killsboard_row_height},
                     font_size = FONT_SIZE,
                     text_horizontal_alignment = "center",
                     text_vertical_alignment = "center",
@@ -63,8 +63,8 @@ local blueprints = {
                 value = "",
                 pass_type = "text",
                 style = {
-                    offset = {KillsboardViewSettings.killsboard_column_header_width + KillsboardViewSettings.killsboard_column_kills_width, 0, base_z + 1},
-                    size = {KillsboardViewSettings.killsboard_column_damage_width, KillsboardViewSettings.killsboard_row_height},
+                    offset = {KillstreakWidgetSettings.killsboard_column_header_width + KillstreakWidgetSettings.killsboard_column_kills_width, 0, base_z + 1},
+                    size = {KillstreakWidgetSettings.killsboard_column_damage_width, KillstreakWidgetSettings.killsboard_row_height},
                     font_size = FONT_SIZE,
                     text_horizontal_alignment = "center",
                     text_vertical_alignment = "center",
@@ -87,7 +87,7 @@ local blueprints = {
                     default_color = Color.black(255, true),
                     hover_color = Color.black(255, true),
                     offset = {get_bg_offset(1), 0, base_z},
-                    size = {KillsboardViewSettings.killsboard_column_player_bg_width, KillsboardViewSettings.killsboard_row_height},
+                    size = {KillstreakWidgetSettings.killsboard_column_player_bg_width, KillstreakWidgetSettings.killsboard_row_height},
                     visible = false,
                 }
             },
@@ -96,8 +96,8 @@ local blueprints = {
                 value = "",
                 pass_type = "text",
                 style = {
-                    offset = {KillsboardViewSettings.killsboard_column_header_width + KillsboardViewSettings.killsboard_column_player_width, 0, base_z + 1},
-                    size = {KillsboardViewSettings.killsboard_column_kills_width, KillsboardViewSettings.killsboard_row_height},
+                    offset = {KillstreakWidgetSettings.killsboard_column_header_width + KillstreakWidgetSettings.killsboard_column_player_width, 0, base_z + 1},
+                    size = {KillstreakWidgetSettings.killsboard_column_kills_width, KillstreakWidgetSettings.killsboard_row_height},
                     font_size = FONT_SIZE,
                     text_horizontal_alignment = "center",
                     text_vertical_alignment = "center",
@@ -114,8 +114,8 @@ local blueprints = {
                 value = "",
                 pass_type = "text",
                 style = {
-                    offset = {KillsboardViewSettings.killsboard_column_header_width + KillsboardViewSettings.killsboard_column_player_width + KillsboardViewSettings.killsboard_column_kills_width, 0, base_z + 1},
-                    size = {KillsboardViewSettings.killsboard_column_damage_width, KillsboardViewSettings.killsboard_row_height},
+                    offset = {KillstreakWidgetSettings.killsboard_column_header_width + KillstreakWidgetSettings.killsboard_column_player_width + KillstreakWidgetSettings.killsboard_column_kills_width, 0, base_z + 1},
+                    size = {KillstreakWidgetSettings.killsboard_column_damage_width, KillstreakWidgetSettings.killsboard_row_height},
                     font_size = FONT_SIZE,
                     text_horizontal_alignment = "center",
                     text_vertical_alignment = "center",
@@ -138,7 +138,7 @@ local blueprints = {
                     default_color = Color.black(200, true),
                     hover_color = Color.black(200, true),
                     offset = {get_bg_offset(2), 0, base_z},
-                    size = {KillsboardViewSettings.killsboard_column_player_bg_width, KillsboardViewSettings.killsboard_row_height},
+                    size = {KillstreakWidgetSettings.killsboard_column_player_bg_width, KillstreakWidgetSettings.killsboard_row_height},
                     visible = false,
                 }
             },
@@ -147,8 +147,8 @@ local blueprints = {
                 value = "",
                 pass_type = "text",
                 style = {
-                    offset = {KillsboardViewSettings.killsboard_column_header_width + KillsboardViewSettings.killsboard_column_player_width * 2, 0, base_z + 1},
-                    size = {KillsboardViewSettings.killsboard_column_kills_width, KillsboardViewSettings.killsboard_row_height},
+                    offset = {KillstreakWidgetSettings.killsboard_column_header_width + KillstreakWidgetSettings.killsboard_column_player_width * 2, 0, base_z + 1},
+                    size = {KillstreakWidgetSettings.killsboard_column_kills_width, KillstreakWidgetSettings.killsboard_row_height},
                     font_size = FONT_SIZE,
                     text_horizontal_alignment = "center",
                     text_vertical_alignment = "center",
@@ -165,8 +165,8 @@ local blueprints = {
                 value = "",
                 pass_type = "text",
                 style = {
-                    offset = {KillsboardViewSettings.killsboard_column_header_width + KillsboardViewSettings.killsboard_column_player_width * 2 + KillsboardViewSettings.killsboard_column_kills_width, 0, base_z + 1},
-                    size = {KillsboardViewSettings.killsboard_column_damage_width, KillsboardViewSettings.killsboard_row_height},
+                    offset = {KillstreakWidgetSettings.killsboard_column_header_width + KillstreakWidgetSettings.killsboard_column_player_width * 2 + KillstreakWidgetSettings.killsboard_column_kills_width, 0, base_z + 1},
+                    size = {KillstreakWidgetSettings.killsboard_column_damage_width, KillstreakWidgetSettings.killsboard_row_height},
                     font_size = FONT_SIZE,
                     text_horizontal_alignment = "center",
                     text_vertical_alignment = "center",
@@ -189,7 +189,7 @@ local blueprints = {
                     default_color = Color.black(255, true),
                     hover_color = Color.black(255, true),
                     offset = {get_bg_offset(3), 0, base_z},
-                    size = {KillsboardViewSettings.killsboard_column_player_bg_width, KillsboardViewSettings.killsboard_row_height},
+                    size = {KillstreakWidgetSettings.killsboard_column_player_bg_width, KillstreakWidgetSettings.killsboard_row_height},
                     visible = false,
                 }
             },
@@ -198,8 +198,8 @@ local blueprints = {
                 value = "",
                 pass_type = "text",
                 style = {
-                    offset = {KillsboardViewSettings.killsboard_column_header_width + KillsboardViewSettings.killsboard_column_player_width * 3, 0, base_z + 1},
-                    size = {KillsboardViewSettings.killsboard_column_kills_width, KillsboardViewSettings.killsboard_row_height},
+                    offset = {KillstreakWidgetSettings.killsboard_column_header_width + KillstreakWidgetSettings.killsboard_column_player_width * 3, 0, base_z + 1},
+                    size = {KillstreakWidgetSettings.killsboard_column_kills_width, KillstreakWidgetSettings.killsboard_row_height},
                     font_size = FONT_SIZE,
                     text_horizontal_alignment = "center",
                     text_vertical_alignment = "center",
@@ -216,8 +216,8 @@ local blueprints = {
                 value = "",
                 pass_type = "text",
                 style = {
-                    offset = {KillsboardViewSettings.killsboard_column_header_width + KillsboardViewSettings.killsboard_column_player_width * 3 + KillsboardViewSettings.killsboard_column_kills_width, 0, base_z + 1},
-                    size = {KillsboardViewSettings.killsboard_column_damage_width, KillsboardViewSettings.killsboard_row_height},
+                    offset = {KillstreakWidgetSettings.killsboard_column_header_width + KillstreakWidgetSettings.killsboard_column_player_width * 3 + KillstreakWidgetSettings.killsboard_column_kills_width, 0, base_z + 1},
+                    size = {KillstreakWidgetSettings.killsboard_column_damage_width, KillstreakWidgetSettings.killsboard_row_height},
                     font_size = FONT_SIZE,
                     text_horizontal_alignment = "center",
                     text_vertical_alignment = "center",
@@ -240,7 +240,7 @@ local blueprints = {
                     default_color = Color.black(200, true),
                     hover_color = Color.black(200, true),
                     offset = {get_bg_offset(4), 0, base_z},
-                    size = {KillsboardViewSettings.killsboard_column_player_bg_width, KillsboardViewSettings.killsboard_row_height},
+                    size = {KillstreakWidgetSettings.killsboard_column_player_bg_width, KillstreakWidgetSettings.killsboard_row_height},
                     visible = false,
                 }
             },
@@ -253,7 +253,7 @@ local blueprints = {
                     disabled_color = Color.black(255, true),
                     default_color = Color.black(255, true),
                     hover_color = Color.black(255, true),
-                    size = {KillsboardViewSettings.killsboard_column_header_width, KillsboardViewSettings.killsboard_row_height},
+                    size = {KillstreakWidgetSettings.killsboard_column_header_width, KillstreakWidgetSettings.killsboard_row_height},
                     offset = {0, 0, base_z},
                     visible = false,
                 }
@@ -262,5 +262,5 @@ local blueprints = {
     },
 }
 
-return settings("KillsboardViewBlueprints", blueprints)
+return settings("KillstreakWidgetBlueprints", blueprints)
 
