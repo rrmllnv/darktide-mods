@@ -61,23 +61,21 @@ mod.get_command_wheel_element = function(self)
 end
 
 mod._command_wheel_input_pressed = false
+mod._command_wheel_last_held_time = 0
 
-mod.command_wheel_pressed = function(self)
+mod.command_wheel_held = function(self)
 	if not is_in_valid_lvl() then
 		return
 	end
 	
-	-- Устанавливаем флаг нажатия клавиши
+	-- Устанавливаем флаг нажатия клавиши и обновляем время
 	mod._command_wheel_input_pressed = true
-end
-
-mod.command_wheel_released = function(self)
-	-- Сбрасываем флаг при отпускании
-	mod._command_wheel_input_pressed = false
+	mod._command_wheel_last_held_time = os.clock()
 end
 
 mod.close_command_wheel = function(self)
 	mod._command_wheel_input_pressed = false
+	mod._command_wheel_last_held_time = 0
 end
 
 -- ##########################################################

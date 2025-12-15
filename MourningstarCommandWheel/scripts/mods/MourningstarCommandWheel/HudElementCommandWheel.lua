@@ -338,7 +338,12 @@ end
 
 HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render_settings, input_service)
 	-- Проверяем, нажата ли клавиша открытия колеса
-	local input_pressed = mod._command_wheel_input_pressed
+	-- Для keybind с trigger "held" функция вызывается каждый кадр, пока клавиша удерживается
+	-- Если функция не вызывалась более 0.1 секунды, значит клавиша отпущена
+	local current_time = os.clock()
+	local time_since_last_held = current_time - mod._command_wheel_last_held_time
+	local input_pressed = mod._command_wheel_input_pressed and time_since_last_held < 0.1
+	
 	local wheel_context = self._wheel_context or {}
 	local start_time = wheel_context.input_start_time
 
