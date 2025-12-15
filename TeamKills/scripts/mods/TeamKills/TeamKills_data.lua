@@ -116,6 +116,12 @@ return {
 				range = {15, 30},
 			},
 			{
+				setting_id = "opacity",
+				type = "numeric",
+				default_value = 100,
+				range = {0, 100},
+			},
+			{
 				setting_id = "show_background",
 				type = "dropdown",
 				default_value = 1,
@@ -123,12 +129,6 @@ return {
 					{text = "show_background_show", value = 1},
 					{text = "show_background_hide", value = 2},
 				},
-			},
-			{
-				setting_id = "opacity",
-				type = "numeric",
-				default_value = 100,
-				range = {0, 100},
 			},
 			{
 				setting_id = "show_killstreaks",

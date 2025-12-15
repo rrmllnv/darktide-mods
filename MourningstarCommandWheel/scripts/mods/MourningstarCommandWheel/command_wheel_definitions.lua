@@ -100,8 +100,8 @@ local entry_widget_definition = UIWidget.create_definition({
 			horizontal_alignment = "center",
 			vertical_alignment = "center",
 			size = {
-				190,
-				140,
+				CommandWheelSettings.slice_width,
+				CommandWheelSettings.slice_height,
 			},
 			offset = {
 				0,
@@ -134,8 +134,8 @@ local entry_widget_definition = UIWidget.create_definition({
 				2,
 			},
 			size = {
-				190,
-				140,
+				CommandWheelSettings.slice_width,
+				CommandWheelSettings.slice_height,
 			},
 			color = {
 				150,
@@ -163,8 +163,8 @@ local entry_widget_definition = UIWidget.create_definition({
 			horizontal_alignment = "center",
 			vertical_alignment = "center",
 			size = {
-				190,
-				140,
+				CommandWheelSettings.slice_width,
+				CommandWheelSettings.slice_height,
 			},
 			color = {
 				150,

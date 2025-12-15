@@ -54,12 +54,12 @@ local button_definitions = {
 		label_key = "button_credits_vendor",
 		icon = "content/ui/materials/icons/system/escape/achievements",
 	},
-	{
-		id = "inbox",
-		view = "inbox_view",
-		label_key = "button_inbox",
-		icon = "content/ui/materials/icons/system/escape/achievements",
-	},
+	-- {
+	-- 	id = "inbox",
+	-- 	view = "inbox_view",
+	-- 	label_key = "button_inbox",
+	-- 	icon = "content/ui/materials/icons/system/escape/achievements",
+	-- },
 	{
 		id = "mission_board",
 		view = "mission_board_view",
@@ -98,7 +98,7 @@ local button_definitions = {
 	},
 }
 
-local HudElementCommandWheel = class("HudElementCommandWheel", HudElementBase)
+local HudElementCommandWheel = class("HudElementCommandWheel", "HudElementBase")
 
 HudElementCommandWheel.init = function(self, parent, draw_layer, start_scale)
 	HudElementCommandWheel.super.init(self, parent, draw_layer, start_scale, Definitions)
@@ -113,7 +113,9 @@ HudElementCommandWheel.init = function(self, parent, draw_layer, start_scale)
 	self._wheel_context = {}
 	self._close_delay = nil
 	
-	local wheel_slots = CommandWheelSettings.wheel_slots
+	-- Автоматически определяем количество слотов по количеству активных кнопок
+	local active_buttons_count = #button_definitions
+	local wheel_slots = math.max(active_buttons_count, CommandWheelSettings.wheel_slots)
 	self:_setup_entries(wheel_slots)
 	self:_populate_wheel(button_definitions)
 	
@@ -194,6 +196,12 @@ HudElementCommandWheel._update_active_progress = function(self, dt)
 	end
 
 	self._wheel_active_progress = progress
+	
+	-- Управляем видимостью фонового виджета (тень, ромб и круг)
+	local wheel_background_widget = self._wheel_background_widget
+	if wheel_background_widget then
+		wheel_background_widget.visible = progress > 0
+	end
 end
 
 HudElementCommandWheel._update_widget_locations = function(self)
@@ -213,14 +221,19 @@ HudElementCommandWheel._update_widget_locations = function(self)
 
 		if entry then
 			local widget = entry.widget
-			local angle = start_angle + (i - 1) * radians_per_widget
-			local position_x = math.sin(angle) * radius
-			local position_y = math.cos(angle) * radius
-			local offset = widget.offset
+			local content = widget.content
+			
+			-- Обновляем позицию только если виджет видим или колесо активно
+			if content.visible or active_progress > 0 then
+				local angle = start_angle + (i - 1) * radians_per_widget
+				local position_x = math.sin(angle) * radius
+				local position_y = math.cos(angle) * radius
+				local offset = widget.offset
 
-			widget.content.angle = angle
-			offset[1] = position_x
-			offset[2] = position_y
+				content.angle = angle
+				offset[1] = position_x
+				offset[2] = position_y
+			end
 		end
 	end
 end
@@ -334,15 +347,10 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 	end
 
 	-- Проверяем, нажата ли клавиша открытия колеса
-	-- Для keybind с trigger "held" функция вызывается каждый кадр, пока клавиша удерживается
-	-- Если функция не вызывалась более 0.2 секунды, значит клавиша отпущена
-	local current_time = os.clock()
-	local time_since_last_held = current_time - mod._command_wheel_last_held_time
-	local input_pressed = mod._command_wheel_input_pressed and time_since_last_held < 0.2
-	
-	-- Проверяем, что мы в правильном уровне
-	if input_pressed and not is_in_valid_lvl() then
-		input_pressed = false
+	-- Проверяем состояние клавиши напрямую через Keyboard/Mouse
+	local input_pressed = false
+	if is_in_valid_lvl() then
+		input_pressed = mod:_is_command_wheel_key_pressed()
 	end
 	
 	local wheel_context = self._wheel_context
@@ -357,7 +365,13 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 			-- Активируем выбранный элемент
 			local option = hovered_entry.option
 			if option and option.view then
-				mod:activate_hub_view(option.view)
+				-- Безопасный вызов с проверкой
+				local success, err = pcall(function()
+					mod:activate_hub_view(option.view)
+				end)
+				if not success then
+					mod:error("Failed to activate view '%s': %s", tostring(option.view), tostring(err))
+				end
 			end
 		end
 		self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
@@ -407,7 +421,13 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 	if hovered_entry and input_service:get("left_pressed") then
 		local option = hovered_entry.option
 		if option and option.view then
-			mod:activate_hub_view(option.view)
+			-- Безопасный вызов с проверкой
+			local success, err = pcall(function()
+				mod:activate_hub_view(option.view)
+			end)
+			if not success then
+				mod:error("Failed to activate view '%s': %s", tostring(option.view), tostring(err))
+			end
 			self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
 		end
 	end
@@ -461,6 +481,40 @@ HudElementCommandWheel._pop_cursor = function(self)
 
 		self._cursor_pushed = false
 	end
+end
+
+HudElementCommandWheel._draw_widgets = function(self, dt, t, input_service, ui_renderer, render_settings)
+	local active_progress = self._wheel_active_progress
+
+	-- Если колесо не активно, не рисуем ничего (включая фоновый виджет)
+	if active_progress == 0 then
+		return
+	end
+
+	-- Устанавливаем прозрачность на основе прогресса анимации
+	render_settings.alpha_multiplier = active_progress
+
+	-- Рисуем виджеты кнопок из entries
+	local entries = self._entries
+
+	if entries then
+		for i = 1, #entries do
+			local entry = entries[i]
+			local widget = entry.widget
+
+			UIWidget.draw(widget, ui_renderer)
+
+			if widget.content.hotspot.is_hover then
+				local hover_data = self._last_widget_hover_data
+
+				hover_data.t = t
+				hover_data.index = i
+			end
+		end
+	end
+
+	-- Рисуем остальные виджеты (wheel_background и т.д.)
+	HudElementCommandWheel.super._draw_widgets(self, dt, t, input_service, ui_renderer, render_settings)
 end
 
 return HudElementCommandWheel
