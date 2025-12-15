@@ -28,6 +28,21 @@ local is_in_valid_lvl = function()
 	return false
 end
 
+-- Доступные иконки из content/ui/materials/icons/system/escape:
+-- achievements - Достижения
+-- social - Социальное меню
+-- premium_store - Премиум магазин
+-- news - Новости
+-- credits - Кредиты
+-- settings - Настройки
+-- leave_party - Покинуть группу
+-- quit - Выход из игры
+-- inventory - Инвентарь
+-- party_finder - Поиск группы
+-- change_character - Сменить персонажа
+-- leave_mission - Покинуть миссию
+-- leave_training - Покинуть тренировку
+
 -- Определения кнопок
 local button_definitions = {
 	{
@@ -70,7 +85,7 @@ local button_definitions = {
 		id = "premium_store",
 		view = "store_view",
 		label_key = "button_premium_store",
-		icon = "content/ui/materials/icons/system/escape/achievements",
+		icon = "content/ui/materials/icons/system/escape/premium_store",
 	},
 	{
 		id = "training_grounds",
@@ -82,7 +97,7 @@ local button_definitions = {
 		id = "social",
 		view = "social_menu_view",
 		label_key = "button_social",
-		icon = "content/ui/materials/icons/system/escape/achievements",
+		icon = "content/ui/materials/icons/system/escape/social",
 	},
 	{
 		id = "commissary",
