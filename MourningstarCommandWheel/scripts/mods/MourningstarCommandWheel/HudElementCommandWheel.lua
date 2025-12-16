@@ -28,46 +28,31 @@ local is_in_valid_lvl = function()
 	return false
 end
 
--- Доступные иконки из content/ui/materials/icons/system/escape:
--- achievements - Достижения
--- social - Социальное меню
--- premium_store - Премиум магазин
--- news - Новости
--- credits - Кредиты
--- settings - Настройки
--- leave_party - Покинуть группу
--- quit - Выход из игры
--- inventory - Инвентарь
--- party_finder - Поиск группы
--- change_character - Сменить персонажа
--- leave_mission - Покинуть миссию
--- leave_training - Покинуть тренировку
-
 -- Определения кнопок
 local button_definitions = {
 	{
 		id = "barber",
 		view = "barber_vendor_background_view",
 		label_key = "button_barber",
-		icon = "content/ui/materials/icons/system/escape/achievements",
+		icon = "content/ui/materials/hud/interactions/icons/barber",
 	},
 	{
 		id = "contracts",
 		view = "contracts_background_view",
 		label_key = "button_contracts",
-		icon = "content/ui/materials/icons/system/escape/achievements",
+		icon = "content/ui/materials/hud/interactions/icons/contracts",
 	},
 	{
 		id = "crafting",
 		view = "crafting_view",
 		label_key = "button_crafting",
-		icon = "content/ui/materials/icons/system/escape/achievements",
+		icon = "content/ui/materials/hud/interactions/icons/forge",
 	},
 	{
 		id = "credits_vendor",
 		view = "credits_vendor_background_view",
 		label_key = "button_credits_vendor",
-		icon = "content/ui/materials/icons/system/escape/achievements",
+		icon = "content/ui/materials/hud/interactions/icons/credits_store",
 	},
 	-- {
 	-- 	id = "inbox",
@@ -79,7 +64,7 @@ local button_definitions = {
 		id = "mission_board",
 		view = "mission_board_view",
 		label_key = "button_mission_board",
-		icon = "content/ui/materials/icons/system/escape/achievements",
+		icon = "content/ui/materials/hud/interactions/icons/mission_board",
 	},
 	{
 		id = "premium_store",
@@ -91,7 +76,7 @@ local button_definitions = {
 		id = "training_grounds",
 		view = "training_grounds_view",
 		label_key = "button_training_grounds",
-		icon = "content/ui/materials/icons/system/escape/achievements",
+		icon = "content/ui/materials/hud/interactions/icons/training_grounds",
 	},
 	{
 		id = "social",
@@ -103,7 +88,7 @@ local button_definitions = {
 		id = "commissary",
 		view = "cosmetics_vendor_background_view",
 		label_key = "button_commissary",
-		icon = "content/ui/materials/icons/system/escape/achievements",
+		icon = "content/ui/materials/hud/interactions/icons/cosmetics_store",
 	},
 	{
 		id = "penance",
@@ -128,7 +113,7 @@ local button_definitions = {
 		id = "havoc",
 		view = "havoc_background_view",
 		label_key = "button_havoc",
-		icon = "content/ui/materials/icons/system/escape/achievements",
+		icon = "content/ui/materials/hud/interactions/icons/havoc",
 	},
 }
 

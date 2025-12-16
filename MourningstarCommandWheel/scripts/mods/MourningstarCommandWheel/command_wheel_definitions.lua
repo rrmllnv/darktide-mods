@@ -43,10 +43,25 @@ local scenegraph_definition = {
 	},
 }
 
-local hover_color = get_hud_color("color_tint_main_1", 255)
-local default_color = get_hud_color("color_tint_main_2", 255)
-local icon_hover_color = get_hud_color("color_tint_main_2", 255)
-local icon_default_color = get_hud_color("color_tint_main_3", 255)
+-- Цвета для линии и иконок (используются, если не заданы в настройках)
+local hover_color = CommandWheelSettings.line_color_hover or get_hud_color("color_tint_main_1", 255)
+local default_color = CommandWheelSettings.line_color_default or get_hud_color("color_tint_main_2", 255)
+local icon_hover_color = CommandWheelSettings.icon_color_hover or get_hud_color("color_tint_main_2", 255)
+local icon_default_color = CommandWheelSettings.icon_color_default or get_hud_color("color_tint_main_3", 255)
+
+-- Применяем кастомные цвета, если они заданы как массивы
+if CommandWheelSettings.line_color_hover and type(CommandWheelSettings.line_color_hover) == "table" then
+	hover_color = CommandWheelSettings.line_color_hover
+end
+if CommandWheelSettings.line_color_default and type(CommandWheelSettings.line_color_default) == "table" then
+	default_color = CommandWheelSettings.line_color_default
+end
+if CommandWheelSettings.icon_color_hover and type(CommandWheelSettings.icon_color_hover) == "table" then
+	icon_hover_color = CommandWheelSettings.icon_color_hover
+end
+if CommandWheelSettings.icon_color_default and type(CommandWheelSettings.icon_color_default) == "table" then
+	icon_default_color = CommandWheelSettings.icon_color_default
+end
 
 local default_button_content = {
 	on_released_sound = nil,
@@ -146,15 +161,10 @@ local entry_widget_definition = UIWidget.create_definition({
 				CommandWheelSettings.slice_height,
 			},
 			uvs = {
-				{ 0.1, 0 },
-				{ 0.9, 1 },
+				{ CommandWheelSettings.slice_uv_left, CommandWheelSettings.slice_uv_top },
+				{ CommandWheelSettings.slice_uv_right, CommandWheelSettings.slice_uv_bottom },
 			},
-			color = {
-				150,
-				0,
-				0,
-				0,
-			},
+			color = CommandWheelSettings.button_color_default,
 		},
 		change_function = function (content, style)
 			style.angle = math.pi + (content.angle or 0)
@@ -170,7 +180,10 @@ local entry_widget_definition = UIWidget.create_definition({
 			local ignore_alpha = false
 			local anim_hover_progress = hotspot.anim_hover_progress
 
-			ColorUtilities.color_lerp(icon_default_color, icon_hover_color, anim_hover_progress, color, ignore_alpha)
+			-- Используем цвета кнопок для highlight
+			local default_button_color = CommandWheelSettings.button_color_default
+			local hover_button_color = CommandWheelSettings.button_color_hover
+			ColorUtilities.color_lerp(default_button_color, hover_button_color, anim_hover_progress, color, false)
 		end,
 	},
 	{
@@ -185,15 +198,10 @@ local entry_widget_definition = UIWidget.create_definition({
 				CommandWheelSettings.slice_height,
 			},
 			uvs = {
-				{ 0.1, 0 },
-				{ 0.9, 1 },
+				{ CommandWheelSettings.slice_uv_left, CommandWheelSettings.slice_uv_top },
+				{ CommandWheelSettings.slice_uv_right, CommandWheelSettings.slice_uv_bottom },
 			},
-			color = {
-				150,
-				0,
-				0,
-				0,
-			},
+			color = CommandWheelSettings.button_color_default,
 		},
 		change_function = function (content, style)
 			style.angle = math.pi + (content.angle or 0)
@@ -264,12 +272,7 @@ local widget_definitions = {
 					0,
 					1,
 				},
-				color = {
-					120,
-					0,
-					0,
-					0,
-				},
+				color = CommandWheelSettings.rhombus_color,
 			},
 			change_function = function (content, style)
 				-- Обновляем размер ромба динамически
@@ -295,18 +298,24 @@ local widget_definitions = {
 			pass_type = "texture",
 			value = "content/ui/materials/hud/communication_wheel/middle_circle",
 			style = {
+				horizontal_alignment = "center",
+				vertical_alignment = "center",
+				size = {
+					CommandWheelSettings.center_circle_size,
+					CommandWheelSettings.center_circle_size,
+				},
 				offset = {
 					0,
 					0,
 					0,
 				},
-				color = {
-					255,
-					0,
-					0,
-					0,
-				},
+				color = CommandWheelSettings.background_color,
 			},
+			change_function = function (content, style)
+				-- Обновляем размер фона динамически
+				style.size[1] = CommandWheelSettings.center_circle_size
+				style.size[2] = CommandWheelSettings.center_circle_size
+			end,
 		},
 		{
 			pass_type = "rotated_texture",
