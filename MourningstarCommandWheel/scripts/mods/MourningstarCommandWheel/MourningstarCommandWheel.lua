@@ -1,6 +1,5 @@
 local mod = get_mod("MourningstarCommandWheel")
 
-local CLASS = CLASS
 local InputUtils = require("scripts/managers/input/input_utils")
 
 -- Добавляем пути для require
