@@ -4,8 +4,8 @@ return {
     ru = "Колесо команд Морнингстар",
   },
   mod_description = {
-    en = "Open various hub menus with a radial command wheel.",
-    ru = "Открывайте различные меню хаба с помощью радиального колеса команд.",
+    en = "A convenient radial menu system for quick access to all hub menus and features.",
+    ru = "Удобная система радиального меню для быстрого доступа ко всем меню и функциям хаба.",
   },
   open_command_wheel_key = {
     en = "Open Command Wheel",
