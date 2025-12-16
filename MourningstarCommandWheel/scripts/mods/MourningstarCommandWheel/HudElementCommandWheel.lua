@@ -323,14 +323,29 @@ HudElementCommandWheel._update_widget_locations = function(self)
 end
 
 HudElementCommandWheel._update_wheel_presentation = function(self, dt, t, ui_renderer, render_settings, input_service)
+	if not input_service then
+		return
+	end
+
+	-- Проверяем существование действий перед использованием
+	if not input_service:has("cursor") and not (InputDevice.gamepad_active and input_service:has("navigate_controller_right")) then
+		return
+	end
+
 	local screen_width, screen_height = RESOLUTION_LOOKUP.width, RESOLUTION_LOOKUP.height
 	local scale = render_settings.scale
-	local cursor = input_service and input_service:get("cursor")
+	local cursor = nil
 
-	if input_service and InputDevice.gamepad_active then
+	if input_service:has("cursor") then
+		cursor = input_service:get("cursor")
+	end
+
+	if not cursor and InputDevice.gamepad_active and input_service:has("navigate_controller_right") then
 		cursor = input_service:get("navigate_controller_right")
-		cursor[1] = screen_width * 0.5 + cursor[1] * screen_width * 0.5
-		cursor[2] = screen_height * 0.5 - cursor[2] * screen_height * 0.5
+		if cursor then
+			cursor[1] = screen_width * 0.5 + cursor[1] * screen_width * 0.5
+			cursor[2] = screen_height * 0.5 - cursor[2] * screen_height * 0.5
+		end
 	end
 
 	if not cursor then
@@ -507,8 +522,8 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 		return
 	end
 
-	-- Закрытие при ESC
-	if input_service:get("cancel_pressed") then
+	-- Закрытие при ESC (проверяем существование действия)
+	if input_service:has("cancel_pressed") and input_service:get("cancel_pressed") then
 		self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
 		return
 	end
@@ -519,8 +534,10 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 	if Mouse then
 		right_mouse_held = Mouse.button(1) == 1
 	else
-		-- Альтернативный способ через input_service
-		right_mouse_held = input_service:get("right_hold") or false
+		-- Альтернативный способ через input_service (проверяем существование действия)
+		if input_service:has("right_hold") then
+			right_mouse_held = input_service:get("right_hold") or false
+		end
 	end
 
 	-- Обработка перетаскивания правой кнопкой мыши
@@ -581,7 +598,8 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 	if not right_mouse_held then
 		local hovered_entry, hovered_index = self:_is_wheel_entry_hovered(t)
 		
-		if hovered_entry and input_service:get("left_pressed") then
+		-- Проверяем существование действия перед использованием
+		if hovered_entry and input_service:has("left_pressed") and input_service:get("left_pressed") then
 			local option = hovered_entry.option
 			if option then
 				-- Безопасный вызов с проверкой
