@@ -33,25 +33,25 @@ local button_definitions = {
 	{
 		id = "barber",
 		view = "barber_vendor_background_view",
-		label_key = "button_barber",
+		label_key = "loc_body_shop_view_display_name",  -- Игровая локализация
 		icon = "content/ui/materials/hud/interactions/icons/barber",
 	},
 	{
 		id = "contracts",
 		view = "contracts_background_view",
-		label_key = "button_contracts",
+		label_key = "loc_marks_vendor_view_title",  -- Игровая локализация
 		icon = "content/ui/materials/hud/interactions/icons/contracts",
 	},
 	{
 		id = "crafting",
 		view = "crafting_view",
-		label_key = "button_crafting",
+		label_key = "loc_crafting_view",  -- Игровая локализация
 		icon = "content/ui/materials/hud/interactions/icons/forge",
 	},
 	{
 		id = "credits_vendor",
 		view = "credits_vendor_background_view",
-		label_key = "button_credits_vendor",
+		label_key = "loc_vendor_view_title",  -- Игровая локализация
 		icon = "content/ui/materials/hud/interactions/icons/credits_store",
 	},
 	-- {
@@ -63,56 +63,56 @@ local button_definitions = {
 	{
 		id = "mission_board",
 		view = "mission_board_view",
-		label_key = "button_mission_board",
+		label_key = "loc_mission_board_view",  -- Игровая локализация
 		icon = "content/ui/materials/hud/interactions/icons/mission_board",
 	},
 	{
 		id = "premium_store",
 		view = "store_view",
-		label_key = "button_premium_store",
+		label_key = "loc_store_view_display_name",  -- Игровая локализация
 		icon = "content/ui/materials/icons/system/escape/premium_store",
 	},
 	{
 		id = "training_grounds",
 		view = "training_grounds_view",
-		label_key = "button_training_grounds",
+		label_key = "loc_training_ground_view",  -- Игровая локализация
 		icon = "content/ui/materials/hud/interactions/icons/training_grounds",
 	},
 	{
 		id = "social",
 		view = "social_menu_view",
-		label_key = "button_social",
+		label_key = "loc_social_view_display_name",  -- Игровая локализация
 		icon = "content/ui/materials/icons/system/escape/social",
 	},
 	{
 		id = "commissary",
 		view = "cosmetics_vendor_background_view",
-		label_key = "button_commissary",
+		label_key = "loc_cosmetics_vendor_view_title",  -- Игровая локализация
 		icon = "content/ui/materials/hud/interactions/icons/cosmetics_store",
 	},
 	{
 		id = "penance",
 		view = "penance_overview_view",
-		label_key = "button_penance",
+		label_key = "loc_achievements_view_display_name",  -- Игровая локализация
 		icon = "content/ui/materials/icons/system/escape/achievements",
 	},
 	{
 		id = "inventory",
 		view = "inventory_background_view",
-		label_key = "button_inventory",
+		label_key = "loc_character_view_display_name",  -- Игровая локализация
 		icon = "content/ui/materials/icons/system/escape/inventory",
 	},
 	{
 		id = "change_character",
 		view = nil, -- Специальная обработка через функцию
-		label_key = "button_change_character",
+		label_key = "loc_exit_to_main_menu_display_name",  -- Игровая локализация
 		icon = "content/ui/materials/icons/system/escape/change_character",
 		action = "change_character", -- Специальное действие вместо view
 	},
 	{
 		id = "havoc",
 		view = "havoc_background_view",
-		label_key = "button_havoc",
+		label_key = "loc_havoc_name",  -- Игровая локализация
 		icon = "content/ui/materials/hud/interactions/icons/havoc",
 	},
 }
@@ -184,7 +184,12 @@ HudElementCommandWheel._populate_wheel = function(self, options)
 
 			if option then
 				content.icon = option.icon or "content/ui/materials/base/ui_default_base"
-				content.text = mod:localize(option.label_key)
+				-- Используем игровую локализацию для ключей, начинающихся с "loc_", иначе используем локализацию мода
+				if option.label_key and string.sub(option.label_key, 1, 4) == "loc_" then
+					content.text = Localize(option.label_key)
+				else
+					content.text = mod:localize(option.label_key)
+				end
 			end
 		end
 	end
@@ -320,7 +325,13 @@ HudElementCommandWheel._update_wheel_presentation = function(self, dt, t, ui_ren
 
 		if hovered_entry then
 			local option = hovered_entry.option
-			local display_name = mod:localize(option.label_key)
+			-- Используем игровую локализацию для ключей, начинающихся с "loc_", иначе используем локализацию мода
+			local display_name
+			if option.label_key and string.sub(option.label_key, 1, 4) == "loc_" then
+				display_name = Localize(option.label_key)
+			else
+				display_name = mod:localize(option.label_key)
+			end
 
 			wheel_background_widget.content.text = display_name
 
