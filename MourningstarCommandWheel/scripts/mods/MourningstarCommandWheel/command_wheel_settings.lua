@@ -81,9 +81,9 @@ local command_wheel_settings = {
 	-- Ромб (middle_box) - появляется при наведении на кнопку
 	rhombus_color = {120, 0, 0, 0},  -- [alpha, r, g, b] - темно-серый по умолчанию
 	-- Кнопки (slice) - базовый цвет сегментов
-	-- Как в ForTheEmperor: используются оттенки серого (меняется только alpha, RGB = 0,0,0)
-	button_color_default = {190, 0, 0, 0},  -- [alpha, r, g, b] - серый по умолчанию (как в ForTheEmperor)
-	button_color_hover = {220, 0, 0, 0},  -- [alpha, r, g, b] - более яркий серый при наведении (как в ForTheEmperor)
+	-- используются оттенки серого (меняется только alpha, RGB = 0,0,0)
+	button_color_default = {190, 0, 0, 0},  -- [alpha, r, g, b] - серый по умолчанию
+	button_color_hover = {220, 0, 0, 0},  -- [alpha, r, g, b] - более яркий серый при наведении
 	-- Иконки - цвет иконок на кнопках
 	icon_color_default = nil,  -- nil = использовать цвет из игры (color_tint_main_3)
 	icon_color_hover = nil,  -- nil = использовать цвет из игры (color_tint_main_2)

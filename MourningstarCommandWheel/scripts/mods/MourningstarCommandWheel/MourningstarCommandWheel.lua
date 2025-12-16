@@ -11,9 +11,6 @@ mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandW
 -- Загружаем settings, чтобы settings() зарегистрировал глобальный объект
 mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_settings")
 
--- ##########################################################
--- ################## Variables #############################
-
 local valid_lvls = {
 	shooting_range = true,
 	hub = true,
@@ -29,9 +26,6 @@ local hud_elements = {
 		},
 	},
 }
-
--- ##########################################################
--- ############## Internal Functions ########################
 
 local is_in_valid_lvl = function()
 	if Managers and Managers.state and Managers.state.game_mode then
@@ -265,9 +259,6 @@ mod.close_command_wheel = function(self)
 	mod._command_wheel_eval_func = nil
 end
 
--- ##########################################################
--- ################### Hooks ################################
-
 mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, params)
 	for _, hud_element in ipairs(hud_elements) do
 		if not table.find_by_key(elements, "class_name", hud_element.class_name) then
@@ -292,6 +283,3 @@ mod.on_setting_changed = function(setting_id)
 		mod._command_wheel_eval_func = nil
 	end
 end
-
--- ##########################################################
--- ################### Script ###############################
