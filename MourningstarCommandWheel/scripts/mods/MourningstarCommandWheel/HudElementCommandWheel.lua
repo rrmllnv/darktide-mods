@@ -54,12 +54,6 @@ local button_definitions = {
 		label_key = "loc_vendor_view_title",  -- Игровая локализация
 		icon = "content/ui/materials/hud/interactions/icons/credits_store",
 	},
-	-- {
-	-- 	id = "inbox",
-	-- 	view = "inbox_view",
-	-- 	label_key = "button_inbox",
-	-- 	icon = "content/ui/materials/icons/system/escape/achievements",
-	-- },
 	{
 		id = "mission_board",
 		view = "mission_board_view",
