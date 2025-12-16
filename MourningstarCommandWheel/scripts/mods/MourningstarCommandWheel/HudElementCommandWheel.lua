@@ -317,7 +317,7 @@ HudElementCommandWheel._update_widget_locations = function(self)
 end
 
 HudElementCommandWheel._update_wheel_presentation = function(self, dt, t, ui_renderer, render_settings, input_service)
-	if not input_service then
+	if not input_service or type(input_service.has) ~= "function" then
 		return
 	end
 
@@ -449,6 +449,15 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 		return
 	end
 
+	-- Проверяем, не открыт ли чат (если чат использует ввод, не открываем колесо)
+	if Managers.ui and Managers.ui:chat_using_input() then
+		-- Если колесо было открыто, закрываем его
+		if self._wheel_active then
+			self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
+		end
+		return
+	end
+
 	-- Проверяем, нажата ли клавиша открытия колеса
 	-- Проверяем состояние клавиши напрямую через Keyboard/Mouse
 	local input_pressed = false
@@ -514,6 +523,11 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 	end
 
 	if not self._wheel_active then
+		return
+	end
+
+	-- Проверяем, что input_service существует и имеет метод has
+	if not input_service or type(input_service.has) ~= "function" then
 		return
 	end
 
@@ -590,7 +604,7 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 	end
 
 	-- Обработка выбора левой кнопкой мыши (только если не перетаскиваем)
-	if not right_mouse_held then
+	if not right_mouse_held and input_service and type(input_service.has) == "function" then
 		local hovered_entry, hovered_index = self:_is_wheel_entry_hovered(t)
 		
 		-- Проверяем существование действия перед использованием
