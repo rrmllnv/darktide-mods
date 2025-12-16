@@ -292,11 +292,7 @@ HudElementCommandWheel._update_wheel_presentation = function(self, dt, t, ui_ren
 	local cursor_angle_degrees_from_center = math.radians_to_degrees(cursor_angle_from_center) % 360
 	
 	-- Используем настраиваемые параметры для hover
-	local hover_min_distance = CommandWheelSettings.hover_min_distance
-	if hover_min_distance == nil then
-		-- По умолчанию пропорционально center_circle_size (оригинал: 130 при center_circle_size = 250)
-		hover_min_distance = CommandWheelSettings.center_circle_size * 0.52
-	end
+	local hover_min_distance = CommandWheelSettings.hover_min_distance or 130
 	local entry_hover_degrees = CommandWheelSettings.hover_angle_degrees or 44
 	local entry_hover_degrees_half = entry_hover_degrees * 0.5
 	local any_hover = false

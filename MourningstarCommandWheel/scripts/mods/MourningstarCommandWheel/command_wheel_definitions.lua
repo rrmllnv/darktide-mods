@@ -73,8 +73,8 @@ local entry_widget_definition = UIWidget.create_definition({
 			horizontal_alignment = "center",
 			vertical_alignment = "center",
 			size = {
-				96,
-				96,
+				CommandWheelSettings.icon_size,
+				CommandWheelSettings.icon_size,
 			},
 			offset = {
 				0,
@@ -100,8 +100,8 @@ local entry_widget_definition = UIWidget.create_definition({
 			horizontal_alignment = "center",
 			vertical_alignment = "center",
 			size = {
-				CommandWheelSettings.slice_width,
-				CommandWheelSettings.slice_height,
+				CommandWheelSettings.line_width,
+				CommandWheelSettings.line_height or ((CommandWheelSettings.max_radius - CommandWheelSettings.min_radius) * CommandWheelSettings.line_height_scale),
 			},
 			offset = {
 				0,
@@ -113,11 +113,13 @@ local entry_widget_definition = UIWidget.create_definition({
 		change_function = function (content, style)
 			style.angle = math.pi + (content.angle or 0)
 
-			-- Применяем корректировку кривизны
-			local base_width = CommandWheelSettings.slice_width
-			local base_height = CommandWheelSettings.slice_height
-			style.size[1] = base_width * CommandWheelSettings.slice_curvature_scale_x
-			style.size[2] = base_height * CommandWheelSettings.slice_curvature_scale_y
+			-- Вычисляем высоту линии на основе радиусов, если не задана явно
+			local line_height = CommandWheelSettings.line_height
+			if line_height == nil then
+				line_height = (CommandWheelSettings.max_radius - CommandWheelSettings.min_radius) * CommandWheelSettings.line_height_scale
+			end
+			style.size[1] = CommandWheelSettings.line_width
+			style.size[2] = line_height
 
 			local color = style.color
 			local ignore_alpha = false
@@ -142,6 +144,10 @@ local entry_widget_definition = UIWidget.create_definition({
 			size = {
 				CommandWheelSettings.slice_width,
 				CommandWheelSettings.slice_height,
+			},
+			uvs = {
+				{ 0.1, 0 },
+				{ 0.9, 1 },
 			},
 			color = {
 				150,
@@ -177,6 +183,10 @@ local entry_widget_definition = UIWidget.create_definition({
 			size = {
 				CommandWheelSettings.slice_width,
 				CommandWheelSettings.slice_height,
+			},
+			uvs = {
+				{ 0.1, 0 },
+				{ 0.9, 1 },
 			},
 			color = {
 				150,
