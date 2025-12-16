@@ -32,8 +32,8 @@ local scenegraph_definition = {
 		parent = "pivot",
 		vertical_alignment = "center",
 		size = {
-			250,
-			250,
+			CommandWheelSettings.center_circle_size,
+			CommandWheelSettings.center_circle_size,
 		},
 		position = {
 			0,
@@ -113,6 +113,12 @@ local entry_widget_definition = UIWidget.create_definition({
 		change_function = function (content, style)
 			style.angle = math.pi + (content.angle or 0)
 
+			-- Применяем корректировку кривизны
+			local base_width = CommandWheelSettings.slice_width
+			local base_height = CommandWheelSettings.slice_height
+			style.size[1] = base_width * CommandWheelSettings.slice_curvature_scale_x
+			style.size[2] = base_height * CommandWheelSettings.slice_curvature_scale_y
+
 			local color = style.color
 			local ignore_alpha = false
 			local hotspot = content.hotspot
@@ -147,6 +153,12 @@ local entry_widget_definition = UIWidget.create_definition({
 		change_function = function (content, style)
 			style.angle = math.pi + (content.angle or 0)
 
+			-- Применяем корректировку кривизны
+			local base_width = CommandWheelSettings.slice_width
+			local base_height = CommandWheelSettings.slice_height
+			style.size[1] = base_width * CommandWheelSettings.slice_curvature_scale_x
+			style.size[2] = base_height * CommandWheelSettings.slice_curvature_scale_y
+
 			local hotspot = content.hotspot
 			local color = style.color
 			local ignore_alpha = false
@@ -175,6 +187,12 @@ local entry_widget_definition = UIWidget.create_definition({
 		},
 		change_function = function (content, style)
 			style.angle = math.pi + (content.angle or 0)
+
+			-- Применяем корректировку кривизны
+			local base_width = CommandWheelSettings.slice_width
+			local base_height = CommandWheelSettings.slice_height
+			style.size[1] = base_width * CommandWheelSettings.slice_curvature_scale_x
+			style.size[2] = base_height * CommandWheelSettings.slice_curvature_scale_y
 		end,
 	},
 	{
@@ -228,8 +246,8 @@ local widget_definitions = {
 				horizontal_alignment = "center",
 				vertical_alignment = "center",
 				size = {
-					250,
-					64,
+					CommandWheelSettings.rhombus_width or CommandWheelSettings.center_circle_size,
+					CommandWheelSettings.rhombus_height or (CommandWheelSettings.center_circle_size * 0.256),
 				},
 				offset = {
 					0,
@@ -243,6 +261,13 @@ local widget_definitions = {
 					0,
 				},
 			},
+			change_function = function (content, style)
+				-- Обновляем размер ромба динамически
+				local rhombus_width = CommandWheelSettings.rhombus_width or CommandWheelSettings.center_circle_size
+				local rhombus_height = CommandWheelSettings.rhombus_height or (CommandWheelSettings.center_circle_size * 0.256)
+				style.size[1] = rhombus_width
+				style.size[2] = rhombus_height
+			end,
 			visibility_function = function (content, style)
 				return content.force_hover
 			end,
@@ -297,6 +322,18 @@ local widget_definitions = {
 			},
 			change_function = function (content, style)
 				style.angle = math.pi - (content.angle or 0)
+
+				-- Обновляем позицию стрелки в зависимости от размера центрального круга
+				-- Оригинальные значения: pivot (10, 147), offset (0, -133)
+				-- Масштабируем пропорционально center_circle_size (оригинал был 250)
+				local scale = CommandWheelSettings.center_circle_size / 250
+				local arrow_size_y = 28 * scale
+				local arrow_pivot_y = 147 * scale
+				local arrow_offset_y = -133 * scale
+
+				style.size[2] = arrow_size_y
+				style.pivot[2] = arrow_pivot_y
+				style.offset[2] = arrow_offset_y
 
 				local color = style.color
 				local ignore_alpha = true

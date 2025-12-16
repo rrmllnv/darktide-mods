@@ -124,6 +124,12 @@ local button_definitions = {
 		icon = "content/ui/materials/icons/system/escape/change_character",
 		action = "change_character", -- Специальное действие вместо view
 	},
+	{
+		id = "havoc",
+		view = "havoc_background_view",
+		label_key = "button_havoc",
+		icon = "content/ui/materials/icons/system/escape/achievements",
+	},
 }
 
 local HudElementCommandWheel = class("HudElementCommandWheel", "HudElementBase")
@@ -284,7 +290,14 @@ HudElementCommandWheel._update_wheel_presentation = function(self, dt, t, ui_ren
 	local cursor_distance_from_center = math.distance_2d(screen_width * 0.5, screen_height * 0.5, cursor[1], cursor[2])
 	local cursor_angle_from_center = math.angle(screen_width * 0.5, screen_height * 0.5, cursor[1], cursor[2]) - math.pi * 0.5
 	local cursor_angle_degrees_from_center = math.radians_to_degrees(cursor_angle_from_center) % 360
-	local entry_hover_degrees = 44
+	
+	-- Используем настраиваемые параметры для hover
+	local hover_min_distance = CommandWheelSettings.hover_min_distance
+	if hover_min_distance == nil then
+		-- По умолчанию пропорционально center_circle_size (оригинал: 130 при center_circle_size = 250)
+		hover_min_distance = CommandWheelSettings.center_circle_size * 0.52
+	end
+	local entry_hover_degrees = CommandWheelSettings.hover_angle_degrees or 44
 	local entry_hover_degrees_half = entry_hover_degrees * 0.5
 	local any_hover = false
 	local hovered_entry
@@ -300,7 +313,7 @@ HudElementCommandWheel._update_wheel_presentation = function(self, dt, t, ui_ren
 		local is_populated = entry.option ~= nil
 		local is_hover = false
 
-		if is_populated and cursor_distance_from_center > 130 * scale then
+		if is_populated and cursor_distance_from_center > hover_min_distance * scale then
 			local angle_diff = (widget_angle_degrees - cursor_angle_degrees_from_center + 180 + 360) % 360 - 180
 
 			if angle_diff <= entry_hover_degrees_half and angle_diff >= -entry_hover_degrees_half then
