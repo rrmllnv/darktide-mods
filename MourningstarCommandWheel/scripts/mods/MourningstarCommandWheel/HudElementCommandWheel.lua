@@ -153,7 +153,13 @@ end
 
 -- Функция для сохранения порядка кнопок в настройки
 local function save_wheel_config(wheel_config)
+	-- Сохраняем через mod:set()
 	mod:set("wheel_config", wheel_config)
+	-- Принудительно сохраняем настройки через DMF для немедленного сохранения
+	local dmf = get_mod("DMF")
+	if dmf and dmf.save_unsaved_settings_to_file then
+		dmf.save_unsaved_settings_to_file()
+	end
 end
 
 -- Функция для генерации опций из конфига
