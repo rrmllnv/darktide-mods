@@ -24,7 +24,7 @@ local scenegraph_definition = {
 		position = {
 			0,
 			0,
-			0,
+			100,
 		},
 	},
 	background = {
@@ -94,7 +94,7 @@ local entry_widget_definition = UIWidget.create_definition({
 			offset = {
 				0,
 				0,
-				3,
+				100,
 			},
 			color = get_hud_color("color_tint_main_2", 255),
 		},
@@ -121,7 +121,7 @@ local entry_widget_definition = UIWidget.create_definition({
 			offset = {
 				0,
 				0,
-				4,
+				100,
 			},
 			color = get_hud_color("color_tint_main_1", 255),
 		},
@@ -154,7 +154,7 @@ local entry_widget_definition = UIWidget.create_definition({
 			offset = {
 				0,
 				0,
-				2,
+				100,
 			},
 			size = {
 				CommandWheelSettings.slice_width,
@@ -193,6 +193,11 @@ local entry_widget_definition = UIWidget.create_definition({
 		style = {
 			horizontal_alignment = "center",
 			vertical_alignment = "center",
+			offset = {
+				0,
+				0,
+				100,
+			},
 			size = {
 				CommandWheelSettings.slice_width,
 				CommandWheelSettings.slice_height,
@@ -224,7 +229,7 @@ local entry_widget_definition = UIWidget.create_definition({
 			offset = {
 				0,
 				0,
-				5,
+				100,
 			},
 			font_type = simple_button_font_settings.font_type,
 			font_size = 16,
@@ -252,7 +257,7 @@ wheel_font_style.text_vertical_alignment = "center"
 wheel_font_style.offset = {
 	0,
 	0,
-	4,
+	100,
 }
 
 local widget_definitions = {
@@ -270,7 +275,7 @@ local widget_definitions = {
 				offset = {
 					0,
 					0,
-					1,
+					100,
 				},
 				color = CommandWheelSettings.rhombus_color,
 			},
@@ -307,7 +312,7 @@ local widget_definitions = {
 				offset = {
 					0,
 					0,
-					0,
+					100,
 				},
 				color = CommandWheelSettings.background_color,
 			},
@@ -335,7 +340,7 @@ local widget_definitions = {
 				offset = {
 					0,
 					-133,
-					6,
+					100,
 				},
 				color = get_hud_color("color_tint_main_1", 255),
 			},
