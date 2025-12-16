@@ -75,6 +75,16 @@ return {
     ["zh-cn"] = "苦修",
     ru = "Искупления",
   },
+  button_inventory = {
+    en = "Operative",
+    ["zh-cn"] = "特工",
+    ru = "Оперативник",
+  },
+  button_change_character = {
+    en = "Change Operative",
+    ["zh-cn"] = "更换特工",
+    ru = "Сменить оперативника",
+  },
   button_havoc = {
     en = "Havoc",
     ["zh-cn"] = "Havoc",

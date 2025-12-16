@@ -7,7 +7,7 @@ local command_wheel_settings = {
 	max_radius = 190,
 	min_radius = 185,
 	scan_delay = 0.2,
-	wheel_slots = 10,
+	wheel_slots = 12,
 	-- Размеры сегментов радиальных кнопок (ширина, высота)
 	-- slice_width - угловая ширина сегмента (влияет на ширину кнопок и промежутки между ними)
 	-- Чем меньше slice_width, тем уже кнопки и больше промежутки между ними

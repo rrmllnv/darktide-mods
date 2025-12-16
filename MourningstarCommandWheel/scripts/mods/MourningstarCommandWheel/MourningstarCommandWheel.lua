@@ -96,6 +96,30 @@ mod.activate_hub_view = function(self, view)
 	return false
 end
 
+mod.change_character = function(self)
+	-- Функция для смены персонажа (выход в главное меню)
+	if not is_in_valid_lvl() then
+		return false
+	end
+	
+	local success, err = pcall(function()
+		-- Проверяем, что multiplayer_session существует
+		if Managers.multiplayer_session and Managers.multiplayer_session.leave then
+			Managers.multiplayer_session:leave("exit_to_main_menu")
+		else
+			mod:error("multiplayer_session not available for character change")
+			return false
+		end
+	end)
+	
+	if not success then
+		mod:error("Failed to change character: %s", tostring(err))
+		return false
+	end
+	
+	return true
+end
+
 mod._command_wheel_element = nil
 
 mod.get_command_wheel_element = function(self)

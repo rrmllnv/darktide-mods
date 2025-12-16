@@ -111,6 +111,19 @@ local button_definitions = {
 		label_key = "button_penance",
 		icon = "content/ui/materials/icons/system/escape/achievements",
 	},
+	{
+		id = "inventory",
+		view = "inventory_background_view",
+		label_key = "button_inventory",
+		icon = "content/ui/materials/icons/system/escape/inventory",
+	},
+	{
+		id = "change_character",
+		view = nil, -- Специальная обработка через функцию
+		label_key = "button_change_character",
+		icon = "content/ui/materials/icons/system/escape/change_character",
+		action = "change_character", -- Специальное действие вместо view
+	},
 }
 
 local HudElementCommandWheel = class("HudElementCommandWheel", "HudElementBase")
@@ -379,13 +392,18 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 		if hovered_entry then
 			-- Активируем выбранный элемент
 			local option = hovered_entry.option
-			if option and option.view then
+			if option then
 				-- Безопасный вызов с проверкой
 				local success, err = pcall(function()
-					mod:activate_hub_view(option.view)
+					if option.action == "change_character" then
+						-- Специальная обработка для смены персонажа
+						mod:change_character()
+					elseif option.view then
+						mod:activate_hub_view(option.view)
+					end
 				end)
 				if not success then
-					mod:error("Failed to activate view '%s': %s", tostring(option.view), tostring(err))
+					mod:error("Failed to activate action/view '%s': %s", tostring(option.action or option.view), tostring(err))
 				end
 			end
 		end
@@ -435,13 +453,18 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 	
 	if hovered_entry and input_service:get("left_pressed") then
 		local option = hovered_entry.option
-		if option and option.view then
+		if option then
 			-- Безопасный вызов с проверкой
 			local success, err = pcall(function()
-				mod:activate_hub_view(option.view)
+				if option.action == "change_character" then
+					-- Специальная обработка для смены персонажа
+					mod:change_character()
+				elseif option.view then
+					mod:activate_hub_view(option.view)
+				end
 			end)
 			if not success then
-				mod:error("Failed to activate view '%s': %s", tostring(option.view), tostring(err))
+				mod:error("Failed to activate action/view '%s': %s", tostring(option.action or option.view), tostring(err))
 			end
 			self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
 		end
