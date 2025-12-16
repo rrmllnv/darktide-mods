@@ -260,48 +260,73 @@ mod.on_setting_changed = function()
     end
 end
 
+-- Функция для сохранения данных миссии (для показа в карусели)
+local function save_mission_data()
+	-- Сохраняем данные для использования в карусели EndView
+	if mod.kills_by_category and next(mod.kills_by_category) then
+		mod.saved_kills_by_category = {}
+		for account_id, categories in pairs(mod.kills_by_category) do
+			mod.saved_kills_by_category[account_id] = {}
+			for category, count in pairs(categories) do
+				mod.saved_kills_by_category[account_id][category] = count
+			end
+		end
+	end
+	if mod.damage_by_category and next(mod.damage_by_category) then
+		mod.saved_damage_by_category = {}
+		for account_id, categories in pairs(mod.damage_by_category) do
+			mod.saved_damage_by_category[account_id] = {}
+			for category, damage in pairs(categories) do
+				mod.saved_damage_by_category[account_id][category] = damage
+			end
+		end
+	end
+	if mod.player_kills and next(mod.player_kills) then
+		mod.saved_player_kills = {}
+		for account_id, kills in pairs(mod.player_kills) do
+			mod.saved_player_kills[account_id] = kills
+		end
+	end
+	if mod.player_damage and next(mod.player_damage) then
+		mod.saved_player_damage = {}
+		for account_id, damage in pairs(mod.player_damage) do
+			mod.saved_player_damage[account_id] = damage
+		end
+	end
+end
+
 function mod.on_game_state_changed(status, state_name)
-	-- Очистка данных при выходе из игрового состояния (окончание миссии)
-	if (state_name == 'GameplayStateRun' or state_name == "StateGameplay") and status == "exit" then
-		-- Сохраняем данные перед очисткой для использования в хабе
-		if mod.kills_by_category and next(mod.kills_by_category) then
+	-- При переходе в хаб - полностью очищаем ВСЕ данные (включая saved и display)
+	if status == "enter" then
+		local game_mode_name = Managers.state and Managers.state.game_mode and Managers.state.game_mode:game_mode_name()
+		if game_mode_name == "hub" then
+			-- Полностью очищаем ВСЕ данные при переходе в хаб
+			mod.player_kills = {}
+			mod.player_damage = {}
+			mod.player_last_damage = {}
+			mod.killed_units = {}
+			mod.player_killstreak = {}
+			mod.player_killstreak_timer = {}
+			mod.last_enemy_interaction = {}
+			mod.kills_by_category = {}
+			mod.damage_by_category = {}
+			mod.last_kill_time_by_category = {}
+			mod.highlighted_categories = {}
+			mod.killstreak_kills_by_category = {}
+			mod.killstreak_damage_by_category = {}
+			mod.display_killstreak_kills_by_category = {}
+			mod.display_killstreak_damage_by_category = {}
+			-- Очищаем также saved данные
 			mod.saved_kills_by_category = {}
-			for account_id, categories in pairs(mod.kills_by_category) do
-				mod.saved_kills_by_category[account_id] = {}
-				for category, count in pairs(categories) do
-					mod.saved_kills_by_category[account_id][category] = count
-				end
-			end
-		end
-		if mod.damage_by_category and next(mod.damage_by_category) then
 			mod.saved_damage_by_category = {}
-			for account_id, categories in pairs(mod.damage_by_category) do
-				mod.saved_damage_by_category[account_id] = {}
-				for category, damage in pairs(categories) do
-					mod.saved_damage_by_category[account_id][category] = damage
-				end
-			end
-		end
-		-- Сохраняем общие данные игроков
-		if mod.player_kills and next(mod.player_kills) then
 			mod.saved_player_kills = {}
-			for account_id, kills in pairs(mod.player_kills) do
-				mod.saved_player_kills[account_id] = kills
-			end
-		end
-		if mod.player_damage and next(mod.player_damage) then
 			mod.saved_player_damage = {}
-			for account_id, damage in pairs(mod.player_damage) do
-				mod.saved_player_damage[account_id] = damage
-			end
+			mod.killsboard_show_in_end_view = false
+		elseif (state_name == 'GameplayStateRun' or state_name == "StateGameplay") and status == "enter" then
+			-- При входе в новую миссию также очищаем данные
+			recreate_hud()
+			mod.killsboard_show_in_end_view = false
 		end
-		-- Очищаем все данные текущей миссии
-		recreate_hud()
-		mod.killsboard_show_in_end_view = false
-	elseif (state_name == 'GameplayStateRun' or state_name == "StateGameplay") and status == "enter" then
-		-- При входе в новую миссию также очищаем данные (на случай если они остались)
-		recreate_hud()
-		mod.killsboard_show_in_end_view = false
 	end
 end
 
@@ -624,6 +649,9 @@ end
 -- Хук для отображения killstreak в конце миссии
 mod:hook(CLASS.EndView, "on_enter", function(func, self, ...)
 	func(self, ...)
+	-- Сохраняем данные миссии для показа в карусели (НЕ очищаем здесь!)
+	save_mission_data()
+	
 	local show_killsboard_end_view = mod:get("show_killsboard_end_view") or 1
 	if show_killsboard_end_view == 1 then
 		mod:show_killstreak_view({end_view = true})
