@@ -434,8 +434,9 @@ HudElementCommandWheel._is_wheel_entry_hovered = function(self, t)
 	end
 
 	local last_hover = self._last_widget_hover_data
+	local hover_grace_period = CommandWheelSettings.hover_grace_period or 0.4
 
-	if last_hover.t and t < last_hover.t + HOVER_GRACE_PERIOD then
+	if last_hover.t and t < last_hover.t + hover_grace_period then
 		local i = last_hover.index
 
 		return entries[i], i
