@@ -121,7 +121,7 @@ local entry_widget_definition = UIWidget.create_definition({
 			offset = {
 				0,
 				0,
-				100,
+				150,
 			},
 			color = get_hud_color("color_tint_main_1", 255),
 		},
