@@ -117,6 +117,60 @@ local button_definitions = {
 	},
 }
 
+-- Создаем словарь для быстрого доступа к кнопкам по id
+local button_definitions_by_id = {}
+for i, button in ipairs(button_definitions) do
+	button_definitions_by_id[button.id] = button
+end
+
+-- Функция для загрузки порядка кнопок из настроек
+local function load_wheel_config()
+	local saved_config = mod:get("wheel_config")
+	if saved_config and #saved_config > 0 then
+		-- Проверяем, что все сохраненные id существуют
+		local valid_config = {}
+		for _, id in ipairs(saved_config) do
+			if button_definitions_by_id[id] then
+				table.insert(valid_config, id)
+			end
+		end
+		-- Добавляем недостающие кнопки в конец
+		for _, button in ipairs(button_definitions) do
+			local found = false
+			for _, saved_id in ipairs(valid_config) do
+				if saved_id == button.id then
+					found = true
+					break
+				end
+			end
+			if not found then
+				table.insert(valid_config, button.id)
+			end
+		end
+		return valid_config
+	end
+	-- Если нет сохраненного порядка, возвращаем порядок по умолчанию
+	local default_config = {}
+	for _, button in ipairs(button_definitions) do
+		table.insert(default_config, button.id)
+	end
+	return default_config
+end
+
+-- Функция для сохранения порядка кнопок в настройки
+local function save_wheel_config(wheel_config)
+	mod:set("wheel_config", wheel_config)
+end
+
+-- Функция для генерации опций из конфига
+local function generate_options_from_config(wheel_config)
+	local options = {}
+	for i, id in ipairs(wheel_config) do
+		options[i] = button_definitions_by_id[id]
+	end
+	return options
+end
+
 local HudElementCommandWheel = class("HudElementCommandWheel", "HudElementBase")
 
 HudElementCommandWheel.init = function(self, parent, draw_layer, start_scale)
@@ -132,11 +186,17 @@ HudElementCommandWheel.init = function(self, parent, draw_layer, start_scale)
 	self._wheel_context = {}
 	self._close_delay = nil
 	
+	-- Загружаем порядок кнопок из настроек
+	self._wheel_config = load_wheel_config()
+	
 	-- Автоматически определяем количество слотов по количеству активных кнопок
-	local active_buttons_count = #button_definitions
+	local active_buttons_count = #self._wheel_config
 	local wheel_slots = math.max(active_buttons_count, CommandWheelSettings.wheel_slots)
 	self:_setup_entries(wheel_slots)
-	self:_populate_wheel(button_definitions)
+	
+	-- Заполняем колесо из конфига
+	local options = generate_options_from_config(self._wheel_config)
+	self:_populate_wheel(options)
 	
 	self._wheel_background_widget = self._widgets_by_name.wheel_background
 end
@@ -453,25 +513,91 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 		return
 	end
 
-	-- Обработка выбора
+	-- Получаем объект Mouse для проверки правой кнопки мыши
+	local Mouse = rawget(_G, "Mouse")
+	local right_mouse_held = false
+	if Mouse then
+		right_mouse_held = Mouse.button(1) == 1
+	else
+		-- Альтернативный способ через input_service
+		right_mouse_held = input_service:get("right_hold") or false
+	end
+
+	-- Обработка перетаскивания правой кнопкой мыши
 	local hovered_entry, hovered_index = self:_is_wheel_entry_hovered(t)
 	
-	if hovered_entry and input_service:get("left_pressed") then
-		local option = hovered_entry.option
-		if option then
-			-- Безопасный вызов с проверкой
-			local success, err = pcall(function()
-				if option.action == "change_character" then
-					-- Специальная обработка для смены персонажа
-					mod:change_character()
-				elseif option.view then
-					mod:activate_hub_view(option.view)
+	if hovered_entry and right_mouse_held then
+		-- Начинаем или продолжаем перетаскивание
+		if not mod.dragged_entry then
+			mod.dragged_entry = hovered_entry
+			mod.dragged_index = hovered_index
+		end
+
+		-- Если наведены на другой элемент, меняем местами
+		if hovered_index ~= mod.dragged_index then
+			local wheel_config = self._wheel_config
+			local replaced_id = wheel_config[hovered_index]
+			wheel_config[hovered_index] = wheel_config[mod.dragged_index]
+			wheel_config[mod.dragged_index] = replaced_id
+
+			mod.dragged_entry = hovered_entry
+			mod.dragged_index = hovered_index
+
+			-- Обновляем колесо с новым порядком
+			local options = generate_options_from_config(wheel_config)
+			self:_populate_wheel(options)
+			
+			-- Сохраняем новый порядок
+			save_wheel_config(wheel_config)
+		end
+
+		-- Обновляем текст в центре
+		local wheel_background_widget = self._wheel_background_widget
+		if wheel_background_widget and mod.dragged_entry then
+			local option = mod.dragged_entry.option
+			if option then
+				local display_name
+				if option.label_key and string.sub(option.label_key, 1, 4) == "loc_" then
+					display_name = Localize(option.label_key)
+				else
+					display_name = mod:localize(option.label_key)
 				end
-			end)
-			if not success then
-				mod:error("Failed to activate action/view '%s': %s", tostring(option.action or option.view), tostring(err))
+				wheel_background_widget.content.text = display_name
 			end
-			self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
+		end
+
+		-- Визуальная обратная связь при перетаскивании
+		self:_update_drag_visual_feedback(hovered_index)
+	else
+		-- Сбрасываем визуальную обратную связь
+		self:_reset_drag_visual_feedback()
+		
+		-- Сбрасываем перетаскивание
+		mod.dragged_entry = nil
+		mod.dragged_index = nil
+	end
+
+	-- Обработка выбора левой кнопкой мыши (только если не перетаскиваем)
+	if not right_mouse_held then
+		local hovered_entry, hovered_index = self:_is_wheel_entry_hovered(t)
+		
+		if hovered_entry and input_service:get("left_pressed") then
+			local option = hovered_entry.option
+			if option then
+				-- Безопасный вызов с проверкой
+				local success, err = pcall(function()
+					if option.action == "change_character" then
+						-- Специальная обработка для смены персонажа
+						mod:change_character()
+					elseif option.view then
+						mod:activate_hub_view(option.view)
+					end
+				end)
+				if not success then
+					mod:error("Failed to activate action/view '%s': %s", tostring(option.action or option.view), tostring(err))
+				end
+				self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
+			end
 		end
 	end
 end
@@ -493,6 +619,11 @@ HudElementCommandWheel._on_wheel_stop = function(self, t, ui_renderer, render_se
 
 	self._wheel_active = false
 	self._close_delay = nil
+	
+	-- Сбрасываем состояние перетаскивания
+	mod.dragged_entry = nil
+	mod.dragged_index = nil
+	self:_reset_drag_visual_feedback()
 
 	if was_active and UISoundEvents.emote_wheel_close then
 		Managers.ui:play_2d_sound(UISoundEvents.emote_wheel_close)
@@ -523,6 +654,114 @@ HudElementCommandWheel._pop_cursor = function(self)
 		input_manager:pop_cursor(name)
 
 		self._cursor_pushed = false
+	end
+end
+
+HudElementCommandWheel._update_drag_visual_feedback = function(self, hovered_index)
+	local entries = self._entries
+	local drag_offset = 30
+
+	for i, entry in ipairs(entries) do
+		local widget = entry.widget
+		local style = widget.style
+		local icon_style = style.icon
+		local highlight_style = style.slice_highlight
+		local slice_style = style.slice
+
+		if i == hovered_index and entry.option then
+			-- Применяем смещение для перетаскиваемого элемента
+			local angle = entry.widget.content.angle or 0
+			local offset_x = math.sin(angle) * drag_offset
+			local offset_y = math.cos(angle) * drag_offset
+
+			if icon_style then
+				icon_style.offset[1] = offset_x
+				icon_style.offset[2] = offset_y
+			end
+			if highlight_style then
+				highlight_style.offset[1] = offset_x
+				highlight_style.offset[2] = offset_y
+				-- Увеличиваем яркость для визуальной обратной связи
+				local hover_color = CommandWheelSettings.button_color_hover or {220, 0, 0, 0}
+				highlight_style.color[1] = math.min(255, hover_color[1] + 30)
+				highlight_style.color[2] = hover_color[2]
+				highlight_style.color[3] = hover_color[3]
+				highlight_style.color[4] = hover_color[4]
+			end
+			if slice_style then
+				slice_style.offset[1] = offset_x
+				slice_style.offset[2] = offset_y
+				-- Увеличиваем яркость для визуальной обратной связи
+				local hover_color = CommandWheelSettings.button_color_hover or {220, 0, 0, 0}
+				slice_style.color[1] = math.min(255, hover_color[1] + 30)
+				slice_style.color[2] = hover_color[2]
+				slice_style.color[3] = hover_color[3]
+				slice_style.color[4] = hover_color[4]
+			end
+		else
+			-- Сбрасываем смещение для остальных элементов
+			if icon_style then
+				icon_style.offset[1] = 0
+				icon_style.offset[2] = 0
+			end
+			if highlight_style then
+				highlight_style.offset[1] = 0
+				highlight_style.offset[2] = 0
+				-- Приглушаем цвет для неактивных элементов
+				local default_color = CommandWheelSettings.button_color_default or {190, 0, 0, 0}
+				highlight_style.color[1] = math.max(50, default_color[1] - 140)
+				highlight_style.color[2] = default_color[2]
+				highlight_style.color[3] = default_color[3]
+				highlight_style.color[4] = default_color[4]
+			end
+			if slice_style then
+				slice_style.offset[1] = 0
+				slice_style.offset[2] = 0
+				-- Приглушаем цвет для неактивных элементов
+				local default_color = CommandWheelSettings.button_color_default or {190, 0, 0, 0}
+				slice_style.color[1] = math.max(50, default_color[1] - 140)
+				slice_style.color[2] = default_color[2]
+				slice_style.color[3] = default_color[3]
+				slice_style.color[4] = default_color[4]
+			end
+		end
+	end
+end
+
+HudElementCommandWheel._reset_drag_visual_feedback = function(self)
+	local entries = self._entries
+
+	for _, entry in ipairs(entries) do
+		local widget = entry.widget
+		local style = widget.style
+		local icon_style = style.icon
+		local highlight_style = style.slice_highlight
+		local slice_style = style.slice
+
+		if icon_style then
+			icon_style.offset[1] = 0
+			icon_style.offset[2] = 0
+		end
+		if highlight_style then
+			highlight_style.offset[1] = 0
+			highlight_style.offset[2] = 0
+			-- Возвращаем нормальный цвет
+			local default_color = CommandWheelSettings.button_color_default or {190, 0, 0, 0}
+			highlight_style.color[1] = default_color[1]
+			highlight_style.color[2] = default_color[2]
+			highlight_style.color[3] = default_color[3]
+			highlight_style.color[4] = default_color[4]
+		end
+		if slice_style then
+			slice_style.offset[1] = 0
+			slice_style.offset[2] = 0
+			-- Возвращаем нормальный цвет
+			local default_color = CommandWheelSettings.button_color_default or {190, 0, 0, 0}
+			slice_style.color[1] = default_color[1]
+			slice_style.color[2] = default_color[2]
+			slice_style.color[3] = default_color[3]
+			slice_style.color[4] = default_color[4]
+		end
 	end
 end
 
