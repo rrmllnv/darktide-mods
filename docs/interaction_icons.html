@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Darktide Interaction Icons - Все иконки взаимодействий</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #fff;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+        .stats {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #aaa;
+            font-size: 1.1em;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #e0e0e0;
+            transition: all 0.2s;
+        }
+        .tab:hover {
+            background: #333;
+            border-color: #6b9;
+        }
+        .tab.active {
+            background: #6b9;
+            border-color: #6b9;
+            color: #fff;
+        }
+        .search-box {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto 30px;
+            padding: 12px 20px;
+            font-size: 16px;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            border-radius: 8px;
+            color: #e0e0e0;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: #6b9;
+        }
+        .search-box::placeholder {
+            color: #888;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #222;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+        thead {
+            background: #333;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #fff;
+            border-bottom: 2px solid #444;
+        }
+        tbody tr {
+            border-bottom: 1px solid #333;
+            transition: background 0.2s;
+        }
+        tbody tr:hover {
+            background: #2a2a2a;
+        }
+        tbody tr.hidden {
+            display: none;
+        }
+        td {
+            padding: 12px 15px;
+            vertical-align: middle;
+        }
+        .template-name {
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: #6b9;
+            font-weight: 500;
+        }
+        .icon-path {
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: #9bb;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+        .icon-preview {
+            width: 64px;
+            height: 64px;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 0.8em;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .icon-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .icon-preview .icon-placeholder {
+            font-size: 0.7em;
+            padding: 5px;
+            color: #666;
+        }
+        .info-cell {
+            font-size: 0.9em;
+            color: #ccc;
+        }
+        .info-label {
+            color: #888;
+            font-size: 0.85em;
+        }
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            display: none;
+        }
+        .no-results.show {
+            display: block;
+        }
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .icon-card {
+            background: #222;
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .icon-card:hover {
+            border-color: #6b9;
+            background: #2a2a2a;
+        }
+        .icon-card .icon-preview {
+            margin: 0 auto 10px;
+        }
+        .icon-card .icon-name {
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: #9bb;
+            font-size: 0.85em;
+            word-break: break-all;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Darktide Interaction Icons</h1>
+        <div class="stats">
+            Всего шаблонов: <strong id="total-templates">46</strong> | 
+            Уникальных иконок: <strong id="unique-icons">20</strong> | 
+            Показано: <strong id="visible-count">46</strong>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="templates">Шаблоны взаимодействий</div>
+            <div class="tab" data-tab="icons">Уникальные иконки</div>
+        </div>
+        
+        <input type="text" class="search-box" id="search" placeholder="🔍 Поиск по названию, пути или типу...">
+        <div class="no-results" id="no-results">Ничего не найдено</div>
+        
+        <!-- Секция шаблонов -->
+        <div class="content-section active" id="section-templates">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Название шаблона</th>
+                        <th>Путь к иконке</th>
+                        <th>Иконка</th>
+                        <th>Информация</th>
+                    </tr>
+                </thead>
+                <tbody id="templates-table">
+                    <tr data-name="ammunition" data-icon="content/ui/materials/hud/interactions/icons/ammunition" data-ui-type="pickup">
+                        <td class="template-name">ammunition</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/ammunition</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">ammunition</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_pickup</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="body_shop" data-icon="content/ui/materials/hud/interactions/icons/barber" data-ui-type="point_of_interest">
+                        <td class="template-name">body_shop</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/barber</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">barber</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_view</div><br><div><span class="info-label">Description:</span> loc_training_ground_view</div><br><div><span class="info-label">UI Type:</span> point_of_interest</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="chest" data-icon="content/ui/materials/hud/interactions/icons/default" data-ui-type="default">
+                        <td class="template-name">chest</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/default</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">default</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_open</div><br><div><span class="info-label">UI Type:</span> default</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="companion_hub_interact" data-icon="content/ui/materials/hud/interactions/icons/default" data-ui-type="player_interaction">
+                        <td class="template-name">companion_hub_interact</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/default</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">default</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_companion_hub_interaction_pet</div><br><div><span class="info-label">UI Type:</span> player_interaction</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="contracts" data-icon="content/ui/materials/hud/interactions/icons/contracts" data-ui-type="point_of_interest">
+                        <td class="template-name">contracts</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/contracts</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">contracts</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_view</div><br><div><span class="info-label">Description:</span> loc_contracts_view</div><br><div><span class="info-label">UI Type:</span> point_of_interest</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="cosmetics_vendor" data-icon="content/ui/materials/hud/interactions/icons/cosmetics_store" data-ui-type="point_of_interest">
+                        <td class="template-name">cosmetics_vendor</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/cosmetics_store</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">cosmetics_store</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_view</div><br><div><span class="info-label">Description:</span> loc_cosmetics_vendor_view_title</div><br><div><span class="info-label">UI Type:</span> point_of_interest</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="crafting" data-icon="content/ui/materials/hud/interactions/icons/forge" data-ui-type="point_of_interest">
+                        <td class="template-name">crafting</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/forge</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">forge</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_view</div><br><div><span class="info-label">Description:</span> loc_crafting_view</div><br><div><span class="info-label">UI Type:</span> point_of_interest</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="decoding" data-icon="content/ui/materials/hud/interactions/icons/objective_secondary" data-ui-type="mission">
+                        <td class="template-name">decoding</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/objective_secondary</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">objective_secondary</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_decode</div><br><div><span class="info-label">UI Type:</span> mission</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="default" data-icon="content/ui/materials/hud/interactions/icons/default" data-ui-type="">
+                        <td class="template-name">default</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/default</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">default</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_generic_interaction</div><br><div><span class="info-label">Description:</span> loc_generic_interaction</div><br><div><span class="info-label">Duration:</span> 3s</div></div></td>
+                    </tr>
+                    <tr data-name="door_control_panel" data-icon="content/ui/materials/hud/interactions/icons/default" data-ui-type="default">
+                        <td class="template-name">door_control_panel</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/default</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">default</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_use</div><br><div><span class="info-label">UI Type:</span> default</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="equip_auspex" data-icon="content/ui/materials/hud/interactions/icons/environment_generic" data-ui-type="pickup">
+                        <td class="template-name">equip_auspex</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/environment_generic</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">environment_generic</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_pickup</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="forge_material" data-icon="content/ui/materials/hud/interactions/icons/environment_generic" data-ui-type="pickup">
+                        <td class="template-name">forge_material</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/environment_generic</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">environment_generic</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_pickup</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="gamemode_havoc" data-icon="content/ui/materials/hud/interactions/icons/havoc" data-ui-type="point_of_interest">
+                        <td class="template-name">gamemode_havoc</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/havoc</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">havoc</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_view</div><br><div><span class="info-label">Description:</span> loc_havoc_view</div><br><div><span class="info-label">UI Type:</span> point_of_interest</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="grenade" data-icon="content/ui/materials/hud/interactions/icons/grenade" data-ui-type="pickup">
+                        <td class="template-name">grenade</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/grenade</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">grenade</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_pickup</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="health" data-icon="content/ui/materials/hud/interactions/icons/respawn" data-ui-type="pickup">
+                        <td class="template-name">health</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/respawn</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">respawn</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_use</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="health_station" data-icon="content/ui/materials/hud/interactions/icons/respawn" data-ui-type="point_of_interest">
+                        <td class="template-name">health_station</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/respawn</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">respawn</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_use</div><br><div><span class="info-label">UI Type:</span> point_of_interest</div><br><div><span class="info-label">Duration:</span> 3s</div></div></td>
+                    </tr>
+                    <tr data-name="interaction_templates" data-icon="content/ui/materials/hud/interactions/icons/default" data-ui-type="pickup">
+                        <td class="template-name">interaction_templates</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/default</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">default</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_generic_interaction</div><br><div><span class="info-label">Description:</span> loc_generic_interaction</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 3s</div></div></td>
+                    </tr>
+                    <tr data-name="luggable" data-icon="content/ui/materials/hud/interactions/icons/default" data-ui-type="pickup">
+                        <td class="template-name">luggable</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/default</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">default</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_pickup</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="luggable_socket" data-icon="content/ui/materials/hud/interactions/icons/default" data-ui-type="pickup">
+                        <td class="template-name">luggable_socket</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/default</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">default</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_insert</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="marks_vendor" data-icon="content/ui/materials/hud/interactions/icons/contracts" data-ui-type="point_of_interest">
+                        <td class="template-name">marks_vendor</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/contracts</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">contracts</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_view</div><br><div><span class="info-label">Description:</span> loc_marks_vendor_view_title</div><br><div><span class="info-label">UI Type:</span> point_of_interest</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="mission_board" data-icon="content/ui/materials/hud/interactions/icons/mission_board" data-ui-type="point_of_interest">
+                        <td class="template-name">mission_board</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/mission_board</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">mission_board</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_view</div><br><div><span class="info-label">Description:</span> loc_mission_board_view</div><br><div><span class="info-label">UI Type:</span> point_of_interest</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="moveable_platform" data-icon="content/ui/materials/hud/interactions/icons/default" data-ui-type="default">
+                        <td class="template-name">moveable_platform</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/default</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">default</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_press</div><br><div><span class="info-label">UI Type:</span> default</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="objective_pickup" data-icon="content/ui/materials/hud/interactions/icons/objective_secondary" data-ui-type="pickup">
+                        <td class="template-name">objective_pickup</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/objective_secondary</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">objective_secondary</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_pickup</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="objective_pickup_hidden_hold" data-icon="content/ui/materials/hud/interactions/icons/objective_secondary" data-ui-type="pickup_hidden">
+                        <td class="template-name">objective_pickup_hidden_hold</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/objective_secondary</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">objective_secondary</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_pickup</div><br><div><span class="info-label">UI Type:</span> pickup_hidden</div><br><div><span class="info-label">Duration:</span> 1s</div></div></td>
+                    </tr>
+                    <tr data-name="objective_pickup_hold" data-icon="content/ui/materials/hud/interactions/icons/objective_secondary" data-ui-type="pickup">
+                        <td class="template-name">objective_pickup_hold</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/objective_secondary</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">objective_secondary</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_pickup</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 1s</div></div></td>
+                    </tr>
+                    <tr data-name="penance_collectible" data-icon="content/ui/materials/hud/interactions/icons/default" data-ui-type="pickup">
+                        <td class="template-name">penance_collectible</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/default</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">default</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_pickup</div><br><div><span class="info-label">Description:</span> loc_pickup_collectible</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="penances" data-icon="content/ui/materials/hud/interactions/icons/penances" data-ui-type="point_of_interest">
+                        <td class="template-name">penances</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/penances</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">penances</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_view</div><br><div><span class="info-label">Description:</span> loc_penances_view</div><br><div><span class="info-label">UI Type:</span> point_of_interest</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="player_hub_inspect" data-icon="content/ui/materials/hud/interactions/icons/default" data-ui-type="player_interaction">
+                        <td class="template-name">player_hub_inspect</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/default</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">default</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_lobby_entry_inspect</div><br><div><span class="info-label">UI Type:</span> player_interaction</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="pocketable" data-icon="content/ui/materials/hud/interactions/icons/pocketable_default" data-ui-type="pickup">
+                        <td class="template-name">pocketable</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/pocketable_default</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">pocketable_default</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_pickup</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="premium_vendor" data-icon="content/ui/materials/hud/interactions/icons/premium_store" data-ui-type="point_of_interest">
+                        <td class="template-name">premium_vendor</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/premium_store</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">premium_store</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_view</div><br><div><span class="info-label">Description:</span> loc_premium_vendor_view_title</div><br><div><span class="info-label">UI Type:</span> point_of_interest</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="pull_up" data-icon="content/ui/materials/hud/interactions/icons/help" data-ui-type="critical">
+                        <td class="template-name">pull_up</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/help</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">help</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_help</div><br><div><span class="info-label">Description:</span> loc_pull_up</div><br><div><span class="info-label">UI Type:</span> critical</div><br><div><span class="info-label">Duration:</span> 3s</div></div></td>
+                    </tr>
+                    <tr data-name="remove_net" data-icon="content/ui/materials/hud/interactions/icons/help" data-ui-type="critical">
+                        <td class="template-name">remove_net</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/help</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">help</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_help</div><br><div><span class="info-label">Description:</span> loc_remove_net</div><br><div><span class="info-label">UI Type:</span> critical</div><br><div><span class="info-label">Duration:</span> 1s</div></div></td>
+                    </tr>
+                    <tr data-name="rescue" data-icon="content/ui/materials/hud/interactions/icons/help" data-ui-type="critical">
+                        <td class="template-name">rescue</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/help</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">help</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_rescue</div><br><div><span class="info-label">Description:</span> loc_rescue</div><br><div><span class="info-label">UI Type:</span> critical</div><br><div><span class="info-label">Duration:</span> 3s</div></div></td>
+                    </tr>
+                    <tr data-name="revive" data-icon="content/ui/materials/hud/interactions/icons/help" data-ui-type="critical">
+                        <td class="template-name">revive</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/help</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">help</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_revive</div><br><div><span class="info-label">Description:</span> loc_revive</div><br><div><span class="info-label">UI Type:</span> critical</div><br><div><span class="info-label">Duration:</span> 3s</div></div></td>
+                    </tr>
+                    <tr data-name="saints_pickup" data-icon="content/ui/materials/hud/interactions/icons/default" data-ui-type="pickup">
+                        <td class="template-name">saints_pickup</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/default</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">default</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_pickup</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="scanning" data-icon="content/ui/materials/hud/interactions/icons/objective_secondary" data-ui-type="mission">
+                        <td class="template-name">scanning</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/objective_secondary</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">objective_secondary</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_scanning</div><br><div><span class="info-label">Description:</span> loc_scanning</div><br><div><span class="info-label">UI Type:</span> mission</div><br><div><span class="info-label">Duration:</span> 4s</div></div></td>
+                    </tr>
+                    <tr data-name="scripted_scenario" data-icon="content/ui/materials/hud/interactions/icons/environment_generic" data-ui-type="point_of_interest">
+                        <td class="template-name">scripted_scenario</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/environment_generic</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">environment_generic</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_view</div><br><div><span class="info-label">Description:</span> loc_character_view_display_name</div><br><div><span class="info-label">UI Type:</span> point_of_interest</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="servo_skull" data-icon="content/ui/materials/hud/interactions/icons/objective_secondary" data-ui-type="mission">
+                        <td class="template-name">servo_skull</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/objective_secondary</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">objective_secondary</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_interactable_servo_skull_scanner_continue</div><br><div><span class="info-label">Description:</span> loc_interactable_servo_skull_scanner</div><br><div><span class="info-label">UI Type:</span> mission</div><br><div><span class="info-label">Duration:</span> 1s</div></div></td>
+                    </tr>
+                    <tr data-name="servo_skull_activator" data-icon="content/ui/materials/hud/interactions/icons/objective_secondary" data-ui-type="mission">
+                        <td class="template-name">servo_skull_activator</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/objective_secondary</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">objective_secondary</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_interactable_servo_skull_scanner_deploy</div><br><div><span class="info-label">Description:</span> loc_interactable_servo_skull_scanner</div><br><div><span class="info-label">UI Type:</span> mission</div><br><div><span class="info-label">Duration:</span> 1s</div></div></td>
+                    </tr>
+                    <tr data-name="setup_breach_charge" data-icon="content/ui/materials/hud/interactions/icons/objective_secondary" data-ui-type="mission">
+                        <td class="template-name">setup_breach_charge</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/objective_secondary</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">objective_secondary</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_plant</div><br><div><span class="info-label">UI Type:</span> mission</div><br><div><span class="info-label">Duration:</span> 4s</div></div></td>
+                    </tr>
+                    <tr data-name="setup_decoding" data-icon="content/ui/materials/hud/interactions/icons/objective_secondary" data-ui-type="mission">
+                        <td class="template-name">setup_decoding</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/objective_secondary</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">objective_secondary</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_plant</div><br><div><span class="info-label">UI Type:</span> mission</div><br><div><span class="info-label">Duration:</span> 3.8s</div></div></td>
+                    </tr>
+                    <tr data-name="side_mission" data-icon="content/ui/materials/hud/interactions/icons/objective_side" data-ui-type="pickup">
+                        <td class="template-name">side_mission</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/objective_side</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">objective_side</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_pickup</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="stolen_rations" data-icon="content/ui/materials/hud/interactions/icons/default" data-ui-type="pickup">
+                        <td class="template-name">stolen_rations</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/default</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">default</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_stolen_rations_recover</div><br><div><span class="info-label">Description:</span> loc_stolen_rations_pickup</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="tainted_skull" data-icon="content/ui/materials/hud/interactions/icons/enemy" data-ui-type="pickup">
+                        <td class="template-name">tainted_skull</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/enemy</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">enemy</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_tainted_skull</div><br><div><span class="info-label">Description:</span> loc_pickup_tainted_skull</div><br><div><span class="info-label">UI Type:</span> pickup</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="training_ground" data-icon="content/ui/materials/hud/interactions/icons/training_grounds" data-ui-type="point_of_interest">
+                        <td class="template-name">training_ground</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/training_grounds</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">training_grounds</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_view</div><br><div><span class="info-label">Description:</span> loc_training_ground_view</div><br><div><span class="info-label">UI Type:</span> point_of_interest</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                    <tr data-name="vendor" data-icon="content/ui/materials/hud/interactions/icons/credits_store" data-ui-type="point_of_interest">
+                        <td class="template-name">vendor</td>
+                        <td class="icon-path">content/ui/materials/hud/interactions/icons/credits_store</td>
+                        <td>
+                            <div class="icon-preview">
+                                <div class="icon-placeholder">credits_store</div>
+                            </div>
+                        </td>
+                        <td><div class="info-cell"><div><span class="info-label">Action:</span> loc_action_interaction_view</div><br><div><span class="info-label">Description:</span> loc_vendor_view_title</div><br><div><span class="info-label">UI Type:</span> point_of_interest</div><br><div><span class="info-label">Duration:</span> 0s</div></div></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Секция уникальных иконок -->
+        <div class="content-section" id="section-icons">
+            <div class="icon-grid" id="icons-grid">
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/ammunition">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">ammunition</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/ammunition</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/barber">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">barber</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/barber</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/contracts">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">contracts</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/contracts</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/cosmetics_store">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">cosmetics_store</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/cosmetics_store</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/credits_store">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">credits_store</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/credits_store</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/default">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">default</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/default</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/enemy">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">enemy</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/enemy</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/environment_generic">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">environment_generic</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/environment_generic</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/forge">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">forge</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/forge</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/grenade">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">grenade</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/grenade</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/havoc">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">havoc</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/havoc</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/help">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">help</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/help</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/mission_board">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">mission_board</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/mission_board</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/objective_secondary">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">objective_secondary</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/objective_secondary</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/objective_side">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">objective_side</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/objective_side</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/penances">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">penances</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/penances</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/pocketable_default">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">pocketable_default</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/pocketable_default</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/premium_store">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">premium_store</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/premium_store</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/respawn">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">respawn</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/respawn</div>
+                </div>
+                <div class="icon-card" data-icon="content/ui/materials/hud/interactions/icons/training_grounds">
+                    <div class="icon-preview">
+                        <div class="icon-placeholder">training_grounds</div>
+                    </div>
+                    <div class="icon-name">content/ui/materials/hud/interactions/icons/training_grounds</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const searchBox = document.getElementById('search');
+        const tabs = document.querySelectorAll('.tab');
+        const sections = document.querySelectorAll('.content-section');
+        const templatesTable = document.getElementById('templates-table');
+        const iconsGrid = document.getElementById('icons-grid');
+        const templatesRows = templatesTable.querySelectorAll('tr');
+        const iconCards = iconsGrid.querySelectorAll('.icon-card');
+        const totalTemplates = document.getElementById('total-templates');
+        const visibleCount = document.getElementById('visible-count');
+        const noResults = document.getElementById('no-results');
+        
+        let currentTab = 'templates';
+        
+        // Переключение вкладок
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                currentTab = tabName;
+                
+                tabs.forEach(t => t.classList.remove('active'));
+                sections.forEach(s => s.classList.remove('active'));
+                
+                this.classList.add('active');
+                document.getElementById('section-' + tabName).classList.add('active');
+                
+                // Применяем поиск при переключении вкладки
+                searchBox.dispatchEvent(new Event('input'));
+            });
+        });
+        
+        function updateCounts() {
+            let visible = 0;
+            
+            if (currentTab === 'templates') {
+                visible = Array.from(templatesRows).filter(r => !r.classList.contains('hidden')).length;
+            } else {
+                visible = Array.from(iconCards).filter(c => !c.classList.contains('hidden')).length;
+            }
+            
+            visibleCount.textContent = visible;
+            
+            if (visible === 0) {
+                noResults.classList.add('show');
+            } else {
+                noResults.classList.remove('show');
+            }
+        }
+        
+        searchBox.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            
+            if (currentTab === 'templates') {
+                templatesRows.forEach(row => {
+                    const name = row.getAttribute('data-name') || '';
+                    const icon = row.getAttribute('data-icon') || '';
+                    const uiType = row.getAttribute('data-ui-type') || '';
+                    
+                    if (name.includes(searchTerm) || icon.includes(searchTerm) || uiType.includes(searchTerm)) {
+                        row.classList.remove('hidden');
+                    } else {
+                        row.classList.add('hidden');
+                    }
+                });
+            } else {
+                iconCards.forEach(card => {
+                    const icon = card.getAttribute('data-icon') || '';
+                    
+                    if (icon.includes(searchTerm)) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+            }
+            
+            updateCounts();
+        });
+        
+        // Инициализация счетчика
+        updateCounts();
+    </script>
+</body>
+</html>
