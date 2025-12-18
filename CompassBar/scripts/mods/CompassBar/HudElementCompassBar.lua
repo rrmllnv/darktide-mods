@@ -16,31 +16,6 @@ local HudElementCompassBar = class("HudElementCompassBar", "HudElementBase")
 
 HudElementCompassBar.init = function(self, parent, draw_layer, start_scale)
 	HudElementCompassBar.super.init(self, parent, draw_layer, start_scale, Definitions)
-	
-	-- Обновляем позицию и размер из настроек
-	self:_update_settings()
-end
-
--- Обновление настроек из mod:get()
-HudElementCompassBar._update_settings = function(self)
-	local position_y = mod:get("position_y") or CompassBarSettings.position_y
-	local width = mod:get("width") or CompassBarSettings.width
-	local opacity = mod:get("opacity") or 100
-	
-	-- Обновляем scenegraph
-	if self._ui_scenegraph and self._ui_scenegraph.compass_area then
-		self._ui_scenegraph.compass_area.size[1] = width
-		self._ui_scenegraph.compass_area.position[2] = position_y
-		
-		-- Обновляем прозрачность в настройках
-		local alpha = math.floor((opacity / 100) * 255)
-		CompassBarSettings.step_color[1] = alpha
-		CompassBarSettings.text_color[1] = alpha
-		CompassBarSettings.cardinal_color[1] = alpha
-		
-		-- Пересчитываем расстояние между делениями
-		CompassBarSettings.marker_spacing = width / (CompassBarSettings.visible_steps - 1)
-	end
 end
 
 -- Получаем угол направления камеры
@@ -69,9 +44,6 @@ end
 
 HudElementCompassBar.update = function(self, dt, t, ui_renderer, render_settings, input_service)
 	HudElementCompassBar.super.update(self, dt, t, ui_renderer, render_settings, input_service)
-	
-	-- Обновляем настройки каждый кадр (на случай изменения в меню настроек)
-	self:_update_settings()
 end
 
 local step_color_table = {}
@@ -88,35 +60,51 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 		return
 	end
 	
-	local ui_scenegraph = self._ui_scenegraph
+	-- Получаем настройки из mod:get()
+	local position_y = mod:get("position_y") or CompassBarSettings.position_y
+	local width = mod:get("width") or CompassBarSettings.width
+	local opacity = mod:get("opacity")
+	if opacity == nil then
+		opacity = 100
+	end
+	-- Преобразуем opacity (0-100) в alpha (0-255)
+	local base_alpha = math.floor((opacity / 100) * 255)
+	
 	local scale = ui_renderer.scale
 	local inverse_scale = ui_renderer.inverse_scale
 	
-	-- Получаем настройки
+	-- Обновляем scenegraph с актуальными значениями
+	local ui_scenegraph = self._ui_scenegraph
+	if ui_scenegraph and ui_scenegraph.compass_area then
+		-- Сохраняем текущую позицию Z
+		local current_z = ui_scenegraph.compass_area.position[3] or 100
+		self:_set_scenegraph_size("compass_area", width, CompassBarSettings.height)
+		-- Используем set_scenegraph_position с X=0 для центрирования (horizontal_alignment = "center" пересчитает позицию)
+		self:set_scenegraph_position("compass_area", 0, position_y, current_z, "center", "top")
+	end
+	
+	-- Получаем область компаса (после обновления scenegraph)
+	local area_scenegraph = ui_scenegraph.compass_area
+	local area_size = area_scenegraph.size
+	local area_position = area_scenegraph.world_position
+	
+	-- Получаем настройки цветов с учетом прозрачности
 	local step_color = CompassBarSettings.step_color
 	local text_color = CompassBarSettings.text_color
 	local cardinal_color = CompassBarSettings.cardinal_color
 	
-	-- Подготавливаем таблицы цветов
-	step_color_table[1] = step_color[1] or 255
+	-- Базовые цвета (без прозрачности, она будет применяться динамически)
 	step_color_table[2] = step_color[2] or 255
 	step_color_table[3] = step_color[3] or 255
 	step_color_table[4] = step_color[4] or 255
 	
-	text_color_table[1] = text_color[1] or 255
 	text_color_table[2] = text_color[2] or 255
 	text_color_table[3] = text_color[3] or 255
 	text_color_table[4] = text_color[4] or 255
 	
-	cardinal_color_table[1] = cardinal_color[1] or 255
 	cardinal_color_table[2] = cardinal_color[2] or 255
 	cardinal_color_table[3] = cardinal_color[3] or 255
 	cardinal_color_table[4] = cardinal_color[4] or 255
-	
-	-- Получаем область компаса
-	local area_scenegraph = ui_scenegraph.compass_area
-	local area_size = area_scenegraph.size
-	local area_position = area_scenegraph.world_position
 	local draw_layer = area_position[3] + 1
 	
 	-- Настройки делений
@@ -127,7 +115,8 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 	local step_height_small = CompassBarSettings.step_height_small
 	local step_height_large = CompassBarSettings.step_height_large
 	local visible_steps = CompassBarSettings.visible_steps
-	local marker_spacing = CompassBarSettings.marker_spacing
+	-- Пересчитываем расстояние между делениями на основе актуальной ширины
+	local marker_spacing = width / (visible_steps - 1)
 	local step_fade_start = CompassBarSettings.step_fade_start
 	local font_size_small = math.ceil(CompassBarSettings.font_size_small * scale)
 	local font_size_big = math.ceil(CompassBarSettings.font_size_big * scale)
@@ -165,9 +154,10 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 			-- Вычисляем расстояние от центра и альфа-канал для затухания
 			local distance_from_center = math.abs(local_x - area_middle_x)
 			local distance_from_center_norm = distance_from_center / (area_size[1] * 0.5)
-			local alpha_fraction = step_fade_start <= distance_from_center_norm and 
+			local fade_alpha_fraction = step_fade_start <= distance_from_center_norm and 
 				1 - math.min((distance_from_center_norm - step_fade_start) / (1 - step_fade_start), 1) or 1
-			local alpha = 255 * alpha_fraction
+			-- Учитываем и настройку opacity из мода, и затухание по краям
+			local final_alpha = math.floor(base_alpha * fade_alpha_fraction)
 			
 			-- Текущий градус
 			local current_degree = read_index * degrees_per_step
@@ -180,13 +170,13 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 			-- Устанавливаем размер и цвет деления
 			if is_cardinal then
 				size[2] = step_height_large
-				step_color_table[1] = alpha
+				step_color_table[1] = final_alpha
 				step_color_table[2] = cardinal_color[2]
 				step_color_table[3] = cardinal_color[3]
 				step_color_table[4] = cardinal_color[4]
 			else
 				size[2] = step_height_small
-				step_color_table[1] = alpha
+				step_color_table[1] = final_alpha
 				step_color_table[2] = step_color[2]
 				step_color_table[3] = step_color[3]
 				step_color_table[4] = step_color[4]
@@ -204,12 +194,12 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 				local text = degree_abbreviation or tostring(math.floor(current_degree))
 				local text_width = UIRenderer.text_size(ui_renderer, text, font_type, is_cardinal and font_size_big or font_size_small)
 				
-				-- Устанавливаем цвет текста
+				-- Устанавливаем цвет текста с учетом прозрачности
 				if is_cardinal then
-					cardinal_color_table[1] = alpha
+					cardinal_color_table[1] = final_alpha
 					text_color_table = cardinal_color_table
 				else
-					text_color_table[1] = alpha
+					text_color_table[1] = final_alpha
 				end
 				
 				-- Позиция текста

@@ -1,41 +1,42 @@
+local mod = get_mod("CompassBar")
+
 return {
-	title = "CompassBar",
-	description = "Compass bar showing directions (N, S, E, W) with degree markings",
+	name = mod:localize("mod_name"),
+	description = mod:localize("mod_description"),
 	is_togglable = true,
 	options = {
-		{
-			id = "enabled",
-			title = "mod_compass_bar_enabled_title",
-			description = "mod_compass_bar_enabled_description",
-			type = "toggle",
-			default_value = true,
-		},
-		{
-			id = "position_y",
-			title = "mod_compass_bar_position_y_title",
-			description = "mod_compass_bar_position_y_description",
-			type = "numeric",
-			default_value = 20,
-			min_value = 0,
-			max_value = 200,
-		},
-		{
-			id = "width",
-			title = "mod_compass_bar_width_title",
-			description = "mod_compass_bar_width_description",
-			type = "numeric",
-			default_value = 600,
-			min_value = 300,
-			max_value = 1200,
-		},
-		{
-			id = "opacity",
-			title = "mod_compass_bar_opacity_title",
-			description = "mod_compass_bar_opacity_description",
-			type = "numeric",
-			default_value = 100,
-			min_value = 0,
-			max_value = 100,
+		widgets = {
+			{
+				setting_id = "enabled",
+				type = "checkbox",
+				default_value = true,
+				title = mod:localize("mod_compass_bar_enabled_title"),
+				tooltip = mod:localize("mod_compass_bar_enabled_description"),
+			},
+			{
+				setting_id = "position_y",
+				type = "numeric",
+				default_value = 20,
+				range = {0, 400},
+				title = mod:localize("mod_compass_bar_position_y_title"),
+				tooltip = mod:localize("mod_compass_bar_position_y_description"),
+			},
+			{
+				setting_id = "width",
+				type = "numeric",
+				default_value = 600,
+				range = {300, 1200},
+				title = mod:localize("mod_compass_bar_width_title"),
+				tooltip = mod:localize("mod_compass_bar_width_description"),
+			},
+			{
+				setting_id = "opacity",
+				type = "numeric",
+				default_value = 100,
+				range = {0, 100},
+				title = mod:localize("mod_compass_bar_opacity_title"),
+				tooltip = mod:localize("mod_compass_bar_opacity_description"),
+			},
 		},
 	},
 }
