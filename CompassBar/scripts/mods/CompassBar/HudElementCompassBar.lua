@@ -7,11 +7,6 @@ local UIRenderer = require("scripts/managers/ui/ui_renderer")
 local UIFonts = require("scripts/managers/ui/ui_fonts")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local ScriptCamera = require("scripts/foundation/utilities/script_camera")
-local Vector3 = Vector3
-local Vector2 = Vector2
-local Quaternion = Quaternion
-local Color = Color
-local POSITION_LOOKUP = POSITION_LOOKUP
 
 local HudElementCompassBar = class("HudElementCompassBar", "HudElementBase")
 
@@ -43,97 +38,6 @@ HudElementCompassBar._get_camera_direction_angle = function(self)
 	return angle
 end
 
--- Получаем список тимейтов (исключая локального игрока)
-HudElementCompassBar._get_teammates = function(self)
-	local teammates = {}
-	
-	if not Managers or not Managers.player then
-		return teammates
-	end
-	
-	local local_player = Managers.player:local_player(1)
-	if not local_player then
-		return teammates
-	end
-	
-	local local_player_unit = local_player.player_unit
-	if not local_player_unit then
-		return teammates
-	end
-	
-	-- Проверяем, что юнит жив
-	if not Unit.alive(local_player_unit) then
-		return teammates
-	end
-	
-	local all_players = Managers.player:players()
-	if not all_players then
-		return teammates
-	end
-	
-	-- Получаем всех игроков (и людей, и ботов)
-	for unique_id, player in pairs(all_players) do
-		if player and player ~= local_player and type(player) == "table" then
-			local player_unit = player.player_unit
-			if player_unit and player_unit ~= local_player_unit and Unit.alive(player_unit) then
-				local player_position = POSITION_LOOKUP[player_unit]
-				if player_position then
-					-- Пробуем получить профиль
-					local success, profile = pcall(function() return player:profile() end)
-					if success and profile then
-						local archetype = profile.archetype
-						if archetype then
-							local archetype_name = archetype.name or "veteran"
-							local icon_path = archetype.archetype_icon_large or ("content/ui/materials/icons/classes/" .. archetype_name)
-							
-							table.insert(teammates, {
-								player = player,
-								unit = player_unit,
-								position = player_position,
-								archetype_name = archetype_name,
-								icon_path = icon_path,
-							})
-						end
-					else
-						-- Если профиль недоступен, используем дефолтную иконку
-						table.insert(teammates, {
-							player = player,
-							unit = player_unit,
-							position = player_position,
-							archetype_name = "veteran",
-							icon_path = "content/ui/materials/icons/classes/veteran",
-						})
-					end
-				end
-			end
-		end
-	end
-	
-	return teammates
-end
-
--- Вычисляем направление тимейта относительно игрока (в радианах, точно как в оригинальном коде)
-HudElementCompassBar._get_teammate_direction_angle = function(self, teammate_position, player_position)
-	local camera = self._parent:player_camera()
-	if not camera then
-		return 0
-	end
-	
-	-- Используем позицию камеры (как в оригинальном коде _get_position_direction_angle)
-	local camera_position = ScriptCamera.position(camera)
-	local diff_vector = teammate_position - camera_position
-	
-	diff_vector.z = 0
-	diff_vector = Vector3.normalize(diff_vector)
-	
-	local diff_right = Vector3.cross(diff_vector, Vector3.up())
-	local direction = Vector3.forward()
-	local forward_dot_dir = Vector3.dot(diff_vector, direction)
-	local right_dot_dir = Vector3.dot(diff_right, direction)
-	local angle = -math.atan2(right_dot_dir, forward_dot_dir) % (math.pi * 2)
-	
-	return angle
-end
 
 HudElementCompassBar.update = function(self, dt, t, ui_renderer, render_settings, input_service)
 	HudElementCompassBar.super.update(self, dt, t, ui_renderer, render_settings, input_service)
@@ -236,32 +140,6 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 	local header_font_settings = UIFontSettings[font_type] or UIFontSettings.hud_body
 	UIFonts.get_font_options_by_style(header_font_settings, _compass_text_options)
 	
-	-- Получаем иконки тимейтов перед циклом делений
-	local teammate_icons = {}
-	local local_player = Managers.player:local_player(1)
-	if local_player then
-		local local_player_unit = local_player.player_unit
-		if local_player_unit and Unit.alive(local_player_unit) then
-			local player_position = POSITION_LOOKUP[local_player_unit]
-			if player_position then
-				local teammates = self:_get_teammates()
-				for idx, teammate in ipairs(teammates) do
-					if teammate.unit and Unit.alive(teammate.unit) then
-						teammate.position = POSITION_LOOKUP[teammate.unit]
-					end
-					if teammate.position then
-						local teammate_angle = self:_get_teammate_direction_angle(teammate.position, player_position)
-						table.insert(teammate_icons, {
-							angle = teammate_angle,
-							icon_path = teammate.icon_path or ("content/ui/materials/icons/classes/" .. (teammate.archetype_name or "veteran")),
-							archetype_name = teammate.archetype_name or "veteran",
-						})
-					end
-				end
-			end
-		end
-	end
-	
 	-- Рисуем деления
 	for i = -visible_steps, visible_steps do
 		local draw_index = start_index + i
@@ -332,86 +210,6 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 				
 				-- Возвращаем размер обратно
 				size[1] = step_width
-			end
-			
-			-- Рисуем иконки тимейтов для текущего деления (точно как в оригинальном коде)
-			-- ВРЕМЕННО: Рисуем все иконки в центре для отладки
-			if i == 0 and #teammate_icons > 0 then
-				local icon_size = CompassBarSettings.teammate_icon_size or 20
-				local icon_offset_y = CompassBarSettings.teammate_icon_offset_y or -30
-				local icon_spacing = 25
-				
-				for idx, icon_data in ipairs(teammate_icons) do
-					local icon_half_size = icon_size * 0.5
-					local icon_x = area_middle_x + (idx - 1) * icon_spacing - (#teammate_icons * icon_spacing * 0.5)
-					local icon_position = Vector3(
-						icon_x - icon_half_size,
-						area_position[2] + area_size[2] * 0.5 + icon_offset_y,
-						draw_layer + 10
-					)
-					local icon_size_vec = Vector2(icon_size, icon_size)
-					local icon_color = {255, 255, 255, 255}
-					
-					-- ВРЕМЕННО: Рисуем красный прямоугольник
-					local debug_color = {255, 255, 0, 0}
-					UIRenderer.draw_rect(ui_renderer, icon_position, icon_size_vec, debug_color)
-					
-					-- Рисуем иконку
-					UIRenderer.draw_texture(ui_renderer, icon_data.icon_path, icon_position, icon_size_vec, icon_color)
-				end
-			end
-			
-			if #teammate_icons > 0 then
-				local icon_size = CompassBarSettings.teammate_icon_size or 20
-				local icon_offset_y = CompassBarSettings.teammate_icon_offset_y or -30
-				
-				for j = #teammate_icons, 1, -1 do
-					local icon_data = teammate_icons[j]
-					local marker_angle = icon_data.angle
-					local marker_degrees = math.radians_to_degrees(marker_angle)
-					
-					-- Используем ту же логику, что и в оригинальном коде
-					local current_degree_check = current_degree % degrees
-					local degree_difference = marker_degrees - current_degree_check
-					
-					-- Нормализуем разницу для правильной проверки (учитываем переход через 0/360)
-					if degree_difference > 180 then
-						degree_difference = degree_difference - 360
-					elseif degree_difference < -180 then
-						degree_difference = degree_difference + 360
-					end
-					
-					-- Проверяем, попадает ли маркер в текущее деление
-					if degree_difference >= 0 and degree_difference <= degrees_per_step then
-						local degree_difference_fraction = degree_difference / degrees_per_step
-						local icon_x = local_x + marker_spacing * degree_difference_fraction
-						local icon_distance_from_center = math.abs(icon_x - area_middle_x)
-						local icon_distance_from_center_norm = icon_distance_from_center / (area_size[1] * 0.5)
-						local icon_alpha_fraction = step_fade_start <= icon_distance_from_center_norm and 
-							1 - math.min((icon_distance_from_center_norm - step_fade_start) / (1 - step_fade_start), 1) or 1
-						local icon_alpha = math.floor(base_alpha * icon_alpha_fraction)
-						
-						-- Минимальная прозрачность
-						if icon_alpha < 100 then
-							icon_alpha = 100
-						end
-						
-						-- Позиция иконки
-						local icon_half_size = icon_size * 0.5
-						local icon_position = Vector3(
-							icon_x - icon_half_size,
-							area_position[2] + area_size[2] * 0.5 + icon_offset_y,
-							draw_layer + 10
-						)
-						local icon_size_vec = Vector2(icon_size, icon_size)
-						
-						-- Цвет иконки с прозрачностью (RGBA)
-						local icon_color = {icon_alpha, 255, 255, 255}
-						
-						-- Рисуем иконку класса
-						UIRenderer.draw_texture(ui_renderer, icon_data.icon_path, icon_position, icon_size_vec, icon_color)
-					end
-				end
 			end
 		end
 	end
