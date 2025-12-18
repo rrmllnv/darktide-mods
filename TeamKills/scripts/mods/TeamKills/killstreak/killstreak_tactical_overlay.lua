@@ -139,8 +139,8 @@ end
 
 -- Хук для отрисовки виджетов после основной отрисовки, чтобы они были поверх всех элементов
 -- Делаем точно как в scoreboard - без изменения start_layer, просто рисуем после func()
-mod:hook(CLASS.HudElementTacticalOverlay, "_draw_widgets", function(func, self, dt, t, input_service, ui_renderer, render_settings, ...)
-	func(self, dt, t, input_service, ui_renderer, render_settings, ...)
+mod:hook(CLASS.HudElementTacticalOverlay, "_draw_widgets", function(func, self, dt, t, input_service, ui_renderer, render_settings)
+	func(self, dt, t, input_service, ui_renderer, render_settings)
 	
 	local killsboard_widget = self._widgets_by_name["killsboard"]
 	if killsboard_widget then
@@ -159,8 +159,8 @@ mod:hook(CLASS.HudElementTacticalOverlay, "_draw_widgets", function(func, self, 
 	end
 end)
 
-mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, ui_renderer, render_settings, input_service, ...)
-	func(self, dt, t, ui_renderer, render_settings, input_service, ...)
+mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, ui_renderer, render_settings, input_service)
+	func(self, dt, t, ui_renderer, render_settings, input_service)
 	
 	self.killsboard_row_widgets = self.killsboard_row_widgets or {}
 	local killsboard_widget = self._widgets_by_name["killsboard"]
