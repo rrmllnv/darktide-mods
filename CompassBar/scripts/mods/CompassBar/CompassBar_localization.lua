@@ -40,12 +40,12 @@ return {
 		ru = "Прозрачность компаса (0-100).",
 	},
 	mod_compass_bar_hud_display_title = {
-		en = "HUD Display",
-		ru = "HUD отображение",
+		en = "HUD Settings",
+		ru = "Настройки HUD",
 	},
 	mod_compass_bar_display_title = {
-		en = "Display",
-		ru = "Display",
+		en = "Display Settings",
+		ru = "Настройки отображения",
 	},
 	mod_compass_bar_show_in_hub_title = {
 		en = "Show in Hub",
