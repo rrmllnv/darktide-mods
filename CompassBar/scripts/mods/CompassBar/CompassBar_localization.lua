@@ -15,14 +15,6 @@ return {
 		en = "Enable or disable the compass bar display.",
 		ru = "Включить или выключить отображение компаса.",
 	},
-	mod_compass_bar_position_y_title = {
-		en = "Vertical Position",
-		ru = "Вертикальная позиция",
-	},
-	mod_compass_bar_position_y_description = {
-		en = "Vertical position of the compass bar from the top of the screen.",
-		ru = "Вертикальная позиция компаса от верха экрана.",
-	},
 	mod_compass_bar_width_title = {
 		en = "Width",
 		ru = "Ширина",

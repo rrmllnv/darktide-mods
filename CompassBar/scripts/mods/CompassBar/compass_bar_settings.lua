@@ -1,11 +1,11 @@
 local CompassBarSettings = {
 	-- Размеры компаса
 	width = 600,
-	height = 40,
+	height = 60,
 	
 	-- Позиция (по умолчанию вверху по центру)
 	position_x = 0,
-	position_y = 20,
+	position_y = 0,
 	
 	-- Количество делений (360 градусов / steps)
 	steps = 72, -- 5 градусов на деление

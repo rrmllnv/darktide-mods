@@ -12,14 +12,6 @@ return {
 				title = "mod_compass_bar_hud_display_title",
 				sub_widgets = {
 					{
-						setting_id = "position_y",
-						type = "numeric",
-						default_value = 10,
-						range = {0, 400},
-						title = "mod_compass_bar_position_y_title",
-						tooltip = "mod_compass_bar_position_y_description",
-					},
-					{
 						setting_id = "width",
 						type = "numeric",
 						default_value = 600,

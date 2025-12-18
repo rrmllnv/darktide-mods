@@ -30,3 +30,19 @@ mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, para
 
 	return func(self, elements, visibility_groups, params)
 end)
+
+-- Обновляем размер при изменении настроек
+mod.on_setting_changed = function(setting_id)
+	if setting_id == "width" then
+		-- Принудительно обновляем scenegraph для всех экземпляров элемента
+		local hud = Managers.ui and Managers.ui._hud
+		if hud then
+			local elements = hud._elements
+			for _, element in pairs(elements) do
+				if element.__class_name == "HudElementCompassBar" then
+					element._cached_width = nil
+				end
+			end
+		end
+	end
+end

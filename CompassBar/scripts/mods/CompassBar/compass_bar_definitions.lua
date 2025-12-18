@@ -6,9 +6,9 @@ local CompassBarSettings = mod:io_dofile("CompassBar/scripts/mods/CompassBar/com
 
 local scenegraph_definition = {
 	screen = UIWorkspaceSettings.screen,
-	compass_area = {
-		vertical_alignment = "top",
+	CompassBarContainer = {
 		parent = "screen",
+		vertical_alignment = "top",
 		horizontal_alignment = "center",
 		size = {CompassBarSettings.width, CompassBarSettings.height},
 		position = {CompassBarSettings.position_x, CompassBarSettings.position_y, 100},

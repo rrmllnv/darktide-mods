@@ -6,12 +6,15 @@ local CompassBarSettings = mod:io_dofile("CompassBar/scripts/mods/CompassBar/com
 local UIRenderer = require("scripts/managers/ui/ui_renderer")
 local UIFonts = require("scripts/managers/ui/ui_fonts")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
-local ScriptCamera = require("scripts/foundation/utilities/script_camera")
+local UIScenegraph = require("scripts/managers/ui/ui_scenegraph")
 
 local HudElementCompassBar = class("HudElementCompassBar", "HudElementBase")
 
 HudElementCompassBar.init = function(self, parent, draw_layer, start_scale)
 	HudElementCompassBar.super.init(self, parent, draw_layer, start_scale, Definitions)
+	
+	-- Инициализируем кэш для отслеживания изменений настроек
+	self._cached_width = nil
 end
 
 -- Получаем угол направления камеры
@@ -41,43 +44,54 @@ end
 
 HudElementCompassBar.update = function(self, dt, t, ui_renderer, render_settings, input_service)
 	HudElementCompassBar.super.update(self, dt, t, ui_renderer, render_settings, input_service)
+	
+	-- Обновляем размер контейнера, позиция НЕ изменяется в runtime, чтобы не конфликтовать с HUD offset
+	local width = mod:get("width") or CompassBarSettings.width
+	
+	local ui_scenegraph = self._ui_scenegraph
+	if ui_scenegraph and ui_scenegraph.CompassBarContainer then
+		-- Обновляем размер контейнера только если изменился
+		if self._cached_width ~= width then
+			self:_set_scenegraph_size("CompassBarContainer", width, CompassBarSettings.height)
+			self._cached_width = width
+		end
+	end
+end
+
+-- Получаем текущий game_mode_name (кэшируем для оптимизации)
+HudElementCompassBar._get_game_mode_name = function(self)
+	if not Managers.state or not Managers.state.game_mode then
+		return nil
+	end
+	return Managers.state.game_mode:game_mode_name()
 end
 
 -- Проверяем, находимся ли мы в хабе
 HudElementCompassBar._is_in_hub = function(self)
-	if not Managers.state or not Managers.state.game_mode then
-		return false
-	end
-	local game_mode_name = Managers.state.game_mode:game_mode_name()
+	local game_mode_name = self:_get_game_mode_name()
 	return game_mode_name == "hub" or game_mode_name == "prologue_hub"
 end
 
 -- Проверяем, находимся ли мы в Псайканиуме
 HudElementCompassBar._is_in_psykhanium = function(self)
-	if not Managers.state or not Managers.state.game_mode then
-		return false
-	end
-	local game_mode_name = Managers.state.game_mode:game_mode_name()
-	return game_mode_name == "shooting_range"
+	return self:_get_game_mode_name() == "shooting_range"
 end
 
 -- Проверяем, находимся ли мы на миссии
 HudElementCompassBar._is_in_mission = function(self)
-	if not Managers.state or not Managers.state.game_mode then
-		return false
-	end
-	local game_mode_name = Managers.state.game_mode:game_mode_name()
-	-- Миссия - это когда не хаб и не Псайканиум
-	return game_mode_name ~= "hub" and game_mode_name ~= "prologue_hub" and game_mode_name ~= "shooting_range"
+	local game_mode_name = self:_get_game_mode_name()
+	return game_mode_name and game_mode_name ~= "hub" and game_mode_name ~= "prologue_hub" and game_mode_name ~= "shooting_range"
 end
+
+local DEGREES = 360
 
 local step_color_table = {}
 local text_color_table = {}
 local cardinal_color_table = {}
 local _compass_text_options = {}
 
-HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_renderer)
-	HudElementCompassBar.super._draw_widgets(self, dt, t, input_service, ui_renderer)
+HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_renderer, render_settings)
+	HudElementCompassBar.super._draw_widgets(self, dt, t, input_service, ui_renderer, render_settings)
 	
 	-- Проверяем условия отображения в зависимости от места игры
 	local is_in_hub = self:_is_in_hub()
@@ -92,21 +106,11 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 	end
 	
 	-- Проверяем, нужно ли отображать компас в текущем месте
-	local should_show = false
-	if is_in_hub and show_in_hub then
-		should_show = true
-	elseif is_in_psykhanium and show_in_psykhanium then
-		should_show = true
-	elseif is_in_mission and show_in_mission then
-		should_show = true
-	end
-	
-	if not should_show then
+	if not ((is_in_hub and show_in_hub) or (is_in_psykhanium and show_in_psykhanium) or (is_in_mission and show_in_mission)) then
 		return
 	end
 	
 	-- Получаем настройки из mod:get()
-	local position_y = mod:get("position_y") or CompassBarSettings.position_y
 	local width = mod:get("width") or CompassBarSettings.width
 	local opacity = mod:get("opacity")
 	if opacity == nil then
@@ -118,20 +122,12 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 	local scale = ui_renderer.scale
 	local inverse_scale = ui_renderer.inverse_scale
 	
-	-- Обновляем scenegraph с актуальными значениями
-	local ui_scenegraph = self._ui_scenegraph
-	if ui_scenegraph and ui_scenegraph.compass_area then
-		-- Сохраняем текущую позицию Z
-		local current_z = ui_scenegraph.compass_area.position[3] or 100
-		self:_set_scenegraph_size("compass_area", width, CompassBarSettings.height)
-		-- Используем set_scenegraph_position с X=0 для центрирования (horizontal_alignment = "center" пересчитает позицию)
-		self:set_scenegraph_position("compass_area", 0, position_y, current_z, "center", "top")
-	end
-	
-	-- Получаем область компаса (после обновления scenegraph)
-	local area_scenegraph = ui_scenegraph.compass_area
-	local area_size = area_scenegraph.size
-	local area_position = area_scenegraph.world_position
+	-- Получаем позицию контейнера с учетом HUD offset через UIScenegraph.world_position
+	-- Контейнер двигается вместе с HUD, и все что внутри него (деления) тоже двигаются
+	-- Используем ui_renderer.ui_scenegraph как виджеты, чтобы автоматически учитывался HUD offset
+	local ui_scenegraph = ui_renderer.ui_scenegraph
+	local area_position = UIScenegraph.world_position(ui_scenegraph, "CompassBarContainer")
+	local area_size = ui_scenegraph.CompassBarContainer.size
 	
 	-- Получаем настройки цветов с учетом прозрачности
 	local step_color = CompassBarSettings.step_color
@@ -154,8 +150,7 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 	
 	-- Настройки делений
 	local num_steps = CompassBarSettings.steps
-	local degrees = 360
-	local degrees_per_step = degrees / num_steps
+	local degrees_per_step = DEGREES / num_steps
 	local step_width = CompassBarSettings.step_width
 	local step_height_small = CompassBarSettings.step_height_small
 	local step_height_large = CompassBarSettings.step_height_large
@@ -170,16 +165,18 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 	
 	-- Получаем угол направления камеры
 	local player_direction_angle = self:_get_camera_direction_angle()
-	local player_direction_degree = degrees - (0 + math.radians_to_degrees(player_direction_angle))
-	local rotation_progress = player_direction_degree / degrees
+	local player_direction_degree = DEGREES - math.radians_to_degrees(player_direction_angle)
+	local rotation_progress = player_direction_degree / DEGREES
 	
 	-- Вычисляем общую длину и начальное смещение
 	local total_length = marker_spacing * num_steps
 	local start_offset = -total_length * rotation_progress
 	local start_index = math.floor(math.abs(start_offset) / marker_spacing)
-	start_offset = start_offset + area_size[1] * 0.5 + marker_spacing
+	local half_width = area_size[1] * 0.5
+	start_offset = start_offset + half_width + marker_spacing
 	
-	local area_middle_x = area_position[1] + area_size[1] * 0.5
+	local area_middle_x = area_position[1] + half_width
+	local half_height = area_size[2] * 0.5
 	local position = Vector3(0, area_position[2], draw_layer)
 	local size = Vector2(step_width, step_height_small)
 	local step_width_offset = -step_width * 0.5
@@ -197,16 +194,15 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 		-- Проверяем, находится ли деление в видимой области
 		if local_x + size[1] >= area_position[1] and local_x <= area_position[1] + area_size[1] then
 			-- Вычисляем расстояние от центра и альфа-канал для затухания
-			local distance_from_center = math.abs(local_x - area_middle_x)
-			local distance_from_center_norm = distance_from_center / (area_size[1] * 0.5)
-			local fade_alpha_fraction = step_fade_start <= distance_from_center_norm and 
-				1 - math.min((distance_from_center_norm - step_fade_start) / (1 - step_fade_start), 1) or 1
-			-- Учитываем и настройку opacity из мода, и затухание по краям
+			local distance_from_center_norm = math.abs(local_x - area_middle_x) / half_width
+			local fade_alpha_fraction = 1
+			if distance_from_center_norm > step_fade_start then
+				fade_alpha_fraction = 1 - math.min((distance_from_center_norm - step_fade_start) / (1 - step_fade_start), 1)
+			end
 			local final_alpha = math.floor(base_alpha * fade_alpha_fraction)
 			
 			-- Текущий градус
-			local current_degree = read_index * degrees_per_step
-			current_degree = current_degree % degrees
+			local current_degree = (read_index * degrees_per_step) % DEGREES
 			
 			-- Проверяем, является ли это направлением (N, S, E, W)
 			local degree_abbreviation = degree_direction_abbreviations[current_degree]
@@ -229,7 +225,7 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 			
 			-- Позиция деления
 			position[1] = local_x + step_width_offset
-			position[2] = area_position[2] + area_size[2] * 0.5 - size[2] * 0.5
+			position[2] = area_position[2] + half_height - size[2] * 0.5
 			
 			-- Рисуем деление
 			UIRenderer.draw_rect(ui_renderer, position, size, step_color_table)
@@ -242,11 +238,10 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 				-- Устанавливаем цвет текста с учетом прозрачности
 				if is_cardinal then
 					cardinal_color_table[1] = final_alpha
-					-- Копируем значения, а не ссылку
-					text_color_table[1] = cardinal_color_table[1]
-					text_color_table[2] = cardinal_color_table[2]
-					text_color_table[3] = cardinal_color_table[3]
-					text_color_table[4] = cardinal_color_table[4]
+					text_color_table[1] = final_alpha
+					text_color_table[2] = cardinal_color[2]
+					text_color_table[3] = cardinal_color[3]
+					text_color_table[4] = cardinal_color[4]
 				else
 					text_color_table[1] = final_alpha
 				end
