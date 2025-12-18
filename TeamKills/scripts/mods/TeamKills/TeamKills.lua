@@ -535,6 +535,7 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                     mod.add_to_killstreak_counter(account_id)
 
                     if breed_name and is_valid_breed(breed_name) then
+                        mod.kills_by_category = mod.kills_by_category or {}
                         mod.kills_by_category[account_id] = mod.kills_by_category[account_id] or {}
                         mod.kills_by_category[account_id][breed_name] = (mod.kills_by_category[account_id][breed_name] or 0) + 1
                         
@@ -565,10 +566,12 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
 
                 local breed_name = breed_or_nil and breed_or_nil.name
                 if breed_name and is_valid_breed(breed_name) then
+                    mod.damage_by_category = mod.damage_by_category or {}
                     mod.damage_by_category[account_id] = mod.damage_by_category[account_id] or {}
                     mod.damage_by_category[account_id][breed_name] = (mod.damage_by_category[account_id][breed_name] or 0) + math.floor(health_damage)
                     
                     -- Всегда увеличиваем счетчик killstreak урона в рабочем массиве (будет скопирован в display во время активного killstreak)
+                    mod.killstreak_damage_by_category = mod.killstreak_damage_by_category or {}
                     mod.killstreak_damage_by_category[account_id] = mod.killstreak_damage_by_category[account_id] or {}
                     mod.killstreak_damage_by_category[account_id][breed_name] = (mod.killstreak_damage_by_category[account_id][breed_name] or 0) + math.floor(health_damage)
                 end

@@ -61,6 +61,11 @@ HudElementCompassBar._get_teammates = function(self)
 		return teammates
 	end
 	
+	-- Проверяем, что юнит жив
+	if not Unit.alive(local_player_unit) then
+		return teammates
+	end
+	
 	local all_players = Managers.player:players()
 	if not all_players then
 		return teammates
@@ -69,19 +74,25 @@ HudElementCompassBar._get_teammates = function(self)
 	for _, player in pairs(all_players) do
 		if player and player ~= local_player then
 			local player_unit = player.player_unit
-			if player_unit and player_unit ~= local_player_unit then
+			if player_unit and player_unit ~= local_player_unit and Unit.alive(player_unit) then
 				local player_position = POSITION_LOOKUP[player_unit]
 				if player_position then
-					local profile = player:profile()
-					local archetype = profile and profile.archetype
-					local archetype_name = archetype and archetype.name or "veteran"
-					
-					table.insert(teammates, {
-						player = player,
-						unit = player_unit,
-						position = player_position,
-						archetype_name = archetype_name,
-					})
+					local success, profile = pcall(function() return player:profile() end)
+					if success and profile then
+						local archetype = profile.archetype
+						if archetype then
+							local archetype_name = archetype.name or "veteran"
+							local icon_path = archetype.archetype_icon_large or ("content/ui/materials/icons/classes/" .. archetype_name)
+							
+							table.insert(teammates, {
+								player = player,
+								unit = player_unit,
+								position = player_position,
+								archetype_name = archetype_name,
+								icon_path = icon_path,
+							})
+						end
+					end
 				end
 			end
 		end
@@ -289,54 +300,81 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 	
 	-- Рисуем маркеры тимейтов
 	local teammates = self:_get_teammates()
+	
+	-- Временно для отладки: рисуем прямоугольник для каждого тимейта
 	if #teammates > 0 then
 		local local_player = Managers.player:local_player(1)
-		local local_player_unit = local_player and local_player.player_unit
-		local player_position = local_player_unit and POSITION_LOOKUP[local_player_unit]
-		
-		if player_position then
-			local icon_size = CompassBarSettings.teammate_icon_size or 20
-			local icon_offset_y = CompassBarSettings.teammate_icon_offset_y or -30
-			
-			for _, teammate in ipairs(teammates) do
-				-- Вычисляем направление тимейта относительно севера (0-360 градусов)
-				local teammate_degree = self:_get_teammate_direction(teammate.position, player_position, player_direction_angle)
+		if local_player then
+			local local_player_unit = local_player.player_unit
+			if local_player_unit and Unit.alive(local_player_unit) then
+				local player_position = POSITION_LOOKUP[local_player_unit]
 				
-				-- Преобразуем градус в позицию на компасе (аналогично делениям)
-				local teammate_rotation_progress = teammate_degree / degrees
-				local teammate_draw_index = math.floor(teammate_rotation_progress * num_steps) + 1
-				teammate_draw_index = (teammate_draw_index - 1) % num_steps + 1
-				
-				-- Вычисляем смещение относительно текущего центра компаса
-				local teammate_offset_from_center = (teammate_rotation_progress - rotation_progress) * total_length
-				local teammate_local_x = area_middle_x + teammate_offset_from_center
-				
-				-- Проверяем, находится ли маркер в видимой области
-				if teammate_local_x >= area_position[1] - icon_size and teammate_local_x <= area_position[1] + area_size[1] + icon_size then
-					-- Вычисляем прозрачность с учетом затухания
-					local distance_from_center = math.abs(teammate_local_x - area_middle_x)
-					local distance_from_center_norm = distance_from_center / (area_size[1] * 0.5)
-					local fade_alpha_fraction = step_fade_start <= distance_from_center_norm and 
-						1 - math.min((distance_from_center_norm - step_fade_start) / (1 - step_fade_start), 1) or 1
-					local icon_alpha = math.floor(base_alpha * fade_alpha_fraction)
+				if player_position then
+					local icon_size = CompassBarSettings.teammate_icon_size or 20
+					local icon_offset_y = CompassBarSettings.teammate_icon_offset_y or -30
 					
-					-- Получаем путь к иконке класса
-					local archetype_name = teammate.archetype_name
-					local icon_path = "content/ui/materials/icons/classes/" .. archetype_name
-					
-					-- Позиция иконки
-					local icon_position = Vector3(
-						teammate_local_x - icon_size * 0.5,
-						area_position[2] + area_size[2] * 0.5 + icon_offset_y,
-						draw_layer + 1
-					)
-					local icon_size_vec = Vector2(icon_size, icon_size)
-					
-					-- Цвет иконки с прозрачностью
-					local icon_color = {icon_alpha, 255, 255, 255}
-					
-					-- Рисуем иконку
-					UIRenderer.draw_texture(ui_renderer, icon_path, icon_position, icon_size_vec, icon_color)
+					for i, teammate in ipairs(teammates) do
+						-- Обновляем позицию тимейта на случай, если она изменилась
+						if teammate.unit and Unit.alive(teammate.unit) then
+							teammate.position = POSITION_LOOKUP[teammate.unit]
+						end
+						
+						if teammate.position then
+							-- Вычисляем направление тимейта относительно севера (0-360 градусов)
+							local teammate_degree = self:_get_teammate_direction(teammate.position, player_position, player_direction_angle)
+							
+							-- Преобразуем градус в индекс деления (как для обычных делений)
+							local teammate_step_index = math.floor((teammate_degree / degrees_per_step) + 1)
+							teammate_step_index = (teammate_step_index - 1) % num_steps + 1
+							
+							-- Вычисляем позицию на компасе используя ту же логику, что и для делений
+							-- Находим, какой draw_index соответствует этому направлению
+							local teammate_rotation_progress = teammate_degree / degrees
+							local teammate_total_offset = -total_length * teammate_rotation_progress
+							local teammate_draw_index = math.floor(math.abs(teammate_total_offset) / marker_spacing)
+							
+							-- Вычисляем локальную позицию X на компасе
+							local teammate_start_offset = teammate_total_offset + area_size[1] * 0.5 + marker_spacing
+							local teammate_local_x = teammate_start_offset + (teammate_draw_index - 1) * marker_spacing + area_position[1]
+							
+							-- Проверяем, находится ли маркер в видимой области
+							local icon_half_size = icon_size * 0.5
+							if teammate_local_x >= area_position[1] - icon_half_size * 2 and teammate_local_x <= area_position[1] + area_size[1] + icon_half_size * 2 then
+								-- Вычисляем прозрачность с учетом затухания
+								local distance_from_center = math.abs(teammate_local_x - area_middle_x)
+								local distance_from_center_norm = distance_from_center / (area_size[1] * 0.5)
+								local fade_alpha_fraction = step_fade_start <= distance_from_center_norm and 
+									1 - math.min((distance_from_center_norm - step_fade_start) / (1 - step_fade_start), 1) or 1
+								local icon_alpha = math.floor(base_alpha * fade_alpha_fraction)
+								
+								-- Минимальная прозрачность
+								if icon_alpha < 100 then
+									icon_alpha = 100
+								end
+								
+								-- Получаем путь к иконке класса
+								local icon_path = teammate.icon_path or ("content/ui/materials/icons/classes/" .. (teammate.archetype_name or "veteran"))
+								
+								-- Позиция иконки
+								local icon_position = Vector3(
+									teammate_local_x - icon_half_size,
+									area_position[2] + area_size[2] * 0.5 + icon_offset_y,
+									draw_layer + 10
+								)
+								local icon_size_vec = Vector2(icon_size, icon_size)
+								
+								-- Цвет иконки с прозрачностью (RGBA)
+								local icon_color = {icon_alpha, 255, 255, 255}
+								
+								-- ВРЕМЕННО: Рисуем прямоугольник для отладки
+								local debug_color = {icon_alpha, 255, 0, 0} -- Красный для отладки
+								UIRenderer.draw_rect(ui_renderer, icon_position, icon_size_vec, debug_color)
+								
+								-- Рисуем иконку класса
+								UIRenderer.draw_texture(ui_renderer, icon_path, icon_position, icon_size_vec, icon_color)
+							end
+						end
+					end
 				end
 			end
 		end
