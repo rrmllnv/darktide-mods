@@ -11,6 +11,7 @@ local Vector3 = Vector3
 local Vector2 = Vector2
 local Quaternion = Quaternion
 local Color = Color
+local POSITION_LOOKUP = POSITION_LOOKUP
 
 local HudElementCompassBar = class("HudElementCompassBar", "HudElementBase")
 
@@ -40,6 +41,75 @@ HudElementCompassBar._get_camera_direction_angle = function(self)
 	local angle = math.atan2(right_dot_dir, forward_dot_dir)
 	
 	return angle
+end
+
+-- Получаем список тимейтов (исключая локального игрока)
+HudElementCompassBar._get_teammates = function(self)
+	local teammates = {}
+	
+	if not Managers or not Managers.player then
+		return teammates
+	end
+	
+	local local_player = Managers.player:local_player(1)
+	if not local_player then
+		return teammates
+	end
+	
+	local local_player_unit = local_player.player_unit
+	if not local_player_unit then
+		return teammates
+	end
+	
+	local all_players = Managers.player:players()
+	if not all_players then
+		return teammates
+	end
+	
+	for _, player in pairs(all_players) do
+		if player and player ~= local_player then
+			local player_unit = player.player_unit
+			if player_unit and player_unit ~= local_player_unit then
+				local player_position = POSITION_LOOKUP[player_unit]
+				if player_position then
+					local profile = player:profile()
+					local archetype = profile and profile.archetype
+					local archetype_name = archetype and archetype.name or "veteran"
+					
+					table.insert(teammates, {
+						player = player,
+						unit = player_unit,
+						position = player_position,
+						archetype_name = archetype_name,
+					})
+				end
+			end
+		end
+	end
+	
+	return teammates
+end
+
+-- Вычисляем направление тимейта относительно игрока (в градусах, 0-360)
+HudElementCompassBar._get_teammate_direction = function(self, teammate_position, player_position, player_direction_angle)
+	local direction_vector = Vector3.subtract(teammate_position, player_position)
+	direction_vector.z = 0 -- Игнорируем вертикальную составляющую
+	direction_vector = Vector3.normalize(direction_vector)
+	
+	-- Вычисляем угол направления тимейта относительно севера (Vector3.forward())
+	local forward = Vector3.forward()
+	local right = Vector3.cross(forward, Vector3.up())
+	local forward_dot = Vector3.dot(direction_vector, forward)
+	local right_dot = Vector3.dot(direction_vector, right)
+	local teammate_angle = math.atan2(right_dot, forward_dot)
+	
+	-- Преобразуем в градусы (0-360)
+	local teammate_degree = math.radians_to_degrees(teammate_angle)
+	if teammate_degree < 0 then
+		teammate_degree = teammate_degree + 360
+	end
+	
+	return teammate_degree
 end
 
 HudElementCompassBar.update = function(self, dt, t, ui_renderer, render_settings, input_service)
@@ -213,6 +283,61 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 				
 				-- Возвращаем размер обратно
 				size[1] = step_width
+			end
+		end
+	end
+	
+	-- Рисуем маркеры тимейтов
+	local teammates = self:_get_teammates()
+	if #teammates > 0 then
+		local local_player = Managers.player:local_player(1)
+		local local_player_unit = local_player and local_player.player_unit
+		local player_position = local_player_unit and POSITION_LOOKUP[local_player_unit]
+		
+		if player_position then
+			local icon_size = CompassBarSettings.teammate_icon_size or 20
+			local icon_offset_y = CompassBarSettings.teammate_icon_offset_y or -30
+			
+			for _, teammate in ipairs(teammates) do
+				-- Вычисляем направление тимейта относительно севера (0-360 градусов)
+				local teammate_degree = self:_get_teammate_direction(teammate.position, player_position, player_direction_angle)
+				
+				-- Преобразуем градус в позицию на компасе (аналогично делениям)
+				local teammate_rotation_progress = teammate_degree / degrees
+				local teammate_draw_index = math.floor(teammate_rotation_progress * num_steps) + 1
+				teammate_draw_index = (teammate_draw_index - 1) % num_steps + 1
+				
+				-- Вычисляем смещение относительно текущего центра компаса
+				local teammate_offset_from_center = (teammate_rotation_progress - rotation_progress) * total_length
+				local teammate_local_x = area_middle_x + teammate_offset_from_center
+				
+				-- Проверяем, находится ли маркер в видимой области
+				if teammate_local_x >= area_position[1] - icon_size and teammate_local_x <= area_position[1] + area_size[1] + icon_size then
+					-- Вычисляем прозрачность с учетом затухания
+					local distance_from_center = math.abs(teammate_local_x - area_middle_x)
+					local distance_from_center_norm = distance_from_center / (area_size[1] * 0.5)
+					local fade_alpha_fraction = step_fade_start <= distance_from_center_norm and 
+						1 - math.min((distance_from_center_norm - step_fade_start) / (1 - step_fade_start), 1) or 1
+					local icon_alpha = math.floor(base_alpha * fade_alpha_fraction)
+					
+					-- Получаем путь к иконке класса
+					local archetype_name = teammate.archetype_name
+					local icon_path = "content/ui/materials/icons/classes/" .. archetype_name
+					
+					-- Позиция иконки
+					local icon_position = Vector3(
+						teammate_local_x - icon_size * 0.5,
+						area_position[2] + area_size[2] * 0.5 + icon_offset_y,
+						draw_layer + 1
+					)
+					local icon_size_vec = Vector2(icon_size, icon_size)
+					
+					-- Цвет иконки с прозрачностью
+					local icon_color = {icon_alpha, 255, 255, 255}
+					
+					-- Рисуем иконку
+					UIRenderer.draw_texture(ui_renderer, icon_path, icon_position, icon_size_vec, icon_color)
+				end
 			end
 		end
 	end
