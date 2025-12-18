@@ -39,4 +39,36 @@ return {
 		en = "Opacity of the compass bar (0-100).",
 		ru = "Прозрачность компаса (0-100).",
 	},
+	mod_compass_bar_hud_display_title = {
+		en = "HUD Display",
+		ru = "HUD отображение",
+	},
+	mod_compass_bar_display_title = {
+		en = "Display",
+		ru = "Display",
+	},
+	mod_compass_bar_show_in_hub_title = {
+		en = "Show in Hub",
+		ru = "Отображать в Хабе",
+	},
+	mod_compass_bar_show_in_hub_description = {
+		en = "Show compass bar in the hub.",
+		ru = "Отображать компас в хабе.",
+	},
+	mod_compass_bar_show_in_psykhanium_title = {
+		en = "Show in Psykhanium",
+		ru = "Отображать в Псайканиуме",
+	},
+	mod_compass_bar_show_in_psykhanium_description = {
+		en = "Show compass bar in the Psykhanium (training area).",
+		ru = "Отображать компас в Псайканиуме.",
+	},
+	mod_compass_bar_show_in_mission_title = {
+		en = "Show in Mission",
+		ru = "Отображать на миссии",
+	},
+	mod_compass_bar_show_in_mission_description = {
+		en = "Show compass bar during missions.",
+		ru = "Отображать компас во время миссий.",
+	},
 }

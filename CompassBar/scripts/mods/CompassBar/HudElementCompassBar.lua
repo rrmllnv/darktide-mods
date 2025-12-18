@@ -43,6 +43,34 @@ HudElementCompassBar.update = function(self, dt, t, ui_renderer, render_settings
 	HudElementCompassBar.super.update(self, dt, t, ui_renderer, render_settings, input_service)
 end
 
+-- Проверяем, находимся ли мы в хабе
+HudElementCompassBar._is_in_hub = function(self)
+	if not Managers.state or not Managers.state.game_mode then
+		return false
+	end
+	local game_mode_name = Managers.state.game_mode:game_mode_name()
+	return game_mode_name == "hub" or game_mode_name == "prologue_hub"
+end
+
+-- Проверяем, находимся ли мы в Псайканиуме
+HudElementCompassBar._is_in_psykhanium = function(self)
+	if not Managers.state or not Managers.state.game_mode then
+		return false
+	end
+	local game_mode_name = Managers.state.game_mode:game_mode_name()
+	return game_mode_name == "shooting_range"
+end
+
+-- Проверяем, находимся ли мы на миссии
+HudElementCompassBar._is_in_mission = function(self)
+	if not Managers.state or not Managers.state.game_mode then
+		return false
+	end
+	local game_mode_name = Managers.state.game_mode:game_mode_name()
+	-- Миссия - это когда не хаб и не Псайканиум
+	return game_mode_name ~= "hub" and game_mode_name ~= "prologue_hub" and game_mode_name ~= "shooting_range"
+end
+
 local step_color_table = {}
 local text_color_table = {}
 local cardinal_color_table = {}
@@ -51,9 +79,29 @@ local _compass_text_options = {}
 HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_renderer)
 	HudElementCompassBar.super._draw_widgets(self, dt, t, input_service, ui_renderer)
 	
-	-- Проверяем, включен ли компас
-	local enabled = mod:get("enabled")
-	if enabled == false then
+	-- Проверяем условия отображения в зависимости от места игры
+	local is_in_hub = self:_is_in_hub()
+	local is_in_psykhanium = self:_is_in_psykhanium()
+	local is_in_mission = self:_is_in_mission()
+	
+	local show_in_hub = mod:get("show_in_hub") or false
+	local show_in_psykhanium = mod:get("show_in_psykhanium") or false
+	local show_in_mission = mod:get("show_in_mission")
+	if show_in_mission == nil then
+		show_in_mission = true
+	end
+	
+	-- Проверяем, нужно ли отображать компас в текущем месте
+	local should_show = false
+	if is_in_hub and show_in_hub then
+		should_show = true
+	elseif is_in_psykhanium and show_in_psykhanium then
+		should_show = true
+	elseif is_in_mission and show_in_mission then
+		should_show = true
+	end
+	
+	if not should_show then
 		return
 	end
 	
