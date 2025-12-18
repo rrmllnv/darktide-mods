@@ -242,7 +242,11 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 				-- Устанавливаем цвет текста с учетом прозрачности
 				if is_cardinal then
 					cardinal_color_table[1] = final_alpha
-					text_color_table = cardinal_color_table
+					-- Копируем значения, а не ссылку
+					text_color_table[1] = cardinal_color_table[1]
+					text_color_table[2] = cardinal_color_table[2]
+					text_color_table[3] = cardinal_color_table[3]
+					text_color_table[4] = cardinal_color_table[4]
 				else
 					text_color_table[1] = final_alpha
 				end
