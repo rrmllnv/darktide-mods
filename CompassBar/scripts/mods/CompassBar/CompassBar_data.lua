@@ -1,0 +1,41 @@
+return {
+	title = "CompassBar",
+	description = "Compass bar showing directions (N, S, E, W) with degree markings",
+	is_togglable = true,
+	options = {
+		{
+			id = "enabled",
+			title = "mod_compass_bar_enabled_title",
+			description = "mod_compass_bar_enabled_description",
+			type = "toggle",
+			default_value = true,
+		},
+		{
+			id = "position_y",
+			title = "mod_compass_bar_position_y_title",
+			description = "mod_compass_bar_position_y_description",
+			type = "numeric",
+			default_value = 20,
+			min_value = 0,
+			max_value = 200,
+		},
+		{
+			id = "width",
+			title = "mod_compass_bar_width_title",
+			description = "mod_compass_bar_width_description",
+			type = "numeric",
+			default_value = 600,
+			min_value = 300,
+			max_value = 1200,
+		},
+		{
+			id = "opacity",
+			title = "mod_compass_bar_opacity_title",
+			description = "mod_compass_bar_opacity_description",
+			type = "numeric",
+			default_value = 100,
+			min_value = 0,
+			max_value = 100,
+		},
+	},
+}
