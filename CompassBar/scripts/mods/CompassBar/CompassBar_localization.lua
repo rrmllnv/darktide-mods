@@ -63,4 +63,12 @@ return {
 		en = "Show compass bar during missions.",
 		ru = "Отображать компас во время миссий.",
 	},
+	mod_compass_bar_show_teammate_markers_title = {
+		en = "Show Teammate Markers",
+		ru = "Показывать метки тимейтов",
+	},
+	mod_compass_bar_show_teammate_markers_description = {
+		en = "Show teammate position markers on the compass bar.",
+		ru = "Показывать метки позиций тимейтов на компасе.",
+	},
 }

@@ -55,6 +55,13 @@ return {
 						title = "mod_compass_bar_show_in_mission_title",
 						tooltip = "mod_compass_bar_show_in_mission_description",
 					},
+					{
+						setting_id = "show_teammate_markers",
+						type = "checkbox",
+						default_value = true,
+						title = "mod_compass_bar_show_teammate_markers_title",
+						tooltip = "mod_compass_bar_show_teammate_markers_description",
+					},
 				},
 			},
 		},

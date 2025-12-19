@@ -10,7 +10,6 @@ local UIRenderer = require("scripts/managers/ui/ui_renderer")
 local UIFonts = require("scripts/managers/ui/ui_fonts")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local UIScenegraph = require("scripts/managers/ui/ui_scenegraph")
-local ScriptCamera = require("scripts/foundation/utilities/script_camera")
 
 local HudElementCompassBar = class("HudElementCompassBar", "HudElementBase")
 
@@ -45,8 +44,7 @@ HudElementCompassBar._get_camera_direction_angle = function(self)
 	return angle
 end
 
--- Получаем список тимейтов и их позиции относительно камеры
--- Используем ТОЧНО ТУ ЖЕ логику, что и в оригинальном коде Darktide
+-- Получаем список тимейтов и их позиции относительно игрока
 HudElementCompassBar._get_teammate_positions = function(self)
 	local teammates = {}
 
@@ -61,13 +59,12 @@ HudElementCompassBar._get_teammate_positions = function(self)
 		return teammates
 	end
 
-	-- Получаем позицию камеры, как в оригинальном коде Darktide
-	local camera = self._parent:player_camera()
-	if not camera then
+	local local_player_unit = local_player.player_unit
+	if not local_player_unit then
 		return teammates
 	end
 
-	local camera_position = ScriptCamera.position(camera)
+	local local_position = Unit.world_position(local_player_unit, 1)
 
 	for _, player in pairs(players) do
 		if player ~= local_player and player.player_unit then
@@ -75,22 +72,14 @@ HudElementCompassBar._get_teammate_positions = function(self)
 			local position = Unit.world_position(unit, 1)
 
 			-- Проверяем, что позиция валидна и не нулевая
-			if position and camera_position then
-				-- Вычисляем направление от камеры к тимейту, как в оригинальном коде
-				local diff_vector = position - camera_position
-				local distance = Vector3.length(diff_vector)
+			if position and local_position then
+				local direction = position - local_position
+				local distance = Vector3.length(direction)
 
 				-- Показываем метки только для тимейтов в радиусе 100 единиц
 				if distance > 0.1 and distance < 100 then
-					-- Используем ТОЧНО ТУ ЖЕ формулу вычисления угла, что и в оригинальном коде Darktide
-					diff_vector.z = 0
-					diff_vector = Vector3.normalize(diff_vector)
-					
-					local diff_right = Vector3.cross(diff_vector, Vector3.up())
-					local direction = Vector3.forward()
-					local forward_dot_dir = Vector3.dot(diff_vector, direction)
-					local right_dot_dir = Vector3.dot(diff_right, direction)
-					local angle = -math.atan2(right_dot_dir, forward_dot_dir) % (math.pi * 2)
+					direction = Vector3.normalize(direction)
+					local angle = math.atan2(direction.x, direction.y)
 
 					table.insert(teammates, {
 						angle = angle,
@@ -332,12 +321,18 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 		show_teammate_markers = true
 	end
 
-	-- Отрисовка меток тимейтов используя ТУ ЖЕ логику, что и в оригинальном коде Darktide
-	-- Маркеры позиционируются относительно ближайшего деления компаса
+	-- Отрисовка меток тимейтов (каждый кадр)
 	if show_teammate_markers then
 		local teammates = self:_get_teammate_positions()
+		local max_teammates = 3
+		-- Временная отладка
+		if #teammates > 0 then
+			-- mod:echo("Найдено тимейтов: %d", #teammates)
+		end
+
 		local teammate_marker_size = CompassBarSettings.teammate_marker_size
 		local teammate_marker_color = CompassBarSettings.teammate_marker_color
+		local teammate_marker_y_offset = CompassBarSettings.teammate_marker_y_offset
 
 		local teammate_color_table = {
 			base_alpha,
@@ -350,88 +345,48 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 		local marker_position = Vector3(0, area_position[2] + half_height - teammate_marker_size * 0.5, draw_layer)
 		local marker_size = Vector2(teammate_marker_size, teammate_marker_size)
 
-		-- Преобразуем углы тимейтов в градусы в той же системе координат, что и деления
-		-- Используем ТОЧНО ТУ ЖЕ формулу, что и в оригинальном коде Darktide
-		local teammate_angles_degrees = {}
 		for i, teammate in ipairs(teammates) do
-			-- В оригинальном коде используется: marker_degrees = math.radians_to_degrees(marker_angle)
-			-- БЕЗ инверсии! Используем ту же формулу
-			local teammate_angle_degrees = math.radians_to_degrees(teammate.angle)
-			teammate_angles_degrees[i] = teammate_angle_degrees
-		end
+			-- if i > max_teammates then break end
 
-		-- Проверяем каждый тимейт для каждого видимого деления компаса
-		-- Используем ту же логику, что и в оригинальном коде Darktide
-		for i = -visible_steps, visible_steps do
-			local draw_index = start_index + i
-			local read_index = (draw_index - 1) % num_steps + 1
-			local local_x = start_offset + (draw_index - 1) * marker_spacing + area_position[1]
+			-- Преобразуем угол тимейта в позицию на компасе
+			-- Угол тимейта в той же системе координат, что и player_direction_degree
+			local teammate_angle_degrees = DEGREES - math.radians_to_degrees(teammate.angle)
 			
-			-- Проверяем, находится ли деление в видимой области
-			if local_x + size[1] >= area_position[1] and local_x <= area_position[1] + area_size[1] then
-				-- Текущий градус деления
-				local current_degree = (read_index * degrees_per_step) % DEGREES
-				
-				-- Проверяем каждый тимейт
-				for j, teammate in ipairs(teammates) do
-					local marker_degrees = teammate_angles_degrees[j]
-					
-					-- СНАЧАЛА проверяем видимость тимейта (только если тимейт впереди или по бокам, не сзади)
-					local visible_angle_range = (visible_steps / 2) * degrees_per_step
-					
-					-- Вычисляем относительный угол для проверки видимости
-					-- Используем разницу между углом тимейта и направлением игрока
-					-- Инвертируем знак для правильного определения направления
-					local relative_angle = player_direction_degree - marker_degrees
-					local normalized_angle = relative_angle % DEGREES
-					if normalized_angle > 180 then
-						normalized_angle = normalized_angle - DEGREES
-					end
-					if normalized_angle < -180 then
-						normalized_angle = normalized_angle + DEGREES
-					end
-					
-					local abs_angle = math.abs(normalized_angle)
-					
-					-- Пропускаем тимейта, если он сзади (вне видимой области)
-					-- Тимейт спереди, если abs_angle <= visible_angle_range
-					if abs_angle > visible_angle_range then
-						goto continue_teammate
-					end
-					
-					-- Нормализуем current_degree в диапазон 0..360 (как в оригинальном коде)
-					current_degree = current_degree % DEGREES
-					
-					-- Нормализуем marker_degrees в диапазон 0..360
-					local normalized_marker_degrees = marker_degrees % DEGREES
-					
-					-- Вычисляем разницу между углом тимейта и текущим градусом деления
-					-- Используем ТОЧНО ТУ ЖЕ логику, что и в оригинальном коде Darktide
-					local degree_difference = normalized_marker_degrees - current_degree
-					
-					-- Нормализуем разницу в диапазон 0..360 для правильной проверки
-					-- Если разница отрицательная, значит тимейт находится перед делением (переход через 0)
-					if degree_difference < 0 then
-						degree_difference = degree_difference + DEGREES
-					end
-					
-					-- Проверяем, попадает ли угол тимейта в диапазон текущего деления
-					-- (как в оригинальном коде: degree_difference >= 0 and degree_difference <= degrees_per_step)
-					if degree_difference >= 0 and degree_difference <= degrees_per_step then
-						-- Вычисляем позицию маркера относительно позиции деления
-						-- Используем ТУ ЖЕ формулу, что и в оригинальном коде Darktide
-						local degree_difference_fraction = degree_difference / degrees_per_step
-						local icon_x = local_x + marker_spacing * degree_difference_fraction
-						
-						-- Рисуем квадрат только если он в видимой области экрана
-						if icon_x >= area_position[1] - teammate_marker_size and icon_x <= area_position[1] + area_size[1] + teammate_marker_size then
-							marker_position[1] = icon_x - teammate_marker_size * 0.5
-							-- Отрисовываем квадратик
-							UIRenderer.draw_rect(ui_renderer, marker_position, marker_size, teammate_color_table)
-						end
-					end
-					
-					::continue_teammate::
+			-- Вычисляем относительный угол (разница между направлением игрока и углом тимейта)
+			-- Инвертируем знак, чтобы тимейты впереди отображались в центре компаса
+			local relative_angle = player_direction_degree - teammate_angle_degrees
+			
+			-- Нормализуем угол в диапазон -180..180 для правильного отображения
+			local normalized_angle = relative_angle % DEGREES
+			if normalized_angle > 180 then
+				normalized_angle = normalized_angle - DEGREES
+			end
+			if normalized_angle < -180 then
+				normalized_angle = normalized_angle + DEGREES
+			end
+			
+			-- Проверяем, находится ли тимейт в видимой области компаса
+			-- Ограничиваем видимую область до 70 градусов с каждой стороны от центра
+			-- Это предотвращает отображение тимейтов сзади (углы больше 70 или меньше -70)
+			local max_visible_angle = 70
+			local abs_angle = math.abs(normalized_angle)
+			
+			-- Показываем маркер только если тимейт находится в видимой области компаса
+			-- (впереди или по бокам, но не сзади - углы не больше 70 градусов)
+			if abs_angle <= max_visible_angle then
+				-- Преобразуем относительный угол в позицию на компасе
+				-- Используем правильный масштаб: угол от -max_visible_angle до +max_visible_angle
+				-- преобразуется в позицию от -width/2 до +width/2 относительно центра
+				-- Формула: position = center + (angle / max_angle) * (width / 2)
+				local angle_ratio = normalized_angle / max_visible_angle  -- -1..1
+				local position_from_center = angle_ratio * half_width
+				local marker_x = area_middle_x + position_from_center
+
+				-- Рисуем квадраты только если они в видимой области экрана
+				if marker_x >= area_position[1] - teammate_marker_size and marker_x <= area_position[1] + area_size[1] + teammate_marker_size then
+					marker_position[1] = marker_x - teammate_marker_size * 0.5
+					-- Отрисовываем квадратик
+					UIRenderer.draw_rect(ui_renderer, marker_position, marker_size, teammate_color_table)
 				end
 			end
 		end
