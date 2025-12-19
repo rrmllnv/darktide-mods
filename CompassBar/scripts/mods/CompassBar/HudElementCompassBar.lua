@@ -11,6 +11,7 @@ local UIRenderer = require("scripts/managers/ui/ui_renderer")
 local UIFonts = require("scripts/managers/ui/ui_fonts")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local UIScenegraph = require("scripts/managers/ui/ui_scenegraph")
+local UISettings = require("scripts/settings/ui/ui_settings")
 local ScriptCamera = require("scripts/foundation/utilities/script_camera")
 
 local HudElementCompassBar = class("HudElementCompassBar", "HudElementBase")
@@ -110,12 +111,18 @@ HudElementCompassBar._get_teammate_positions = function(self)
 						class_icon_text = archetype_font_icons[profile.archetype.name]
 					end
 
+					-- Получаем цвет игрока для окраски иконки
+					local player_slot = player and player.slot and player:slot()
+					local player_slot_colors = UISettings.player_slot_colors
+					local player_color = player_slot and player_slot_colors and player_slot_colors[player_slot]
+
 					table.insert(teammates, {
 						angle = angle,
 						position = position,
 						player = player,
 						distance = distance,
-						class_icon_text = class_icon_text
+						class_icon_text = class_icon_text,
+						player_color = player_color
 					})
 				end
 			end
@@ -365,10 +372,12 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 			teammate_marker_color[4] or 255
 		}
 
-		-- Создаем таблицу иконок для каждого тимейта
+		-- Создаем таблицы иконок и цветов для каждого тимейта
 		local teammate_class_icons = {}
+		local teammate_player_colors = {}
 		for i, teammate in ipairs(teammates) do
 			teammate_class_icons[i] = teammate.class_icon_text or "?"
+			teammate_player_colors[i] = teammate.player_color or teammate_color_table
 		end
 
 		local half_height = area_size[2] * 0.5
@@ -456,8 +465,10 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 								local icon_size = Vector2(teammate_marker_size, teammate_marker_size)
 								local icon_position = Vector3(icon_x - teammate_marker_size * 0.5, area_position[2] + half_height - teammate_marker_size * 0.5, draw_layer)
 
-								-- Используем шрифт из настроек для рисования иконки
-								UIRenderer.draw_text(ui_renderer, icon_text, teammate_marker_size, "machine_medium", icon_position, icon_size, teammate_color_table, {})
+								local icon_color = teammate_player_colors[j] or teammate_color_table
+
+								-- Используем шрифт из настроек для рисования иконки с цветом игрока
+								UIRenderer.draw_text(ui_renderer, icon_text, teammate_marker_size, "machine_medium", icon_position, icon_size, icon_color, {})
 							end
 						end
 					end
