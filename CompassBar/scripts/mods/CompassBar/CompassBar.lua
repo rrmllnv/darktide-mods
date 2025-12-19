@@ -28,6 +28,19 @@ mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, para
 		end
 	end
 
+	
+	-- Включаем оригинальный компас игры для сравнения
+	-- if not table.find_by_key(elements, "class_name", "HudElementPlayerCompass") then
+	-- 	table.insert(elements, {
+	-- 		class_name = "HudElementPlayerCompass",
+	-- 		filename = "scripts/ui/hud/elements/player_compass/hud_element_player_compass",
+	-- 		use_hud_scale = true,
+	-- 		visibility_groups = {
+	-- 			"alive",
+	-- 		},
+	-- 	})
+	-- end
+
 	return func(self, elements, visibility_groups, params)
 end)
 
