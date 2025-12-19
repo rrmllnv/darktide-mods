@@ -3,6 +3,82 @@ local mod = get_mod("CompassBar")
 -- Константа PI для совместимости
 local PI = 3.141592653589793
 
+-- Список врагов для отслеживания на компасе (из TargetHunter)
+local tracked_enemies = {
+	-- Настоящие боссы
+	["chaos_beast_of_nurgle"] = { enabled = true, is_boss = true },
+	["chaos_spawn"] = { enabled = true, is_boss = true },
+	["chaos_plague_ogryn"] = { enabled = true, is_boss = true },
+	["chaos_daemonhost"] = { enabled = true, is_boss = true },
+	["renegade_captain"] = { enabled = true, is_boss = true },
+	["renegade_twin_captain"] = { enabled = true, is_boss = true },
+	["renegade_twin_captain_two"] = { enabled = true, is_boss = true },
+	["cultist_captain"] = { enabled = true, is_boss = true },
+	-- Мощные элиты для отслеживания на компасе
+	-- ["chaos_ogryn_gunner"] = { enabled = true, is_boss = false },
+	-- ["chaos_ogryn_executor"] = { enabled = true, is_boss = false },
+	-- ["chaos_ogryn_bulwark"] = { enabled = true, is_boss = false }
+}
+
+-- Хранилище отслеживаемых боссов
+local tracked_bosses = {}
+
+-- Функции для работы с боссами
+local function fetch_breed(unit)
+	local unit_data = ScriptUnit.has_extension and ScriptUnit.has_extension(unit, "unit_data_system")
+	return unit_data and unit_data:breed()
+end
+
+local function is_unit_alive(unit)
+	return unit and Unit.alive(unit)
+end
+
+local function should_track_enemy(breed)
+	if not breed or not breed.name then
+		return false
+	end
+
+	local config = tracked_enemies[breed.name]
+	return config and config.enabled
+end
+
+-- Для обратной совместимости
+local function should_track_boss(breed)
+	local config = tracked_enemies[breed.name]
+	return config and config.enabled and config.is_boss
+end
+
+local function add_enemy_marker(unit, breed)
+	if tracked_bosses[unit] then
+		return
+	end
+
+	local config = tracked_enemies[breed.name]
+	local is_boss = config and config.is_boss or false
+
+	tracked_bosses[unit] = {
+		breed_name = breed.name,
+		is_boss = is_boss
+	}
+
+	-- mod:echo("CompassBar: Enemy detected: " .. breed.name .. " (" .. (is_boss and "Boss" or "Elite") .. "), total tracked: " .. table.size(tracked_bosses))
+end
+
+local function remove_boss_marker(unit)
+	if tracked_bosses[unit] then
+		tracked_bosses[unit] = nil
+		-- mod:echo("Boss removed")
+	end
+end
+
+local function cleanup_dead_bosses()
+	for unit, data in pairs(tracked_bosses) do
+		if not is_unit_alive(unit) then
+			remove_boss_marker(unit)
+		end
+	end
+end
+
 local HudElementBase = require("scripts/ui/hud/elements/hud_element_base")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local Definitions = mod:io_dofile("CompassBar/scripts/mods/CompassBar/compass_bar_definitions")
@@ -21,6 +97,53 @@ HudElementCompassBar.init = function(self, parent, draw_layer, start_scale)
 
 	-- Инициализируем кэш для отслеживания изменений настроек
 	self._cached_width = nil
+
+	-- Настраиваем хуки для отслеживания боссов
+	self:_setup_boss_tracking()
+end
+
+-- Настройка отслеживания боссов
+HudElementCompassBar._setup_boss_tracking = function(self)
+	-- mod:echo("CompassBar: Setting up boss tracking hooks")
+
+	-- Хук на событие спавна миньонов (TargetHunter-style)
+	mod:hook_safe(Managers.event, "trigger", function(self, event_name, unit, ...)
+		if event_name == "minion_unit_spawned" and unit then
+			local breed = fetch_breed(unit)
+			if breed and should_track_enemy(breed) then
+				-- mod:echo("CompassBar: Enemy spawned via event: " .. breed.name)
+				add_enemy_marker(unit, breed)
+			end
+		end
+	end)
+
+	-- Дополнительный хук на UnitSpawnerManager для сетевых юнитов (только для боссов)
+	-- Используем обычный hook вместо hook_safe, чтобы избежать конфликта с TargetHunter
+	mod:hook(CLASS.UnitSpawnerManager, "_add_network_unit", function(func, self, unit, game_object_id, is_husk)
+		-- Вызываем оригинальную функцию
+		local result = func(self, unit, game_object_id, is_husk)
+
+		if not unit then
+			return result
+		end
+
+		-- Пытаемся взять breed из game_session
+		local game_session_manager = Managers.state and Managers.state.game_session
+		local game_session = game_session_manager and game_session_manager:game_session()
+
+		if game_session and GameSession.has_game_object_field(game_session, game_object_id, "breed_id") then
+			local breed_id = GameSession.game_object_field(game_session, game_object_id, "breed_id")
+			local breeds = require("scripts/settings/breed/breeds")
+			local breed = breeds[breed_id]
+
+			if breed and should_track_enemy(breed) then
+				-- mod:echo("CompassBar: Enemy spawned via network: " .. breed.name)
+				add_enemy_marker(unit, breed)
+			end
+		end
+
+		return result
+	end)
 end
 
 -- Получаем угол направления камеры
@@ -132,18 +255,124 @@ HudElementCompassBar._get_teammate_positions = function(self)
 	return teammates
 end
 
+-- Получаем список боссов и их позиции
+HudElementCompassBar._get_boss_positions = function(self)
+	local bosses = {}
+
+	-- mod:echo("CompassBar: _get_boss_positions called")
+
+	if not Managers.player then
+		-- mod:echo("CompassBar: Managers.player is nil")
+		return bosses
+	end
+
+	local players = Managers.player:players()
+	local local_player = Managers.player:local_player(1)
+
+	if not local_player or not players then
+		-- mod:echo("CompassBar: local_player or players is nil")
+		return bosses
+	end
+
+	-- Получаем позицию камеры
+	local camera = self._parent:player_camera()
+	if not camera then
+		-- mod:echo("CompassBar: camera is nil")
+		return bosses
+	end
+
+	local camera_position = ScriptCamera.position(camera)
+	if not camera_position then
+		-- mod:echo("CompassBar: camera_position is nil")
+		return bosses
+	end
+
+	-- mod:echo("CompassBar: camera_position = (" .. camera_position[1] .. ", " .. camera_position[2] .. ", " .. camera_position[3] .. ")")
+
+	-- Очищаем мертвых боссов
+	cleanup_dead_bosses()
+
+	-- Отладка: показываем количество отслеживаемых боссов
+	local boss_count = table.size(tracked_bosses)
+	-- mod:echo("CompassBar: Tracking " .. boss_count .. " bosses after cleanup")
+
+	if boss_count > 0 then
+		for unit, data in pairs(tracked_bosses) do
+			-- mod:echo("CompassBar: Boss in tracked_bosses: " .. data.breed_name .. ", unit alive: " .. tostring(is_unit_alive(unit)))
+		end
+	end
+
+	-- Получаем позиции живых боссов
+	for unit, data in pairs(tracked_bosses) do
+		-- mod:echo("CompassBar: Processing boss: " .. data.breed_name)
+		if is_unit_alive(unit) then
+			-- mod:echo("CompassBar: Boss " .. data.breed_name .. " is alive")
+			local position = Unit.world_position(unit, 1)
+
+			if position and camera_position then
+				local diff_vector = position - camera_position
+				local distance = Vector3.length(diff_vector)
+
+				-- Показываем метки боссов в радиусе 150 единиц
+				if distance > 0.1 and distance < 500 then
+					diff_vector.z = 0
+					diff_vector = Vector3.normalize(diff_vector)
+
+					local diff_right = Vector3.cross(diff_vector, Vector3.up())
+					local direction = Vector3.forward()
+					local forward_dot_dir = Vector3.dot(diff_vector, direction)
+					local right_dot_dir = Vector3.dot(diff_right, direction)
+					local angle = -math.atan2(right_dot_dir, forward_dot_dir) % (math.pi * 2)
+
+					table.insert(bosses, {
+						angle = angle,
+						position = position,
+						unit = unit,
+						distance = distance,
+						breed_name = data.breed_name
+					})
+				else
+					-- Отладка: босс слишком далеко
+					-- mod:echo("CompassBar: Boss " .. data.breed_name .. " too far: " .. string.format("%.1f", distance) .. " units")
+				end
+			else
+				-- Отладка: нет позиции
+				-- mod:echo("CompassBar: Boss " .. data.breed_name .. " has no position")
+			end
+		else
+			-- Отладка: босс мертв
+			-- mod:echo("CompassBar: Boss " .. data.breed_name .. " is dead")
+		end
+	end
+
+	-- Отладка: сколько боссов будет отображено
+	if #bosses > 0 then
+		-- mod:echo("CompassBar: Displaying " .. #bosses .. " bosses on compass")
+	end
+
+	return bosses
+end
+
 HudElementCompassBar.update = function(self, dt, t, ui_renderer, render_settings, input_service)
 	HudElementCompassBar.super.update(self, dt, t, ui_renderer, render_settings, input_service)
-	
+
 	-- Обновляем размер контейнера, позиция НЕ изменяется в runtime, чтобы не конфликтовать с HUD offset
 	local width = mod:get("width") or CompassBarSettings.width
-	
+
 	local ui_scenegraph = self._ui_scenegraph
 	if ui_scenegraph and ui_scenegraph.CompassBarContainer then
 		-- Обновляем размер контейнера только если изменился
 		if self._cached_width ~= width then
 			self:_set_scenegraph_size("CompassBarContainer", width, CompassBarSettings.height)
 			self._cached_width = width
+		end
+	end
+
+	-- Очищаем боссов при входе в хаб (как в TargetHunter)
+	local game_mode_name = self:_get_game_mode_name()
+	if game_mode_name == "hub" or not game_mode_name then
+		for unit, data in pairs(tracked_bosses) do
+			remove_boss_marker(unit)
 		end
 	end
 end
@@ -181,22 +410,30 @@ local cardinal_color_table = {}
 local _compass_text_options = {}
 
 HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_renderer, render_settings)
+	-- mod:echo("CompassBar: _draw_widgets called")
 	HudElementCompassBar.super._draw_widgets(self, dt, t, input_service, ui_renderer, render_settings)
 	
 	-- Проверяем условия отображения в зависимости от места игры
 	local is_in_hub = self:_is_in_hub()
 	local is_in_psykhanium = self:_is_in_psykhanium()
 	local is_in_mission = self:_is_in_mission()
-	
+
 	local show_in_hub = mod:get("show_in_hub") or false
 	local show_in_psykhanium = mod:get("show_in_psykhanium") or false
 	local show_in_mission = mod:get("show_in_mission")
 	if show_in_mission == nil then
 		show_in_mission = true
 	end
-	
+
+	-- mod:echo("CompassBar: Location check - hub:" .. tostring(is_in_hub) .. ", psykh:" .. tostring(is_in_psykhanium) .. ", mission:" .. tostring(is_in_mission))
+	-- mod:echo("CompassBar: Show settings - hub:" .. tostring(show_in_hub) .. ", psykh:" .. tostring(show_in_psykhanium) .. ", mission:" .. tostring(show_in_mission))
+
 	-- Проверяем, нужно ли отображать компас в текущем месте
-	if not ((is_in_hub and show_in_hub) or (is_in_psykhanium and show_in_psykhanium) or (is_in_mission and show_in_mission)) then
+	local should_show = (is_in_hub and show_in_hub) or (is_in_psykhanium and show_in_psykhanium) or (is_in_mission and show_in_mission)
+	-- mod:echo("CompassBar: Should show compass: " .. tostring(should_show))
+
+	if not should_show then
+		-- mod:echo("CompassBar: Compass not shown due to location settings")
 		return
 	end
 	
@@ -358,10 +595,14 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 		show_teammate_markers = true
 	end
 
-	-- Отрисовка меток тимейтов используя ТУ ЖЕ логику, что и в оригинальном коде Darktide
+	-- Отрисовка меток тимейтов и боссов используя ТУ ЖЕ логику, что и в оригинальном коде Darktide
 	-- Маркеры позиционируются относительно ближайшего деления компаса
 	if show_teammate_markers then
+		-- mod:echo("CompassBar: show_teammate_markers is true, getting positions")
 		local teammates = self:_get_teammate_positions()
+		-- mod:echo("CompassBar: Got " .. #teammates .. " teammates")
+		local bosses = self:_get_boss_positions()
+		-- mod:echo("CompassBar: Got " .. #bosses .. " bosses from _get_boss_positions")
 		local teammate_marker_size = CompassBarSettings.teammate_marker_size
 		local teammate_marker_color = CompassBarSettings.teammate_marker_color
 
@@ -372,7 +613,7 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 			teammate_marker_color[4] or 255
 		}
 
-		-- Создаем таблицы иконок и цветов для каждого тимейта
+		-- Создаем таблицы иконок и цветов для тимейтов
 		local teammate_class_icons = {}
 		local teammate_player_colors = {}
 		for i, teammate in ipairs(teammates) do
@@ -380,102 +621,124 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 			teammate_player_colors[i] = teammate.player_color or teammate_color_table
 		end
 
+		-- Цвета для боссов (красный)
+		local boss_color_table = {
+			base_alpha,
+			255, 0, 0  -- красный цвет для боссов
+		}
+
 		local half_height = area_size[2] * 0.5
-		local marker_position = Vector3(0, area_position[2] + half_height - teammate_marker_size * 0.5, draw_layer)
-		local marker_size = Vector2(teammate_marker_size, teammate_marker_size)
+		local icon_position = Vector3(0, 0, draw_layer)
 
-		-- Преобразуем углы тимейтов в градусы в той же системе координат, что и деления
-		-- Используем ТОЧНО ТУ ЖЕ формулу, что и в оригинальном коде Darktide
-		local teammate_angles_degrees = {}
-		for i, teammate in ipairs(teammates) do
-			-- В оригинальном коде используется: marker_degrees = math.radians_to_degrees(marker_angle)
-			-- БЕЗ инверсии! Используем ту же формулу
-			local teammate_angle_degrees = math.radians_to_degrees(teammate.angle)
-			teammate_angles_degrees[i] = teammate_angle_degrees
-		end
+		-- Функция для отрисовки маркеров (тимейтов и боссов)
+		local function draw_markers(markers, marker_size, color_table, is_boss)
+			-- Преобразуем углы в градусы
+			local marker_angles_degrees = {}
+			for i, marker in ipairs(markers) do
+				local marker_angle_degrees = math.radians_to_degrees(marker.angle)
+				marker_angles_degrees[i] = marker_angle_degrees
+			end
 
-		-- Проверяем каждый тимейт для каждого видимого деления компаса
-		-- Используем ту же логику, что и в оригинальном коде Darktide
-		for i = -visible_steps, visible_steps do
-			local draw_index = start_index + i
-			local read_index = (draw_index - 1) % num_steps + 1
-			local local_x = start_offset + (draw_index - 1) * marker_spacing + area_position[1]
-			
-			-- Проверяем, находится ли деление в видимой области
-			if local_x + size[1] >= area_position[1] and local_x <= area_position[1] + area_size[1] then
-				-- Текущий градус деления
-				local current_degree = (read_index * degrees_per_step) % DEGREES
-				
-					-- Проверяем каждый тимейт
-				for j, teammate in ipairs(teammates) do
-					local marker_degrees = teammate_angles_degrees[j]
+			-- Проверяем каждый маркер для каждого видимого деления компаса
+			for i = -visible_steps, visible_steps do
+				local draw_index = start_index + i
+				local read_index = (draw_index - 1) % num_steps + 1
+				local local_x = start_offset + (draw_index - 1) * marker_spacing + area_position[1]
 
-					-- СНАЧАЛА проверяем видимость тимейта (только если тимейт впереди или по бокам, не сзади)
-					local visible_angle_range = (visible_steps / 2) * degrees_per_step
+				-- Проверяем, находится ли деление в видимой области
+				if local_x + size[1] >= area_position[1] and local_x <= area_position[1] + area_size[1] then
+					local current_degree = (read_index * degrees_per_step) % DEGREES
 
-					-- Вычисляем относительный угол для проверки видимости
-					-- Используем разницу между углом тимейта и направлением игрока
-					-- Инвертируем знак для правильного определения направления
-					local relative_angle = player_direction_degree - marker_degrees
-					local normalized_angle = relative_angle % DEGREES
-					if normalized_angle > 180 then
-						normalized_angle = normalized_angle - DEGREES
-					end
-					if normalized_angle < -180 then
-						normalized_angle = normalized_angle + DEGREES
-					end
+					-- Проверяем каждый маркер
+					for j, marker in ipairs(markers) do
+						local marker_degrees = marker_angles_degrees[j]
 
-					local abs_angle = math.abs(normalized_angle)
+						-- Проверяем видимость маркера
+						local visible_angle_range = (visible_steps / 2) * degrees_per_step
+						local relative_angle = player_direction_degree - marker_degrees
+						local normalized_angle = relative_angle % DEGREES
+						if normalized_angle > 180 then
+							normalized_angle = normalized_angle - DEGREES
+						end
+						if normalized_angle < -180 then
+							normalized_angle = normalized_angle + DEGREES
+						end
 
-					-- Пропускаем тимейта, если он сзади (вне видимой области)
-					-- Тимейт спереди, если abs_angle <= visible_angle_range
-					if abs_angle > visible_angle_range then
-						goto continue_teammate
-					end
+						local abs_angle = math.abs(normalized_angle)
 
-					-- Нормализуем current_degree в диапазон 0..360 (как в оригинальном коде)
-					current_degree = current_degree % DEGREES
+						-- Пропускаем если сзади
+						if abs_angle > visible_angle_range then
+							goto continue_marker
+						end
 
-					-- Нормализуем marker_degrees в диапазон 0..360
-					local normalized_marker_degrees = marker_degrees % DEGREES
+						-- Нормализуем углы
+						current_degree = current_degree % DEGREES
+						local normalized_marker_degrees = marker_degrees % DEGREES
 
-					-- Вычисляем разницу между углом тимейта и текущим градусом деления
-					-- Используем ТОЧНО ТУ ЖЕ логику, что и в оригинальном коде Darktide
-					local degree_difference = normalized_marker_degrees - current_degree
+						-- Вычисляем разницу углов
+						local degree_difference = normalized_marker_degrees - current_degree
+						if degree_difference < 0 then
+							degree_difference = degree_difference + DEGREES
+						end
 
-					-- Нормализуем разницу в диапазон 0..360 для правильной проверки
-					-- Если разница отрицательная, значит тимейт находится перед делением (переход через 0)
-					if degree_difference < 0 then
-						degree_difference = degree_difference + DEGREES
-					end
+						-- Проверяем попадание в диапазон деления
+						if degree_difference >= 0 and degree_difference <= degrees_per_step then
+							local degree_difference_fraction = degree_difference / degrees_per_step
+							local icon_x = local_x + marker_spacing * degree_difference_fraction
 
-					-- Проверяем, попадает ли угол тимейта в диапазон текущего деления
-					-- (как в оригинальном коде: degree_difference >= 0 and degree_difference <= degrees_per_step)
-					if degree_difference >= 0 and degree_difference <= degrees_per_step then
-						-- Вычисляем позицию маркера относительно позиции деления
-						-- Используем ТУ ЖЕ формулу, что и в оригинальном коде Darktide
-						local degree_difference_fraction = degree_difference / degrees_per_step
-						local icon_x = local_x + marker_spacing * degree_difference_fraction
+							-- Рисуем маркер
+							if icon_x >= area_position[1] - marker_size and icon_x <= area_position[1] + area_size[1] + marker_size then
+								icon_position[1] = icon_x - marker_size * 0.5
+								icon_position[2] = area_position[2] + half_height - marker_size * 0.5
 
-						-- Рисуем иконку класса только если она в видимой области экрана
-						if icon_x >= area_position[1] - teammate_marker_size and icon_x <= area_position[1] + area_size[1] + teammate_marker_size then
-							-- Отрисовываем шрифтовую иконку класса
-							local icon_text = teammate_class_icons[j]
-							if icon_text then
-								local icon_size = Vector2(teammate_marker_size, teammate_marker_size)
-								local icon_position = Vector3(icon_x - teammate_marker_size * 0.5, area_position[2] + half_height - teammate_marker_size * 0.5, draw_layer)
+								if is_boss then
+									-- Для врагов (боссов и элит) определяем тип
+									local marker_unit = markers[j].unit
+									local tracked_info = tracked_bosses[marker_unit]
+									local marker_is_boss = tracked_info and tracked_info.is_boss
+									local enemy_icon_size = Vector2(marker_size, marker_size)
 
-								local icon_color = teammate_player_colors[j] or teammate_color_table
+									-- if marker_is_boss then
+									-- 	-- Для настоящих боссов рисуем "BOSS"
+									-- 	local enemy_icon = "content/ui/materials/hud/interactions/icons/enemy"
+									-- else
+									-- 	-- Для элитных врагов рисуем иконку врага
+									-- 	-- local enemy_icon = "content/ui/materials/hud/interactions/icons/objective_secondary"
+									-- end
 
-								-- Используем шрифт из настроек для рисования иконки с цветом игрока
-								UIRenderer.draw_text(ui_renderer, icon_text, teammate_marker_size, "machine_medium", icon_position, icon_size, icon_color, {})
+									local enemy_icon = "content/ui/materials/hud/interactions/icons/enemy"
+									local enemy_color_table = {
+										base_alpha,
+										255, 0, 0  -- Красный цвет для элит
+									}
+									UIRenderer.draw_texture(ui_renderer, enemy_icon, icon_position, enemy_icon_size, enemy_color_table)
+									
+								else
+									-- Для тимейтов рисуем иконки классов
+									local icon_text = teammate_class_icons[j]
+									if icon_text then
+										local icon_size = Vector2(marker_size, marker_size)
+										local icon_color = teammate_player_colors[j] or color_table
+										UIRenderer.draw_text(ui_renderer, icon_text, marker_size, "machine_medium", icon_position, icon_size, icon_color, {})
+									end
+								end
 							end
 						end
-					end
 
-					::continue_teammate::
+						::continue_marker::
+					end
 				end
 			end
+		end
+
+		-- Отрисовываем тимейтов
+		draw_markers(teammates, teammate_marker_size, teammate_color_table, false)
+
+		-- Отрисовываем боссов
+		if #bosses > 0 then
+			-- -- mod:echo("CompassBar: Drawing " .. #bosses .. " boss markers")
+			local boss_marker_size = teammate_marker_size * 1.2  -- боссы чуть больше
+			draw_markers(bosses, boss_marker_size, boss_color_table, true)
 		end
 	end
 
