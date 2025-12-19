@@ -40,9 +40,9 @@ local CompassBarSettings = {
 	step_fade_start = 0.6,
 
 	-- Настройки меток тимейтов
-	teammate_marker_size = 16, -- Размер квадратика метки тимейта
+	teammate_marker_size = 40, -- Размер квадратика метки тимейта
 	teammate_marker_color = {255, 255, 255, 255}, -- Красный цвет для меток тимейтов
-	teammate_marker_y_offset = 10, -- Смещение по Y от компаса
+	teammate_marker_y_offset = 5, -- Смещение по Y от компаса
 
 	-- Направления (N, S, E, W и промежуточные)
 	degree_direction_abbreviations = {

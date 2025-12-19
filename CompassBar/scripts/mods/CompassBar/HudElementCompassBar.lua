@@ -4,6 +4,7 @@ local mod = get_mod("CompassBar")
 local PI = 3.141592653589793
 
 local HudElementBase = require("scripts/ui/hud/elements/hud_element_base")
+local UIWidget = require("scripts/managers/ui/ui_widget")
 local Definitions = mod:io_dofile("CompassBar/scripts/mods/CompassBar/compass_bar_definitions")
 local CompassBarSettings = mod:io_dofile("CompassBar/scripts/mods/CompassBar/compass_bar_settings")
 local UIRenderer = require("scripts/managers/ui/ui_renderer")
@@ -85,18 +86,36 @@ HudElementCompassBar._get_teammate_positions = function(self)
 					-- Используем ТОЧНО ТУ ЖЕ формулу вычисления угла, что и в оригинальном коде Darktide
 					diff_vector.z = 0
 					diff_vector = Vector3.normalize(diff_vector)
-					
+
 					local diff_right = Vector3.cross(diff_vector, Vector3.up())
 					local direction = Vector3.forward()
 					local forward_dot_dir = Vector3.dot(diff_vector, direction)
 					local right_dot_dir = Vector3.dot(diff_right, direction)
 					local angle = -math.atan2(right_dot_dir, forward_dot_dir) % (math.pi * 2)
 
+					-- Получаем профиль игрока и иконку класса
+					local profile = player:profile()
+					local class_icon_text = nil
+
+					-- Используем шрифтовые иконки классов как в оригинальном коде
+					if profile and profile.archetype and profile.archetype.name then
+						local archetype_font_icons = {
+							veteran = "",
+							psyker = "",
+							ogryn = "",
+							zealot = "",
+							adamant = "",
+							broker = ""
+						}
+						class_icon_text = archetype_font_icons[profile.archetype.name]
+					end
+
 					table.insert(teammates, {
 						angle = angle,
 						position = position,
 						player = player,
-						distance = distance
+						distance = distance,
+						class_icon_text = class_icon_text
 					})
 				end
 			end
@@ -346,6 +365,12 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 			teammate_marker_color[4] or 255
 		}
 
+		-- Создаем таблицу иконок для каждого тимейта
+		local teammate_class_icons = {}
+		for i, teammate in ipairs(teammates) do
+			teammate_class_icons[i] = teammate.class_icon_text or "?"
+		end
+
 		local half_height = area_size[2] * 0.5
 		local marker_position = Vector3(0, area_position[2] + half_height - teammate_marker_size * 0.5, draw_layer)
 		local marker_size = Vector2(teammate_marker_size, teammate_marker_size)
@@ -372,13 +397,13 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 				-- Текущий градус деления
 				local current_degree = (read_index * degrees_per_step) % DEGREES
 				
-				-- Проверяем каждый тимейт
+					-- Проверяем каждый тимейт
 				for j, teammate in ipairs(teammates) do
 					local marker_degrees = teammate_angles_degrees[j]
-					
+
 					-- СНАЧАЛА проверяем видимость тимейта (только если тимейт впереди или по бокам, не сзади)
 					local visible_angle_range = (visible_steps / 2) * degrees_per_step
-					
+
 					-- Вычисляем относительный угол для проверки видимости
 					-- Используем разницу между углом тимейта и направлением игрока
 					-- Инвертируем знак для правильного определения направления
@@ -390,31 +415,31 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 					if normalized_angle < -180 then
 						normalized_angle = normalized_angle + DEGREES
 					end
-					
+
 					local abs_angle = math.abs(normalized_angle)
-					
+
 					-- Пропускаем тимейта, если он сзади (вне видимой области)
 					-- Тимейт спереди, если abs_angle <= visible_angle_range
 					if abs_angle > visible_angle_range then
 						goto continue_teammate
 					end
-					
+
 					-- Нормализуем current_degree в диапазон 0..360 (как в оригинальном коде)
 					current_degree = current_degree % DEGREES
-					
+
 					-- Нормализуем marker_degrees в диапазон 0..360
 					local normalized_marker_degrees = marker_degrees % DEGREES
-					
+
 					-- Вычисляем разницу между углом тимейта и текущим градусом деления
 					-- Используем ТОЧНО ТУ ЖЕ логику, что и в оригинальном коде Darktide
 					local degree_difference = normalized_marker_degrees - current_degree
-					
+
 					-- Нормализуем разницу в диапазон 0..360 для правильной проверки
 					-- Если разница отрицательная, значит тимейт находится перед делением (переход через 0)
 					if degree_difference < 0 then
 						degree_difference = degree_difference + DEGREES
 					end
-					
+
 					-- Проверяем, попадает ли угол тимейта в диапазон текущего деления
 					-- (как в оригинальном коде: degree_difference >= 0 and degree_difference <= degrees_per_step)
 					if degree_difference >= 0 and degree_difference <= degrees_per_step then
@@ -422,15 +447,21 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 						-- Используем ТУ ЖЕ формулу, что и в оригинальном коде Darktide
 						local degree_difference_fraction = degree_difference / degrees_per_step
 						local icon_x = local_x + marker_spacing * degree_difference_fraction
-						
-						-- Рисуем квадрат только если он в видимой области экрана
+
+						-- Рисуем иконку класса только если она в видимой области экрана
 						if icon_x >= area_position[1] - teammate_marker_size and icon_x <= area_position[1] + area_size[1] + teammate_marker_size then
-							marker_position[1] = icon_x - teammate_marker_size * 0.5
-							-- Отрисовываем квадратик
-							UIRenderer.draw_rect(ui_renderer, marker_position, marker_size, teammate_color_table)
+							-- Отрисовываем шрифтовую иконку класса
+							local icon_text = teammate_class_icons[j]
+							if icon_text then
+								local icon_size = Vector2(teammate_marker_size, teammate_marker_size)
+								local icon_position = Vector3(icon_x - teammate_marker_size * 0.5, area_position[2] + half_height - teammate_marker_size * 0.5, draw_layer)
+
+								-- Используем шрифт из настроек для рисования иконки
+								UIRenderer.draw_text(ui_renderer, icon_text, teammate_marker_size, "machine_medium", icon_position, icon_size, teammate_color_table, {})
+							end
 						end
 					end
-					
+
 					::continue_teammate::
 				end
 			end
