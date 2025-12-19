@@ -696,20 +696,13 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 									local marker_unit = markers[j].unit
 									local tracked_info = tracked_bosses[marker_unit]
 									local marker_is_boss = tracked_info and tracked_info.is_boss
-									local enemy_icon_size = Vector2(marker_size, marker_size)
 
-									-- if marker_is_boss then
-									-- 	-- Для настоящих боссов рисуем "BOSS"
-									-- 	local enemy_icon = "content/ui/materials/hud/interactions/icons/enemy"
-									-- else
-									-- 	-- Для элитных врагов рисуем иконку врага
-									-- 	-- local enemy_icon = "content/ui/materials/hud/interactions/icons/objective_secondary"
-									-- end
-
+									-- Для всех врагов рисуем иконку врага
 									local enemy_icon = "content/ui/materials/hud/interactions/icons/enemy"
+									local enemy_icon_size = Vector2(marker_size * 0.3, marker_size * 0.3)
 									local enemy_color_table = {
 										base_alpha,
-										255, 0, 0  -- Красный цвет для элит
+										255, 0, 0  -- Красный цвет для всех врагов
 									}
 									UIRenderer.draw_texture(ui_renderer, enemy_icon, icon_position, enemy_icon_size, enemy_color_table)
 									

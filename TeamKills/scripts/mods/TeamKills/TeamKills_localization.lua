@@ -259,5 +259,17 @@ return {
 		en = "Open KillStreak board (Hub only)",
 		ru = "Открыть KillStreak board (только в хабе)",
 	},
+	loc_breed_display_name_chaos_beast_of_nurgle_wk = {
+		en = "Weakened Beast of Nurgle",
+		ru = "Ослабленный Зверь Нургла",
+	},
+	loc_breed_display_name_chaos_spawn_wk = {
+		en = "Weakened Chaos Spawn",
+		ru = "Ослабленный Порождение Хаоса",
+	},
+	loc_breed_display_name_chaos_plague_ogryn_wk = {
+		en = "Weakened Plague Ogryn",
+		ru = "Ослабленный Чумной Огрин",
+	},
 }
 
