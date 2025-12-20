@@ -6,6 +6,7 @@ return {
 	is_togglable = true,
 	allow_rehooking = true,
 	options = {
+		localize = true,
 		widgets = {
 			{
 				setting_id = "hud_team_kills_tracker",
