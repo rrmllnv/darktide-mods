@@ -9,11 +9,11 @@ return {
 	},
 	i18n_show_total_damage = {
 		en = "Show Total Damage",
-		ru = "Показывать Общий урон",
+		ru = "Показывать (Общий урон)",
 	},
 	i18n_show_last_damage = {
 		en = "Show Last Damage",
-		ru = "Показывать Последний урон",
+		ru = "Показывать [Последний урон]",
 	},
 	i18n_show_team_summary = {
 		en = "Show TEAM KILLS line",
@@ -47,34 +47,7 @@ return {
 		en = "Hide all players",
 		ru = "Скрыть всех игроков",
 	},
-	i18n_hud_counter_mode = {
-		en = "HUD Counter Mode",
-		ru = "Режим счётчика в HUD",
-	},
-	i18n_hud_counter_mode_kills_damage = {
-		en = "Kills (total damage)",
-		ru = "Убийства (общий урон)",
-	},
-	i18n_hud_counter_mode_kills = {
-		en = "Kills only",
-		ru = "Только убийства",
-	},
-	i18n_hud_counter_mode_damage = {
-		en = "Total damage only",
-		ru = "Только общий урон",
-	},
-	i18n_hud_counter_mode_last_damage = {
-		en = "Last-hit damage only",
-		ru = "Только последний удар",
-	},
-	i18n_hud_counter_mode_kills_last_damage = {
-		en = "Kills [last-hit damage]",
-		ru = "Убийства [последний удар]",
-	},
-	i18n_hud_counter_mode_kills_total_last_damage = {
-		en = "Kills (total damage) [last-hit damage]",
-		ru = "Убийства (общий урон) [последний удар]",
-	},
+
 	i18n_kills_color = {
 		en = "Kills color",
 		ru = "Цвет убийств",
@@ -229,11 +202,11 @@ return {
 	},
 	i18n_hud_team_kills_tracker_title = {
 		en = "HUD Team Kills Tracker",
-		ru = "HUD Счётчик убийств команды",
+		ru = "HUD Трекер командных убийств",
 	},
 	i18n_hud_boss_damage_tracker_title = {
 		en = "HUD Boss Damage Tracker",
-		ru = "HUD Счётчик урона босса",
+		ru = "HUD Трекер урона босса",
 	},
 	i18n_hud_general_settings_title = {
 		en = "HUD General Settings",
