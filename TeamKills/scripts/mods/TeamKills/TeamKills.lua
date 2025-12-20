@@ -6,8 +6,8 @@ local ConstantElementNotificationFeed = mod:original_require("scripts/ui/constan
 
 local hud_elements = {
 	{
-		filename = "TeamKills/scripts/mods/TeamKills/HudElementTeamKills",
-		class_name = "HudElementTeamKills",
+		filename = "TeamKills/scripts/mods/TeamKills/hud/HudTeamKillsTracker",
+		class_name = "HudTeamKillsTracker",
 		visibility_groups = {
 			"alive",
 		},
