@@ -1060,7 +1060,7 @@ local function format_boss_damage_text_for_notification(unit)
 	end
 end
 
--- Перехватываем _generate_notification_data чтобы разбить line_1 с \n на отдельные строки (как в PlayerDeathfeed)
+-- Перехватываем _generate_notification_data чтобы разбить line_1 с \n на отдельные строки
 mod:hook(ConstantElementNotificationFeed, "_generate_notification_data", function(func, self, message_type, data)
 	local notification_data = func(self, message_type, data)
 	
