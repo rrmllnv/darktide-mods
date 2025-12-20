@@ -73,12 +73,9 @@ mod.disablers = {
 }
 mod.bosses = {
 	"chaos_beast_of_nurgle",
-	"chaos_beast_of_nurgle_wk",
 	"chaos_daemonhost",
 	"chaos_spawn",
-	"chaos_spawn_wk",
 	"chaos_plague_ogryn",
-	"chaos_plague_ogryn_wk",
 	"chaos_plague_ogryn_sprayer",
 	"renegade_captain",
 	"cultist_captain",
