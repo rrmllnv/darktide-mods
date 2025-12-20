@@ -232,8 +232,8 @@ return {
 		ru = "Урон",
 	},
 	show_killsboard = {
-		en = "Show KillStreak board",
-		ru = "Показать KillStreak board",
+		en = "Show in tactical overlay",
+		ru = "Показать в тактическом оверлее",
 	},
 	show_killsboard_show = {
 		en = "Show",
@@ -244,8 +244,8 @@ return {
 		ru = "Скрыть",
 	},
 	show_killsboard_end_view = {
-		en = "Show KillStreak board at end of mission",
-		ru = "Показать KillStreak board в конце миссии",
+		en = "Show at end of mission",
+		ru = "Показать в конце миссии",
 	},
 	show_killsboard_end_view_show = {
 		en = "Show",
@@ -256,8 +256,8 @@ return {
 		ru = "Скрыть",
 	},
 	open_killsboard = {
-		en = "Open KillStreak board (Hub only)",
-		ru = "Открыть KillStreak board (только в хабе)",
+		en = "Open (Hub only)",
+		ru = "Открывать (только в хабе)",
 	},
 	loc_breed_display_name_chaos_beast_of_nurgle_wk = {
 		en = "Weakened Beast of Nurgle",
@@ -270,6 +270,22 @@ return {
 	loc_breed_display_name_chaos_plague_ogryn_wk = {
 		en = "Weakened Plague Ogryn",
 		ru = "Ослабленный Чумной Огрин",
+	},
+	hud_team_kills_tracker_title = {
+		en = "HUD Team Kills Tracker",
+		ru = "HUD Счётчик убийств команды",
+	},
+	hud_boss_damage_tracker_title = {
+		en = "HUD Boss Damage Tracker",
+		ru = "HUD Счётчик урона босса",
+	},
+	hud_general_settings_title = {
+		en = "HUD General Settings",
+		ru = "HUD Общие настройки",
+	},
+	killstreak_board_title = {
+		en = "KillStreak Board",
+		ru = "Доска серии убийств",
 	},
 }
 
