@@ -165,7 +165,7 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 		if max_damage_player.player_color then
 			player_name = string.format("{#color(%d,%d,%d)}%s{#reset()}", max_damage_player.player_color[1], max_damage_player.player_color[2], max_damage_player.player_color[3], player_name)
 		end
-		table.insert(lines, mod:localize("i18n_notification_top") .. player_name .. " (" .. max_percent .. "%)" .. " : " .. max_damage_text)
+		table.insert(lines, mod:localize("i18n_notification_top") .. player_name .. " (" .. max_percent .. "%)" .. " " .. max_damage_text)
 	end
 	
 	-- Игрок с последним ударом
@@ -177,7 +177,7 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 		if max_last_damage_player.player_color then
 			player_name = string.format("{#color(%d,%d,%d)}%s{#reset()}", max_last_damage_player.player_color[1], max_last_damage_player.player_color[2], max_last_damage_player.player_color[3], player_name)
 		end
-		table.insert(lines, mod:localize("i18n_notification_last_hit") .. player_name .. " : " .. last_damage_text)
+		table.insert(lines, mod:localize("i18n_notification_last_hit") .. player_name .. " [" .. last_damage_text .. "]")
 	end
 	
 	-- Разделитель
