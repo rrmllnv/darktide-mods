@@ -1,6 +1,32 @@
 local mod = get_mod("TeamKills")
 
 local ConstantElementNotificationFeed = mod:original_require("scripts/ui/constant_elements/elements/notification_feed/constant_element_notification_feed")
+local UISettings = require("scripts/settings/ui/ui_settings")
+
+-- Функция для получения цвета игрока по account_id
+local function get_player_color(account_id)
+	if not account_id or not Managers.player then
+		return nil
+	end
+	
+	local players = Managers.player:players()
+	for _, player in pairs(players) do
+		if player then
+			local player_account_id = player:account_id() or player:name()
+			if player_account_id == account_id then
+				local slot = player:slot()
+				if slot and UISettings.player_slot_colors[slot] then
+					local color = UISettings.player_slot_colors[slot]
+					-- Color формат: [alpha, r, g, b]
+					return {color[2], color[3], color[4]}
+				end
+				break
+			end
+		end
+	end
+	
+	return nil
+end
 
 -- Функция для формирования текста урона для уведомления с цветами
 local function format_boss_damage_text_for_notification(unit, boss_extension)
@@ -67,11 +93,14 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 			
 			local last_damage = boss_last_damage_data and boss_last_damage_data[account_id] or 0
 			total_damage = total_damage + damage
+			-- Получаем цвет игрока
+			local player_color = get_player_color(account_id)
 			table.insert(players_with_damage, {
 				name = display_name,
 				damage = damage,
 				last_damage = last_damage,
-				account_id = account_id
+				account_id = account_id,
+				player_color = player_color
 			})
 		end
 	end
@@ -131,14 +160,24 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 		local max_dmg = math.floor(max_damage_player.damage or 0)
 		local max_damage_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", damage_rgb[1], damage_rgb[2], damage_rgb[3], mod.format_number(max_dmg))
 		local max_percent = total_damage > 0 and math.floor((max_dmg / total_damage) * 100) or 0
-		table.insert(lines, mod:localize("i18n_notification_top") .. max_damage_player.name .. " (" .. max_percent .. "%)" .. " - " .. max_damage_text)
+		-- Применяем цвет к нику игрока
+		local player_name = max_damage_player.name
+		if max_damage_player.player_color then
+			player_name = string.format("{#color(%d,%d,%d)}%s{#reset()}", max_damage_player.player_color[1], max_damage_player.player_color[2], max_damage_player.player_color[3], player_name)
+		end
+		table.insert(lines, mod:localize("i18n_notification_top") .. player_name .. " (" .. max_percent .. "%)" .. " - " .. max_damage_text)
 	end
 	
 	-- Игрок с последним ударом
 	if show_last_damage and max_last_damage_player and max_last_damage > 0 then
 		local last_dmg = math.floor(max_last_damage)
 		local last_damage_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", last_damage_rgb[1], last_damage_rgb[2], last_damage_rgb[3], mod.format_number(last_dmg))
-		table.insert(lines, mod:localize("i18n_notification_last_hit") .. max_last_damage_player.name .. " - " .. last_damage_text)
+		-- Применяем цвет к нику игрока
+		local player_name = max_last_damage_player.name
+		if max_last_damage_player.player_color then
+			player_name = string.format("{#color(%d,%d,%d)}%s{#reset()}", max_last_damage_player.player_color[1], max_last_damage_player.player_color[2], max_last_damage_player.player_color[3], player_name)
+		end
+		table.insert(lines, mod:localize("i18n_notification_last_hit") .. player_name .. " - " .. last_damage_text)
 	end
 	
 	-- Разделитель
@@ -153,8 +192,12 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 		local percent = total_damage > 0 and math.floor((dmg / total_damage) * 100) or 0
 		
 		local parts = {}
-		-- Ник игрока
-		table.insert(parts, player.name)
+		-- Ник игрока с цветом
+		local player_name = player.name
+		if player.player_color then
+			player_name = string.format("{#color(%d,%d,%d)}%s{#reset()}", player.player_color[1], player.player_color[2], player.player_color[3], player_name)
+		end
+		table.insert(parts, player_name)
 		
 		-- Проценты
 		if show_total_damage and total_damage > 0 then
