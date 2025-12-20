@@ -143,7 +143,7 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 	
 	-- Разделитель
 	if #players_with_damage > 0 then
-		table.insert(lines, "")
+		table.insert(lines, " ")
 	end
 	
 	-- Список всех игроков с уроном и процентом
