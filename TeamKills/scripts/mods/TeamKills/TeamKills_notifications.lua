@@ -110,7 +110,7 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 		end
 	end
 	if boss_name == "" then
-		boss_name = "BOSS"
+		boss_name = mod:localize("i18n_notification_boss_default")
 	end
 	
 	-- Формируем текст с цветами для уведомления
@@ -123,7 +123,7 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 	-- Общий урон команды
 	if show_total_damage and total_damage > 0 then
 		local total_damage_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", damage_rgb[1], damage_rgb[2], damage_rgb[3], mod.format_number(math.floor(total_damage)))
-		table.insert(lines, "Total: " .. total_damage_text)
+		table.insert(lines, mod:localize("i18n_notification_total") .. total_damage_text)
 	end
 	
 	-- Игрок с максимальным уроном
@@ -131,14 +131,14 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 		local max_dmg = math.floor(max_damage_player.damage or 0)
 		local max_damage_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", damage_rgb[1], damage_rgb[2], damage_rgb[3], mod.format_number(max_dmg))
 		local max_percent = total_damage > 0 and math.floor((max_dmg / total_damage) * 100) or 0
-		table.insert(lines, "Top: " .. max_damage_player.name .. " (" .. max_percent .. "%)" .. ": " .. max_damage_text)
+		table.insert(lines, mod:localize("i18n_notification_top") .. max_damage_player.name .. " (" .. max_percent .. "%)" .. ": " .. max_damage_text)
 	end
 	
 	-- Игрок с последним ударом
 	if show_last_damage and max_last_damage_player and max_last_damage > 0 then
 		local last_dmg = math.floor(max_last_damage)
 		local last_damage_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", last_damage_rgb[1], last_damage_rgb[2], last_damage_rgb[3], mod.format_number(last_dmg))
-		table.insert(lines, "Last Hit: " .. max_last_damage_player.name .. " - " .. last_damage_text)
+		table.insert(lines, mod:localize("i18n_notification_last_hit") .. max_last_damage_player.name .. " - " .. last_damage_text)
 	end
 	
 	-- Разделитель

@@ -17,6 +17,7 @@ end
 load("TeamKills/scripts/mods/TeamKills/Localization/Core")
 load("TeamKills/scripts/mods/TeamKills/Localization/Data")
 load("TeamKills/scripts/mods/TeamKills/Localization/Widget")
+load("TeamKills/scripts/mods/TeamKills/Localization/Notifications")
 
 return localization
 
