@@ -30,7 +30,22 @@ local function fetch_breed(unit)
 end
 
 local function is_unit_alive(unit)
-	return unit and Unit.alive(unit)
+	if not unit then
+		return false
+	end
+	
+	-- Проверяем через Unit.alive
+	if not Unit.alive(unit) then
+		return false
+	end
+	
+	-- Дополнительная проверка через health_extension для более надежного определения смерти
+	local health_ext = ScriptUnit.has_extension(unit, "health_system")
+	if health_ext and type(health_ext.is_dead) == "function" and health_ext:is_dead() then
+		return false
+	end
+	
+	return true
 end
 
 local function should_track_enemy(breed)
@@ -61,7 +76,7 @@ local function add_enemy_marker(unit, breed)
 		is_boss = is_boss
 	}
 
-	-- mod:echo("CompassBar: Enemy detected: " .. breed.name .. " (" .. (is_boss and "Boss" or "Elite") .. "), total tracked: " .. table.size(tracked_bosses))
+	-- mod:echo("CompassBar: Обнаружен враг: " .. breed.name .. " (" .. (is_boss and "Босс" or "Элита") .. "), всего отслеживается: " .. table.size(tracked_bosses))
 end
 
 local function remove_boss_marker(unit)
@@ -75,6 +90,44 @@ local function cleanup_dead_bosses()
 	for unit, data in pairs(tracked_bosses) do
 		if not is_unit_alive(unit) then
 			remove_boss_marker(unit)
+		end
+	end
+end
+
+-- Функция для поиска уже существующих боссов на карте
+local function scan_existing_bosses()
+	if not Managers.state then
+		return
+	end
+	
+	-- Пытаемся найти боссов через BossSystem
+	local extension_manager = Managers.state.extension
+	if extension_manager and extension_manager:has_system("boss_system") then
+		local boss_system = extension_manager:system("boss_system")
+		if boss_system and boss_system._unit_to_extension_map then
+			for unit, extension in pairs(boss_system._unit_to_extension_map) do
+				if is_unit_alive(unit) and not tracked_bosses[unit] then
+					local breed = fetch_breed(unit)
+					if breed and should_track_enemy(breed) then
+						add_enemy_marker(unit, breed)
+					end
+				end
+			end
+		end
+	end
+	
+	-- Альтернативный способ: ищем через extension напрямую
+	if extension_manager then
+		local boss_extensions = extension_manager:get_entities("boss_system")
+		if boss_extensions then
+			for unit, extension in pairs(boss_extensions) do
+				if is_unit_alive(unit) and not tracked_bosses[unit] then
+					local breed = fetch_breed(unit)
+					if breed and should_track_enemy(breed) then
+						add_enemy_marker(unit, breed)
+					end
+				end
+			end
 		end
 	end
 end
@@ -97,52 +150,32 @@ HudElementCompassBar.init = function(self, parent, draw_layer, start_scale)
 
 	-- Инициализируем кэш для отслеживания изменений настроек
 	self._cached_width = nil
+	
+	-- Таймер для периодического сканирования существующих боссов
+	self._boss_scan_timer = 0
+	self._boss_scan_interval = 2.0  -- Сканируем каждые 2 секунды
 
 	-- Настраиваем хуки для отслеживания боссов
 	self:_setup_boss_tracking()
+	
+	-- Первое сканирование существующих боссов с небольшой задержкой
+	self._initial_scan_done = false
 end
 
 -- Настройка отслеживания боссов
 HudElementCompassBar._setup_boss_tracking = function(self)
-	-- mod:echo("CompassBar: Setting up boss tracking hooks")
-
-	-- Хук на событие спавна миньонов (TargetHunter-style)
+	-- Хук на событие начала и окончания боя с боссом
 	mod:hook_safe(Managers.event, "trigger", function(self, event_name, unit, ...)
-		if event_name == "minion_unit_spawned" and unit then
+		if event_name == "boss_encounter_start" and unit then
+			-- Отслеживаем боссов через событие начала боя с боссом
 			local breed = fetch_breed(unit)
 			if breed and should_track_enemy(breed) then
-				-- mod:echo("CompassBar: Enemy spawned via event: " .. breed.name)
 				add_enemy_marker(unit, breed)
 			end
+		elseif event_name == "boss_encounter_end" and unit then
+			-- Удаляем босса при завершении боя
+			remove_boss_marker(unit)
 		end
-	end)
-
-	-- Дополнительный хук на UnitSpawnerManager для сетевых юнитов (только для боссов)
-	-- Используем обычный hook вместо hook_safe, чтобы избежать конфликта с TargetHunter
-	mod:hook(CLASS.UnitSpawnerManager, "_add_network_unit", function(func, self, unit, game_object_id, is_husk)
-		-- Вызываем оригинальную функцию
-		local result = func(self, unit, game_object_id, is_husk)
-
-		if not unit then
-			return result
-		end
-
-		-- Пытаемся взять breed из game_session
-		local game_session_manager = Managers.state and Managers.state.game_session
-		local game_session = game_session_manager and game_session_manager:game_session()
-
-		if game_session and GameSession.has_game_object_field(game_session, game_object_id, "breed_id") then
-			local breed_id = GameSession.game_object_field(game_session, game_object_id, "breed_id")
-			local breeds = require("scripts/settings/breed/breeds")
-			local breed = breeds[breed_id]
-
-			if breed and should_track_enemy(breed) then
-				-- mod:echo("CompassBar: Enemy spawned via network: " .. breed.name)
-				add_enemy_marker(unit, breed)
-			end
-		end
-
-		return result
 	end)
 end
 
@@ -345,11 +378,6 @@ HudElementCompassBar._get_boss_positions = function(self)
 		end
 	end
 
-	-- Отладка: сколько боссов будет отображено
-	if #bosses > 0 then
-		-- mod:echo("CompassBar: Displaying " .. #bosses .. " bosses on compass")
-	end
-
 	return bosses
 end
 
@@ -373,6 +401,42 @@ HudElementCompassBar.update = function(self, dt, t, ui_renderer, render_settings
 	if game_mode_name == "hub" or not game_mode_name then
 		for unit, data in pairs(tracked_bosses) do
 			remove_boss_marker(unit)
+		end
+		self._initial_scan_done = false
+		return
+	end
+	
+	-- Первое сканирование существующих боссов с задержкой после инициализации
+	if not self._initial_scan_done then
+		self._boss_scan_timer = self._boss_scan_timer + dt
+		if self._boss_scan_timer >= 1.0 then  -- Задержка 1 секунда после инициализации
+			scan_existing_bosses()
+			self._initial_scan_done = true
+			self._boss_scan_timer = 0
+		end
+	else
+		-- Периодическое сканирование существующих боссов
+		self._boss_scan_timer = self._boss_scan_timer + dt
+		if self._boss_scan_timer >= self._boss_scan_interval then
+			scan_existing_bosses()
+			self._boss_scan_timer = 0
+		end
+	end
+	
+	-- Первое сканирование существующих боссов с задержкой после инициализации
+	if not self._initial_scan_done then
+		self._boss_scan_timer = self._boss_scan_timer + dt
+		if self._boss_scan_timer >= 1.0 then  -- Задержка 1 секунда после инициализации
+			scan_existing_bosses()
+			self._initial_scan_done = true
+			self._boss_scan_timer = 0
+		end
+	else
+		-- Периодическое сканирование существующих боссов
+		self._boss_scan_timer = self._boss_scan_timer + dt
+		if self._boss_scan_timer >= self._boss_scan_interval then
+			scan_existing_bosses()
+			self._boss_scan_timer = 0
 		end
 	end
 end
@@ -697,9 +761,9 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 									local tracked_info = tracked_bosses[marker_unit]
 									local marker_is_boss = tracked_info and tracked_info.is_boss
 
-									-- Для всех врагов рисуем иконку врага
+									-- Для всех врагов рисуем иконку врага (размер как у тимейтов)
 									local enemy_icon = "content/ui/materials/hud/interactions/icons/enemy"
-									local enemy_icon_size = Vector2(marker_size * 0.5, marker_size * 0.5)
+									local enemy_icon_size = Vector2(marker_size, marker_size)
 									local enemy_color_table = {
 										base_alpha,
 										255, 0, 0  -- Красный цвет для всех врагов
@@ -729,9 +793,8 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 
 		-- Отрисовываем боссов
 		if #bosses > 0 then
-			-- -- mod:echo("CompassBar: Drawing " .. #bosses .. " boss markers")
-			local boss_marker_size = teammate_marker_size * 1.2  -- боссы чуть больше
-			draw_markers(bosses, boss_marker_size, boss_color_table, true)
+			-- mod:echo("CompassBar: Рисуется " .. #bosses .. " маркеров боссов")
+			draw_markers(bosses, teammate_marker_size, boss_color_table, true)
 		end
 	end
 
