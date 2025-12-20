@@ -13,6 +13,7 @@ mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/co
 local valid_lvls = {
 	shooting_range = true,
 	hub = true,
+	training_grounds = true,  -- Псайкинариум
 }
 
 local hud_elements = {

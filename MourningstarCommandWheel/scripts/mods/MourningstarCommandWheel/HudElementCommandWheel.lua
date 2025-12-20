@@ -19,11 +19,25 @@ local HOVER_GRACE_PERIOD = 0.4
 local valid_lvls = {
 	shooting_range = true,
 	hub = true,
+	training_grounds = true,  -- Псайкинариум
 }
 
 local is_in_valid_lvl = function()
 	if Managers and Managers.state and Managers.state.game_mode then
 		return valid_lvls[Managers.state.game_mode:game_mode_name()] or false
+	end
+	return false
+end
+
+-- Функция для проверки, находимся ли мы в псайкинариуме
+local is_in_psychanium = function()
+	if Managers and Managers.state and Managers.state.game_mode then
+		local game_mode_name = Managers.state.game_mode:game_mode_name()
+		return game_mode_name == "training_grounds" or game_mode_name == "shooting_range"
+	end
+	-- Также проверяем активный view
+	if Managers and Managers.ui then
+		return Managers.ui:view_active("training_grounds_view")
 	end
 	return false
 end
@@ -71,6 +85,13 @@ local button_definitions = {
 		view = "training_grounds_view",
 		label_key = "loc_training_ground_view",  -- Игровая локализация
 		icon = "content/ui/materials/hud/interactions/icons/training_grounds",
+	},
+	{
+		id = "exit_psychanium",
+		view = nil,
+		label_key = "loc_tg_exit_training_grounds",  -- Игровая локализация
+		icon = "content/ui/materials/icons/system/escape/leave_training",
+		action = "exit_psychanium",  -- Специальное действие для выхода из псайкинариума
 	},
 	{
 		id = "social",
@@ -129,7 +150,12 @@ local function load_wheel_config()
 			end
 		end
 		-- Добавляем недостающие кнопки в конец
+		-- Исключаем exit_psychanium, так как он должен появляться только как замена для training_grounds
 		for _, button in ipairs(button_definitions) do
+			if button.id == "exit_psychanium" then
+				-- Пропускаем exit_psychanium, он не должен быть в конфиге по умолчанию
+				goto continue
+			end
 			local found = false
 			for _, saved_id in ipairs(valid_config) do
 				if saved_id == button.id then
@@ -140,13 +166,17 @@ local function load_wheel_config()
 			if not found then
 				table.insert(valid_config, button.id)
 			end
+			::continue::
 		end
 		return valid_config
 	end
 	-- Если нет сохраненного порядка, возвращаем порядок по умолчанию
+	-- Исключаем exit_psychanium, так как он должен появляться только как замена для training_grounds
 	local default_config = {}
 	for _, button in ipairs(button_definitions) do
-		table.insert(default_config, button.id)
+		if button.id ~= "exit_psychanium" then
+			table.insert(default_config, button.id)
+		end
 	end
 	return default_config
 end
@@ -165,8 +195,20 @@ end
 -- Функция для генерации опций из конфига
 local function generate_options_from_config(wheel_config)
 	local options = {}
+	local in_psychanium = is_in_psychanium()
+	
 	for i, id in ipairs(wheel_config) do
-		options[i] = button_definitions_by_id[id]
+		-- Если мы в псайкинариуме и это кнопка training_grounds, заменяем на exit_psychanium
+		if in_psychanium and id == "training_grounds" then
+			options[i] = button_definitions_by_id["exit_psychanium"]
+		-- Если мы НЕ в псайкинариуме и это кнопка exit_psychanium, скрываем её
+		-- (exit_psychanium не должен быть в конфиге по умолчанию, но на всякий случай)
+		elseif not in_psychanium and id == "exit_psychanium" then
+			options[i] = nil
+		-- Для всех остальных кнопок используем как есть
+		else
+			options[i] = button_definitions_by_id[id]
+		end
 	end
 	return options
 end
@@ -370,11 +412,12 @@ HudElementCommandWheel._update_wheel_presentation = function(self, dt, t, ui_ren
 		local widget = entry.widget
 		local content = widget.content
 		local widget_angle = content.angle
-		local widget_angle_degrees = -(math.radians_to_degrees(widget_angle) - math.pi * 0.5) % 360
 		local is_populated = entry.option ~= nil
 		local is_hover = false
 
-		if is_populated and cursor_distance_from_center > hover_min_distance * scale then
+		-- Проверяем, что widget_angle не nil перед использованием
+		if widget_angle and is_populated and cursor_distance_from_center > hover_min_distance * scale then
+			local widget_angle_degrees = -(math.radians_to_degrees(widget_angle) - math.pi * 0.5) % 360
 			local angle_diff = (widget_angle_degrees - cursor_angle_degrees_from_center + 180 + 360) % 360 - 180
 
 			if angle_diff <= entry_hover_degrees_half and angle_diff >= -entry_hover_degrees_half then
@@ -488,6 +531,11 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 					if option.action == "change_character" then
 						-- Специальная обработка для смены персонажа
 						mod:change_character()
+					elseif option.action == "exit_psychanium" then
+						-- Специальная обработка для выхода из псайкинариума
+						if Managers and Managers.state and Managers.state.game_mode then
+							Managers.state.game_mode:complete_game_mode()
+						end
 					elseif option.view then
 						mod:activate_hub_view(option.view)
 					end
@@ -515,6 +563,10 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 
 	if draw_wheel and not self._wheel_active then
 		self._wheel_active = true
+		
+		-- Обновляем опции при открытии колеса, чтобы показывать правильную кнопку (training_grounds или exit_psychanium)
+		local options = generate_options_from_config(self._wheel_config)
+		self:_populate_wheel(options)
 
 		if UISoundEvents.emote_wheel_open then
 			Managers.ui:play_2d_sound(UISoundEvents.emote_wheel_open)
@@ -622,6 +674,11 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 					if option.action == "change_character" then
 						-- Специальная обработка для смены персонажа
 						mod:change_character()
+					elseif option.action == "exit_psychanium" then
+						-- Специальная обработка для выхода из псайкинариума
+						if Managers and Managers.state and Managers.state.game_mode then
+							Managers.state.game_mode:complete_game_mode()
+						end
 					elseif option.view then
 						mod:activate_hub_view(option.view)
 					end
