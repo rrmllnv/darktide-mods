@@ -699,7 +699,7 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 
 									-- Для всех врагов рисуем иконку врага
 									local enemy_icon = "content/ui/materials/hud/interactions/icons/enemy"
-									local enemy_icon_size = Vector2(marker_size * 0.3, marker_size * 0.3)
+									local enemy_icon_size = Vector2(marker_size * 0.5, marker_size * 0.5)
 									local enemy_color_table = {
 										base_alpha,
 										255, 0, 0  -- Красный цвет для всех врагов
