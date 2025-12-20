@@ -1,41 +1,41 @@
 return {
-	stats_bosses = {
+	i18n_stats_bosses = {
 		en = "BOSSES",
 		ru = "БОССЫ",
 	},
-	stats_melee_lessers = {
+	i18n_stats_melee_lessers = {
 		en = "MELEE LESSERS",
 		ru = "МЛАДШИЕ БОЙЦЫ БЛИЖНЕГО БОЯ",
 	},
-	stats_ranged_lessers = {
+	i18n_stats_ranged_lessers = {
 		en = "RANGED LESSERS",
 		ru = "МЛАДШИЕ БОЙЦЫ ДАЛЬНЕГО БОЯ",
 	},
-	stats_melee_elites = {
+	i18n_stats_melee_elites = {
 		en = "MELEE ELITES",
 		ru = "ЭЛИТЫ БЛИЖНЕГО БОЯ",
 	},
-	stats_ranged_elites = {
+	i18n_stats_ranged_elites = {
 		en = "RANGED ELITES",
 		ru = "ЭЛИТЫ ДАЛЬНЕГО БОЯ",
 	},
-	stats_specials = {
+	i18n_stats_specials = {
 		en = "SPECIALS",
 		ru = "СПЕЦИАЛИСТЫ",
 	},
-	stats_disablers = {
+	i18n_stats_disablers = {
 		en = "DISABLERS",
 		ru = "ОБЕЗДВИЖИВАЮЩИЕ",
 	},
-	killsboard_total = {
+	i18n_killsboard_total = {
 		en = "TOTAL",
 		ru = "ИТОГО",
 	},
-	killsboard_kills = {
+	i18n_killsboard_kills = {
 		en = "Kills",
 		ru = "Убийства",
 	},
-	killsboard_damage = {
+	i18n_killsboard_damage = {
 		en = "Damage",
 		ru = "Урон",
 	},

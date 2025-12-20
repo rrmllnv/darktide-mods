@@ -23,13 +23,13 @@ end
 
 -- Маппинг названий групп на ключи локализации
 local group_localization_map = {
-	["Melee Lessers"] = "stats_melee_lessers",
-	["Ranged Lessers"] = "stats_ranged_lessers",
-	["Melee Elites"] = "stats_melee_elites",
-	["Ranged Elites"] = "stats_ranged_elites",
-	["Specials"] = "stats_specials",
-	["Disablers"] = "stats_disablers",
-	["Bosses"] = "stats_bosses",
+	["Melee Lessers"] = "i18n_stats_melee_lessers",
+	["Ranged Lessers"] = "i18n_stats_ranged_lessers",
+	["Melee Elites"] = "i18n_stats_melee_elites",
+	["Ranged Elites"] = "i18n_stats_ranged_elites",
+	["Specials"] = "i18n_stats_specials",
+	["Disablers"] = "i18n_stats_disablers",
+	["Bosses"] = "i18n_stats_bosses",
 }
 
 -- Функция локализации для групп
@@ -279,8 +279,8 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		pass_template[1].value = ""
 		for i = 1, 4 do
 			if players[i] then
-				pass_template[k_pass_map[i]].value = mod:localize("killsboard_kills")
-				pass_template[d_pass_map[i]].value = mod:localize("killsboard_damage")
+				pass_template[k_pass_map[i]].value = mod:localize("i18n_killsboard_kills")
+				pass_template[d_pass_map[i]].value = mod:localize("i18n_killsboard_damage")
 			else
 				pass_template[k_pass_map[i]].value = ""
 				pass_template[d_pass_map[i]].value = ""
@@ -305,7 +305,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		end
 	elseif total then
 		-- Используем локализацию для "TOTAL"
-		local total_text = mod:localize("killsboard_total")
+		local total_text = mod:localize("i18n_killsboard_total")
 		pass_template[1].value = total_text
 		-- Устанавливаем цвет для строки TOTAL (такой же, как для заголовков групп)
 		pass_template[1].style.text_color = Color.terminal_text_body_sub_header(255, true)
