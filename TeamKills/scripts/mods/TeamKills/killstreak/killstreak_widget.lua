@@ -684,6 +684,7 @@ end
 mod.adjust_killsboard_size = function(self, total_height, killsboard_widget, scenegraph, row_widgets)
 	local _settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_settings")
 	local height = total_height + 75
+	height = math.max(height, 400) -- Минимальная высота 600
 	height = math.min(height, 990)
 	killsboard_widget.style.style_id_1.size[2] = height - 3 -- удалить если захочу вернуть тень
 	killsboard_widget.style.style_id_2.size[2] = height - 28 -- inner_shadow_medium
