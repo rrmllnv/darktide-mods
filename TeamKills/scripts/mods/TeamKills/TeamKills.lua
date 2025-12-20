@@ -1,6 +1,7 @@
 local mod = get_mod("TeamKills")
 
 local Breed = mod:original_require("scripts/utilities/breed")
+local Text = mod:original_require("scripts/utilities/ui/text")
 
 local hud_elements = {
 	{
@@ -728,6 +729,74 @@ local function get_font_size()
 	return mod.font_size or mod:get("font_size") or 16
 end
 
+-- Функция для формирования текста урона по боссу
+local function format_boss_damage_text(unit)
+	local boss_damage_data = mod.boss_damage and mod.boss_damage[unit]
+	if not boss_damage_data or not next(boss_damage_data) then
+		return nil
+	end
+	
+	-- Получаем список текущих игроков
+	local current_players = {}
+	if Managers.player then
+		local players = Managers.player:players()
+		for _, player in pairs(players) do
+			if player then
+				local account_id = player:account_id() or player:name()
+				local character_name = player.character_name and player:character_name()
+				if account_id then
+					current_players[account_id] = character_name or player:name() or account_id
+				end
+			end
+		end
+	end
+	
+	-- Получаем данные о последнем уроне по этому боссу
+	local boss_last_damage_data = mod.boss_last_damage and mod.boss_last_damage[unit]
+	
+	-- Формируем список игроков с уроном
+	local players_with_damage = {}
+	for account_id, damage in pairs(boss_damage_data) do
+		local display_name = current_players[account_id]
+		if display_name and damage > 0 then
+			local last_damage = boss_last_damage_data and boss_last_damage_data[account_id] or 0
+			table.insert(players_with_damage, {
+				name = display_name,
+				damage = damage,
+				last_damage = last_damage,
+				account_id = account_id
+			})
+		end
+	end
+	
+	-- Сортируем по урону (больше сверху)
+	table.sort(players_with_damage, function(a, b)
+		return a.damage > b.damage
+	end)
+	
+	-- Формируем текст
+	local lines = {}
+	local damage_color = mod.get_damage_color_string()
+	local last_damage_color = mod.get_last_damage_color_string()
+	local reset_color = "{#reset()}"
+	
+	for _, player in ipairs(players_with_damage) do
+		local dmg = math.floor(player.damage or 0)
+		local last_dmg = math.floor(player.last_damage or 0)
+		local line = player.name .. ": " .. damage_color .. mod.format_number(dmg) .. reset_color
+		if last_dmg > 0 then
+			line = line .. " [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]"
+		end
+		table.insert(lines, line)
+	end
+	
+	if #lines > 0 then
+		return lines
+	else
+		return nil
+	end
+end
+
 -- Добавляем виджеты для отображения списка игроков в каждую группу виджетов
 -- Используем хук после того, как все виджеты созданы (включая RecolorBossHealthBars)
 mod:hook_safe(CLASS.HudElementBossHealth, "_setup_widget_groups", function(self)
@@ -887,83 +956,110 @@ mod:hook_safe(CLASS.HudElementBossHealth, "update", function(self, dt, t, ui_ren
 				damage_widget.offset[2] = health_widget.offset[2]
 			end
 			
-			-- Получаем данные об уроне по этому боссу
-			local boss_damage_data = mod.boss_damage and mod.boss_damage[unit]
+			-- Получаем текст урона
+			local damage_lines = format_boss_damage_text(unit)
 			
-			if boss_damage_data and next(boss_damage_data) then
-				-- Получаем список текущих игроков
-				local current_players = {}
-				if Managers.player then
-					local players = Managers.player:players()
-					for _, player in pairs(players) do
-						if player then
-							local account_id = player:account_id() or player:name()
-							local character_name = player.character_name and player:character_name()
-							if account_id then
-								current_players[account_id] = character_name or player:name() or account_id
-							end
-						end
-					end
-				end
-				
-				-- Получаем данные о последнем уроне по этому боссу
-				local boss_last_damage_data = mod.boss_last_damage and mod.boss_last_damage[unit]
-				
-				-- Формируем список игроков с уроном
-				local players_with_damage = {}
-				for account_id, damage in pairs(boss_damage_data) do
-					local display_name = current_players[account_id]
-					if display_name and damage > 0 then
-						local last_damage = boss_last_damage_data and boss_last_damage_data[account_id] or 0
-						table.insert(players_with_damage, {
-							name = display_name,
-							damage = damage,
-							last_damage = last_damage,
-							account_id = account_id
-						})
-					end
-				end
-				
-				-- Сортируем по урону (больше сверху)
-				table.sort(players_with_damage, function(a, b)
-					return a.damage > b.damage
-				end)
-				
-				-- Формируем текст
-				local lines = {}
-				local damage_color = mod.get_damage_color_string()
-				local last_damage_color = mod.get_last_damage_color_string()
-				local reset_color = "{#reset()}"
-				
-				for _, player in ipairs(players_with_damage) do
-					local dmg = math.floor(player.damage or 0)
-					local last_dmg = math.floor(player.last_damage or 0)
-					local line = player.name .. ": " .. damage_color .. mod.format_number(dmg) .. reset_color
-					if last_dmg > 0 then
-						line = line .. " [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]"
-					end
-					table.insert(lines, line)
-				end
-				
-				if #lines > 0 then
-					damage_widget.content.text = table.concat(lines, "\n")
-					damage_widget.visible = true
-				else
-					damage_widget.content.text = ""
-					damage_widget.visible = false
-				end
+			if damage_lines and #damage_lines > 0 then
+				damage_widget.content.text = table.concat(damage_lines, "\n")
+				damage_widget.visible = true
 			else
-				if damage_widget then
-					damage_widget.content.text = ""
-					damage_widget.visible = false
-				end
+				damage_widget.content.text = ""
+				damage_widget.visible = false
 			end
 		end
 	end
 end)
 
--- Очищаем данные об уроне по боссу при завершении боя
+-- Функция для формирования текста урона для уведомления с цветами
+local function format_boss_damage_text_for_notification(unit)
+	local boss_damage_data = mod.boss_damage and mod.boss_damage[unit]
+	if not boss_damage_data or not next(boss_damage_data) then
+		return nil
+	end
+	
+	-- Получаем список текущих игроков
+	local current_players = {}
+	if Managers.player then
+		local players = Managers.player:players()
+		for _, player in pairs(players) do
+			if player then
+				local account_id = player:account_id() or player:name()
+				local character_name = player.character_name and player:character_name()
+				if account_id then
+					current_players[account_id] = character_name or player:name() or account_id
+				end
+			end
+		end
+	end
+	
+	-- Получаем данные о последнем уроне по этому боссу
+	local boss_last_damage_data = mod.boss_last_damage and mod.boss_last_damage[unit]
+	
+	-- Получаем цвета RGB
+	local damage_color_name = mod.damage_color or "orange"
+	local last_damage_color_name = mod.last_damage_color or "orange"
+	local damage_rgb = color_presets[damage_color_name] or color_presets["orange"]
+	local last_damage_rgb = color_presets[last_damage_color_name] or color_presets["orange"]
+	
+	-- Формируем список игроков с уроном
+	local players_with_damage = {}
+	for account_id, damage in pairs(boss_damage_data) do
+		local display_name = current_players[account_id]
+		if display_name and damage > 0 then
+			local last_damage = boss_last_damage_data and boss_last_damage_data[account_id] or 0
+			table.insert(players_with_damage, {
+				name = display_name,
+				damage = damage,
+				last_damage = last_damage,
+				account_id = account_id
+			})
+		end
+	end
+	
+	-- Сортируем по урону (больше сверху)
+	table.sort(players_with_damage, function(a, b)
+		return a.damage > b.damage
+	end)
+	
+	-- Формируем текст с цветами для уведомления (как в StimmCountdown)
+	local lines = {}
+	for _, player in ipairs(players_with_damage) do
+		local dmg = math.floor(player.damage or 0)
+		local damage_number = mod.format_number(dmg)
+		local damage_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", damage_rgb[1], damage_rgb[2], damage_rgb[3], damage_number)
+		local line = player.name .. ": " .. damage_text
+		table.insert(lines, line)
+	end
+	
+	if #lines > 0 then
+		return lines
+	else
+		return nil
+	end
+end
+
+-- Отправляем уведомление при смерти босса с информацией об уроне (как в StimmCountdown)
 mod:hook_safe(CLASS.HudElementBossHealth, "event_boss_encounter_end", function(self, unit, boss_extension)
+	-- Получаем данные об уроне по этому боссу
+	local damage_lines = format_boss_damage_text_for_notification(unit)
+	
+	if damage_lines and #damage_lines > 0 then
+		-- Формируем данные для уведомления типа "custom" (как в StimmCountdown)
+		local notification_data = {
+			line_1 = damage_lines[1] or "",
+			line_2 = damage_lines[2] or "",
+			line_3 = damage_lines[3] or "",
+			line_4 = damage_lines[4] or "",
+			show_shine = false,
+		}
+		
+		-- Отправляем уведомление с информацией об уроне
+		if Managers.event then
+			Managers.event:trigger("event_add_notification_message", "custom", notification_data)
+		end
+	end
+	
+	-- Очищаем данные об уроне по боссу после отправки уведомления
 	if mod.boss_damage and mod.boss_damage[unit] then
 		mod.boss_damage[unit] = nil
 	end
