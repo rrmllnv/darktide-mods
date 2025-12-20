@@ -11,6 +11,11 @@ local function get_font_size()
 	return mod.font_size or mod:get("opt_font_size") or 16
 end
 
+local function get_opacity_alpha()
+	local opacity = mod.opacity or mod:get("opt_opacity") or 100
+	return math.floor((opacity / 100) * 255)
+end
+
 -- Функция для формирования текста урона по боссу
 local function format_boss_damage_text(unit)
 	local boss_damage_data = mod.boss_damage and mod.boss_damage[unit]
@@ -132,7 +137,7 @@ mod:hook_safe(CLASS.HudElementBossHealth, "_setup_widget_groups", function(self)
 						text_horizontal_alignment = "left",
 						text_vertical_alignment = "top",
 						text_color = {
-							255,
+							get_opacity_alpha(),
 							255,
 							255,
 							255,
@@ -207,7 +212,7 @@ mod:hook_safe(CLASS.HudElementBossHealth, "update", function(self, dt, t, ui_ren
 						text_horizontal_alignment = "left",
 						text_vertical_alignment = "top",
 						text_color = {
-							255,
+							get_opacity_alpha(),
 							255,
 							255,
 							255,
@@ -267,6 +272,13 @@ mod:hook_safe(CLASS.HudElementBossHealth, "update", function(self, dt, t, ui_ren
 			if health_widget and health_widget.offset then
 				damage_widget.offset[1] = health_widget.offset[1]
 				damage_widget.offset[2] = health_widget.offset[2]
+			end
+			
+			-- Обновляем альфа-канал текста
+			local text_style = damage_widget.style and damage_widget.style.text
+			if text_style and text_style.text_color then
+				local alpha = get_opacity_alpha()
+				text_style.text_color[1] = alpha
 			end
 			
 			-- Получаем текст урона
