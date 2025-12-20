@@ -76,6 +76,7 @@ local categories = {
 	{"chaos_plague_ogryn", "loc_breed_display_name_chaos_plage_ogryn", "Bosses"},
 	{"chaos_spawn", "loc_breed_display_name_chaos_spawn", "Bosses"},
 	{"chaos_daemonhost", "loc_breed_display_name_chaos_daemonhost", "Bosses"},
+	{"chaos_mutator_daemonhost", "loc_breed_display_name_chaos_daemonhost", "Bosses"},
 	{"chaos_beast_of_nurgle", "loc_breed_display_name_chaos_beast_of_nurgle", "Bosses"},
 	{"chaos_beast_of_nurgle_wk", "loc_breed_display_name_chaos_beast_of_nurgle_wk", "Bosses"},
 	{"chaos_spawn_wk", "loc_breed_display_name_chaos_spawn_wk", "Bosses"},
