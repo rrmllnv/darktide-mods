@@ -215,6 +215,19 @@ return {
 				},
 			},
 			{
+				setting_id = "opt_notifications",
+				type = "group",
+				title = "i18n_notifications_title",
+				sub_widgets = {
+					{
+						setting_id = "opt_show_boss_death_notification",
+						type = "checkbox",
+						title = "i18n_show_boss_death_notification",
+						default_value = true,
+					},
+				},
+			},
+			{
 				setting_id = "opt_killstreak_board",
 				type = "group",
 				title = "i18n_killstreak_board_title",

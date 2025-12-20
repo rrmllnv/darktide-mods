@@ -235,6 +235,11 @@ end)
 
 -- Отправляем уведомление при смерти босса с информацией об уроне
 mod:hook_safe(CLASS.HudElementBossHealth, "event_boss_encounter_end", function(self, unit, boss_extension)
+	-- Проверяем, включены ли уведомления
+	if mod:get("opt_show_boss_death_notification") == false then
+		return
+	end
+	
 	-- Получаем данные об уроне по этому боссу
 	local damage_lines = format_boss_damage_text_for_notification(unit, boss_extension)
 	

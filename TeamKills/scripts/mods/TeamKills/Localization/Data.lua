@@ -228,4 +228,12 @@ return {
 		en = "KillStreak Board",
 		ru = "Доска серии убийств",
 	},
+	i18n_notifications_title = {
+		en = "Notifications",
+		ru = "Уведомления",
+	},
+	i18n_show_boss_death_notification = {
+		en = "Show boss death notification",
+		ru = "Показывать уведомление при убийстве босса",
+	},
 }
