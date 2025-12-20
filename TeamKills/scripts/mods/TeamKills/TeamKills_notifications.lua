@@ -131,7 +131,7 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 		local max_dmg = math.floor(max_damage_player.damage or 0)
 		local max_damage_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", damage_rgb[1], damage_rgb[2], damage_rgb[3], mod.format_number(max_dmg))
 		local max_percent = total_damage > 0 and math.floor((max_dmg / total_damage) * 100) or 0
-		table.insert(lines, mod:localize("i18n_notification_top") .. max_damage_player.name .. " (" .. max_percent .. "%)" .. ": " .. max_damage_text)
+		table.insert(lines, mod:localize("i18n_notification_top") .. max_damage_player.name .. " (" .. max_percent .. "%)" .. " - " .. max_damage_text)
 	end
 	
 	-- Игрок с последним ударом
@@ -143,7 +143,7 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 	
 	-- Разделитель
 	if #players_with_damage > 0 then
-		table.insert(lines, "---")
+		table.insert(lines, "")
 	end
 	
 	-- Список всех игроков с уроном и процентом
