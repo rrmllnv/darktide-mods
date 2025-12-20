@@ -8,12 +8,12 @@ return {
 		ru = "Показывать Убийства",
 	},
 	i18n_show_total_damage = {
-		en = "Show Total Damage",
+		en = "Show (Total Damage)",
 		ru = "Показывать (Общий урон)",
 	},
 	i18n_show_last_damage = {
-		en = "Show Last Damage",
-		ru = "Показывать [Последний урон]",
+		en = "[Last hit damage]",
+		ru = "[Урон последнего удара]",
 	},
 	i18n_show_team_summary = {
 		en = "Show TEAM KILLS line",
