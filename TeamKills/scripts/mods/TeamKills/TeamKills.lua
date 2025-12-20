@@ -2,7 +2,11 @@ local mod = get_mod("TeamKills")
 
 local Breed = mod:original_require("scripts/utilities/breed")
 local Text = mod:original_require("scripts/utilities/ui/text")
-local ConstantElementNotificationFeed = mod:original_require("scripts/ui/constant_elements/elements/notification_feed/constant_element_notification_feed")
+
+-- Загружаем модули
+mod:io_dofile("TeamKills/scripts/mods/TeamKills/TeamKills_constants")
+mod:io_dofile("TeamKills/scripts/mods/TeamKills/TeamKills_notifications")
+mod:io_dofile("TeamKills/scripts/mods/TeamKills/hud/HudBossDamageTracker")
 
 local hud_elements = {
 	{
@@ -20,70 +24,11 @@ mod.player_last_damage = {}
 mod.killed_units = {}
 mod.player_killstreak = {}
 mod.player_killstreak_timer = {}
-mod.killstreak_duration_seconds = 2.5
+mod.killstreak_duration_seconds = mod.DEFAULT_KILLSTREAK_DURATION
 mod.last_kill_time_by_category = {}  -- {account_id: {category_key: time}}
 mod.last_enemy_interaction = {} -- Отслеживание последнего взаимодействия с врагом
 mod.boss_damage = {} -- {[unit] = {[account_id] = damage}} - урон по боссам
 mod.boss_last_damage = {} -- {[unit] = {[account_id] = last_damage}} - последний урон по боссам
--- Категории целей
-mod.melee_lessers = {
-	"chaos_newly_infected",
-	"chaos_poxwalker",
-	"chaos_mutated_poxwalker",
-	"chaos_armored_infected",
-	"cultist_melee",
-	"cultist_ritualist",
-	"renegade_melee",
-}
-mod.ranged_lessers = {
-	"chaos_lesser_mutated_poxwalker",
-	"cultist_assault",
-	"renegade_assault",
-	"renegade_rifleman",
-}
-mod.melee_elites = {
-	"cultist_berzerker",
-	"renegade_berzerker",
-	"renegade_executor",
-	"chaos_ogryn_bulwark",
-	"chaos_ogryn_executor",
-}
-mod.ranged_elites = {
-	"cultist_gunner",
-	"renegade_gunner",
-	"renegade_plasma_gunner",
-	"renegade_radio_operator",
-	"cultist_shocktrooper",
-	"renegade_shocktrooper",
-	"chaos_ogryn_gunner",
-}
-mod.specials = {
-	"chaos_poxwalker_bomber",
-	"renegade_grenadier",
-	"cultist_grenadier",
-	"renegade_sniper",
-	"renegade_flamer",
-	"renegade_flamer_mutator",
-	"cultist_flamer",
-}
-mod.disablers = {
-	"chaos_hound",
-	"chaos_hound_mutator",
-	"cultist_mutant",
-	"cultist_mutant_mutator",
-	"renegade_netgunner",
-}
-mod.bosses = {
-	"chaos_beast_of_nurgle",
-	"chaos_daemonhost",
-	"chaos_spawn",
-	"chaos_plague_ogryn",
-	"chaos_plague_ogryn_sprayer",
-	"renegade_captain",
-	"cultist_captain",
-	"renegade_twin_captain",
-	"renegade_twin_captain_two",
-}
 mod.kills_by_category = {}
 mod.damage_by_category = {}
 mod.saved_kills_by_category = {}
@@ -141,43 +86,23 @@ mod.format_number = function(number)
 	return formatted
 end
 
--- Предопределённые цвета
-local color_presets = {
-	white = {255, 255, 255},
-	red = {255, 54, 36},        -- ui_red_light
-	green = {61, 112, 55},      -- ui_green_medium
-	blue = {30, 144, 255},      -- dodger_blue
-	yellow = {226, 199, 126},   -- ui_terminal
-	orange = {255, 183, 44},    -- ui_orange_light
-	purple = {166, 93, 172},    -- ui_corruption_default
-	cyan = {107, 209, 241},     -- ui_blue_light
-	teal = {62, 143, 155},          -- ui_toughness_medium
-	gold = {196, 195, 108},         -- ui_toughness_buffed
-	purple_deep = {130, 66, 170},   -- ui_corruption_medium
-	magenta = {102, 38, 98},        -- ui_ability_purple
-	orange_dark = {148, 46, 14},    -- ui_orange_dark
-	orange_medium = {245, 121, 21}, -- ui_orange_medium
-	amber = {191, 151, 73},         -- ui_terminal_dark
-	grey = {102, 102, 102},         -- ui_grey_medium
-}
-
 -- Получить строку цвета для убийств
 mod.get_kills_color_string = function()
 	local color_name = mod.kills_color or "white"
-	local rgb = color_presets[color_name] or color_presets["white"]
+	local rgb = mod.color_presets[color_name] or mod.color_presets["white"]
 	return string.format("{#color(%d,%d,%d)}", rgb[1], rgb[2], rgb[3])
 end
 
 -- Получить строку цвета для урона
 mod.get_damage_color_string = function()
 	local color_name = mod.damage_color or "orange"
-	local rgb = color_presets[color_name] or color_presets["orange"]
+	local rgb = mod.color_presets[color_name] or mod.color_presets["orange"]
 	return string.format("{#color(%d,%d,%d)}", rgb[1], rgb[2], rgb[3])
 end
 
 mod.get_last_damage_color_string = function()
 	local color_name = mod.last_damage_color or "orange"
-	local rgb = color_presets[color_name] or color_presets["orange"]
+	local rgb = mod.color_presets[color_name] or mod.color_presets["orange"]
 	return string.format("{#color(%d,%d,%d)}", rgb[1], rgb[2], rgb[3])
 end
 
@@ -204,11 +129,11 @@ local function recreate_hud()
     mod.show_killstreaks = mod:get("show_killstreaks") or 1
     local ks_diff = mod:get("killstreak_difficulty") or 2
     if ks_diff == 1 then
-        mod.killstreak_duration_seconds = 4
+        mod.killstreak_duration_seconds = mod.KILLSTREAK_DURATION_EASY
     elseif ks_diff == 2 then
-        mod.killstreak_duration_seconds = 2.5
+        mod.killstreak_duration_seconds = mod.KILLSTREAK_DURATION_NORMAL
     elseif ks_diff == 3 then
-        mod.killstreak_duration_seconds = 1
+        mod.killstreak_duration_seconds = mod.KILLSTREAK_DURATION_HARD
     end
     mod.kills_color = mod:get("kills_color") or "white"
     mod.damage_color = mod:get("damage_color") or "orange"
@@ -242,11 +167,11 @@ mod.on_setting_changed = function()
     mod.show_killstreaks = mod:get("show_killstreaks") or 1
     local ks_diff = mod:get("killstreak_difficulty") or 2
     if ks_diff == 1 then
-        mod.killstreak_duration_seconds = 4
+        mod.killstreak_duration_seconds = mod.KILLSTREAK_DURATION_EASY
     elseif ks_diff == 2 then
-        mod.killstreak_duration_seconds = 2.5
+        mod.killstreak_duration_seconds = mod.KILLSTREAK_DURATION_NORMAL
     elseif ks_diff == 3 then
-        mod.killstreak_duration_seconds = 1
+        mod.killstreak_duration_seconds = mod.KILLSTREAK_DURATION_HARD
     end
     mod.kills_color = mod:get("kills_color") or "white"
     mod.damage_color = mod:get("damage_color") or "orange"
@@ -718,400 +643,5 @@ mod:hook(CLASS.EndPlayerView, "on_exit", function(func, self, ...)
 	end
 end)
 
--- Хуки для отображения списка игроков и урона ниже полоски жизни босса
-local UIWidget = require("scripts/managers/ui/ui_widget")
-local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
-local HudElementBossHealthSettings = require("scripts/ui/hud/elements/boss_health/hud_element_boss_health_settings")
-local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
-
-local hud_body_font_settings = UIFontSettings.hud_body or {}
-
-local function get_font_size()
-	return mod.font_size or mod:get("font_size") or 16
-end
-
--- Функция для формирования текста урона по боссу
-local function format_boss_damage_text(unit)
-	local boss_damage_data = mod.boss_damage and mod.boss_damage[unit]
-	if not boss_damage_data or not next(boss_damage_data) then
-		return nil
-	end
-	
-	-- Получаем список текущих игроков
-	local current_players = {}
-	if Managers.player then
-		local players = Managers.player:players()
-		for _, player in pairs(players) do
-			if player then
-				local account_id = player:account_id() or player:name()
-				local character_name = player.character_name and player:character_name()
-				if account_id then
-					current_players[account_id] = character_name or player:name() or account_id
-				end
-			end
-		end
-	end
-	
-	-- Получаем данные о последнем уроне по этому боссу
-	local boss_last_damage_data = mod.boss_last_damage and mod.boss_last_damage[unit]
-	
-	-- Формируем список игроков с уроном
-	local players_with_damage = {}
-	for account_id, damage in pairs(boss_damage_data) do
-		local display_name = current_players[account_id]
-		if display_name and damage > 0 then
-			local last_damage = boss_last_damage_data and boss_last_damage_data[account_id] or 0
-			table.insert(players_with_damage, {
-				name = display_name,
-				damage = damage,
-				last_damage = last_damage,
-				account_id = account_id
-			})
-		end
-	end
-	
-	-- Сортируем по урону (больше сверху)
-	table.sort(players_with_damage, function(a, b)
-		return a.damage > b.damage
-	end)
-	
-	-- Формируем текст
-	local lines = {}
-	local damage_color = mod.get_damage_color_string()
-	local last_damage_color = mod.get_last_damage_color_string()
-	local reset_color = "{#reset()}"
-	
-	for _, player in ipairs(players_with_damage) do
-		local dmg = math.floor(player.damage or 0)
-		local last_dmg = math.floor(player.last_damage or 0)
-		local line = player.name .. ": " .. damage_color .. mod.format_number(dmg) .. reset_color
-		if last_dmg > 0 then
-			line = line .. " [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]"
-		end
-		table.insert(lines, line)
-	end
-	
-	if #lines > 0 then
-		return lines
-	else
-		return nil
-	end
-end
-
--- Добавляем виджеты для отображения списка игроков в каждую группу виджетов
--- Используем хук после того, как все виджеты созданы (включая RecolorBossHealthBars)
-mod:hook_safe(CLASS.HudElementBossHealth, "_setup_widget_groups", function(self)
-	local widget_groups = self._widget_groups
-	if not widget_groups then
-		return
-	end
-	
-	-- Создаем виджеты для всех групп виджетов (включая созданные RecolorBossHealthBars)
-	local font_size = get_font_size()
-	local health_bar_size_y = HudElementBossHealthSettings.size[2]
-	
-	for widget_group_index, widget_group in ipairs(widget_groups) do
-		if widget_group.health and not widget_group.boss_damage_list then
-			local health_widget = widget_group.health
-			
-			-- Получаем offset health виджета из style для правильного позиционирования
-			local health_bar_style = health_widget.style and health_widget.style.bar
-			local health_bar_offset = health_bar_style and health_bar_style.offset or {0, -13, 4}
-			
-			-- Определяем размер полоски жизни (большая для первого, маленькая для остальных)
-			local health_bar_size = widget_group_index == 1 and HudElementBossHealthSettings.size or HudElementBossHealthSettings.size_small
-			
-			-- Создаем виджет для отображения списка игроков и урона
-			local damage_list_widget_definition = UIWidget.create_definition({
-				{
-					pass_type = "text",
-					style_id = "text",
-					value = "",
-					value_id = "text",
-					style = {
-						font_size = font_size,
-						font_type = hud_body_font_settings.font_type or "machine_medium",
-						line_spacing = 1.2,
-						horizontal_alignment = "left",
-						vertical_alignment = "top",
-						text_horizontal_alignment = "left",
-						text_vertical_alignment = "top",
-						text_color = {
-							255,
-							255,
-							255,
-							255,
-						},
-						drop_shadow = true,
-						offset = {
-							health_bar_offset[1],
-							health_bar_offset[2] + health_bar_size_y + 45,
-							10,
-						},
-						size = {
-							250,
-							200,
-						},
-					},
-				},
-			}, "health_bar")
-			
-			widget_group.boss_damage_list = self:_create_widget("boss_damage_list_" .. widget_group_index, damage_list_widget_definition)
-			
-			-- Учитываем offset виджета health, если он установлен (для виджетов созданных RecolorBossHealthBars)
-			if health_widget.offset then
-				widget_group.boss_damage_list.offset[1] = health_widget.offset[1]
-				widget_group.boss_damage_list.offset[2] = health_widget.offset[2]
-			end
-		end
-	end
-end)
-
--- Обновляем виджеты со списком игроков и урона
-mod:hook_safe(CLASS.HudElementBossHealth, "update", function(self, dt, t, ui_renderer, render_settings, input_service)
-	local is_active = self._is_active
-	
-	if not is_active then
-		return
-	end
-	
-	local widget_groups = self._widget_groups
-	local active_targets_array = self._active_targets_array
-	local num_active_targets = #active_targets_array
-	local num_health_bars_to_update = math.min(num_active_targets, self._max_health_bars)
-	
-	-- Создаем виджеты для всех групп виджетов, которые еще не имеют нашего виджета
-	-- Это нужно на случай, если RecolorBossHealthBars добавил виджеты после нашего хука _setup_widget_groups
-	local font_size = get_font_size()
-	local health_bar_size_y = HudElementBossHealthSettings.size[2]
-	
-	for widget_group_index, widget_group in ipairs(widget_groups) do
-		if widget_group.health and not widget_group.boss_damage_list then
-			local health_widget = widget_group.health
-			
-			-- Получаем offset health виджета из style для правильного позиционирования
-			local health_bar_style = health_widget.style and health_widget.style.bar
-			local health_bar_offset = health_bar_style and health_bar_style.offset or {0, -13, 4}
-			
-			-- Определяем размер полоски жизни (большая для первого, маленькая для остальных)
-			local health_bar_size = widget_group_index == 1 and HudElementBossHealthSettings.size or HudElementBossHealthSettings.size_small
-			
-			-- Создаем виджет для отображения списка игроков и урона
-			local damage_list_widget_definition = UIWidget.create_definition({
-				{
-					pass_type = "text",
-					style_id = "text",
-					value = "",
-					value_id = "text",
-					style = {
-						font_size = font_size,
-						font_type = hud_body_font_settings.font_type or "machine_medium",
-						line_spacing = 1.2,
-						horizontal_alignment = "left",
-						vertical_alignment = "top",
-						text_horizontal_alignment = "left",
-						text_vertical_alignment = "top",
-						text_color = {
-							255,
-							255,
-							255,
-							255,
-						},
-						drop_shadow = true,
-						offset = {
-							health_bar_offset[1],
-							health_bar_offset[2] + health_bar_size_y + 45,
-							10,
-						},
-						size = {
-							250,
-							200,
-						},
-					},
-				},
-			}, "health_bar")
-			
-			widget_group.boss_damage_list = self:_create_widget("boss_damage_list_" .. widget_group_index, damage_list_widget_definition)
-			
-			-- Учитываем offset виджета health, если он установлен (для виджетов созданных RecolorBossHealthBars)
-			if health_widget.offset then
-				widget_group.boss_damage_list.offset[1] = health_widget.offset[1]
-				widget_group.boss_damage_list.offset[2] = health_widget.offset[2]
-			end
-		end
-	end
-	
-	for i = 1, num_health_bars_to_update do
-		local widget_group_index = num_active_targets > 1 and i + 1 or i
-		local widget_group = widget_groups[widget_group_index]
-		local target = active_targets_array[i]
-		local unit = target.unit
-		
-		if ALIVE[unit] and widget_group.boss_damage_list then
-			local damage_widget = widget_group.boss_damage_list
-			
-			-- Обновляем offset виджета, если health виджет имеет offset (для виджетов созданных RecolorBossHealthBars)
-			local health_widget = widget_group.health
-			if health_widget and health_widget.offset then
-				damage_widget.offset[1] = health_widget.offset[1]
-				damage_widget.offset[2] = health_widget.offset[2]
-			end
-			
-			-- Получаем текст урона
-			local damage_lines = format_boss_damage_text(unit)
-			
-			if damage_lines and #damage_lines > 0 then
-				damage_widget.content.text = table.concat(damage_lines, "\n")
-				damage_widget.visible = true
-			else
-				damage_widget.content.text = ""
-				damage_widget.visible = false
-			end
-		end
-	end
-end)
-
--- Функция для формирования текста урона для уведомления с цветами
-local function format_boss_damage_text_for_notification(unit)
-	local boss_damage_data = mod.boss_damage and mod.boss_damage[unit]
-	if not boss_damage_data or not next(boss_damage_data) then
-		return nil
-	end
-	
-	-- Получаем список текущих игроков
-	local current_players = {}
-	if Managers.player then
-		local players = Managers.player:players()
-		for _, player in pairs(players) do
-			if player then
-				local account_id = player:account_id() or player:name()
-				local character_name = player.character_name and player:character_name()
-				if account_id then
-					current_players[account_id] = character_name or player:name() or account_id
-				end
-			end
-		end
-	end
-	
-	-- Получаем данные о последнем уроне по этому боссу
-	local boss_last_damage_data = mod.boss_last_damage and mod.boss_last_damage[unit]
-	
-	-- Получаем цвета RGB
-	local damage_color_name = mod.damage_color or "orange"
-	local last_damage_color_name = mod.last_damage_color or "orange"
-	local damage_rgb = color_presets[damage_color_name] or color_presets["orange"]
-	local last_damage_rgb = color_presets[last_damage_color_name] or color_presets["orange"]
-	
-	-- Формируем список игроков с уроном
-	local players_with_damage = {}
-	for account_id, damage in pairs(boss_damage_data) do
-		if damage > 0 then
-			-- Получаем имя игрока
-			local display_name = current_players[account_id]
-			-- Если имя не найдено в текущих игроках, пробуем найти по account_id
-			if not display_name then
-				if Managers.player then
-					local players = Managers.player:players()
-					for _, player in pairs(players) do
-						if player then
-							local player_account_id = player:account_id() or player:name()
-							if player_account_id == account_id then
-								display_name = player.character_name and player:character_name() or player:name() or tostring(account_id)
-								break
-							end
-						end
-					end
-				end
-				-- Если все еще не нашли, используем account_id как имя
-				if not display_name then
-					display_name = tostring(account_id)
-				end
-			end
-			
-			local last_damage = boss_last_damage_data and boss_last_damage_data[account_id] or 0
-			table.insert(players_with_damage, {
-				name = display_name,
-				damage = damage,
-				last_damage = last_damage,
-				account_id = account_id
-			})
-		end
-	end
-	
-	-- Сортируем по урону (больше сверху)
-	table.sort(players_with_damage, function(a, b)
-		return a.damage > b.damage
-	end)
-	
-	-- Формируем текст с цветами для уведомления (как в StimmCountdown)
-	local lines = {}
-	for _, player in ipairs(players_with_damage) do
-		local dmg = math.floor(player.damage or 0)
-		local damage_number = mod.format_number(dmg)
-		local damage_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", damage_rgb[1], damage_rgb[2], damage_rgb[3], damage_number)
-		local line = player.name .. ": " .. damage_text
-		table.insert(lines, line)
-	end
-	
-	if #lines > 0 then
-		return lines
-	else
-		return nil
-	end
-end
-
--- Перехватываем _generate_notification_data чтобы разбить line_1 с \n на отдельные строки
-mod:hook(ConstantElementNotificationFeed, "_generate_notification_data", function(func, self, message_type, data)
-	local notification_data = func(self, message_type, data)
-	
-	-- Для custom уведомлений разбиваем line_1 с \n на отдельные строки
-	if message_type == "custom" and notification_data and data and data.line_1 then
-		-- Разбиваем line_1 по \n на отдельные строки
-		local lines = {}
-		for line in string.gmatch(data.line_1, "([^\n]+)") do
-			if line and line ~= "" then
-				table.insert(lines, {
-					display_name = line,
-					color = data.line_1_color,
-				})
-			end
-		end
-		
-		-- Если есть строки, заменяем texts на разбитые строки
-		if #lines > 0 then
-			notification_data.texts = lines
-		end
-	end
-	
-	return notification_data
-end)
-
--- Отправляем уведомление при смерти босса с информацией об уроне
-mod:hook_safe(CLASS.HudElementBossHealth, "event_boss_encounter_end", function(self, unit, boss_extension)
-	-- Получаем данные об уроне по этому боссу
-	local damage_lines = format_boss_damage_text_for_notification(unit)
-	
-	if damage_lines and #damage_lines > 0 then
-		-- Объединяем все строки в line_1 с переносами \n - система автоматически разобьет на строки
-		local all_lines = table.concat(damage_lines, "\n")
-		local notification_data = {
-			line_1 = all_lines,
-			show_shine = false,
-		}
-		
-		-- Отправляем уведомление с информацией об уроне
-		if Managers.event then
-			Managers.event:trigger("event_add_notification_message", "custom", notification_data)
-		end
-	end
-	
-	-- Очищаем данные об уроне по боссу после отправки уведомления
-	if mod.boss_damage and mod.boss_damage[unit] then
-		mod.boss_damage[unit] = nil
-	end
-	if mod.boss_last_damage and mod.boss_last_damage[unit] then
-		mod.boss_last_damage[unit] = nil
-	end
-end)
 
 
