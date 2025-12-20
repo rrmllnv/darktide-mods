@@ -8,7 +8,7 @@ local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local hud_body_font_settings = UIFontSettings.hud_body or {}
 
 local function get_font_size()
-	return mod.font_size or mod:get("font_size") or 16
+	return mod.font_size or mod:get("opt_font_size") or 16
 end
 
 -- Функция для формирования текста урона по боссу

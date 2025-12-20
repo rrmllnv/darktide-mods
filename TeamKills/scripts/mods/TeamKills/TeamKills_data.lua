@@ -9,12 +9,12 @@ return {
 		localize = true,
 		widgets = {
 			{
-				setting_id = "hud_team_kills_tracker",
+				setting_id = "opt_hud_team_kills_tracker",
 				type = "group",
 				title = "i18n_hud_team_kills_tracker_title",
 				sub_widgets = {
 					{
-						setting_id = "hud_counter_mode",
+						setting_id = "opt_hud_counter_mode",
 						type = "dropdown",
 						title = "i18n_hud_counter_mode",
 						default_value = 1,
@@ -28,7 +28,7 @@ return {
 						},
 					},
 					{
-						setting_id = "show_team_summary",
+						setting_id = "opt_show_team_summary",
 						type = "dropdown",
 						title = "i18n_show_team_summary",
 						default_value = 1,
@@ -38,7 +38,7 @@ return {
 						},
 					},
 					{
-						setting_id = "display_mode",
+						setting_id = "opt_display_mode",
 						type = "dropdown",
 						title = "i18n_display_mode",
 						default_value = 1,
@@ -50,7 +50,7 @@ return {
 						},
 					},
 					{
-						setting_id = "show_killstreaks",
+						setting_id = "opt_show_killstreaks",
 						type = "dropdown",
 						title = "i18n_show_killstreaks",
 						default_value = 1,
@@ -60,7 +60,7 @@ return {
 						},
 					},
 					{
-						setting_id = "killstreak_difficulty",
+						setting_id = "opt_killstreak_difficulty",
 						type = "dropdown",
 						title = "i18n_killstreak_difficulty",
 						default_value = 2,
@@ -88,12 +88,12 @@ return {
 			-- 	},
 			-- },
 			{
-				setting_id = "hud_general_settings",
+				setting_id = "opt_hud_general_settings",
 				type = "group",
 				title = "i18n_hud_general_settings_title",
 				sub_widgets = {
 					{
-						setting_id = "kills_color",
+						setting_id = "opt_kills_color",
 						type = "dropdown",
 						title = "i18n_kills_color",
 						default_value = "white",
@@ -117,7 +117,7 @@ return {
 						},
 					},
 					{
-						setting_id = "damage_color",
+						setting_id = "opt_damage_color",
 						type = "dropdown",
 						title = "i18n_damage_color",
 						default_value = "orange",
@@ -141,7 +141,7 @@ return {
 						},
 					},
 					{
-						setting_id = "last_damage_color",
+						setting_id = "opt_last_damage_color",
 						type = "dropdown",
 						title = "i18n_last_damage_color",
 						default_value = "orange",
@@ -165,7 +165,7 @@ return {
 						},
 					},
 					{
-						setting_id = "show_background",
+						setting_id = "opt_show_background",
 						type = "dropdown",
 						title = "i18n_show_background",
 						default_value = 1,
@@ -175,14 +175,14 @@ return {
 						},
 					},
 					{
-						setting_id = "font_size",
+						setting_id = "opt_font_size",
 						type = "numeric",
 						title = "i18n_font_size",
 						default_value = 16,
 						range = {15, 30},
 					},
 					{
-						setting_id = "opacity",
+						setting_id = "opt_opacity",
 						type = "numeric",
 						title = "i18n_opacity",
 						default_value = 100,
@@ -191,12 +191,12 @@ return {
 				},
 			},
 			{
-				setting_id = "killstreak_board",
+				setting_id = "opt_killstreak_board",
 				type = "group",
 				title = "i18n_killstreak_board_title",
 				sub_widgets = {
 					{
-						setting_id = "show_killsboard",
+						setting_id = "opt_show_killsboard",
 						type = "dropdown",
 						title = "i18n_show_killsboard",
 						default_value = 1,
@@ -206,7 +206,7 @@ return {
 						},
 					},
 					{
-						setting_id = "show_killsboard_end_view",
+						setting_id = "opt_show_killsboard_end_view",
 						type = "dropdown",
 						title = "i18n_show_killsboard_end_view",
 						default_value = 1,
@@ -216,7 +216,7 @@ return {
 						},
 					},
 					{
-						setting_id = "open_killsboard",
+						setting_id = "opt_open_killsboard",
 						type = "keybind",
 						title = "i18n_open_killsboard",
 						default_value = {"f7"},

@@ -35,9 +35,9 @@ mod.saved_kills_by_category = {}
 mod.saved_damage_by_category = {}
 mod.saved_player_kills = {}
 mod.saved_player_damage = {}
-mod.display_mode = mod:get("display_mode") or 1
-mod.show_background = mod:get("show_background") or 1
-mod.opacity = mod:get("opacity") or 100
+mod.display_mode = mod:get("opt_display_mode") or 1
+mod.show_background = mod:get("opt_show_background") or 1
+mod.opacity = mod:get("opt_opacity") or 100
 
 for _, hud_element in ipairs(hud_elements) do
 	mod:add_require_path(hud_element.filename)
@@ -124,10 +124,10 @@ local function recreate_hud()
     mod.display_killstreak_damage_by_category = {}  -- {account_id: {category_key: damage}} - урон для отображения
     mod.boss_damage = {}  -- {[unit] = {[account_id] = damage}} - урон по боссам
     mod.boss_last_damage = {}  -- {[unit] = {[account_id] = last_damage}} - последний урон по боссам
-    mod.display_mode = mod:get("display_mode") or 1
-    mod.hud_counter_mode = mod:get("hud_counter_mode") or 1
-    mod.show_killstreaks = mod:get("show_killstreaks") or 1
-    local ks_diff = mod:get("killstreak_difficulty") or 2
+    mod.display_mode = mod:get("opt_display_mode") or 1
+    mod.hud_counter_mode = mod:get("opt_hud_counter_mode") or 1
+    mod.show_killstreaks = mod:get("opt_show_killstreaks") or 1
+    local ks_diff = mod:get("opt_killstreak_difficulty") or 2
     if ks_diff == 1 then
         mod.killstreak_duration_seconds = mod.KILLSTREAK_DURATION_EASY
     elseif ks_diff == 2 then
@@ -135,13 +135,13 @@ local function recreate_hud()
     elseif ks_diff == 3 then
         mod.killstreak_duration_seconds = mod.KILLSTREAK_DURATION_HARD
     end
-    mod.kills_color = mod:get("kills_color") or "white"
-    mod.damage_color = mod:get("damage_color") or "orange"
-    mod.last_damage_color = mod:get("last_damage_color") or "orange"
-    mod.font_size = mod:get("font_size") or 16
-    mod.show_background = mod:get("show_background") or 1
-    mod.opacity = mod:get("opacity") or 100
-    mod.show_killsboard = mod:get("show_killsboard") or 1
+    mod.kills_color = mod:get("opt_kills_color") or "white"
+    mod.damage_color = mod:get("opt_damage_color") or "orange"
+    mod.last_damage_color = mod:get("opt_last_damage_color") or "orange"
+    mod.font_size = mod:get("opt_font_size") or 16
+    mod.show_background = mod:get("opt_show_background") or 1
+    mod.opacity = mod:get("opt_opacity") or 100
+    mod.show_killsboard = mod:get("opt_show_killsboard") or 1
 end
 
 mod.on_all_mods_loaded = function()
@@ -161,11 +161,11 @@ mod.on_all_mods_loaded = function()
 end
 
 mod.on_setting_changed = function()
-    mod.display_mode = mod:get("display_mode") or 1
-    mod.hud_counter_mode = mod:get("hud_counter_mode") or 1
-    mod.show_team_summary = mod:get("show_team_summary") or 1
-    mod.show_killstreaks = mod:get("show_killstreaks") or 1
-    local ks_diff = mod:get("killstreak_difficulty") or 2
+    mod.display_mode = mod:get("opt_display_mode") or 1
+    mod.hud_counter_mode = mod:get("opt_hud_counter_mode") or 1
+    mod.show_team_summary = mod:get("opt_show_team_summary") or 1
+    mod.show_killstreaks = mod:get("opt_show_killstreaks") or 1
+    local ks_diff = mod:get("opt_killstreak_difficulty") or 2
     if ks_diff == 1 then
         mod.killstreak_duration_seconds = mod.KILLSTREAK_DURATION_EASY
     elseif ks_diff == 2 then
@@ -173,14 +173,14 @@ mod.on_setting_changed = function()
     elseif ks_diff == 3 then
         mod.killstreak_duration_seconds = mod.KILLSTREAK_DURATION_HARD
     end
-    mod.kills_color = mod:get("kills_color") or "white"
-    mod.damage_color = mod:get("damage_color") or "orange"
-    mod.last_damage_color = mod:get("last_damage_color") or "orange"
-    mod.font_size = mod:get("font_size") or 16
-    mod.show_background = mod:get("show_background") or 1
-    mod.opacity = mod:get("opacity") or 100
-    mod.show_killsboard = mod:get("show_killsboard") or 1
-    local show_killsboard_end_view = mod:get("show_killsboard_end_view") or 1
+    mod.kills_color = mod:get("opt_kills_color") or "white"
+    mod.damage_color = mod:get("opt_damage_color") or "orange"
+    mod.last_damage_color = mod:get("opt_last_damage_color") or "orange"
+    mod.font_size = mod:get("opt_font_size") or 16
+    mod.show_background = mod:get("opt_show_background") or 1
+    mod.opacity = mod:get("opt_opacity") or 100
+    mod.show_killsboard = mod:get("opt_show_killsboard") or 1
+    local show_killsboard_end_view = mod:get("opt_show_killsboard_end_view") or 1
     -- Обновляем флаг, если мы уже в EndView
     if mod.killsboard_show_in_end_view then
         mod.killsboard_show_in_end_view = (show_killsboard_end_view == 1)
@@ -604,7 +604,7 @@ mod:hook(CLASS.EndView, "on_enter", function(func, self, ...)
 	-- Сохраняем данные миссии для показа в карусели (НЕ очищаем здесь!)
 	save_mission_data()
 	
-	local show_killsboard_end_view = mod:get("show_killsboard_end_view") or 1
+	local show_killsboard_end_view = mod:get("opt_show_killsboard_end_view") or 1
 	if show_killsboard_end_view == 1 then
 		mod:show_killstreak_view({end_view = true})
 	end

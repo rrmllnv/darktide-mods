@@ -165,8 +165,8 @@ mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, 
 	self.killsboard_row_widgets = self.killsboard_row_widgets or {}
 	local killsboard_widget = self._widgets_by_name["killsboard"]
 	
-	local show_killsboard = mod.show_killsboard or mod:get("show_killsboard") or 1
-	local show_killsboard_end_view = mod:get("show_killsboard_end_view") or 1
+	local show_killsboard = mod.show_killsboard or mod:get("opt_show_killsboard") or 1
+	local show_killsboard_end_view = mod:get("opt_show_killsboard_end_view") or 1
 	local delete = false
 	
 	-- Удаляем виджеты только если:

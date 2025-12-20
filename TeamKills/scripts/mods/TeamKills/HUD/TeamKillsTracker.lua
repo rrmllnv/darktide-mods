@@ -12,7 +12,7 @@ local hud_body_font_settings = UIFontSettings.hud_body or {}
 local panel_size = HudElementTeamPanelHandlerSettings.panel_size
 local BORDER_PADDING = 5
 local function get_font_size()
-	return mod.font_size or mod:get("font_size") or 16
+	return mod.font_size or mod:get("opt_font_size") or 16
 end
 
 local function get_default_panel_height()
@@ -21,7 +21,7 @@ local function get_default_panel_height()
 end
 
 local function get_opacity_alpha()
-	local opacity = mod.opacity or mod:get("opacity") or 100
+	local opacity = mod.opacity or mod:get("opt_opacity") or 100
 	return math.floor((opacity / 100) * 255)
 end
 local panel_offset = {550, -200, 0}
@@ -195,7 +195,7 @@ local widget_definitions = {
 					},
 				},
 				visibility_function = function (content)
-					local show_background = mod.show_background or mod:get("show_background") or 1
+					local show_background = mod.show_background or mod:get("opt_show_background") or 1
 					return content.visible and show_background == 1
 				end,
 			},
@@ -297,9 +297,9 @@ TeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, in
     -- Формируем текст с учетом настроек
     local lines = {}
     local streak_lines = {}
-    local mode = mod.hud_counter_mode or mod:get("hud_counter_mode") or 1
-    local display_mode = mod.display_mode or mod:get("display_mode") or 1
-    local team_summary_setting = mod.show_team_summary or mod:get("show_team_summary") or 1
+    local mode = mod.hud_counter_mode or mod:get("opt_hud_counter_mode") or 1
+    local display_mode = mod.display_mode or mod:get("opt_display_mode") or 1
+    local team_summary_setting = mod.show_team_summary or mod:get("opt_show_team_summary") or 1
     local show_team_summary = team_summary_setting == 1
     local show_player_lines = display_mode ~= 3
     local show_only_me = display_mode == 2
