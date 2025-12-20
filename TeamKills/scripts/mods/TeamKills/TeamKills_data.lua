@@ -14,17 +14,29 @@ return {
 				title = "i18n_hud_team_kills_tracker_title",
 				sub_widgets = {
 					{
-						setting_id = "opt_hud_counter_mode",
-						type = "dropdown",
-						title = "i18n_hud_counter_mode",
-						default_value = 1,
-						options = {
-							{text = "i18n_hud_counter_mode_kills_damage", value = 1},
-							{text = "i18n_hud_counter_mode_kills", value = 2},
-							{text = "i18n_hud_counter_mode_damage", value = 3},
-							{text = "i18n_hud_counter_mode_last_damage", value = 4},
-							{text = "i18n_hud_counter_mode_kills_last_damage", value = 5},
-							{text = "i18n_hud_counter_mode_kills_total_last_damage", value = 6},
+						setting_id = "opt_show_team_kills_tracker",
+						type = "checkbox",
+						title = "i18n_show_team_kills_tracker",
+						default_value = true,
+						sub_widgets = {
+							{
+								setting_id = "opt_show_kills",
+								type = "checkbox",
+								title = "i18n_show_kills",
+								default_value = true,
+							},
+							{
+								setting_id = "opt_show_total_damage",
+								type = "checkbox",
+								title = "i18n_show_total_damage",
+								default_value = true,
+							},
+							{
+								setting_id = "opt_show_last_damage",
+								type = "checkbox",
+								title = "i18n_show_last_damage",
+								default_value = false,
+							},
 						},
 					},
 					{

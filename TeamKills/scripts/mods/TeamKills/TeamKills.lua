@@ -125,7 +125,9 @@ local function recreate_hud()
     mod.boss_damage = {}  -- {[unit] = {[account_id] = damage}} - урон по боссам
     mod.boss_last_damage = {}  -- {[unit] = {[account_id] = last_damage}} - последний урон по боссам
     mod.display_mode = mod:get("opt_display_mode") or 1
-    mod.hud_counter_mode = mod:get("opt_hud_counter_mode") or 1
+    mod.show_kills = mod:get("opt_show_kills") ~= false
+    mod.show_total_damage = mod:get("opt_show_total_damage") ~= false
+    mod.show_last_damage = mod:get("opt_show_last_damage") == true
     mod.show_killstreaks = mod:get("opt_show_killstreaks") or 1
     local ks_diff = mod:get("opt_killstreak_difficulty") or 2
     if ks_diff == 1 then
@@ -162,7 +164,9 @@ end
 
 mod.on_setting_changed = function()
     mod.display_mode = mod:get("opt_display_mode") or 1
-    mod.hud_counter_mode = mod:get("opt_hud_counter_mode") or 1
+    mod.show_kills = mod:get("opt_show_kills") ~= false
+    mod.show_total_damage = mod:get("opt_show_total_damage") ~= false
+    mod.show_last_damage = mod:get("opt_show_last_damage") == true
     mod.show_team_summary = mod:get("opt_show_team_summary") or 1
     mod.show_killstreaks = mod:get("opt_show_killstreaks") or 1
     local ks_diff = mod:get("opt_killstreak_difficulty") or 2

@@ -233,6 +233,24 @@ TeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, in
 	
 	local widget = self._widgets_by_name.TeamKillsWidget
 
+	-- Проверка настройки "Показать Team Kills Tracker"
+	local show_tracker = mod:get("opt_show_team_kills_tracker")
+	if show_tracker == false then
+		widget.content.visible = false
+		widget.content.text = ""
+		return
+	end
+	
+	-- Проверка: если все три опции выключены, нечего показывать
+	local show_kills = mod:get("opt_show_kills") ~= false
+	local show_total_damage = mod:get("opt_show_total_damage") ~= false
+	local show_last_damage = mod:get("opt_show_last_damage") == true
+	if not show_kills and not show_total_damage and not show_last_damage then
+		widget.content.visible = false
+		widget.content.text = ""
+		return
+	end
+
 	mod.update_killstreak_timers(dt)
 
 	if self.is_in_hub then
@@ -297,7 +315,9 @@ TeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, in
     -- Формируем текст с учетом настроек
     local lines = {}
     local streak_lines = {}
-    local mode = mod.hud_counter_mode or mod:get("opt_hud_counter_mode") or 1
+    local show_kills = mod.show_kills ~= false
+    local show_total_damage = mod.show_total_damage ~= false
+    local show_last_damage = mod.show_last_damage == true
     local display_mode = mod.display_mode or mod:get("opt_display_mode") or 1
     local team_summary_setting = mod.show_team_summary or mod:get("opt_show_team_summary") or 1
     local show_team_summary = team_summary_setting == 1
@@ -309,24 +329,47 @@ TeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, in
     local last_damage_color = mod.get_last_damage_color_string()
     local reset_color = "{#reset()}"
     
+    -- Функция для формирования строки с данными игрока/команды
+    local function format_stats(kills, damage, last_damage, is_team)
+        local parts = {}
+        
+        if show_kills then
+            table.insert(parts, kills_color .. kills .. reset_color)
+        end
+        
+        if show_total_damage then
+            if #parts > 0 then
+                table.insert(parts, "(" .. damage_color .. mod.format_number(damage) .. reset_color .. ")")
+            else
+                table.insert(parts, damage_color .. mod.format_number(damage) .. reset_color)
+            end
+        end
+        
+        if show_last_damage then
+            table.insert(parts, "[" .. last_damage_color .. mod.format_number(last_damage) .. reset_color .. "]")
+        end
+        
+        if #parts == 0 then
+            return ""
+        end
+        
+        return table.concat(parts, " ")
+    end
+    
     if show_team_summary then
-        if mode == 1 then
-            table.insert(lines, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " (" .. damage_color .. mod.format_number(total_damage) .. reset_color .. ")")
-            table.insert(streak_lines, "")
-        elseif mode == 2 then
-            table.insert(lines, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color)
-            table.insert(streak_lines, "")
-        elseif mode == 3 then
-            table.insert(lines, "TEAM DAMAGE: " .. damage_color .. mod.format_number(total_damage) .. reset_color)
-            table.insert(streak_lines, "")
-        elseif mode == 4 then
-            table.insert(lines, "TEAM LAST DAMAGE: " .. last_damage_color .. mod.format_number(total_last_damage) .. reset_color)
-            table.insert(streak_lines, "")
-        elseif mode == 5 then
-            table.insert(lines, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " [" .. last_damage_color .. mod.format_number(total_last_damage) .. reset_color .. "]")
-            table.insert(streak_lines, "")
-        elseif mode == 6 then
-            table.insert(lines, "TEAM KILLS: " .. kills_color .. total_kills .. reset_color .. " (" .. damage_color .. mod.format_number(total_damage) .. reset_color .. ") [" .. last_damage_color .. mod.format_number(total_last_damage) .. reset_color .. "]")
+        local team_stats = format_stats(total_kills, total_damage, total_last_damage, true)
+        if team_stats ~= "" then
+            local prefix = "TEAM "
+            if show_kills and not show_total_damage and not show_last_damage then
+                prefix = prefix .. "KILLS: "
+            elseif show_total_damage and not show_kills and not show_last_damage then
+                prefix = prefix .. "DAMAGE: "
+            elseif show_last_damage and not show_kills and not show_total_damage then
+                prefix = prefix .. "LAST DAMAGE: "
+            else
+                prefix = prefix .. "KILLS: "
+            end
+            table.insert(lines, prefix .. team_stats)
             table.insert(streak_lines, "")
         end
     end
@@ -347,18 +390,9 @@ TeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, in
             local name = player.name
             table.insert(streak_lines, streak_label and ("+" .. streak_label) or "")
 
-            if mode == 1 then
-                table.insert(lines, name .. ": " .. kills_color .. player.kills .. reset_color .. " (" .. damage_color .. mod.format_number(dmg) .. reset_color .. ")")
-            elseif mode == 2 then
-                table.insert(lines, name .. ": " .. kills_color .. player.kills .. reset_color)
-            elseif mode == 3 then
-                table.insert(lines, name .. ": " .. damage_color .. mod.format_number(dmg) .. reset_color)
-            elseif mode == 4 then
-                table.insert(lines, name .. ": [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]")
-            elseif mode == 5 then
-                table.insert(lines, name .. ": " .. kills_color .. player.kills .. reset_color .. " [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]")
-            elseif mode == 6 then
-                table.insert(lines, name .. ": " .. kills_color .. player.kills .. reset_color .. " (" .. damage_color .. mod.format_number(dmg) .. reset_color .. ") [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]")
+            local player_stats = format_stats(player.kills, dmg, last_dmg, false)
+            if player_stats ~= "" then
+                table.insert(lines, name .. ": " .. player_stats)
             end
             ::continue::
         end

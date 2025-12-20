@@ -1,4 +1,20 @@
 return {
+	i18n_show_team_kills_tracker = {
+		en = "Show Team Kills Tracker",
+		ru = "Показать Team Kills Tracker",
+	},
+	i18n_show_kills = {
+		en = "Show Kills",
+		ru = "Показывать Убийства",
+	},
+	i18n_show_total_damage = {
+		en = "Show Total Damage",
+		ru = "Показывать Общий урон",
+	},
+	i18n_show_last_damage = {
+		en = "Show Last Damage",
+		ru = "Показывать Последний урон",
+	},
 	i18n_show_team_summary = {
 		en = "Show TEAM KILLS line",
 		ru = "Показывать строку TEAM KILLS",
