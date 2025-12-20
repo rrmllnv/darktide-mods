@@ -84,21 +84,33 @@ return {
 					},
 				},
 			},
-			-- {
-			-- 	setting_id = "hud_boss_damage_tracker",
-			-- 	type = "group",
-			-- 	title = "hud_boss_damage_tracker_title",
-			-- 	sub_widgets = {
-			-- 		{
-			-- 			setting_id = "boss_damage_placeholder",
-			-- 			type = "dropdown",
-			-- 			default_value = 1,
-			-- 			options = {
-			-- 				{text = "boss_damage_placeholder_text", value = 1},
-			-- 			},
-			-- 		},
-			-- 	},
-			-- },
+			{
+				setting_id = "opt_hud_boss_damage_tracker",
+				type = "group",
+				title = "i18n_hud_boss_damage_tracker_title",
+				sub_widgets = {
+					{
+						setting_id = "opt_show_boss_damage_tracker",
+						type = "checkbox",
+						title = "i18n_show_boss_damage_tracker",
+						default_value = true,
+						sub_widgets = {
+							{
+								setting_id = "opt_show_boss_total_damage",
+								type = "checkbox",
+								title = "i18n_show_boss_total_damage",
+								default_value = true,
+							},
+							{
+								setting_id = "opt_show_boss_last_damage",
+								type = "checkbox",
+								title = "i18n_show_boss_last_damage",
+								default_value = false,
+							},
+						},
+					},
+				},
+			},
 			{
 				setting_id = "opt_hud_general_settings",
 				type = "group",

@@ -56,6 +56,10 @@ local function format_boss_damage_text(unit)
 		return a.damage > b.damage
 	end)
 	
+	-- Получаем настройки отображения
+	local show_total_damage = mod:get("opt_show_boss_total_damage") ~= false
+	local show_last_damage = mod:get("opt_show_boss_last_damage") == true
+	
 	-- Формируем текст
 	local lines = {}
 	local damage_color = mod.get_damage_color_string()
@@ -65,11 +69,21 @@ local function format_boss_damage_text(unit)
 	for _, player in ipairs(players_with_damage) do
 		local dmg = math.floor(player.damage or 0)
 		local last_dmg = math.floor(player.last_damage or 0)
-		local line = player.name .. ": " .. damage_color .. mod.format_number(dmg) .. reset_color
-		if last_dmg > 0 then
-			line = line .. " [" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]"
+		
+		local parts = {}
+		table.insert(parts, player.name .. ":")
+		
+		if show_total_damage then
+			table.insert(parts, damage_color .. mod.format_number(dmg) .. reset_color)
 		end
-		table.insert(lines, line)
+		
+		if show_last_damage and last_dmg > 0 then
+			table.insert(parts, "[" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]")
+		end
+		
+		if #parts > 1 then
+			table.insert(lines, table.concat(parts, " "))
+		end
 	end
 	
 	if #lines > 0 then
@@ -231,6 +245,23 @@ mod:hook_safe(CLASS.HudElementBossHealth, "update", function(self, dt, t, ui_ren
 		if ALIVE[unit] and widget_group.boss_damage_list then
 			local damage_widget = widget_group.boss_damage_list
 			
+			-- Проверка настройки "Показать Boss Damage Tracker"
+			local show_tracker = mod:get("opt_show_boss_damage_tracker")
+			if show_tracker == false then
+				damage_widget.content.text = ""
+				damage_widget.visible = false
+				goto continue
+			end
+			
+			-- Проверка: если обе опции выключены, нечего показывать
+			local show_total_damage = mod:get("opt_show_boss_total_damage") ~= false
+			local show_last_damage = mod:get("opt_show_boss_last_damage") == true
+			if not show_total_damage and not show_last_damage then
+				damage_widget.content.text = ""
+				damage_widget.visible = false
+				goto continue
+			end
+			
 			-- Обновляем offset виджета, если health виджет имеет offset (для виджетов созданных RecolorBossHealthBars)
 			local health_widget = widget_group.health
 			if health_widget and health_widget.offset then
@@ -248,6 +279,7 @@ mod:hook_safe(CLASS.HudElementBossHealth, "update", function(self, dt, t, ui_ren
 				damage_widget.content.text = ""
 				damage_widget.visible = false
 			end
+			::continue::
 		end
 	end
 end)

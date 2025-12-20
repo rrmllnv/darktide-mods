@@ -208,6 +208,18 @@ return {
 		en = "HUD Boss Damage Tracker",
 		ru = "HUD Трекер урона босса",
 	},
+	i18n_show_boss_damage_tracker = {
+		en = "Show Boss Damage Tracker",
+		ru = "Показать Boss Damage Tracker",
+	},
+	i18n_show_boss_total_damage = {
+		en = "Show (Total Damage)",
+		ru = "Показывать (Общий урон)",
+	},
+	i18n_show_boss_last_damage = {
+		en = "[Last hit damage]",
+		ru = "[Урон последнего удара]",
+	},
 	i18n_hud_general_settings_title = {
 		en = "HUD General Settings",
 		ru = "HUD Общие настройки",
