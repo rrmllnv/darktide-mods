@@ -6,12 +6,12 @@ local Text = mod:original_require("scripts/utilities/ui/text")
 -- Загружаем модули
 mod:io_dofile("TeamKills/scripts/mods/TeamKills/TeamKills_constants")
 mod:io_dofile("TeamKills/scripts/mods/TeamKills/TeamKills_notifications")
-mod:io_dofile("TeamKills/scripts/mods/TeamKills/hud/HudBossDamageTracker")
+mod:io_dofile("TeamKills/scripts/mods/TeamKills/HUD/BossDamageTracker")
 
 local hud_elements = {
 	{
-		filename = "TeamKills/scripts/mods/TeamKills/hud/HudTeamKillsTracker",
-		class_name = "HudTeamKillsTracker",
+		filename = "TeamKills/scripts/mods/TeamKills/HUD/TeamKillsTracker",
+		class_name = "TeamKillsTracker",
 		visibility_groups = {
 			"alive",
 		},
@@ -156,7 +156,7 @@ mod.on_all_mods_loaded = function()
 		end
 	end
 	recreate_hud()
-	mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_tactical_overlay")
+	mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/TacticalOverlay")
 	mod:register_killstreak_view()
 end
 
@@ -531,9 +531,9 @@ end)
 
 -- Регистрация killstreak view
 mod.register_killstreak_view = function(self)
-	self:add_require_path("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_view")
-	self:add_require_path("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_definitions")
-	self:add_require_path("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_settings")
+	self:add_require_path("TeamKills/scripts/mods/TeamKills/KillStreakBoard/View")
+	self:add_require_path("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetDefinitions")
+	self:add_require_path("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetSettings")
 	self:register_view({
 		view_name = "killstreak_view",
 		view_settings = {
@@ -547,7 +547,7 @@ mod.register_killstreak_view = function(self)
 			load_always = true,
 			load_in_hub = true,
 			package = "packages/ui/views/options_view/options_view",
-			path = "TeamKills/scripts/mods/TeamKills/killstreak/killstreak_view",
+			path = "TeamKills/scripts/mods/TeamKills/KillStreakBoard/View",
 			state_bound = false,
 			enter_sound_events = {},
 			exit_sound_events = {},
@@ -561,7 +561,7 @@ mod.register_killstreak_view = function(self)
 			transition_time = nil
 		}
 	})
-	self:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_view")
+	self:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/View")
 end
 
 mod.show_killstreak_view = function(self, context)

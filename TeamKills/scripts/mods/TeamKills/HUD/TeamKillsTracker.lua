@@ -218,18 +218,18 @@ local widget_definitions = {
 	),
 }
 
-local HudTeamKillsTracker = class("HudTeamKillsTracker", "HudElementBase")
+local TeamKillsTracker = class("TeamKillsTracker", "HudElementBase")
 
-HudTeamKillsTracker.init = function(self, parent, draw_layer, start_scale)
-	HudTeamKillsTracker.super.init(self, parent, draw_layer, start_scale, {
+TeamKillsTracker.init = function(self, parent, draw_layer, start_scale)
+	TeamKillsTracker.super.init(self, parent, draw_layer, start_scale, {
 		scenegraph_definition = scenegraph_definition,
 		widget_definitions = widget_definitions,
 	})
 	self.is_in_hub = mod._is_in_hub()
 end
 
-HudTeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, input_service)
-	HudTeamKillsTracker.super.update(self, dt, t, ui_renderer, render_settings, input_service)
+TeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, input_service)
+	TeamKillsTracker.super.update(self, dt, t, ui_renderer, render_settings, input_service)
 	
 	local widget = self._widgets_by_name.TeamKillsWidget
 
@@ -379,4 +379,4 @@ HudTeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings,
     self._widgets_by_name.TeamKillsWidget.content.streak = table.concat(streak_lines, "\n")
 end
 
-return HudTeamKillsTracker
+return TeamKillsTracker

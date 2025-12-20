@@ -4,15 +4,15 @@ local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local base_z = 100
 
 -- Загружаем общий виджет
-mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget")
+mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/Widget")
 
-local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_settings")
+local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetSettings")
 
 local KillstreakView = class("KillstreakView", "BaseView")
 
 KillstreakView.init = function(self, settings, context)
-    self._definitions = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_definitions")
-    self._settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_settings")
+    self._definitions = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetDefinitions")
+    self._settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetSettings")
     self.end_view = context and context.end_view
     
     KillstreakView.super.init(self, self._definitions, settings)
@@ -21,8 +21,8 @@ KillstreakView.init = function(self, settings, context)
 end
 
 KillstreakView.on_enter = function(self)
-    self._definitions = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_definitions")
-    self._settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_settings")
+    self._definitions = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetDefinitions")
+    self._settings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetSettings")
     
     KillstreakView.super.on_enter(self)
     
@@ -78,7 +78,7 @@ KillstreakView.on_enter = function(self)
 end
 
 KillstreakView.setup_row_widgets = function(self)
-    -- Используем функцию get_players из killstreak_widget.lua
+    -- Используем функцию get_players из Widget.lua
     local players = mod.get_players_for_killsboard()
     
     -- Если нет игроков, создаем пустой список для отображения пустого view
@@ -86,7 +86,7 @@ KillstreakView.setup_row_widgets = function(self)
         players = {}
     end
     
-    -- Используем общую функцию из killstreak_widget.lua
+    -- Используем общую функцию из Widget.lua
     local row_widgets, total_height = mod:setup_killsboard_row_widgets(
         self.row_widgets, 
         self._widgets_by_name, 

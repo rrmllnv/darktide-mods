@@ -6,13 +6,13 @@ local Managers = Managers
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 
 -- Загружаем общий виджет
-mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget")
+mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/Widget")
 
-local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/killstreak/killstreak_widget_settings")
+local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetSettings")
 local base_z = 100
 local base_x = 0
 
--- Используем функцию get_players из killstreak_widget
+-- Используем функцию get_players из Widget
 local function get_players()
 	return mod.get_players_for_killsboard()
 end
@@ -123,7 +123,7 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 	}, "killsboard")
 end)
 
--- Функции create_killsboard_row_widget, setup_killsboard_row_widgets и adjust_killsboard_size теперь в killstreak_widget.lua
+-- Функции create_killsboard_row_widget, setup_killsboard_row_widgets и adjust_killsboard_size теперь в Widget.lua
 
 local function _is_in_hub()
 	local game_mode_name = Managers.state.game_mode:game_mode_name()
