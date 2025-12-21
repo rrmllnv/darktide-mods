@@ -72,13 +72,14 @@ IconPathViewerView._setup_grid = function(self)
 	
 	-- Private preset-icons pool (как в BetterLoadouts)
 	local PRIVATE_ICON_LOOKUP, PRIVATE_ICON_KEYS = {}, {}
-	
-	-- Функция регистрации (как в BetterLoadouts)
+
+
+	-- Функция регистрации (ТОЧНАЯ КОПИЯ из BetterLoadouts)
 	local function _register_private(list)
 		for i = 1, #list do
 			local key = list[i]
 			if key and not PRIVATE_ICON_LOOKUP[key] then
-				PRIVATE_ICON_LOOKUP[key] = key
+				PRIVATE_ICON_LOOKUP[key] = key -- our convention (используем путь как материал)
 				PRIVATE_ICON_KEYS[#PRIVATE_ICON_KEYS + 1] = key
 			end
 		end
@@ -90,7 +91,6 @@ IconPathViewerView._setup_grid = function(self)
 		local ref = S and S.optional_preset_icon_reference_keys or {}
 		local lu  = S and S.optional_preset_icons_lookup or {}
 
-		-- Сначала добавляем все из reference_keys (как в BetterLoadouts)
 		for i = 1, #ref do
 			local vk   = ref[i]
 			local vmat = lu[vk]
@@ -99,19 +99,10 @@ IconPathViewerView._setup_grid = function(self)
 				PRIVATE_ICON_KEYS[#PRIVATE_ICON_KEYS + 1] = vk
 			end
 		end
-		
-		-- Также добавляем ВСЕ ключи из lookup (на случай если там больше, чем в reference_keys)
-		if lu then
-			for vk, vmat in pairs(lu) do
-				if vk and vmat and not PRIVATE_ICON_LOOKUP[vk] then
-					PRIVATE_ICON_LOOKUP[vk] = vmat
-					PRIVATE_ICON_KEYS[#PRIVATE_ICON_KEYS + 1] = vk
-				end
-			end
-		end
 
-		-- Встроенный список путей (скопирован из BetterLoadouts/constants.lua)
+		-- Встроенный список путей (скопирован из BetterLoadouts/constants.lua + ui_settings.lua)
 		local DEFAULT_CUSTOM_ICON_PATHS = {
+			-- Из BetterLoadouts/constants.lua
 			"content/ui/materials/icons/item_types/ranged_weapons",
 			"content/ui/materials/icons/circumstances/assault_01",
 			"content/ui/materials/icons/item_types/weapons",
@@ -122,6 +113,60 @@ IconPathViewerView._setup_grid = function(self)
 			"content/ui/materials/icons/circumstances/nurgle_manifestation_01",
 			"content/ui/materials/icons/pocketables/hud/scripture",
 			"content/ui/materials/icons/pocketables/hud/corrupted_auspex_scanner",
+			-- Иконки из pocketables
+			"content/ui/materials/icons/pocketables/hud/small/party_ammo_crate",
+			"content/ui/materials/icons/pocketables/hud/small/party_scripture",
+			"content/ui/materials/icons/pocketables/hud/small/party_syringe_power",
+			"content/ui/materials/icons/pocketables/hud/small/party_syringe_speed",
+			"content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
+			"content/ui/materials/icons/pocketables/hud/small/party_medic_crate",
+			"content/ui/materials/icons/pocketables/hud/small/party_corrupted_auspex_scanner",
+			"content/ui/materials/icons/pocketables/hud/small/party_grimoire",
+			"content/ui/materials/icons/pocketables/hud/small/party_syringe_ability",
+			-- Из ui_settings.lua - item_type_material_lookup
+			"content/ui/materials/icons/item_types/body_tattoos",
+			"content/ui/materials/icons/item_types/nameplates",
+			"content/ui/materials/icons/item_types/companion_gear_full",
+			"content/ui/materials/icons/item_types/devices",
+			"content/ui/materials/icons/item_types/poses",
+			"content/ui/materials/icons/item_types/eye_color",
+			"content/ui/materials/icons/item_types/face_types",
+			"content/ui/materials/icons/item_types/facial_hair_styles",
+			"content/ui/materials/icons/item_types/facial_makeup",
+			"content/ui/materials/icons/item_types/scars",
+			"content/ui/materials/icons/item_types/face_tattoos",
+			"content/ui/materials/icons/item_types/outfits",
+			"content/ui/materials/icons/item_types/headgears",
+			"content/ui/materials/icons/item_types/lower_bodies",
+			"content/ui/materials/icons/item_types/upper_bodies",
+			"content/ui/materials/icons/item_types/hair_styles",
+			"content/ui/materials/icons/item_types/weapon_trinkets",
+			-- Из ui_settings.lua - texture_by_store_category
+			"content/ui/materials/icons/item_types/boons",
+			"content/ui/materials/icons/item_types/emotes",
+			-- Из ui_settings.lua - weapon_card_icons и weapon_action_type_icons
+			"content/ui/materials/icons/weapons/actions/activate",
+			"content/ui/materials/icons/weapons/actions/ads",
+			"content/ui/materials/icons/weapons/actions/brace",
+			"content/ui/materials/icons/weapons/actions/burst",
+			"content/ui/materials/icons/weapons/actions/charge",
+			"content/ui/materials/icons/weapons/actions/defence",
+			"content/ui/materials/icons/weapons/actions/flashlight",
+			"content/ui/materials/icons/weapons/actions/full_auto",
+			"content/ui/materials/icons/weapons/actions/hipfire",
+			"content/ui/materials/icons/weapons/actions/linesman",
+			"content/ui/materials/icons/weapons/actions/melee",
+			"content/ui/materials/icons/weapons/actions/melee_hand",
+			"content/ui/materials/icons/weapons/actions/ninjafencer",
+			"content/ui/materials/icons/weapons/actions/projectile",
+			"content/ui/materials/icons/weapons/actions/quick_grenade",
+			"content/ui/materials/icons/weapons/actions/semi_auto",
+			"content/ui/materials/icons/weapons/actions/shotgun",
+			"content/ui/materials/icons/weapons/actions/smiter",
+			"content/ui/materials/icons/weapons/actions/special_bullet",
+			"content/ui/materials/icons/weapons/actions/special_attack",
+			"content/ui/materials/icons/weapons/actions/tank",
+			"content/ui/materials/icons/weapons/actions/vent",
 		}
 		_register_private(DEFAULT_CUSTOM_ICON_PATHS)
 	end
@@ -147,32 +192,7 @@ IconPathViewerView._setup_grid = function(self)
 		end
 	end
 
-	-- Добавляем Unicode глифы (ТОЧНАЯ КОПИЯ логики из BetterLoadouts profile_presets_present_grid.lua)
-	local function make_unicode(cp)
-		local key = string.format("unicode:%X", cp)
-		return {
-			widget_type = "unicode_icon",
-			text = utf8(cp),
-			icon_key = key,
-			unicode_text = utf8(cp),
-			unicode_code = string.format("U+%04X", cp),
-		}
-	end
-
-	-- Добавляем дополнительные Unicode коды
-	for i = 1, #UNICODE_EXTRA_CODES do
-		layout[#layout + 1] = make_unicode(UNICODE_EXTRA_CODES[i])
-	end
-
-	-- Также добавляем глобальные Unicode коды (если есть)
-	local G = _G.UNICODE_PRESET_CODES
-	if G then
-		for i = 1, #G do
-			layout[#layout + 1] = make_unicode(G[i])
-		end
-	end
-
-	mod:info("Layout entries count: %d (including %d unicode icons)", #layout, #UNICODE_EXTRA_CODES + (G and #G or 0))
+	mod:info("Layout entries count: %d", #layout)
 
 	local spacing_entry = {
 		widget_type = "spacing_vertical"

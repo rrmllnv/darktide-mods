@@ -45,3 +45,9 @@ mod:command("iconpaths", mod:localize("cmd_open_icon_viewer"), function()
 	end
 end)
 
+mod.open_icon_viewer = function(self)
+	if not Managers.ui:view_instance("icon_path_viewer_view") then
+		Managers.ui:open_view("icon_path_viewer_view", nil, nil, nil, nil, {})
+	end
+end
+

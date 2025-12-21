@@ -200,19 +200,20 @@ local blueprints = {
 			content.text = element.text or "?"
 			content.unicode_text = element.unicode_text or element.text or "?"
 			content.unicode_code = element.unicode_code or element.icon_key or ""
+			content.element = element
 		end
 	},
 	icon_box = {
 		size = elements_size,
 		pass_template = {
-			{
-				pass_type = "hotspot",
-				content_id = "hotspot",
-				style = {
-					on_hover_sound = UISoundEvents.default_mouse_hover,
-					on_pressed_sound = UISoundEvents.default_click,
-				}
-			},
+		{
+			content_id = "hotspot",
+			pass_type = "hotspot",
+			content = {
+				on_hover_sound = UISoundEvents.default_mouse_hover,
+				on_pressed_sound = UISoundEvents.default_click,
+			}
+		},
 			{
 				pass_type = "texture",
 				style_id = "background",
