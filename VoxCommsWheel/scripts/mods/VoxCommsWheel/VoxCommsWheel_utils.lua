@@ -147,9 +147,13 @@ local function activate_option(option)
 					end
 				end
 				
-				-- Отправляем сообщение через send_channel_message (не локализованное, так как мы уже получили английский текст)
+				-- Форматируем сообщение с синим цветом (как в ForTheEmperor)
+				-- Цвет RGB: 79, 175, 255 (синий)
+				local formatted_message = string.format("{#color(79,175,255)}%s{#reset()}", english_text)
+				
+				-- Отправляем сообщение через send_channel_message с цветом
 				if chat_manager.send_channel_message then
-					chat_manager:send_channel_message(channel_handle, english_text)
+					chat_manager:send_channel_message(channel_handle, formatted_message)
 				end
 			end
 		end
