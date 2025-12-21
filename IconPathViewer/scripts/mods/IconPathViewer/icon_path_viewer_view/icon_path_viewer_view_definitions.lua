@@ -268,7 +268,7 @@ local blueprints = {
 			{
 				pass_type = "texture",
 				value_id = "icon",
-				value = "content/ui/materials/base/ui_default_base",
+				value = "content/ui/materials/icons/presets/preset_01", -- Fallback, будет заменен в init
 				style_id = "icon",
 				style = {
 					horizontal_alignment = "center",
@@ -282,12 +282,7 @@ local blueprints = {
 						-15,
 						10,
 					},
-					color = {
-						255,
-						255,
-						255,
-						255,
-					},
+					color = Color.terminal_icon(255, true),
 				},
 			},
 			-- Путь иконки (короткое имя)
@@ -374,7 +369,14 @@ local blueprints = {
 			content.icon_index = element.icon_index
 			content.icon_path = element.icon_path or element.icon
 			content.icon_path_short = element.icon_path_short
-			content.icon = element.icon or element.icon_path -- Используем icon для отображения
+			
+			-- Устанавливаем иконку для отображения (как в оригинальном blueprint "icon")
+			local icon_texture = element.icon or element.icon_path
+			if icon_texture then
+				content.icon = icon_texture
+			end
+			
+			content.element = element
 		end
 	},
 	spacing_vertical = {
