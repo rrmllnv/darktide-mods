@@ -81,36 +81,59 @@ local function activate_option(option)
 			end
 			
 			local chat_manager = Managers.chat
-			local channel = option.chat_message_data.channel
+			local channel_tag = option.chat_message_data.channel
 			
-			if not channel then
+			if not channel_tag then
 				return
 			end
 			
-			-- Получаем английский текст из локализации
-			local text_key = option.chat_message_data.text
-			local english_text = text_key
+			-- Получаем channel_handle по channel_tag (как в HudElementSmartTagging)
+			local channels = chat_manager:connected_chat_channels()
+			local channel_handle = nil
 			
-			-- Если это ключ локализации, получаем английскую версию
-			if string.sub(text_key, 1, 4) == "loc_" then
-				-- Используем кэшированную локализацию или загружаем заново
-				local localization_table = mod._localization_cache
-				if not localization_table then
-					localization_table = mod:io_dofile("VoxCommsWheel/scripts/mods/VoxCommsWheel/VoxCommsWheel_localization")
-					mod._localization_cache = localization_table
-				end
-				
-				if localization_table and localization_table[text_key] then
-					english_text = localization_table[text_key].en or text_key
-				else
-					-- Если не найдено, используем ключ как есть
-					english_text = text_key
+			if channels then
+				for handle, channel in pairs(channels) do
+					if channel.tag == channel_tag then
+						channel_handle = handle
+						break
+					end
 				end
 			end
 			
-			-- Отправляем только английский текст
-			if chat_manager.send_channel_message then
-				chat_manager:send_channel_message(channel, english_text)
+			if not channel_handle then
+				-- Если не нашли канал, пробуем получить первый доступный session
+				local sessions = chat_manager:sessions()
+				if sessions then
+					channel_handle = next(sessions)
+				end
+			end
+			
+			if channel_handle then
+				-- Получаем английский текст из локализации
+				local text_key = option.chat_message_data.text
+				local english_text = text_key
+				
+				-- Если это ключ локализации, получаем английскую версию
+				if string.sub(text_key, 1, 4) == "loc_" then
+					-- Используем кэшированную локализацию или загружаем заново
+					local localization_table = mod._localization_cache
+					if not localization_table then
+						localization_table = mod:io_dofile("VoxCommsWheel/scripts/mods/VoxCommsWheel/VoxCommsWheel_localization")
+						mod._localization_cache = localization_table
+					end
+					
+					if localization_table and localization_table[text_key] then
+						english_text = localization_table[text_key].en or text_key
+					else
+						-- Если не найдено, используем ключ как есть
+						english_text = text_key
+					end
+				end
+				
+				-- Отправляем сообщение через send_channel_message (не локализованное, так как мы уже получили английский текст)
+				if chat_manager.send_channel_message then
+					chat_manager:send_channel_message(channel_handle, english_text)
+				end
 			end
 		end
 	end)
