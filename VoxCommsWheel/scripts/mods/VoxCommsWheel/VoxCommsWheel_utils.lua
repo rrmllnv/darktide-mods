@@ -1,15 +1,22 @@
 local mod = get_mod("VoxCommsWheel")
 
 local function localize_text(label_key)
+
+	--mod:echo("localize_text called")
+
 	if not label_key then
 		return ""
 	end
+
+	mod:echo("localize_text: %s", label_key)
 	
 	-- Используем mod:localize для всех ключей (DMF автоматически загружает локализацию из файла)
 	-- mod:localize автоматически выбирает правильный язык (ru, en и т.д.)
 	local success, result = pcall(function()
 		return mod:localize(label_key)
 	end)
+
+	mod:echo("result: %s", result)
 	
 	if success and result and result ~= "" and result ~= label_key then
 		return result
