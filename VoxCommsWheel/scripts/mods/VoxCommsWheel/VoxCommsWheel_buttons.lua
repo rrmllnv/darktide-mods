@@ -33,7 +33,7 @@ local button_definitions = {
 	{
 		id = "please",
 		label_key = "loc_command_please",
-		icon = "content/ui/materials/hud/communication_wheel/icons/thanks",
+		icon = "content/ui/materials/icons/presets/preset_15",
 		voice_event_data = {
 			voice_tag_concept = VOQueryConstants.concepts.on_demand_com_wheel,
 			voice_tag_id = VOQueryConstants.trigger_ids.com_wheel_vo_my_pleasure,
@@ -46,7 +46,7 @@ local button_definitions = {
 	{
 		id = "sorry",
 		label_key = "loc_command_sorry",
-		icon = "content/ui/materials/icons/list_buttons/cross",
+		icon = "content/ui/materials/icons/presets/preset_13",
 		-- Нет голосовой реплики
 		chat_message_data = {
 			text = "loc_command_sorry",
@@ -56,7 +56,7 @@ local button_definitions = {
 	{
 		id = "need_help",
 		label_key = "loc_command_need_help",
-		icon = "content/ui/materials/hud/interactions/icons/help",
+		icon = "content/ui/materials/icons/presets/preset_03",
 		voice_event_data = {
 			voice_tag_concept = VOQueryConstants.concepts.generic_mission_vo,
 			voice_tag_id = "calling_for_help",
@@ -69,7 +69,7 @@ local button_definitions = {
 	{
 		id = "take_this",
 		label_key = "loc_command_take_this",
-		icon = "content/ui/materials/hud/communication_wheel/icons/attention",
+		icon = "content/ui/materials/hud/interactions/icons/pocketable_default",
 		voice_event_data = {
 			voice_tag_concept = VOQueryConstants.concepts.on_demand_com_wheel,
 			voice_tag_id = VOQueryConstants.trigger_ids.com_wheel_vo_take_this,
