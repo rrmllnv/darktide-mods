@@ -1,18 +1,15 @@
 local mod = get_mod("MourningstarCommandWheel")
 
-local InputUtils = require("scripts/managers/input/input_utils")
-
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_settings")
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_definitions")
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/HudElementCommandWheel")
+mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_utils")
+mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_buttons")
 
 mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_settings")
 
-local valid_lvls = {
-	shooting_range = true,
-	hub = true,
-	training_grounds = true,
-}
+local Utils = require("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_utils")
+local is_in_valid_lvl = Utils.is_in_valid_lvl
 
 local hud_elements = {
 	{
@@ -24,13 +21,6 @@ local hud_elements = {
 		},
 	},
 }
-
-local is_in_valid_lvl = function()
-	if Managers and Managers.state and Managers.state.game_mode then
-		return valid_lvls[Managers.state.game_mode:game_mode_name()] or false
-	end
-	return false
-end
 
 local can_activate_view = function(ui_manager, view)
 	if not ui_manager or not view then
@@ -135,24 +125,9 @@ mod._is_command_wheel_key_pressed = function(self)
 		}
 		
 		local main_key = keybind_data.main
-		local device_info = nil
-		
 		local SUPPORTED_DEVICES = {"keyboard", "mouse"}
-		for _, device_type in ipairs(SUPPORTED_DEVICES) do
-			local device = Managers.input:_find_active_device(device_type)
-			if device then
-				local index = device:button_index(main_key)
-				if index then
-					device_info = {
-						device = device,
-						index = index,
-						key_id = main_key,
-					}
-					break
-				end
-			end
-		end
 		
+		local device_info = Utils.find_device_for_key(main_key, SUPPORTED_DEVICES)
 		if not device_info then
 			return false
 		end
@@ -166,36 +141,18 @@ mod._is_command_wheel_key_pressed = function(self)
 		
 		if #keybind_data.enablers > 0 then
 			for _, enabler_key in ipairs(keybind_data.enablers) do
-				for _, device_type in ipairs(SUPPORTED_DEVICES) do
-					local device = Managers.input:_find_active_device(device_type)
-					if device then
-						local index = device:button_index(enabler_key)
-						if index then
-							table.insert(key_info.enablers, {
-								device = device,
-								index = index,
-							})
-							break
-						end
-					end
+				local device_info_enabler = Utils.find_device_for_key(enabler_key, SUPPORTED_DEVICES)
+				if device_info_enabler then
+					table.insert(key_info.enablers, device_info_enabler)
 				end
 			end
 		end
 		
 		if keybind_data.disablers and #keybind_data.disablers > 0 then
 			for _, disabler_key in ipairs(keybind_data.disablers) do
-				for _, device_type in ipairs(SUPPORTED_DEVICES) do
-					local device = Managers.input:_find_active_device(device_type)
-					if device then
-						local index = device:button_index(disabler_key)
-						if index then
-							table.insert(key_info.disablers, {
-								device = device,
-								index = index,
-							})
-							break
-						end
-					end
+				local device_info_disabler = Utils.find_device_for_key(disabler_key, SUPPORTED_DEVICES)
+				if device_info_disabler then
+					table.insert(key_info.disablers, device_info_disabler)
 				end
 			end
 		end

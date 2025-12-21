@@ -6,6 +6,8 @@ mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/co
 local CommandWheelSettings = require("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_settings")
 
 local Definitions = mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_definitions")
+local Utils = require("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_utils")
+local Buttons = require("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_buttons")
 local InputDevice = require("scripts/managers/input/input_device")
 local UISoundEvents = require("scripts/settings/ui/ui_sound_events")
 local UIWidget = require("scripts/managers/ui/ui_widget")
@@ -14,125 +16,15 @@ local RESOLUTION_LOOKUP = RESOLUTION_LOOKUP
 
 local HOVER_GRACE_PERIOD = 0.4
 
-local valid_lvls = {
-	shooting_range = true,
-	hub = true,
-	training_grounds = true,
-}
+local is_in_valid_lvl = Utils.is_in_valid_lvl
+local is_in_psychanium = Utils.is_in_psychanium
+local localize_text = Utils.localize_text
+local activate_option = Utils.activate_option
+local apply_style_offset = Utils.apply_style_offset
+local apply_style_color = Utils.apply_style_color
 
-local is_in_valid_lvl = function()
-	if Managers and Managers.state and Managers.state.game_mode then
-		return valid_lvls[Managers.state.game_mode:game_mode_name()] or false
-	end
-	return false
-end
-
-local is_in_psychanium = function()
-	if Managers and Managers.state and Managers.state.game_mode then
-		local game_mode_name = Managers.state.game_mode:game_mode_name()
-		return game_mode_name == "training_grounds" or game_mode_name == "shooting_range"
-	end
-
-	if Managers and Managers.ui then
-		return Managers.ui:view_active("training_grounds_view")
-	end
-	return false
-end
-
-local button_definitions = {
-	{
-		id = "barber",
-		view = "barber_vendor_background_view",
-		label_key = "loc_body_shop_view_display_name",
-		icon = "content/ui/materials/hud/interactions/icons/barber",
-	},
-	{
-		id = "contracts",
-		view = "contracts_background_view",
-		label_key = "loc_marks_vendor_view_title",
-		icon = "content/ui/materials/hud/interactions/icons/contracts",
-	},
-	{
-		id = "crafting",
-		view = "crafting_view",
-		label_key = "loc_crafting_view",
-		icon = "content/ui/materials/hud/interactions/icons/forge",
-	},
-	{
-		id = "credits_vendor",
-		view = "credits_vendor_background_view",
-		label_key = "loc_vendor_view_title",
-		icon = "content/ui/materials/hud/interactions/icons/credits_store",
-	},
-	{
-		id = "mission_board",
-		view = "mission_board_view",
-		label_key = "loc_mission_board_view",
-		icon = "content/ui/materials/hud/interactions/icons/mission_board",
-	},
-	{
-		id = "premium_store",
-		view = "store_view",
-		label_key = "loc_store_view_display_name",
-		icon = "content/ui/materials/icons/system/escape/premium_store",
-	},
-	{
-		id = "training_grounds",
-		view = "training_grounds_view",
-		label_key = "loc_training_ground_view",
-		icon = "content/ui/materials/hud/interactions/icons/training_grounds",
-	},
-	{
-		id = "exit_psychanium",
-		view = nil,
-		label_key = "loc_tg_exit_training_grounds",
-		icon = "content/ui/materials/icons/system/escape/leave_training",
-		action = "exit_psychanium",
-	},
-	{
-		id = "social",
-		view = "social_menu_view",
-		label_key = "loc_social_view_display_name",
-		icon = "content/ui/materials/icons/system/escape/social",
-	},
-	{
-		id = "commissary",
-		view = "cosmetics_vendor_background_view",
-		label_key = "loc_cosmetics_vendor_view_title",
-		icon = "content/ui/materials/hud/interactions/icons/cosmetics_store",
-	},
-	{
-		id = "penance",
-		view = "penance_overview_view",
-		label_key = "loc_achievements_view_display_name",
-		icon = "content/ui/materials/icons/system/escape/achievements",
-	},
-	{
-		id = "inventory",
-		view = "inventory_background_view",
-		label_key = "loc_character_view_display_name",
-		icon = "content/ui/materials/icons/system/escape/inventory",
-	},
-	{
-		id = "change_character",
-		view = nil,
-		label_key = "loc_exit_to_main_menu_display_name",
-		icon = "content/ui/materials/icons/system/escape/change_character",
-		action = "change_character",
-	},
-	{
-		id = "havoc",
-		view = "havoc_background_view",
-		label_key = "loc_havoc_name",
-		icon = "content/ui/materials/hud/interactions/icons/havoc",
-	},
-}
-
-
-local button_definitions_by_id = {}
-for i, button in ipairs(button_definitions) do
-	button_definitions_by_id[button.id] = button
-end
+local button_definitions = Buttons.button_definitions
+local button_definitions_by_id = Buttons.button_definitions_by_id
 
 
 local function load_wheel_config()
@@ -282,12 +174,7 @@ HudElementCommandWheel._populate_wheel = function(self, options)
 
 			if option then
 				content.icon = option.icon or "content/ui/materials/base/ui_default_base"
-
-				if option.label_key and string.sub(option.label_key, 1, 4) == "loc_" then
-					content.text = Localize(option.label_key)
-				else
-					content.text = mod:localize(option.label_key)
-				end
+				content.text = localize_text(option.label_key)
 			end
 		end
 	end
@@ -439,15 +326,7 @@ HudElementCommandWheel._update_wheel_presentation = function(self, dt, t, ui_ren
 
 		if hovered_entry then
 			local option = hovered_entry.option
-
-			local display_name
-			if option.label_key and string.sub(option.label_key, 1, 4) == "loc_" then
-				display_name = Localize(option.label_key)
-			else
-				display_name = mod:localize(option.label_key)
-			end
-
-			wheel_background_widget.content.text = display_name
+			wheel_background_widget.content.text = localize_text(option.label_key)
 
 			if is_hover_started then
 				if UISoundEvents.emote_wheel_entry_hover then
@@ -519,27 +398,7 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 
 		local hovered_entry, hovered_index = self:_is_wheel_entry_hovered(t)
 		if hovered_entry then
-
-			local option = hovered_entry.option
-			if option then
-
-				local success, err = pcall(function()
-					if option.action == "change_character" then
-
-						mod:change_character()
-					elseif option.action == "exit_psychanium" then
-
-						if Managers and Managers.state and Managers.state.game_mode then
-							Managers.state.game_mode:complete_game_mode()
-						end
-					elseif option.view then
-						mod:activate_hub_view(option.view)
-					end
-				end)
-				if not success then
-					mod:error("Failed to activate action/view '%s': %s", tostring(option.action or option.view), tostring(err))
-				end
-			end
+			activate_option(hovered_entry.option)
 		end
 		self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
 	end
@@ -636,13 +495,7 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 		if wheel_background_widget and mod.dragged_entry then
 			local option = mod.dragged_entry.option
 			if option then
-				local display_name
-				if option.label_key and string.sub(option.label_key, 1, 4) == "loc_" then
-					display_name = Localize(option.label_key)
-				else
-					display_name = mod:localize(option.label_key)
-				end
-				wheel_background_widget.content.text = display_name
+				wheel_background_widget.content.text = localize_text(option.label_key)
 			end
 		end
 
@@ -663,25 +516,7 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 		
 
 		if hovered_entry and input_service:has("left_pressed") and input_service:get("left_pressed") then
-			local option = hovered_entry.option
-			if option then
-
-				local success, err = pcall(function()
-					if option.action == "change_character" then
-
-						mod:change_character()
-					elseif option.action == "exit_psychanium" then
-
-						if Managers and Managers.state and Managers.state.game_mode then
-							Managers.state.game_mode:complete_game_mode()
-						end
-					elseif option.view then
-						mod:activate_hub_view(option.view)
-					end
-				end)
-				if not success then
-					mod:error("Failed to activate action/view '%s': %s", tostring(option.action or option.view), tostring(err))
-				end
+			if activate_option(hovered_entry.option) then
 				self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
 			end
 		end
@@ -755,61 +590,27 @@ HudElementCommandWheel._update_drag_visual_feedback = function(self, hovered_ind
 		local slice_style = style.slice
 
 		if i == hovered_index and entry.option then
-
 			local angle = entry.widget.content.angle or 0
 			local offset_x = math.sin(angle) * drag_offset
 			local offset_y = math.cos(angle) * drag_offset
 
-			if icon_style then
-				icon_style.offset[1] = offset_x
-				icon_style.offset[2] = offset_y
-			end
-			if highlight_style then
-				highlight_style.offset[1] = offset_x
-				highlight_style.offset[2] = offset_y
+			apply_style_offset(icon_style, offset_x, offset_y)
+			apply_style_offset(highlight_style, offset_x, offset_y)
+			apply_style_offset(slice_style, offset_x, offset_y)
 
-				local hover_color = CommandWheelSettings.button_color_hover or {220, 0, 0, 0}
-				highlight_style.color[1] = math.min(255, hover_color[1] + 30)
-				highlight_style.color[2] = hover_color[2]
-				highlight_style.color[3] = hover_color[3]
-				highlight_style.color[4] = hover_color[4]
-			end
-			if slice_style then
-				slice_style.offset[1] = offset_x
-				slice_style.offset[2] = offset_y
-
-				local hover_color = CommandWheelSettings.button_color_hover or {220, 0, 0, 0}
-				slice_style.color[1] = math.min(255, hover_color[1] + 30)
-				slice_style.color[2] = hover_color[2]
-				slice_style.color[3] = hover_color[3]
-				slice_style.color[4] = hover_color[4]
-			end
+			local hover_color = CommandWheelSettings.button_color_hover or {220, 0, 0, 0}
+			local bright_color = {math.min(255, hover_color[1] + 30), hover_color[2], hover_color[3], hover_color[4]}
+			apply_style_color(highlight_style, bright_color)
+			apply_style_color(slice_style, bright_color)
 		else
+			apply_style_offset(icon_style, 0, 0)
+			apply_style_offset(highlight_style, 0, 0)
+			apply_style_offset(slice_style, 0, 0)
 
-			if icon_style then
-				icon_style.offset[1] = 0
-				icon_style.offset[2] = 0
-			end
-			if highlight_style then
-				highlight_style.offset[1] = 0
-				highlight_style.offset[2] = 0
-
-				local default_color = CommandWheelSettings.button_color_default or {190, 0, 0, 0}
-				highlight_style.color[1] = math.max(50, default_color[1] - 140)
-				highlight_style.color[2] = default_color[2]
-				highlight_style.color[3] = default_color[3]
-				highlight_style.color[4] = default_color[4]
-			end
-			if slice_style then
-				slice_style.offset[1] = 0
-				slice_style.offset[2] = 0
-
-				local default_color = CommandWheelSettings.button_color_default or {190, 0, 0, 0}
-				slice_style.color[1] = math.max(50, default_color[1] - 140)
-				slice_style.color[2] = default_color[2]
-				slice_style.color[3] = default_color[3]
-				slice_style.color[4] = default_color[4]
-			end
+			local default_color = CommandWheelSettings.button_color_default or {190, 0, 0, 0}
+			local dimmed_color = {math.max(50, default_color[1] - 140), default_color[2], default_color[3], default_color[4]}
+			apply_style_color(highlight_style, dimmed_color)
+			apply_style_color(slice_style, dimmed_color)
 		end
 	end
 end
@@ -824,30 +625,13 @@ HudElementCommandWheel._reset_drag_visual_feedback = function(self)
 		local highlight_style = style.slice_highlight
 		local slice_style = style.slice
 
-		if icon_style then
-			icon_style.offset[1] = 0
-			icon_style.offset[2] = 0
-		end
-		if highlight_style then
-			highlight_style.offset[1] = 0
-			highlight_style.offset[2] = 0
+		apply_style_offset(icon_style, 0, 0)
+		apply_style_offset(highlight_style, 0, 0)
+		apply_style_offset(slice_style, 0, 0)
 
-			local default_color = CommandWheelSettings.button_color_default or {190, 0, 0, 0}
-			highlight_style.color[1] = default_color[1]
-			highlight_style.color[2] = default_color[2]
-			highlight_style.color[3] = default_color[3]
-			highlight_style.color[4] = default_color[4]
-		end
-		if slice_style then
-			slice_style.offset[1] = 0
-			slice_style.offset[2] = 0
-
-			local default_color = CommandWheelSettings.button_color_default or {190, 0, 0, 0}
-			slice_style.color[1] = default_color[1]
-			slice_style.color[2] = default_color[2]
-			slice_style.color[3] = default_color[3]
-			slice_style.color[4] = default_color[4]
-		end
+		local default_color = CommandWheelSettings.button_color_default or {190, 0, 0, 0}
+		apply_style_color(highlight_style, default_color)
+		apply_style_color(slice_style, default_color)
 	end
 end
 
