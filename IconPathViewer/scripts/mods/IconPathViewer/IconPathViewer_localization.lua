@@ -1,7 +1,7 @@
 return {
 	mod_name = {
-		en = "Icon Path Viewer",
-		ru = "Просмотр путей иконок",
+		en = "Icon Viewer",
+		ru = "Просмотр иконок",
 	},
 	mod_description = {
 		en = "View icon paths from BetterLoadouts mod. Execute /iconpaths command to open the viewer.",

@@ -167,6 +167,33 @@ IconPathViewerView._setup_grid = function(self)
 			"content/ui/materials/icons/weapons/actions/special_attack",
 			"content/ui/materials/icons/weapons/actions/tank",
 			"content/ui/materials/icons/weapons/actions/vent",
+			-- Из MourningstarCommandWheel_buttons.lua
+			"content/ui/materials/hud/interactions/icons/barber",
+			"content/ui/materials/hud/interactions/icons/contracts",
+			"content/ui/materials/hud/interactions/icons/forge",
+			"content/ui/materials/hud/interactions/icons/credits_store",
+			"content/ui/materials/hud/interactions/icons/mission_board",
+			"content/ui/materials/icons/system/escape/premium_store",
+			"content/ui/materials/hud/interactions/icons/training_grounds",
+			"content/ui/materials/icons/system/escape/leave_training",
+			"content/ui/materials/icons/system/escape/social",
+			"content/ui/materials/hud/interactions/icons/cosmetics_store",
+			"content/ui/materials/icons/system/escape/achievements",
+			"content/ui/materials/icons/system/escape/inventory",
+			"content/ui/materials/icons/system/escape/change_character",
+			"content/ui/materials/hud/interactions/icons/havoc",
+			-- Из interaction_icons.html - уникальные иконки взаимодействий
+			"content/ui/materials/hud/interactions/icons/ammunition",
+			"content/ui/materials/hud/interactions/icons/default",
+			"content/ui/materials/hud/interactions/icons/enemy",
+			"content/ui/materials/hud/interactions/icons/environment_generic",
+			"content/ui/materials/hud/interactions/icons/help",
+			"content/ui/materials/hud/interactions/icons/objective_secondary",
+			"content/ui/materials/hud/interactions/icons/objective_side",
+			"content/ui/materials/hud/interactions/icons/penances",
+			"content/ui/materials/hud/interactions/icons/pocketable_default",
+			"content/ui/materials/hud/interactions/icons/premium_store",
+			"content/ui/materials/hud/interactions/icons/respawn",
 		}
 		_register_private(DEFAULT_CUSTOM_ICON_PATHS)
 	end
