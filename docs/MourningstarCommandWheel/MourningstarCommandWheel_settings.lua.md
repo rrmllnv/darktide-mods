@@ -1,4 +1,4 @@
-# command_wheel_settings.lua - Документация
+# MourningstarCommandWheel_settings.lua - Документация
 
 ## Описание файла
 
@@ -351,7 +351,7 @@
 ## Использование
 
 Настройки доступны глобально через `CommandWheelSettings` после загрузки файла. Используются в:
-- `command_wheel_definitions.lua` - для определения размеров и цветов виджетов
+- `MourningstarCommandWheel_definitions.lua` - для определения размеров и цветов виджетов
 - `HudElementCommandWheel.lua` - для логики отображения и поведения
 
 ## Рекомендации по настройке

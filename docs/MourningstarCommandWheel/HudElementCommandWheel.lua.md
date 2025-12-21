@@ -7,7 +7,9 @@
 ## Зависимости
 
 - `HudElementBase` - базовый класс HUD элементов
-- `CommandWheelSettings` - настройки колеса
+- `CommandWheelSettings` - настройки колеса (из `MourningstarCommandWheel_settings.lua`)
+- `MourningstarCommandWheel_utils` - утилиты (из `MourningstarCommandWheel_utils.lua`)
+- `MourningstarCommandWheel_buttons` - определения кнопок (из `MourningstarCommandWheel_buttons.lua`)
 - `InputDevice` - работа с устройствами ввода
 - `UISoundEvents` - звуковые события
 - `UIWidget` - система виджетов
@@ -15,17 +17,11 @@
 
 ## Глобальные переменные
 
-### `valid_lvls`
-Таблица с допустимыми игровыми режимами:
-- `shooting_range` - тир
-- `hub` - основной хаб
-- `training_grounds` - псайкинариум
-
 ### `HOVER_GRACE_PERIOD`
 Период "милосердия" для hover (0.4 секунды). Используется в `_is_wheel_entry_hovered()`.
 
 ### `button_definitions`
-Массив определений всех доступных кнопок. Каждая кнопка содержит:
+Массив определений всех доступных кнопок (из `MourningstarCommandWheel_buttons.lua`). Каждая кнопка содержит:
 - `id` - уникальный идентификатор
 - `view` - имя view для открытия (или `nil` для специальных действий)
 - `label_key` - ключ локализации
@@ -33,29 +29,21 @@
 - `action` - специальное действие (опционально, для `change_character` и `exit_psychanium`)
 
 ### `button_definitions_by_id`
-Словарь для быстрого доступа к кнопкам по `id`.
+Словарь для быстрого доступа к кнопкам по `id` (из `MourningstarCommandWheel_buttons.lua`).
+
+## Используемые утилиты
+
+Файл использует функции из `MourningstarCommandWheel_utils.lua`:
+- `is_in_valid_lvl()` - проверка допустимой локации
+- `is_in_psychanium()` - проверка нахождения в псайкинариуме
+- `localize_text()` - локализация текста
+- `activate_option()` - активация действия/вью
+- `apply_style_offset()` - применение смещения к стилю
+- `apply_style_color()` - применение цвета к стилю
 
 ---
 
 ## Вспомогательные функции
-
-### `is_in_valid_lvl()`
-Проверяет, находимся ли мы в допустимой локации.
-
-**Возвращает:**
-- `boolean` - `true` если в допустимой локации
-
----
-
-### `is_in_psychanium()`
-Проверяет, находимся ли мы в псайкинариуме.
-
-**Возвращает:**
-- `boolean` - `true` если в псайкинариуме
-
-**Логика:**
-- Проверяет `game_mode_name == "training_grounds"` или `"shooting_range"`
-- Также проверяет активный view `training_grounds_view`
 
 ---
 
@@ -158,7 +146,7 @@
    - Сохраняет `option` в `entry.option`
    - Если `option` существует:
      - Устанавливает иконку
-     - Устанавливает текст (использует `Localize()` для ключей `loc_*`, иначе `mod:localize()`)
+     - Устанавливает текст через `localize_text()` (использует `Localize()` для ключей `loc_*`, иначе `mod:localize()`)
 
 ---
 
@@ -259,9 +247,10 @@
 7. Обрабатывает выбор левой кнопкой мыши
 
 **Активация кнопок:**
-- `change_character`: вызывает `mod:change_character()`
-- `exit_psychanium`: вызывает `Managers.state.game_mode:complete_game_mode()`
-- Остальные: вызывает `mod:activate_hub_view(option.view)`
+- Использует функцию `activate_option()` из утилит, которая обрабатывает:
+  - `change_character`: вызывает `mod:change_character()`
+  - `exit_psychanium`: вызывает `Managers.state.game_mode:complete_game_mode()`
+  - Остальные: вызывает `mod:activate_hub_view(option.view)`
 
 ---
 
@@ -345,11 +334,11 @@
 
 **Логика:**
 1. Для перетаскиваемой кнопки (`hovered_index`):
-   - Применяет смещение по направлению от центра (`drag_offset = 30`)
-   - Увеличивает яркость цвета
+   - Применяет смещение по направлению от центра (`drag_offset = 30`) через `apply_style_offset()`
+   - Увеличивает яркость цвета через `apply_style_color()`
 2. Для остальных кнопок:
-   - Сбрасывает смещение
-   - Приглушает цвет
+   - Сбрасывает смещение через `apply_style_offset()`
+   - Приглушает цвет через `apply_style_color()`
 
 ---
 
@@ -357,7 +346,8 @@
 Сбрасывает визуальную обратную связь перетаскивания.
 
 **Логика:**
-- Сбрасывает смещение и цвета всех кнопок к значениям по умолчанию
+- Сбрасывает смещение всех кнопок через `apply_style_offset(0, 0)`
+- Сбрасывает цвета всех кнопок к значениям по умолчанию через `apply_style_color()`
 
 ---
 

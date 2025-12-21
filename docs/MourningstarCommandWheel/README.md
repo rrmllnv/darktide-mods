@@ -20,9 +20,11 @@
 2. **MourningstarCommandWheel.lua** - основной файл мода с логикой и хуками
 3. **MourningstarCommandWheel_data.lua** - данные мода (настройки, опции)
 4. **MourningstarCommandWheel_localization.lua** - локализация мода
-5. **command_wheel_settings.lua** - настройки визуального оформления колеса
-6. **command_wheel_definitions.lua** - определения UI виджетов и scenegraph
-7. **HudElementCommandWheel.lua** - HUD элемент колеса команд
+5. **MourningstarCommandWheel_settings.lua** - настройки визуального оформления колеса
+6. **MourningstarCommandWheel_definitions.lua** - определения UI виджетов и scenegraph
+7. **MourningstarCommandWheel_utils.lua** - утилиты и вспомогательные функции
+8. **MourningstarCommandWheel_buttons.lua** - определения кнопок колеса
+9. **HudElementCommandWheel.lua** - HUD элемент колеса команд
 
 ## Где работает мод
 
@@ -86,7 +88,9 @@
 - [MourningstarCommandWheel.lua](MourningstarCommandWheel.lua.md) - Основной файл мода
 - [MourningstarCommandWheel_data.lua](MourningstarCommandWheel_data.lua.md) - Данные мода
 - [MourningstarCommandWheel_localization.lua](MourningstarCommandWheel_localization.lua.md) - Локализация
-- [command_wheel_settings.lua](command_wheel_settings.lua.md) - Настройки колеса
-- [command_wheel_definitions.lua](command_wheel_definitions.lua.md) - Определения UI
+- [MourningstarCommandWheel_settings.lua](MourningstarCommandWheel_settings.lua.md) - Настройки колеса
+- [MourningstarCommandWheel_definitions.lua](MourningstarCommandWheel_definitions.lua.md) - Определения UI
+- [MourningstarCommandWheel_utils.lua](MourningstarCommandWheel_utils.lua.md) - Утилиты
+- [MourningstarCommandWheel_buttons.lua](MourningstarCommandWheel_buttons.lua.md) - Определения кнопок
 - [HudElementCommandWheel.lua](HudElementCommandWheel.lua.md) - HUD элемент
 

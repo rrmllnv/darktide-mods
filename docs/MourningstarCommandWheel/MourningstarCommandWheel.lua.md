@@ -6,32 +6,19 @@
 
 ## Зависимости
 
-- `InputUtils` - утилиты для работы с вводом
-- Модули мода: `command_wheel_settings`, `command_wheel_definitions`, `HudElementCommandWheel`
+- Модули мода:
+  - `MourningstarCommandWheel_settings` - настройки колеса
+  - `MourningstarCommandWheel_definitions` - определения UI
+  - `MourningstarCommandWheel_utils` - утилиты и вспомогательные функции
+  - `MourningstarCommandWheel_buttons` - определения кнопок
+  - `HudElementCommandWheel` - HUD элемент колеса
 
 ## Глобальные переменные
-
-### `valid_lvls`
-Таблица с допустимыми игровыми режимами, где работает мод:
-- `shooting_range` - тир
-- `hub` - основной хаб
-- `training_grounds` - псайкинариум
 
 ### `hud_elements`
 Массив с определением HUD элемента для регистрации в системе HUD.
 
 ## Функции
-
-### `is_in_valid_lvl()`
-Проверяет, находимся ли мы в допустимой локации для работы мода.
-
-**Возвращает:**
-- `boolean` - `true` если находимся в допустимой локации, иначе `false`
-
-**Логика:**
-- Проверяет `Managers.state.game_mode:game_mode_name()` на наличие в `valid_lvls`
-
----
 
 ### `can_activate_view(ui_manager, view)`
 Проверяет, можно ли активировать указанный view.
@@ -47,7 +34,7 @@
 1. Проверяет существование `ui_manager` и `view`
 2. Проверяет, что view существует в системе Views
 3. Проверяет доступность view через `ui_manager:view_is_available()`
-4. Проверяет, что мы в допустимой локации
+4. Проверяет, что мы в допустимой локации через `Utils.is_in_valid_lvl()`
 5. Проверяет, что чат не использует ввод
 6. Проверяет, что view не открыт
 
@@ -101,8 +88,9 @@
 1. Если `_command_wheel_eval_func` не создана, создает её:
    - Получает настройки keybind из `mod:get("open_command_wheel_key")`
    - Конвертирует через DMF `local_keys_to_keywatch_result()`
-   - Находит device и index для основной клавиши
-   - Создает функции проверки для enablers и disablers
+   - Находит device и index для основной клавиши через `Utils.find_device_for_key()`
+   - Находит устройства для enablers и disablers через `Utils.find_device_for_key()`
+   - Создает функцию проверки состояния всех клавиш
    - Сохраняет функцию проверки в `_command_wheel_eval_func`
 2. Вызывает `_command_wheel_eval_func()` для проверки состояния клавиши
 
@@ -110,6 +98,7 @@
 - Поддерживает enablers (клавиши, которые должны быть нажаты)
 - Поддерживает disablers (клавиши, которые не должны быть нажаты)
 - Кэширует функцию проверки для производительности
+- Использует утилиту `Utils.find_device_for_key()` для поиска устройств ввода
 
 ---
 

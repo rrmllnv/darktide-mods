@@ -1,4 +1,4 @@
-# command_wheel_definitions.lua - Документация
+# MourningstarCommandWheel_definitions.lua - Документация
 
 ## Описание файла
 
@@ -6,7 +6,7 @@
 
 ## Зависимости
 
-- `CommandWheelSettings` - настройки колеса
+- `CommandWheelSettings` - настройки колеса (из `MourningstarCommandWheel_settings.lua`)
 - `UIFontSettings` - настройки шрифтов
 - `UISoundEvents` - звуковые события
 - `UIWidget` - система виджетов
