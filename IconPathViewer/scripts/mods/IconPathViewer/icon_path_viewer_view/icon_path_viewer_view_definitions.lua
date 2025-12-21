@@ -34,6 +34,174 @@ local grid_settings = {
 }
 
 local blueprints = {
+	unicode_icon = {
+		size = { 120, 120 },
+		pass_template = {
+			{
+				content_id = "hotspot",
+				pass_type = "hotspot",
+				content = {
+					on_hover_sound   = UISoundEvents.default_mouse_hover,
+					on_pressed_sound = UISoundEvents.default_click
+				}
+			},
+			{ pass_type = "rect", style = { color = { 100, 0, 0, 0 } } },
+			{
+				pass_type = "texture",
+				style_id = "background",
+				value = "content/ui/materials/backgrounds/default_square",
+				style = {
+					default_color = Color.terminal_background(nil, true),
+					selected_color = Color.terminal_background_selected(nil, true)
+				},
+				change_function = ButtonPassTemplates.terminal_button_change_function,
+			},
+			{
+				pass_type = "texture",
+				style_id = "background_gradient",
+				value = "content/ui/materials/gradients/gradient_vertical",
+				style = {
+					vertical_alignment = "center",
+					horizontal_alignment = "center",
+					default_color = Color.terminal_background_gradient(nil, true),
+					selected_color = Color.terminal_frame_selected(nil, true),
+					offset = { 0, 0, 2 }
+				},
+				change_function = function (content, style)
+					ButtonPassTemplates.terminal_button_change_function(content, style)
+					ButtonPassTemplates.terminal_button_hover_change_function(content, style)
+				end,
+			},
+			{
+				value = "content/ui/materials/frames/dropshadow_medium",
+				style_id = "outer_shadow",
+				pass_type = "texture",
+				style = {
+					vertical_alignment = "center",
+					horizontal_alignment = "center",
+					scale_to_material = true,
+					color = Color.black(100, true),
+					size_addition = { 20, 20 },
+					offset = { 0, 0, 3 }
+				}
+			},
+			{
+				pass_type = "texture",
+				value = "content/ui/materials/frames/inner_shadow_thin",
+				style = {
+					scale_to_material = true,
+					color = Color.terminal_corner_selected(nil, true),
+					offset = { 0, 0, 1 }
+				},
+				visibility_function = function(content)
+					if content.force_glow or content.equipped or (content.hotspot and content.hotspot.is_selected) then
+						return true
+					end
+					local ik = content.icon_key or (content.element and content.element.icon_key)
+					local ck = content.current_key or (content.element and content.element.current_key)
+					if type(ik) == "string" then ik = string.lower(ik) end
+					if type(ck) == "string" then ck = string.lower(ck) end
+					return (ik ~= nil and ck ~= nil and ik == ck)
+				end
+			},
+			{
+				pass_type = "texture",
+				style_id = "frame",
+				value = "content/ui/materials/frames/frame_tile_2px",
+				style = {
+					horizontal_alignment = "center",
+					vertical_alignment   = "center",
+					offset               = { 0, 0, 6 },
+					color                = Color.terminal_frame(nil, true),
+					default_color        = Color.terminal_frame(nil, true),
+					selected_color       = Color.terminal_frame_selected(nil, true),
+					hover_color          = Color.terminal_frame_hover(nil, true)
+				},
+				change_function = ButtonPassTemplates.default_button_hover_change_function
+			},
+			{
+				pass_type = "texture",
+				style_id = "corner",
+				value = "content/ui/materials/frames/frame_corner_2px",
+				style = {
+					horizontal_alignment = "center",
+					vertical_alignment   = "center",
+					offset               = { 0, 0, 7 },
+					color                = Color.terminal_corner(nil, true),
+					default_color        = Color.terminal_corner(nil, true),
+					selected_color       = Color.terminal_corner_selected(nil, true),
+					hover_color          = Color.terminal_corner_hover(nil, true)
+				},
+				change_function = ButtonPassTemplates.default_button_hover_change_function
+			},
+			{
+				pass_type = "texture",
+				value = "content/ui/materials/frames/frame_tile_1px",
+				style = { color = { 255, 0, 0, 0 }, offset = { 0, 0, 3 } }
+			},
+			{
+				pass_type = "text",
+				value_id = "text",
+				style = {
+					font_size                 = 28,
+					font_type                 = "proxima_nova_bold",
+					text_horizontal_alignment = "center",
+					text_vertical_alignment   = "center",
+					offset                    = { 0, 0, 2 },
+					text_color                = Color.terminal_icon(255, true)
+				}
+			},
+			-- Текст Unicode глифа (для копирования)
+			{
+				style_id = "unicode_text",
+				pass_type = "text",
+				value = "",
+				value_id = "unicode_text",
+				style = {
+					vertical_alignment = "bottom",
+					horizontal_alignment = "center",
+					text_vertical_alignment = "bottom",
+					text_horizontal_alignment = "center",
+					offset = { 0, -5, 10 },
+					size = { elements_size[1], 30 },
+					text_color = Color.terminal_text_header(255, true),
+					font_type = "proxima_nova_bold",
+					font_size = 12,
+				},
+			},
+			-- Unicode код (при наведении)
+			{
+				style_id = "unicode_code",
+				pass_type = "text",
+				value = "",
+				value_id = "unicode_code",
+				style = {
+					vertical_alignment = "top",
+					horizontal_alignment = "center",
+					text_vertical_alignment = "top",
+					text_horizontal_alignment = "center",
+					offset = { 0, 0, 10 },
+					size = { elements_size[1], 40 },
+					text_color = Color.terminal_text_header(200, true),
+					font_type = "proxima_nova_bold",
+					font_size = 10,
+				},
+				visibility_function = function(content)
+					return content.hotspot and content.hotspot.is_hover
+				end,
+			},
+		},
+		init = function (parent, widget, element, callback_name)
+			local content = widget.content
+			local style = widget.style
+
+			content.hotspot.pressed_callback = callback_name and callback(parent, callback_name, widget, element)
+			content.icon_index = element.icon_index
+			content.text = element.text or "?"
+			content.unicode_text = element.unicode_text or element.text or "?"
+			content.unicode_code = element.unicode_code or element.icon_key or ""
+		end
+	},
 	icon_box = {
 		size = elements_size,
 		pass_template = {

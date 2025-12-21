@@ -4,6 +4,34 @@ local ViewElementInputLegend = require("scripts/ui/view_elements/view_element_in
 local ViewElementGrid = require("scripts/ui/view_elements/view_element_grid/view_element_grid")
 local definitions = mod:io_dofile("IconPathViewer/scripts/mods/IconPathViewer/icon_path_viewer_view/icon_path_viewer_view_definitions")
 
+-- Конвертация Unicode кодов в символы (ТОЧНАЯ КОПИЯ из BetterLoadouts)
+local bytemarkers = { { 0x7FF, 192 }, { 0xFFFF, 224 }, { 0x1FFFFF, 240 } }
+local function utf8(decimal)
+	if decimal < 128 then return string.char(decimal) end
+	local charbytes = {}
+	for bytes, vals in ipairs(bytemarkers) do
+		if decimal <= vals[1] then
+			for b = bytes + 1, 2, -1 do
+				local rem = decimal % 64
+				decimal = (decimal - rem) / 64
+				charbytes[b] = string.char(128 + rem)
+			end
+			charbytes[1] = string.char(vals[2] + decimal)
+			break
+		end
+	end
+	return table.concat(charbytes)
+end
+
+-- Дополнительные Unicode коды для иконок (ТОЧНАЯ КОПИЯ из BetterLoadouts)
+local UNICODE_EXTRA_CODES = {
+	0xE000, 0xE001, 0xE002, 0xE003, 0xE004, 0xE005, 0xE006, 0xE007,
+	0xE01F, 0xE021, 0xE026, 0xE029, 0xE02E, 0xE041, 0xE042, 0xE045,
+	0xE046, 0xE049, 0xE04D, 0xE04F, 0xE051, 0xE107, 0xE108, 0xE109,
+	0xE10A, 0xE010, 0xE011, 0xE012, 0xE013, 0xE014, 0xE015, 0xE016,
+	0xE017, 0xE018, 0xE019,
+}
+
 IconPathViewerView = class("IconPathViewerView", "BaseView")
 
 IconPathViewerView.init = function(self, settings)
@@ -99,9 +127,9 @@ IconPathViewerView._setup_grid = function(self)
 	end
 	
 	_seed_private_from_vanilla_then_custom()
-	
+
 	mod:info("PRIVATE_ICON_KEYS count: %d", #PRIVATE_ICON_KEYS)
-	
+
 	-- Создаем layout ТОЧНО как в BetterLoadouts (строки 150-157)
 	local layout = {}
 	for i = 1, #PRIVATE_ICON_KEYS do
@@ -118,8 +146,33 @@ IconPathViewerView._setup_grid = function(self)
 			}
 		end
 	end
-	
-	mod:info("Layout entries count: %d", #layout)
+
+	-- Добавляем Unicode глифы (ТОЧНАЯ КОПИЯ логики из BetterLoadouts profile_presets_present_grid.lua)
+	local function make_unicode(cp)
+		local key = string.format("unicode:%X", cp)
+		return {
+			widget_type = "unicode_icon",
+			text = utf8(cp),
+			icon_key = key,
+			unicode_text = utf8(cp),
+			unicode_code = string.format("U+%04X", cp),
+		}
+	end
+
+	-- Добавляем дополнительные Unicode коды
+	for i = 1, #UNICODE_EXTRA_CODES do
+		layout[#layout + 1] = make_unicode(UNICODE_EXTRA_CODES[i])
+	end
+
+	-- Также добавляем глобальные Unicode коды (если есть)
+	local G = _G.UNICODE_PRESET_CODES
+	if G then
+		for i = 1, #G do
+			layout[#layout + 1] = make_unicode(G[i])
+		end
+	end
+
+	mod:info("Layout entries count: %d (including %d unicode icons)", #layout, #UNICODE_EXTRA_CODES + (G and #G or 0))
 
 	local spacing_entry = {
 		widget_type = "spacing_vertical"
@@ -136,9 +189,17 @@ IconPathViewerView._setup_grid = function(self)
 end
 
 IconPathViewerView.cb_on_icon_left_pressed = function(self, widget, element)
-	if widget and widget.content and widget.content.icon_path then
-		Clipboard.put(widget.content.icon_path)
-		mod:notify(mod:localize("msg_copied_path", widget.content.icon_path))
+	if widget and widget.content then
+		local content = widget.content
+		-- Для Unicode глифов копируем Unicode код
+		if content.unicode_code and element.widget_type == "unicode_icon" then
+			Clipboard.put(content.unicode_code)
+			mod:notify(mod:localize("msg_copied_path", content.unicode_code))
+		-- Для обычных иконок копируем путь
+		elseif content.icon_path then
+			Clipboard.put(content.icon_path)
+			mod:notify(mod:localize("msg_copied_path", content.icon_path))
+		end
 	end
 end
 
