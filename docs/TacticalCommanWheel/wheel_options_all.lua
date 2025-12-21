@@ -1,5 +1,18 @@
 -- Полный список всех доступных голосовых реплик из исходного кода Darktide
 -- Собрано из: scripts/settings/dialogue/vo_query_constants.lua
+--
+-- ИСПОЛЬЗОВАНИЕ: Это пример файла для создания собственного колеса коммуникации
+-- (как MourningstarCommandWheel). Используйте эти определения как основу для
+-- вашего файла YourModName_buttons.lua
+--
+-- Структура команды для собственного колеса:
+-- {
+--     id = "unique_id",
+--     label_key = "loc_key",
+--     icon = "path/to/icon",
+--     voice_event_data = { ... },
+--     chat_message_data = { ... },
+-- }
 
 local ChatManagerConstants = require("scripts/foundation/managers/chat/chat_manager_constants")
 local VOQueryConstants = require("scripts/settings/dialogue/vo_query_constants")

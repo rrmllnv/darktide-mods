@@ -1,4 +1,6 @@
-# Полный список всех доступных голосовых реплик для колеса коммуникации
+# Полный список всех доступных голосовых реплик для собственного колеса коммуникации
+
+Этот документ содержит все доступные голосовые реплики, которые можно использовать в **собственном колесе коммуникации** (как `MourningstarCommandWheel`).
 
 Собрано из исходного кода Darktide (`scripts/settings/dialogue/vo_query_constants.lua`)
 
@@ -86,36 +88,102 @@
     - Описание: "Возьми это"
     - Примечание: Нужно найти правильную локализацию и иконку
 
-## Структура опции колеса
+## Структура команды для собственного колеса
 
-Каждая опция может содержать:
+В вашем собственном колесе (как `MourningstarCommandWheel`) команда определяется так:
 
 ```lua
 {
-    display_name = "loc_key",              -- Ключ локализации для отображения
+    id = "unique_id",                      -- Уникальный идентификатор команды
+    label_key = "loc_key",                 -- Ключ локализации для отображения
     icon = "path/to/icon",                 -- Путь к иконке
     tag_type = "location_ping",            -- Опционально: тип тега для маркировки
     voice_event_data = {
-        voice_tag_concept = "on_demand_com_wheel",
+        voice_tag_concept = "on_demand_com_wheel",  -- или "generic_mission_vo"
         voice_tag_id = "com_wheel_vo_xxx",
     },
     chat_message_data = {                  -- Опционально: сообщение в чат
         text = "loc_key",
-        channel = ChannelTags.MISSION,
+        channel = "mission",               -- или другой канал
+    },
+    action = function(option)              -- Опционально: кастомное действие
+        -- Ваша логика
+        return true
+    end,
+}
+```
+
+**Пример использования:**
+
+```lua
+-- В YourModName_buttons.lua
+{
+    id = "thanks",
+    label_key = "loc_communication_wheel_display_name_thanks",
+    icon = "content/ui/materials/hud/communication_wheel/icons/thanks",
+    voice_event_data = {
+        voice_tag_concept = "on_demand_com_wheel",
+        voice_tag_id = "com_wheel_vo_thank_you",
+    },
+    chat_message_data = {
+        text = "loc_communication_wheel_thanks",
+        channel = "mission",
     },
 }
 ```
 
 ## Использование в коде
 
+### Для собственного колеса
+
+1. **Определите команду** в `YourModName_buttons.lua` (см. структуру выше)
+2. **Обработайте активацию** в `HudElementCommandWheel.lua`:
+
+```lua
+local function activate_option(option)
+    if not option then
+        return false
+    end
+
+    -- Воспроизведение голосовой реплики
+    if option.voice_event_data then
+        local player_unit = Managers.player:local_player_safe(1).player_unit
+        if player_unit then
+            local Vo = require("scripts/utilities/vo")
+            Vo.on_demand_vo_event(
+                player_unit,
+                option.voice_event_data.voice_tag_concept,
+                option.voice_event_data.voice_tag_id
+            )
+        end
+    end
+
+    -- Отправка сообщения в чат
+    if option.chat_message_data then
+        -- ... код отправки сообщения ...
+    end
+
+    -- Выполнение кастомного действия
+    if option.action and type(option.action) == "function" then
+        return option.action(option)
+    end
+
+    return true
+end
+```
+
+### Справочная информация
+
 Все голосовые события определены в:
 - `scripts/settings/dialogue/vo_query_constants.lua`
 
-Стандартное колесо определено в:
+Стандартное колесо игры (для справки):
 - `scripts/ui/hud/elements/smart_tagging/hud_element_smart_tagging.lua`
 
 Настройки тегов (где используются некоторые из этих реплик как ответы):
 - `scripts/settings/smart_tag/smart_tag_settings.lua`
+
+**Пример мода:** См. `MourningstarCommandWheel` для полной реализации
 
 ## Использование других реплик из игры
 
@@ -144,9 +212,11 @@ voice_event_data = {
 
 ## Примечания
 
-- Все голосовые события для колеса используют концепт `on_demand_com_wheel`
+- **Для собственного колеса** вы можете использовать любые реплики
+- Голосовые события для колеса используют концепт `on_demand_com_wheel`
 - Можно использовать реплики из `generic_mission_vo` (см. `VOICE_REPLICAS_EXPLANATION.md`)
-- Некоторые реплики используются только как ответы на теги (replies), но могут быть добавлены в колесо
-- Для новых опций нужно найти подходящие иконки и локализационные ключи
-- Мод ForTheEmperor добавляет 3 новые опции: yes, no, help
+- Некоторые реплики используются только как ответы на теги (replies), но могут быть добавлены в ваше колесо
+- Для новых команд нужно найти подходящие иконки и локализационные ключи
+- См. `CUSTOM_COMMANDS_GUIDE.md` для подробного руководства по добавлению команд
+- См. `README.md` для общей структуры проекта
 

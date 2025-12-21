@@ -1,8 +1,10 @@
-# Объяснение: Можно ли использовать другие реплики из игры?
+# Объяснение: Использование реплик из игры в собственном колесе
+
+Это руководство для создания **собственного колеса коммуникации** (как `MourningstarCommandWheel`), а не для модификации стандартного колеса игры.
 
 ## Краткий ответ
 
-**Да, можно!** Но есть ограничения и нюансы.
+**Да, можно использовать любые реплики из игры!** В собственном колесе у вас полный контроль.
 
 ## Типы голосовых реплик в игре
 
@@ -12,11 +14,18 @@
 - `scripts/settings/dialogue/vo_query_constants.lua` 
 - Файлы: `dialogues/generated/on_demand_vo_*.lua`
 
-**Их можно использовать напрямую** в колесе, указав:
+**Их можно использовать** в вашем собственном колесе:
+
 ```lua
-voice_event_data = {
-    voice_tag_concept = "on_demand_com_wheel",
-    voice_tag_id = "com_wheel_vo_xxx",  -- Из vo_query_constants.lua
+-- В YourModName_buttons.lua
+{
+    id = "emperor",
+    label_key = "loc_communication_wheel_display_name_cheer",
+    icon = "content/ui/materials/hud/communication_wheel/icons/for_the_emperor",
+    voice_event_data = {
+        voice_tag_concept = "on_demand_com_wheel",
+        voice_tag_id = "com_wheel_vo_for_the_emperor",
+    },
 }
 ```
 
@@ -45,14 +54,20 @@ voice_event_data = {
 - Файлы: `dialogues/generated/gameplay_vo_*.lua`
 - Используются с концептом `generic_mission_vo` или `interaction_vo`
 
-**Можно ли их использовать в колесе?**
+**Можно ли их использовать в вашем собственном колесе?**
 
-**Технически ДА**, но нужно использовать другой концепт:
+**ДА!** Используйте другой концепт:
 
 ```lua
-voice_event_data = {
-    voice_tag_concept = "generic_mission_vo",  -- Вместо on_demand_com_wheel
-    voice_tag_id = "calling_for_help",  -- Имя из gameplay_vo файла
+-- В YourModName_buttons.lua
+{
+    id = "help",
+    label_key = "loc_help",
+    icon = "content/ui/materials/hud/interactions/icons/help",
+    voice_event_data = {
+        voice_tag_concept = "generic_mission_vo",  -- Вместо on_demand_com_wheel
+        voice_tag_id = "calling_for_help",  -- Имя из gameplay_vo файла
+    },
 }
 ```
 
@@ -112,11 +127,13 @@ calling_for_help = {
 
 **Имя реплики** = `calling_for_help` (это trigger_id)
 
-### Шаг 4: Используйте в колесе
+### Шаг 4: Используйте в вашем колесе
 
 ```lua
-[WHEEL_OPTION.help_custom] = {
-    display_name = "loc_help_custom",
+-- В YourModName_buttons.lua
+{
+    id = "help_custom",
+    label_key = "loc_help_custom",
     icon = "content/ui/materials/hud/interactions/icons/help",
     voice_event_data = {
         voice_tag_concept = "generic_mission_vo",  -- Важно!
@@ -125,13 +142,34 @@ calling_for_help = {
 }
 ```
 
+**Обработка в HudElementCommandWheel.lua:**
+
+```lua
+local function activate_option(option)
+    if option.voice_event_data then
+        local player_unit = Managers.player:local_player_safe(1).player_unit
+        if player_unit then
+            local Vo = require("scripts/utilities/vo")
+            Vo.on_demand_vo_event(
+                player_unit,
+                option.voice_event_data.voice_tag_concept,
+                option.voice_event_data.voice_tag_id
+            )
+        end
+    end
+    return true
+end
+```
+
 ## Примеры использования реплик из gameplay_vo
 
 ### Пример 1: "Почти на месте"
 
 ```lua
-[WHEEL_OPTION.almost_there] = {
-    display_name = "loc_almost_there",
+-- В YourModName_buttons.lua
+{
+    id = "almost_there",
+    label_key = "loc_almost_there",
     icon = "content/ui/materials/hud/communication_wheel/icons/location",
     voice_event_data = {
         voice_tag_concept = "generic_mission_vo",
@@ -143,8 +181,9 @@ calling_for_help = {
 ### Пример 2: "Отстал от отряда"
 
 ```lua
-[WHEEL_OPTION.away_from_squad] = {
-    display_name = "loc_away_from_squad",
+{
+    id = "away_from_squad",
+    label_key = "loc_away_from_squad",
     icon = "content/ui/materials/hud/communication_wheel/icons/attention",
     voice_event_data = {
         voice_tag_concept = "generic_mission_vo",
@@ -156,8 +195,9 @@ calling_for_help = {
 ### Пример 3: Короткие фразы в бою
 
 ```lua
-[WHEEL_OPTION.combat_phrase] = {
-    display_name = "loc_combat_phrase",
+{
+    id = "combat_phrase",
+    label_key = "loc_combat_phrase",
     icon = "content/ui/materials/hud/communication_wheel/icons/enemy",
     voice_event_data = {
         voice_tag_concept = "generic_mission_vo",
@@ -197,11 +237,16 @@ calling_for_help = {
 
 ## Итог
 
-**Да, можно использовать другие реплики!** 
+**В собственном колесе вы можете использовать любые реплики!** 
 
 - **Для колеса** - используйте `on_demand_com_wheel` (14 доступных реплик)
 - **Для экспериментов** - используйте `generic_mission_vo` с репликами из gameplay_vo
 - **Для предметов** - используйте `on_demand_vo_tag_item`
 
-Главное - найти подходящие реплики и правильно указать концепт и trigger_id.
+Главное - найти подходящие реплики и правильно указать концепт и trigger_id в структуре команды.
+
+**См. также:**
+- `README.md` - общая структура проекта
+- `CUSTOM_COMMANDS_GUIDE.md` - подробное руководство по добавлению команд
+- `ALL_VOICE_OPTIONS.md` - полный список доступных реплик
 
