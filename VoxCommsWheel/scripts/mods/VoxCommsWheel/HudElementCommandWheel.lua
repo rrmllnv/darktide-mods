@@ -35,6 +35,11 @@ local button_definitions_by_id = Buttons.button_definitions_by_id
 -- Генерация опций из страницы
 local function generate_options_from_page(current_page)
 	local options = {}
+	
+	if not Pages or not Pages.get_page_config then
+		return options
+	end
+	
 	local page_config = Pages.get_page_config(current_page)
 	
 	if not page_config then
@@ -53,10 +58,12 @@ local function generate_options_from_page(current_page)
 	
 	-- Остальные слоты - команды страницы
 	local commands = page_config.commands
-	for i = 1, math.min(#commands, CommandWheelSettings.wheel_slots - 1) do
-		local command_id = commands[i]
-		if button_definitions_by_id[command_id] then
-			options[i + 1] = button_definitions_by_id[command_id]
+	if commands and type(commands) == "table" then
+		for i = 1, math.min(#commands, CommandWheelSettings.wheel_slots - 1) do
+			local command_id = commands[i]
+			if command_id and button_definitions_by_id and button_definitions_by_id[command_id] then
+				options[i + 1] = button_definitions_by_id[command_id]
+			end
 		end
 	end
 	
@@ -80,7 +87,7 @@ HudElementVoxCommsWheel.init = function(self, parent, draw_layer, start_scale)
 	
 	-- Инициализация страниц
 	self._current_page = 1
-	self._max_pages = Pages.get_max_pages()
+	self._max_pages = Pages and Pages.get_max_pages and Pages.get_max_pages() or 1
 	
 	-- Настройка слотов
 	local wheel_slots = CommandWheelSettings.wheel_slots

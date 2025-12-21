@@ -90,7 +90,7 @@ local entry_widget_definition = UIWidget.create_definition({
 		pass_type = "hotspot",
 		content = default_button_content,
 	},
-	-- Иконка (оставляем место, но делаем прозрачной)
+	-- Иконка команды
 	{
 		pass_type = "texture",
 		value_id = "icon",
@@ -108,8 +108,16 @@ local entry_widget_definition = UIWidget.create_definition({
 				0,
 				100,
 			},
-			color = { 0, 0, 0, 0 }, -- Прозрачная
+			color = icon_default_color,
 		},
+		change_function = function (content, style)
+			local color = style.color
+			local ignore_alpha = false
+			local hotspot = content.hotspot
+			local anim_hover_progress = hotspot.anim_hover_progress
+
+			ColorUtilities.color_lerp(icon_default_color, icon_hover_color, anim_hover_progress, color, ignore_alpha)
+		end,
 	},
 	-- Линия
 	{

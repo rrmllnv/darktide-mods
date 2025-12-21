@@ -11,13 +11,17 @@ mod:add_require_path("VoxCommsWheel/scripts/mods/VoxCommsWheel/HudElementCommand
 local VoxCommsWheel_localization = mod:io_dofile("VoxCommsWheel/scripts/mods/VoxCommsWheel/VoxCommsWheel_localization")
 
 -- Регистрируем все строки с префиксом loc_ как глобальные
-local global_strings = {}
-for key, value in pairs(VoxCommsWheel_localization) do
-	if string.sub(key, 1, 4) == "loc_" then
-		global_strings[key] = value
+if VoxCommsWheel_localization and type(VoxCommsWheel_localization) == "table" then
+	local global_strings = {}
+	for key, value in pairs(VoxCommsWheel_localization) do
+		if string.sub(key, 1, 4) == "loc_" then
+			global_strings[key] = value
+		end
+	end
+	if next(global_strings) then
+		mod:add_global_localize_strings(global_strings)
 	end
 end
-mod:add_global_localize_strings(global_strings)
 
 local Utils = require("VoxCommsWheel/scripts/mods/VoxCommsWheel/VoxCommsWheel_utils")
 
