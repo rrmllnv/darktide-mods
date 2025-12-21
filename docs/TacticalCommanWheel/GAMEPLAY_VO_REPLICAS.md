@@ -1,6 +1,6 @@
-# Полный список реплик из gameplay_vo для собственного колеса коммуникации
+# Полный список ВСЕХ реплик из gameplay_vo для собственного колеса коммуникации
 
-Этот документ содержит **полный список всех реплик** из файлов `gameplay_vo_*.lua`, которые можно использовать в вашем собственном колесе коммуникации.
+Этот документ содержит **ПОЛНЫЙ СПИСОК ВСЕХ РЕПЛИК** из файлов `gameplay_vo_*.lua`, которые можно использовать в вашем собственном колесе коммуникации.
 
 **Важно:** Все эти реплики используют концепт `generic_mission_vo` (не `on_demand_com_wheel`).
 
@@ -23,192 +23,479 @@
 
 ## 1. calling_for_help - Просьба о помощи
 
-**Описание:** Реплики для запроса помощи от команды.
+**Полное имя реплики:** `calling_for_help`
 
 **Использование:**
 ```lua
 voice_tag_id = "calling_for_help"
 ```
 
-**Доступность:** Есть во всех файлах gameplay_vo (zealot, veteran, psyker, ogryn, все варианты голосов)
+**Доступность:** Есть во ВСЕХ файлах gameplay_vo (zealot, veteran, psyker, ogryn, broker, adamant - все варианты голосов)
 
 ---
 
 ## 2. almost_there - "Почти на месте"
 
-**Описание:** Реплики о том, что цель почти достигнута.
+**Полное имя реплики:** `almost_there`
 
 **Использование:**
 ```lua
 voice_tag_id = "almost_there"
 ```
 
-**Доступность:** Есть во всех файлах gameplay_vo (zealot, veteran, psyker, ogryn, все варианты голосов)
+**Доступность:** Есть во ВСЕХ файлах gameplay_vo (zealot, veteran, psyker, ogryn, broker, adamant - все варианты голосов)
 
 ---
 
 ## 3. away_from_squad - "Отстал от отряда"
 
-**Описание:** Реплики о том, что персонаж отстал от команды.
+**Полное имя реплики:** `away_from_squad`
 
 **Использование:**
 ```lua
 voice_tag_id = "away_from_squad"
 ```
 
-**Доступность:** Есть во всех файлах gameplay_vo (zealot, veteran, psyker, ogryn, все варианты голосов)
+**Доступность:** Есть во ВСЕХ файлах gameplay_vo (zealot, veteran, psyker, ogryn, broker, adamant - все варианты голосов)
 
 ---
 
 ## 4. combat_pause_one_liner - Короткие фразы в бою
 
-**Описание:** Короткие боевые фразы, произносимые во время паузы в бою.
+**Полное имя реплики:** `combat_pause_one_liner`
 
 **Использование:**
 ```lua
 voice_tag_id = "combat_pause_one_liner"
 ```
 
-**Доступность:** Есть во всех файлах gameplay_vo (zealot, veteran, psyker, ogryn, все варианты голосов)
+**Доступность:** Есть во ВСЕХ файлах gameplay_vo (zealot, veteran, psyker, ogryn, broker, adamant - все варианты голосов)
 
 ---
 
 ## 5. ability_* - Способности
 
-**Описание:** Реплики, связанные с использованием способностей персонажей.
+### 5.1. Zealot (Фанатик) - Основные файлы gameplay_vo_zealot_*.lua
 
-### 5.1. Zealot (Фанатик)
+**Полное имя реплики:** `ability_maniac`
 
-- **ability_maniac** - Способность "Маньяк"
-  - Доступность: Все варианты голосов zealot (male_a/b/c, female_a/b/c)
+**Использование:**
+```lua
+voice_tag_id = "ability_maniac"
+```
 
-### 5.2. Veteran (Ветеран)
+**Доступность:** Все варианты голосов zealot (male_a, male_b, male_c, female_a, female_b, female_c)
 
-- **ability_ranger** - Способность "Рейнджер"
-  - Доступность: Все варианты голосов veteran (male_a/b/c, female_a/b/c)
+### 5.2. Veteran (Ветеран) - Основные файлы gameplay_vo_veteran_*.lua
 
-### 5.3. Psyker (Псайкер)
+**Полное имя реплики:** `ability_ranger`
 
-- **ability_biomancer_high** - Способность "Биомансер" (высокий уровень)
-  - Доступность: Все варианты голосов psyker (male_a/b/c, female_a/b/c)
+**Использование:**
+```lua
+voice_tag_id = "ability_ranger"
+```
 
-- **ability_biomancer_low** - Способность "Биомансер" (низкий уровень)
-  - Доступность: Все варианты голосов psyker (male_a/b/c, female_a/b/c)
+**Доступность:** Все варианты голосов veteran (male_a, male_b, male_c, female_a, female_b, female_c)
 
-- **ability_venting** - Способность "Вентиляция"
-  - Доступность: Все варианты голосов psyker (male_a/b/c, female_a/b/c)
+### 5.3. Psyker (Псайкер) - Основные файлы gameplay_vo_psyker_*.lua
 
-### 5.4. Ogryn (Огрун)
+**Полное имя реплики 1:** `ability_biomancer_high`
 
-- **ability_bonebreaker** - Способность "Костолом"
-  - Доступность: Все варианты голосов ogryn (a/b/c/d)
+**Использование:**
+```lua
+voice_tag_id = "ability_biomancer_high"
+```
 
-### 5.5. Class Rework - Дополнительные способности
+**Доступность:** Все варианты голосов psyker (male_a, male_b, male_c, female_a, female_b, female_c)
 
-#### Zealot Class Rework:
-- **ability_banisher** - Способность "Изгнатель"
-- **ability_banisher_impact** - Способность "Изгнатель" (удар)
-- **ability_pious_stabber** - Способность "Благочестивый закалыватель"
-- **ability_repent_a** - Способность "Покаяние A"
+**Полное имя реплики 2:** `ability_biomancer_low`
 
-#### Veteran Class Rework:
-- **ability_shock_trooper** - Способность "Шоковый солдат"
-- **ability_squad_leader** - Способность "Командир отряда"
+**Использование:**
+```lua
+voice_tag_id = "ability_biomancer_low"
+```
 
-#### Psyker Class Rework:
-- **ability_buff_stance_a** - Способность "Буфф стойка A"
-- **ability_gunslinger** - Способность "Гансlinger"
-- **ability_protectorate_start** - Способность "Протекторат" (начало)
-- **ability_protectorate_stop** - Способность "Протекторат" (конец)
+**Доступность:** Все варианты голосов psyker (male_a, male_b, male_c, female_a, female_b, female_c)
 
-#### Ogryn Class Rework:
-- **ability_bullgryn** - Способность "Буллгрин"
-- **ability_gun_lugger** - Способность "Ган Луггер"
+**Полное имя реплики 3:** `ability_venting`
 
-#### Adamant (Особый персонаж):
-- **ability_charge_a** - Способность "Зарядка A"
-- **ability_howl_a** - Способность "Вой A"
-- **ability_stance_a** - Способность "Стойка A"
+**Использование:**
+```lua
+voice_tag_id = "ability_venting"
+```
 
-**Примечание:** Class Rework реплики находятся в файлах `class_rework_*.lua` и `adamant_*.lua`, а не в основных `gameplay_vo_*.lua`.
+**Доступность:** Все варианты голосов psyker (male_a, male_b, male_c, female_a, female_b, female_c)
+
+### 5.4. Ogryn (Огрун) - Основные файлы gameplay_vo_ogryn_*.lua
+
+**Полное имя реплики:** `ability_bonebreaker`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_bonebreaker"
+```
+
+**Доступность:** Все варианты голосов ogryn (a, b, c, d)
+
+### 5.5. Zealot Class Rework - Файлы class_rework_zealot_*.lua
+
+**Полное имя реплики 1:** `ability_banisher`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_banisher"
+```
+
+**Доступность:** Все варианты голосов zealot (male_a, male_b, male_c, female_a, female_b, female_c)
+
+**Полное имя реплики 2:** `ability_banisher_impact`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_banisher_impact"
+```
+
+**Доступность:** Все варианты голосов zealot (male_a, male_b, male_c, female_a, female_b, female_c)
+
+**Полное имя реплики 3:** `ability_pious_stabber`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_pious_stabber"
+```
+
+**Доступность:** Все варианты голосов zealot (male_a, male_b, male_c, female_a, female_b, female_c)
+
+**Полное имя реплики 4:** `ability_repent_a`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_repent_a"
+```
+
+**Доступность:** Все варианты голосов zealot (male_a, male_b, male_c, female_a, female_b, female_c)
+
+### 5.6. Veteran Class Rework - Файлы class_rework_veteran_*.lua
+
+**Полное имя реплики 1:** `ability_shock_trooper`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_shock_trooper"
+```
+
+**Доступность:** Все варианты голосов veteran (male_a, male_b, male_c, female_a, female_b, female_c)
+
+**Полное имя реплики 2:** `ability_squad_leader`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_squad_leader"
+```
+
+**Доступность:** Все варианты голосов veteran (male_a, male_b, male_c, female_a, female_b, female_c)
+
+### 5.7. Psyker Class Rework - Файлы class_rework_psyker_*.lua
+
+**Полное имя реплики 1:** `ability_buff_stance_a`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_buff_stance_a"
+```
+
+**Доступность:** Все варианты голосов psyker (male_a, male_b, male_c, female_a, female_b, female_c)
+
+**Полное имя реплики 2:** `ability_gunslinger`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_gunslinger"
+```
+
+**Доступность:** Все варианты голосов psyker (male_a, male_b, male_c, female_a, female_b, female_c)
+
+**Полное имя реплики 3:** `ability_protectorate_start`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_protectorate_start"
+```
+
+**Доступность:** Все варианты голосов psyker (male_a, male_b, male_c, female_a, female_b, female_c)
+
+**Полное имя реплики 4:** `ability_protectorate_stop`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_protectorate_stop"
+```
+
+**Доступность:** Все варианты голосов psyker (male_a, male_b, male_c, female_a, female_b, female_c)
+
+### 5.8. Ogryn Class Rework - Файлы class_rework_ogryn_*.lua
+
+**Полное имя реплики 1:** `ability_bullgryn`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_bullgryn"
+```
+
+**Доступность:** Все варианты голосов ogryn (a, b, c, d)
+
+**Полное имя реплики 2:** `ability_gun_lugger`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_gun_lugger"
+```
+
+**Доступность:** Все варианты голосов ogryn (a, b, c, d)
+
+### 5.9. Adamant (Особый персонаж) - Файлы adamant_adamant_*.lua
+
+**Полное имя реплики 1:** `ability_charge_a`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_charge_a"
+```
+
+**Доступность:** Все варианты голосов adamant (male_a, male_b, male_c, female_a, female_b, female_c)
+
+**Полное имя реплики 2:** `ability_howl_a`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_howl_a"
+```
+
+**Доступность:** Все варианты голосов adamant (male_a, male_b, male_c, female_a, female_b, female_c)
+
+**Полное имя реплики 3:** `ability_stance_a`
+
+**Использование:**
+```lua
+voice_tag_id = "ability_stance_a"
+```
+
+**Доступность:** Все варианты голосов adamant (male_a, male_b, male_c, female_a, female_b, female_c)
 
 ---
 
 ## 6. alerted_* - Предупреждения
 
-**Описание:** Реплики предупреждения о врагах.
-
 ### 6.1. Daemonhost (Демон-хост)
 
-- **alerted_2_enemy_daemonhost** - Предупреждение о 2+ демон-хостах
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn, broker, adamant)
+**Полное имя реплики 1:** `alerted_2_enemy_daemonhost`
 
-- **alerted_enemy_daemonhost** - Предупреждение о демон-хосте
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn, broker, adamant)
+**Использование:**
+```lua
+voice_tag_id = "alerted_2_enemy_daemonhost"
+```
 
-**Примечание:** Эти реплики используются для предупреждения команды о присутствии опасного врага.
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn, broker, adamant - все варианты голосов)
+
+**Полное имя реплики 2:** `alerted_enemy_daemonhost`
+
+**Использование:**
+```lua
+voice_tag_id = "alerted_enemy_daemonhost"
+```
+
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn, broker, adamant - все варианты голосов)
 
 ---
 
 ## 7. found_* - Находки
 
-**Описание:** Реплики о найденных предметах (патроны, здоровье).
-
 ### 7.1. Патроны (Ammo)
 
-- **found_ammo_ogryn_low_on_ammo** - Найдены патроны (для огруна с низким запасом)
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn)
+**Полное имя реплики 1:** `found_ammo_ogryn_low_on_ammo`
 
-- **found_ammo_psyker_low_on_ammo** - Найдены патроны (для псайкера с низким запасом)
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn)
+**Использование:**
+```lua
+voice_tag_id = "found_ammo_ogryn_low_on_ammo"
+```
 
-- **found_ammo_veteran_low_on_ammo** - Найдены патроны (для ветерана с низким запасом)
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn)
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn - все варианты голосов)
 
-- **found_ammo_zealot_low_on_ammo** - Найдены патроны (для фанатика с низким запасом)
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn)
+**Полное имя реплики 2:** `found_ammo_psyker_low_on_ammo`
 
-**Примечание:** Эти реплики произносятся, когда персонаж находит патроны и видит, что у другого персонажа низкий запас патронов.
+**Использование:**
+```lua
+voice_tag_id = "found_ammo_psyker_low_on_ammo"
+```
 
-### 7.2. Здоровье (Health)
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn - все варианты голосов)
 
-#### Базовые реплики:
+**Полное имя реплики 3:** `found_ammo_veteran_low_on_ammo`
 
-- **found_health_booster** - Найден бустер здоровья
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn)
+**Использование:**
+```lua
+voice_tag_id = "found_ammo_veteran_low_on_ammo"
+```
 
-- **found_health_booster_low_on_health** - Найден бустер здоровья (у говорящего низкое здоровье)
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn)
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn - все варианты голосов)
 
-#### Специфичные для класса:
+**Полное имя реплики 4:** `found_ammo_zealot_low_on_ammo`
 
-- **found_health_booster_ogryn_low_on_health** - Найден бустер здоровья (для огруна с низким здоровьем)
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn)
+**Использование:**
+```lua
+voice_tag_id = "found_ammo_zealot_low_on_ammo"
+```
 
-- **found_health_booster_psyker_low_on_health** - Найден бустер здоровья (для псайкера с низким здоровьем)
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn)
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn - все варианты голосов)
 
-- **found_health_booster_veteran_low_on_health** - Найден бустер здоровья (для ветерана с низким здоровьем)
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn)
+### 7.2. Здоровье (Health) - Базовые реплики
 
-- **found_health_booster_zealot_low_on_health** - Найден бустер здоровья (для фанатика с низким здоровьем)
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn)
+**Полное имя реплики 1:** `found_health_booster`
 
-#### Станции здоровья:
+**Использование:**
+```lua
+voice_tag_id = "found_health_booster"
+```
 
-- **found_health_station_ogryn_low_on_health** - Найдена станция здоровья (для огруна с низким здоровьем)
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn)
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn - все варианты голосов)
 
-- **found_health_station_psyker_low_on_health** - Найдена станция здоровья (для псайкера с низким здоровьем)
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn)
+**Полное имя реплики 2:** `found_health_booster_low_on_health`
 
-- **found_health_station_veteran_low_on_health** - Найдена станция здоровья (для ветерана с низким здоровьем)
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn)
+**Использование:**
+```lua
+voice_tag_id = "found_health_booster_low_on_health"
+```
 
-- **found_health_station_zealot_low_on_health** - Найдена станция здоровья (для фанатика с низким здоровьем)
-  - Доступность: Все файлы gameplay_vo (zealot, veteran, psyker, ogryn)
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn - все варианты голосов)
 
-**Примечание:** Эти реплики произносятся, когда персонаж находит предметы здоровья и видит, что у другого персонажа низкое здоровье.
+### 7.3. Здоровье (Health) - Специфичные для класса
+
+**Полное имя реплики 1:** `found_health_booster_ogryn_low_on_health`
+
+**Использование:**
+```lua
+voice_tag_id = "found_health_booster_ogryn_low_on_health"
+```
+
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn - все варианты голосов)
+
+**Полное имя реплики 2:** `found_health_booster_psyker_low_on_health`
+
+**Использование:**
+```lua
+voice_tag_id = "found_health_booster_psyker_low_on_health"
+```
+
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn - все варианты голосов)
+
+**Полное имя реплики 3:** `found_health_booster_veteran_low_on_health`
+
+**Использование:**
+```lua
+voice_tag_id = "found_health_booster_veteran_low_on_health"
+```
+
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn - все варианты голосов)
+
+**Полное имя реплики 4:** `found_health_booster_zealot_low_on_health`
+
+**Использование:**
+```lua
+voice_tag_id = "found_health_booster_zealot_low_on_health"
+```
+
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn - все варианты голосов)
+
+### 7.4. Здоровье (Health) - Станции здоровья
+
+**Полное имя реплики 1:** `found_health_station_ogryn_low_on_health`
+
+**Использование:**
+```lua
+voice_tag_id = "found_health_station_ogryn_low_on_health"
+```
+
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn - все варианты голосов)
+
+**Полное имя реплики 2:** `found_health_station_psyker_low_on_health`
+
+**Использование:**
+```lua
+voice_tag_id = "found_health_station_psyker_low_on_health"
+```
+
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn - все варианты голосов)
+
+**Полное имя реплики 3:** `found_health_station_veteran_low_on_health`
+
+**Использование:**
+```lua
+voice_tag_id = "found_health_station_veteran_low_on_health"
+```
+
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn - все варианты голосов)
+
+**Полное имя реплики 4:** `found_health_station_zealot_low_on_health`
+
+**Использование:**
+```lua
+voice_tag_id = "found_health_station_zealot_low_on_health"
+```
+
+**Доступность:** Все файлы gameplay_vo (zealot, veteran, psyker, ogryn - все варианты голосов)
+
+---
+
+## Полный список всех реплик для копирования
+
+### Базовые реплики (есть везде):
+- `calling_for_help`
+- `almost_there`
+- `away_from_squad`
+- `combat_pause_one_liner`
+
+### Способности (ability_*):
+- `ability_maniac` (zealot)
+- `ability_ranger` (veteran)
+- `ability_biomancer_high` (psyker)
+- `ability_biomancer_low` (psyker)
+- `ability_venting` (psyker)
+- `ability_bonebreaker` (ogryn)
+- `ability_banisher` (zealot class rework)
+- `ability_banisher_impact` (zealot class rework)
+- `ability_pious_stabber` (zealot class rework)
+- `ability_repent_a` (zealot class rework)
+- `ability_shock_trooper` (veteran class rework)
+- `ability_squad_leader` (veteran class rework)
+- `ability_buff_stance_a` (psyker class rework)
+- `ability_gunslinger` (psyker class rework)
+- `ability_protectorate_start` (psyker class rework)
+- `ability_protectorate_stop` (psyker class rework)
+- `ability_bullgryn` (ogryn class rework)
+- `ability_gun_lugger` (ogryn class rework)
+- `ability_charge_a` (adamant)
+- `ability_howl_a` (adamant)
+- `ability_stance_a` (adamant)
+
+### Предупреждения (alerted_*):
+- `alerted_2_enemy_daemonhost`
+- `alerted_enemy_daemonhost`
+
+### Находки (found_*):
+- `found_ammo_ogryn_low_on_ammo`
+- `found_ammo_psyker_low_on_ammo`
+- `found_ammo_veteran_low_on_ammo`
+- `found_ammo_zealot_low_on_ammo`
+- `found_health_booster`
+- `found_health_booster_low_on_health`
+- `found_health_booster_ogryn_low_on_health`
+- `found_health_booster_psyker_low_on_health`
+- `found_health_booster_veteran_low_on_health`
+- `found_health_booster_zealot_low_on_health`
+- `found_health_station_ogryn_low_on_health`
+- `found_health_station_psyker_low_on_health`
+- `found_health_station_veteran_low_on_health`
+- `found_health_station_zealot_low_on_health`
 
 ---
 
@@ -266,7 +553,7 @@ voice_tag_id = "combat_pause_one_liner"
     icon = "content/ui/materials/hud/items/icons/ammo",
     voice_event_data = {
         voice_tag_concept = "generic_mission_vo",
-        voice_tag_id = "found_ammo_veteran_low_on_ammo",  -- Или другой вариант
+        voice_tag_id = "found_ammo_veteran_low_on_ammo",
     },
 }
 ```
@@ -292,4 +579,3 @@ voice_tag_id = "combat_pause_one_liner"
 - `VOICE_REPLICAS_EXPLANATION.md` - Объяснение типов реплик
 - `CUSTOM_COMMANDS_GUIDE.md` - Руководство по добавлению команд
 - `ALL_VOICE_OPTIONS.md` - Полный список всех голосовых опций
-
