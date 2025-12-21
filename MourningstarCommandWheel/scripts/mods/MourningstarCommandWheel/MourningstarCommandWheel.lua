@@ -2,11 +2,9 @@ local mod = get_mod("MourningstarCommandWheel")
 
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_settings")
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_definitions")
-mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/HudElementCommandWheel")
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_utils")
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_buttons")
-
-mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_settings")
+mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/HudElementCommandWheel")
 
 local Utils = require("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_utils")
 local is_in_valid_lvl = Utils.is_in_valid_lvl

@@ -2,7 +2,6 @@ local mod = get_mod("MourningstarCommandWheel")
 
 local HudElementBase = require("scripts/ui/hud/elements/hud_element_base")
 
-mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_settings")
 local CommandWheelSettings = require("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_settings")
 
 local Definitions = mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_definitions")
