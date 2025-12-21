@@ -51,14 +51,40 @@ IconPathViewerView._setup_grid = function(self)
 		local ref = ViewElementProfilePresetsSettings and ViewElementProfilePresetsSettings.optional_preset_icon_reference_keys or {}
 		local lu = ViewElementProfilePresetsSettings and ViewElementProfilePresetsSettings.optional_preset_icons_lookup or {}
 		
+		-- Добавляем все иконки из ванильных настроек (как в BetterLoadouts)
+		-- Сначала проходим по reference_keys
 		for i = 1, #ref do
 			local vk = ref[i]
 			local vmat = lu[vk]
-			if vk and vmat and not icon_paths_lookup[vk] then
+			-- Добавляем материал (путь к иконке)
+			if vk and vmat and type(vmat) == "string" and vmat ~= "" and not icon_paths_lookup[vmat] then
 				icon_paths[#icon_paths + 1] = vmat
+				icon_paths_lookup[vmat] = true
+			end
+			-- Также добавляем ключ, если он является строкой и отличается от материала
+			if vk and type(vk) == "string" and vk ~= "" and vk ~= vmat and not icon_paths_lookup[vk] then
+				icon_paths[#icon_paths + 1] = vk
 				icon_paths_lookup[vk] = true
 			end
 		end
+		
+		-- Также проходим по всем ключам в lookup (может быть больше, чем в reference_keys)
+		if lu then
+			for vk, vmat in pairs(lu) do
+				-- Добавляем материал (путь к иконке)
+				if vk and vmat and type(vmat) == "string" and vmat ~= "" and not icon_paths_lookup[vmat] then
+					icon_paths[#icon_paths + 1] = vmat
+					icon_paths_lookup[vmat] = true
+				end
+				-- Также добавляем ключ, если он является строкой и отличается от материала
+				if vk and type(vk) == "string" and vk ~= "" and vk ~= vmat and not icon_paths_lookup[vk] then
+					icon_paths[#icon_paths + 1] = vk
+					icon_paths_lookup[vk] = true
+				end
+			end
+		end
+		
+		mod:info("Loaded %d icon paths from ViewElementProfilePresetsSettings", #icon_paths)
 	end
 	
 	-- Пробуем получить пути из BetterLoadouts
@@ -74,7 +100,7 @@ IconPathViewerView._setup_grid = function(self)
 				end
 			end
 		end
-		mod:info("Loaded %d icon paths from BetterLoadouts", #icon_paths)
+		mod:info("Total icon paths after BetterLoadouts: %d", #icon_paths)
 	end
 	
 	-- Если ничего не найдено, используем встроенный список
