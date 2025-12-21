@@ -100,14 +100,16 @@ voice_event_data = {
 
 ### Шаг 2: Найдите интересующие реплики
 
-Ищите по ключевым словам:
+**Полный список всех реплик:** См. `GAMEPLAY_VO_REPLICAS.md` для полного списка всех доступных реплик.
+
+Основные категории:
 - `calling_for_help` - просьба о помощи
 - `almost_there` - "почти на месте"
 - `away_from_squad` - "отстал от отряда"
 - `combat_pause_one_liner` - короткие фразы
-- `ability_*` - способности
-- `alerted_*` - предупреждения
-- `found_*` - находки
+- `ability_*` - способности (см. полный список в `GAMEPLAY_VO_REPLICAS.md`)
+- `alerted_*` - предупреждения (см. полный список в `GAMEPLAY_VO_REPLICAS.md`)
+- `found_*` - находки (см. полный список в `GAMEPLAY_VO_REPLICAS.md`)
 
 ### Шаг 3: Проверьте структуру
 
@@ -248,5 +250,6 @@ end
 **См. также:**
 - `README.md` - общая структура проекта
 - `CUSTOM_COMMANDS_GUIDE.md` - подробное руководство по добавлению команд
-- `ALL_VOICE_OPTIONS.md` - полный список доступных реплик
+- `ALL_VOICE_OPTIONS.md` - полный список доступных реплик из `com_wheel_vo`
+- `GAMEPLAY_VO_REPLICAS.md` - **полный список всех реплик из `gameplay_vo`** (включая все ability_*, alerted_*, found_*)
 
