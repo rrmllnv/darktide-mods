@@ -1,4 +1,12 @@
 return {
+	i18n_notifications_title = {
+		en = "Notifications about boss defeat",
+		ru = "Уведомления об устранении босса",
+	},
+	i18n_show_boss_death_notification = {
+		en = "Show boss death notification",
+		ru = "Показывать уведомление при убийстве босса",
+	},
 	i18n_notification_boss_default = {
 		en = "BOSS",
 		ru = "БОСС",
