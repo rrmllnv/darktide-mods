@@ -117,9 +117,35 @@
 Настройки тегов (где используются некоторые из этих реплик как ответы):
 - `scripts/settings/smart_tag/smart_tag_settings.lua`
 
+## Использование других реплик из игры
+
+**Важно:** Можно использовать не только реплики из `on_demand_com_wheel`, но и другие реплики из игры!
+
+### Реплики из gameplay_vo
+
+В файлах `dialogues/generated/gameplay_vo_*.lua` есть множество реплик, которые персонажи говорят автоматически. Их можно использовать в колесе с концептом `generic_mission_vo`:
+
+**Примеры доступных реплик:**
+- `calling_for_help` - "Нужна помощь!"
+- `almost_there` - "Почти на месте"
+- `away_from_squad` - "Отстал от отряда"
+- `combat_pause_one_liner` - короткие фразы в бою
+- И многие другие...
+
+**Как использовать:**
+```lua
+voice_event_data = {
+    voice_tag_concept = "generic_mission_vo",  -- Вместо on_demand_com_wheel
+    voice_tag_id = "calling_for_help",  -- Имя из gameplay_vo файла
+}
+```
+
+**Подробнее:** См. `VOICE_REPLICAS_EXPLANATION.md`
+
 ## Примечания
 
-- Все голосовые события используют концепт `on_demand_com_wheel`
+- Все голосовые события для колеса используют концепт `on_demand_com_wheel`
+- Можно использовать реплики из `generic_mission_vo` (см. `VOICE_REPLICAS_EXPLANATION.md`)
 - Некоторые реплики используются только как ответы на теги (replies), но могут быть добавлены в колесо
 - Для новых опций нужно найти подходящие иконки и локализационные ключи
 - Мод ForTheEmperor добавляет 3 новые опции: yes, no, help
