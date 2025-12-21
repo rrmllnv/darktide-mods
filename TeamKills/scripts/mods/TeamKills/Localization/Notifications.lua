@@ -4,8 +4,8 @@ return {
 		ru = "Уведомления об устранении босса",
 	},
 	i18n_show_boss_death_notification = {
-		en = "Show boss death notification",
-		ru = "Показывать уведомление при убийстве босса",
+		en = "Show notification",
+		ru = "Показывать уведомление",
 	},
 	i18n_notification_boss_default = {
 		en = "BOSS",
@@ -25,14 +25,14 @@ return {
 	},
 	i18n_show_total_damage_notification = {
 		en = "Show Total Damage",
-		ru = "Показывать общий урон",
+		ru = "Показать общий урон",
 	},
 	i18n_show_max_damage_notification = {
 		en = "Show Max Damage",
-		ru = "Показывать максимальный урон",
+		ru = "Показать макс. урон",
 	},
 	i18n_show_last_hit_damage_notification = {
 		en = "Show Last Hit Damage",
-		ru = "Показывать урон последнего удара",
+		ru = "Показать урон посл. удара",
 	},
 }
