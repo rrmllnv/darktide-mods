@@ -69,7 +69,7 @@ local button_definitions = {
 	{
 		id = "take_this",
 		label_key = "loc_command_take_this",
-		icon = "content/ui/materials/hud/communication_wheel/icons/take_this",
+		icon = "content/ui/materials/hud/communication_wheel/icons/attention",
 		voice_event_data = {
 			voice_tag_concept = VOQueryConstants.concepts.on_demand_com_wheel,
 			voice_tag_id = VOQueryConstants.trigger_ids.com_wheel_vo_take_this,
@@ -82,7 +82,7 @@ local button_definitions = {
 	{
 		id = "i_need_this",
 		label_key = "loc_command_i_need_this",
-		icon = "content/ui/materials/hud/communication_wheel/icons/need_that",
+		icon = "content/ui/materials/hud/communication_wheel/icons/ammo",
 		voice_event_data = {
 			voice_tag_concept = VOQueryConstants.concepts.on_demand_com_wheel,
 			voice_tag_id = VOQueryConstants.trigger_ids.com_wheel_vo_need_that,
@@ -137,7 +137,7 @@ local button_definitions = {
 	{
 		id = "follow_you",
 		label_key = "loc_command_follow_you",
-		icon = "content/ui/materials/hud/communication_wheel/icons/follow",
+		icon = "content/ui/materials/hud/communication_wheel/icons/location",
 		voice_event_data = {
 			voice_tag_concept = VOQueryConstants.concepts.on_demand_com_wheel,
 			voice_tag_id = VOQueryConstants.trigger_ids.com_wheel_vo_follow_you,
@@ -150,7 +150,7 @@ local button_definitions = {
 	{
 		id = "follow_me",
 		label_key = "loc_command_follow_me",
-		icon = "content/ui/materials/hud/communication_wheel/icons/follow",
+		icon = "content/ui/materials/hud/communication_wheel/icons/location",
 		-- Нет голосовой реплики
 		chat_message_data = {
 			text = "loc_command_follow_me",
@@ -190,7 +190,7 @@ local button_definitions = {
 	{
 		id = "dont_fall_behind",
 		label_key = "loc_command_dont_fall_behind",
-		icon = "content/ui/materials/hud/communication_wheel/icons/follow",
+		icon = "content/ui/materials/hud/communication_wheel/icons/location",
 		-- Нет голосовой реплики
 		chat_message_data = {
 			text = "loc_command_dont_fall_behind",
