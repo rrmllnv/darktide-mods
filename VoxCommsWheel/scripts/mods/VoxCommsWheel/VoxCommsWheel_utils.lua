@@ -74,21 +74,43 @@ local function activate_option(option)
 			end
 		end
 		
-		-- Отправка сообщения в чат
+		-- Отправка сообщения в чат (только на английском)
 		if option.chat_message_data then
-			local Managers = Managers
-			if Managers and Managers.chat then
-				local chat_manager = Managers.chat
-				local text = localize_text(option.chat_message_data.text)
-				local channel = option.chat_message_data.channel
-				
-				if channel then
-					if chat_manager.send_loc_channel_message then
-						chat_manager:send_loc_channel_message(channel, option.chat_message_data.text)
-					elseif chat_manager.send_channel_message then
-						chat_manager:send_channel_message(channel, text)
-					end
+			if not Managers or not Managers.chat then
+				return
+			end
+			
+			local chat_manager = Managers.chat
+			local channel = option.chat_message_data.channel
+			
+			if not channel then
+				return
+			end
+			
+			-- Получаем английский текст из локализации
+			local text_key = option.chat_message_data.text
+			local english_text = text_key
+			
+			-- Если это ключ локализации, получаем английскую версию
+			if string.sub(text_key, 1, 4) == "loc_" then
+				-- Используем кэшированную локализацию или загружаем заново
+				local localization_table = mod._localization_cache
+				if not localization_table then
+					localization_table = mod:io_dofile("VoxCommsWheel/scripts/mods/VoxCommsWheel/VoxCommsWheel_localization")
+					mod._localization_cache = localization_table
 				end
+				
+				if localization_table and localization_table[text_key] then
+					english_text = localization_table[text_key].en or text_key
+				else
+					-- Если не найдено, используем ключ как есть
+					english_text = text_key
+				end
+			end
+			
+			-- Отправляем только английский текст
+			if chat_manager.send_channel_message then
+				chat_manager:send_channel_message(channel, english_text)
 			end
 		end
 	end)

@@ -48,6 +48,10 @@ return {
 		en = "Attention, Daemonhost",
 		ru = "Внимание, Демонхост",
 	},
+	loc_command_daemonhost_alert = {
+		en = "Attention, Daemonhost",
+		ru = "Внимание, Демонхост",
+	},
 	loc_command_almost_there = {
 		en = "Almost There",
 		ru = "Почти на месте",

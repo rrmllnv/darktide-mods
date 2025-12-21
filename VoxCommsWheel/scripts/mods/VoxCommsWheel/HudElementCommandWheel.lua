@@ -139,7 +139,13 @@ HudElementVoxCommsWheel._populate_wheel = function(self, options)
 
 			if option then
 				content.icon = option.icon or "content/ui/materials/base/ui_default_base"
-				content.text = localize_text(option.label_key)
+				local localized_text = localize_text(option.label_key)
+				content.text = localized_text or option.label_key or ""
+				
+				-- Убеждаемся, что текст установлен
+				if not content.text or content.text == "" then
+					content.text = option.label_key or "?"
+				end
 			end
 		end
 	end
@@ -338,8 +344,14 @@ HudElementVoxCommsWheel._update_wheel_presentation = function(self, dt, t, ui_re
 	local wheel_background_widget = self._wheel_background_widget
 
 	if wheel_background_widget then
-		wheel_background_widget.content.angle = cursor_angle_from_center
+		-- Устанавливаем угол ромба только когда есть hover на опции
+		-- Это предотвращает вращение ромба когда курсор в центре
+		if any_hover then
+			wheel_background_widget.content.angle = cursor_angle_from_center
+		end
+		
 		wheel_background_widget.content.force_hover = any_hover
+		wheel_background_widget.style.mark.color[1] = any_hover and 255 or 0
 
 		if hovered_entry then
 			local option = hovered_entry.option
@@ -350,6 +362,8 @@ HudElementVoxCommsWheel._update_wheel_presentation = function(self, dt, t, ui_re
 					Managers.ui:play_2d_sound(UISoundEvents.emote_wheel_entry_hover)
 				end
 			end
+		elseif center_button_hover then
+			wheel_background_widget.content.text = localize_text("loc_page_switch")
 		end
 	end
 end

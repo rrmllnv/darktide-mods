@@ -7,6 +7,18 @@ mod:add_require_path("VoxCommsWheel/scripts/mods/VoxCommsWheel/VoxCommsWheel_but
 mod:add_require_path("VoxCommsWheel/scripts/mods/VoxCommsWheel/VoxCommsWheel_pages")
 mod:add_require_path("VoxCommsWheel/scripts/mods/VoxCommsWheel/HudElementCommandWheel")
 
+-- Загружаем локализацию и регистрируем глобальные строки
+local VoxCommsWheel_localization = mod:io_dofile("VoxCommsWheel/scripts/mods/VoxCommsWheel/VoxCommsWheel_localization")
+
+-- Регистрируем все строки с префиксом loc_ как глобальные
+local global_strings = {}
+for key, value in pairs(VoxCommsWheel_localization) do
+	if string.sub(key, 1, 4) == "loc_" then
+		global_strings[key] = value
+	end
+end
+mod:add_global_localize_strings(global_strings)
+
 local Utils = require("VoxCommsWheel/scripts/mods/VoxCommsWheel/VoxCommsWheel_utils")
 
 local hud_elements = {
