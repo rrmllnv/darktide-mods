@@ -718,11 +718,23 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 
 		-- Функция для отрисовки маркеров (тимейтов и боссов)
 		local function draw_markers(markers, marker_size, color_table, is_boss)
+			-- Проверяем, что markers - это таблица
+			if not markers or type(markers) ~= "table" then
+				return
+			end
+			
+			-- Проверяем, что таблица не пустая
+			if #markers == 0 then
+				return
+			end
+			
 			-- Преобразуем углы в градусы
 			local marker_angles_degrees = {}
 			for i, marker in ipairs(markers) do
-				local marker_angle_degrees = math.radians_to_degrees(marker.angle)
-				marker_angles_degrees[i] = marker_angle_degrees
+				if marker and marker.angle then
+					local marker_angle_degrees = math.radians_to_degrees(marker.angle)
+					marker_angles_degrees[i] = marker_angle_degrees
+				end
 			end
 
 			-- Проверяем каждый маркер для каждого видимого деления компаса
@@ -738,6 +750,11 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 					-- Проверяем каждый маркер
 					for j, marker in ipairs(markers) do
 						local marker_degrees = marker_angles_degrees[j]
+						
+						-- Пропускаем маркер, если угол не определен
+						if not marker_degrees or not marker then
+							goto continue_marker
+						end
 
 						-- Проверяем видимость маркера
 						local visible_angle_range = (visible_steps / 2) * degrees_per_step
@@ -811,10 +828,12 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 		end
 
 		-- Отрисовываем тимейтов
-		draw_markers(teammates, teammate_marker_size, teammate_color_table, false)
+		if teammates and type(teammates) == "table" and #teammates > 0 then
+			draw_markers(teammates, teammate_marker_size, teammate_color_table, false)
+		end
 
 		-- Отрисовываем боссов
-		if #bosses > 0 then
+		if bosses and type(bosses) == "table" and #bosses > 0 then
 			-- mod:echo("CompassBar: Рисуется " .. #bosses .. " маркеров боссов")
 			draw_markers(bosses, teammate_marker_size, boss_color_table, true)
 		end
