@@ -224,6 +224,26 @@ return {
 						type = "checkbox",
 						title = "i18n_show_boss_death_notification",
 						default_value = true,
+						sub_widgets = {
+							{
+								setting_id = "opt_show_total_damage_notification",
+								type = "checkbox",
+								title = "i18n_show_total_damage_notification",
+								default_value = true,
+							},
+							{
+								setting_id = "opt_show_max_damage_notification",
+								type = "checkbox",
+								title = "i18n_show_max_damage_notification",
+								default_value = true,
+							},
+							{
+								setting_id = "opt_show_last_hit_damage_notification",
+								type = "checkbox",
+								title = "i18n_show_last_hit_damage_notification",
+								default_value = true,
+							},
+						},
 					},
 				},
 			},

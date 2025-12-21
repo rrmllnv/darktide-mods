@@ -36,8 +36,9 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 	end
 	
 	-- Получаем настройки отображения
-	local show_total_damage = mod:get("opt_show_boss_total_damage") ~= false
-	local show_last_damage = mod:get("opt_show_boss_last_damage") == true
+	local show_total_damage = mod:get("opt_show_total_damage_notification") ~= false
+	local show_max_damage = mod:get("opt_show_max_damage_notification") ~= false
+	local show_last_damage = mod:get("opt_show_last_hit_damage_notification") ~= false
 	
 	-- Получаем список текущих игроков
 	local current_players = {}
@@ -156,7 +157,7 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 	end
 	
 	-- Игрок с максимальным уроном
-	if max_damage_player then
+	if show_max_damage and max_damage_player then
 		local max_dmg = math.floor(max_damage_player.damage or 0)
 		local max_damage_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", damage_rgb[1], damage_rgb[2], damage_rgb[3], mod.format_number(max_dmg))
 		local max_percent = total_damage > 0 and math.floor((max_dmg / total_damage) * 100) or 0
