@@ -796,7 +796,7 @@ HudElementCompassBar._draw_widgets = function(self, dt, t, input_service, ui_ren
 									-- Для тимейтов рисуем иконки классов
 									local icon_text = teammate_class_icons[j]
 									if icon_text then
-										local icon_size = Vector2(marker_size, marker_size)
+										local icon_size = Vector3(marker_size, marker_size, 0)
 										local icon_color = teammate_player_colors[j] or color_table
 										UIRenderer.draw_text(ui_renderer, icon_text, marker_size, "machine_medium", icon_position, icon_size, icon_color, {})
 									end
