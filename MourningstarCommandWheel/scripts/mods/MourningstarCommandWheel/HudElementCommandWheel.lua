@@ -2,11 +2,9 @@ local mod = get_mod("MourningstarCommandWheel")
 
 local HudElementBase = require("scripts/ui/hud/elements/hud_element_base")
 
--- Загружаем settings через io_dofile, чтобы settings() зарегистрировал глобальный объект
 mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_settings")
 local CommandWheelSettings = require("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_settings")
 
--- Загружаем definitions
 local Definitions = mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_definitions")
 local InputDevice = require("scripts/managers/input/input_device")
 local UISoundEvents = require("scripts/settings/ui/ui_sound_events")
@@ -19,7 +17,7 @@ local HOVER_GRACE_PERIOD = 0.4
 local valid_lvls = {
 	shooting_range = true,
 	hub = true,
-	training_grounds = true,  -- Псайкинариум
+	training_grounds = true,
 }
 
 local is_in_valid_lvl = function()
@@ -29,131 +27,129 @@ local is_in_valid_lvl = function()
 	return false
 end
 
--- Функция для проверки, находимся ли мы в псайкинариуме
 local is_in_psychanium = function()
 	if Managers and Managers.state and Managers.state.game_mode then
 		local game_mode_name = Managers.state.game_mode:game_mode_name()
 		return game_mode_name == "training_grounds" or game_mode_name == "shooting_range"
 	end
-	-- Также проверяем активный view
+
 	if Managers and Managers.ui then
 		return Managers.ui:view_active("training_grounds_view")
 	end
 	return false
 end
 
--- Определения кнопок
 local button_definitions = {
 	{
 		id = "barber",
 		view = "barber_vendor_background_view",
-		label_key = "loc_body_shop_view_display_name",  -- Игровая локализация
+		label_key = "loc_body_shop_view_display_name",
 		icon = "content/ui/materials/hud/interactions/icons/barber",
 	},
 	{
 		id = "contracts",
 		view = "contracts_background_view",
-		label_key = "loc_marks_vendor_view_title",  -- Игровая локализация
+		label_key = "loc_marks_vendor_view_title",
 		icon = "content/ui/materials/hud/interactions/icons/contracts",
 	},
 	{
 		id = "crafting",
 		view = "crafting_view",
-		label_key = "loc_crafting_view",  -- Игровая локализация
+		label_key = "loc_crafting_view",
 		icon = "content/ui/materials/hud/interactions/icons/forge",
 	},
 	{
 		id = "credits_vendor",
 		view = "credits_vendor_background_view",
-		label_key = "loc_vendor_view_title",  -- Игровая локализация
+		label_key = "loc_vendor_view_title",
 		icon = "content/ui/materials/hud/interactions/icons/credits_store",
 	},
 	{
 		id = "mission_board",
 		view = "mission_board_view",
-		label_key = "loc_mission_board_view",  -- Игровая локализация
+		label_key = "loc_mission_board_view",
 		icon = "content/ui/materials/hud/interactions/icons/mission_board",
 	},
 	{
 		id = "premium_store",
 		view = "store_view",
-		label_key = "loc_store_view_display_name",  -- Игровая локализация
+		label_key = "loc_store_view_display_name",
 		icon = "content/ui/materials/icons/system/escape/premium_store",
 	},
 	{
 		id = "training_grounds",
 		view = "training_grounds_view",
-		label_key = "loc_training_ground_view",  -- Игровая локализация
+		label_key = "loc_training_ground_view",
 		icon = "content/ui/materials/hud/interactions/icons/training_grounds",
 	},
 	{
 		id = "exit_psychanium",
 		view = nil,
-		label_key = "loc_tg_exit_training_grounds",  -- Игровая локализация
+		label_key = "loc_tg_exit_training_grounds",
 		icon = "content/ui/materials/icons/system/escape/leave_training",
-		action = "exit_psychanium",  -- Специальное действие для выхода из псайкинариума
+		action = "exit_psychanium",
 	},
 	{
 		id = "social",
 		view = "social_menu_view",
-		label_key = "loc_social_view_display_name",  -- Игровая локализация
+		label_key = "loc_social_view_display_name",
 		icon = "content/ui/materials/icons/system/escape/social",
 	},
 	{
 		id = "commissary",
 		view = "cosmetics_vendor_background_view",
-		label_key = "loc_cosmetics_vendor_view_title",  -- Игровая локализация
+		label_key = "loc_cosmetics_vendor_view_title",
 		icon = "content/ui/materials/hud/interactions/icons/cosmetics_store",
 	},
 	{
 		id = "penance",
 		view = "penance_overview_view",
-		label_key = "loc_achievements_view_display_name",  -- Игровая локализация
+		label_key = "loc_achievements_view_display_name",
 		icon = "content/ui/materials/icons/system/escape/achievements",
 	},
 	{
 		id = "inventory",
 		view = "inventory_background_view",
-		label_key = "loc_character_view_display_name",  -- Игровая локализация
+		label_key = "loc_character_view_display_name",
 		icon = "content/ui/materials/icons/system/escape/inventory",
 	},
 	{
 		id = "change_character",
-		view = nil, -- Специальная обработка через функцию
-		label_key = "loc_exit_to_main_menu_display_name",  -- Игровая локализация
+		view = nil,
+		label_key = "loc_exit_to_main_menu_display_name",
 		icon = "content/ui/materials/icons/system/escape/change_character",
-		action = "change_character", -- Специальное действие вместо view
+		action = "change_character",
 	},
 	{
 		id = "havoc",
 		view = "havoc_background_view",
-		label_key = "loc_havoc_name",  -- Игровая локализация
+		label_key = "loc_havoc_name",
 		icon = "content/ui/materials/hud/interactions/icons/havoc",
 	},
 }
 
--- Создаем словарь для быстрого доступа к кнопкам по id
+
 local button_definitions_by_id = {}
 for i, button in ipairs(button_definitions) do
 	button_definitions_by_id[button.id] = button
 end
 
--- Функция для загрузки порядка кнопок из настроек
+
 local function load_wheel_config()
 	local saved_config = mod:get("wheel_config")
 	if saved_config and #saved_config > 0 then
-		-- Проверяем, что все сохраненные id существуют
+
 		local valid_config = {}
 		for _, id in ipairs(saved_config) do
 			if button_definitions_by_id[id] then
 				table.insert(valid_config, id)
 			end
 		end
-		-- Добавляем недостающие кнопки в конец
-		-- Исключаем exit_psychanium, так как он должен появляться только как замена для training_grounds
+
+
 		for _, button in ipairs(button_definitions) do
 			if button.id == "exit_psychanium" then
-				-- Пропускаем exit_psychanium, он не должен быть в конфиге по умолчанию
+
 				goto continue
 			end
 			local found = false
@@ -170,8 +166,8 @@ local function load_wheel_config()
 		end
 		return valid_config
 	end
-	-- Если нет сохраненного порядка, возвращаем порядок по умолчанию
-	-- Исключаем exit_psychanium, так как он должен появляться только как замена для training_grounds
+
+
 	local default_config = {}
 	for _, button in ipairs(button_definitions) do
 		if button.id ~= "exit_psychanium" then
@@ -181,31 +177,31 @@ local function load_wheel_config()
 	return default_config
 end
 
--- Функция для сохранения порядка кнопок в настройки
+
 local function save_wheel_config(wheel_config)
-	-- Сохраняем через mod:set()
+
 	mod:set("wheel_config", wheel_config)
-	-- Принудительно сохраняем настройки через DMF для немедленного сохранения
+
 	local dmf = get_mod("DMF")
 	if dmf and dmf.save_unsaved_settings_to_file then
 		dmf.save_unsaved_settings_to_file()
 	end
 end
 
--- Функция для генерации опций из конфига
+
 local function generate_options_from_config(wheel_config)
 	local options = {}
 	local in_psychanium = is_in_psychanium()
 	
 	for i, id in ipairs(wheel_config) do
-		-- Если мы в псайкинариуме и это кнопка training_grounds, заменяем на exit_psychanium
+
 		if in_psychanium and id == "training_grounds" then
 			options[i] = button_definitions_by_id["exit_psychanium"]
-		-- Если мы НЕ в псайкинариуме и это кнопка exit_psychanium, скрываем её
-		-- (exit_psychanium не должен быть в конфиге по умолчанию, но на всякий случай)
+
+
 		elseif not in_psychanium and id == "exit_psychanium" then
 			options[i] = nil
-		-- Для всех остальных кнопок используем как есть
+
 		else
 			options[i] = button_definitions_by_id[id]
 		end
@@ -228,15 +224,15 @@ HudElementCommandWheel.init = function(self, parent, draw_layer, start_scale)
 	self._wheel_context = {}
 	self._close_delay = nil
 	
-	-- Загружаем порядок кнопок из настроек
+
 	self._wheel_config = load_wheel_config()
 	
-	-- Автоматически определяем количество слотов по количеству активных кнопок
+
 	local active_buttons_count = #self._wheel_config
 	local wheel_slots = math.max(active_buttons_count, CommandWheelSettings.wheel_slots)
 	self:_setup_entries(wheel_slots)
 	
-	-- Заполняем колесо из конфига
+
 	local options = generate_options_from_config(self._wheel_config)
 	self:_populate_wheel(options)
 	
@@ -286,7 +282,7 @@ HudElementCommandWheel._populate_wheel = function(self, options)
 
 			if option then
 				content.icon = option.icon or "content/ui/materials/base/ui_default_base"
-				-- Используем игровую локализацию для ключей, начинающихся с "loc_", иначе используем локализацию мода
+
 				if option.label_key and string.sub(option.label_key, 1, 4) == "loc_" then
 					content.text = Localize(option.label_key)
 				else
@@ -323,7 +319,7 @@ HudElementCommandWheel._update_active_progress = function(self, dt)
 
 	self._wheel_active_progress = progress
 	
-	-- Управляем видимостью фонового виджета (тень, ромб и круг)
+
 	local wheel_background_widget = self._wheel_background_widget
 	if wheel_background_widget then
 		wheel_background_widget.visible = progress > 0
@@ -349,7 +345,7 @@ HudElementCommandWheel._update_widget_locations = function(self)
 			local widget = entry.widget
 			local content = widget.content
 			
-			-- Обновляем позицию только если виджет видим или колесо активно
+
 			if content.visible or active_progress > 0 then
 				local angle = start_angle + (i - 1) * radians_per_widget
 				local position_x = math.sin(angle) * radius
@@ -369,7 +365,7 @@ HudElementCommandWheel._update_wheel_presentation = function(self, dt, t, ui_ren
 		return
 	end
 
-	-- Проверяем существование действий перед использованием
+
 	if not input_service:has("cursor") and not (InputDevice.gamepad_active and input_service:has("navigate_controller_right")) then
 		return
 	end
@@ -398,7 +394,7 @@ HudElementCommandWheel._update_wheel_presentation = function(self, dt, t, ui_ren
 	local cursor_angle_from_center = math.angle(screen_width * 0.5, screen_height * 0.5, cursor[1], cursor[2]) - math.pi * 0.5
 	local cursor_angle_degrees_from_center = math.radians_to_degrees(cursor_angle_from_center) % 360
 	
-	-- Используем настраиваемые параметры для hover
+
 	local hover_min_distance = CommandWheelSettings.hover_min_distance or 130
 	local entry_hover_degrees = CommandWheelSettings.hover_angle_degrees or 44
 	local entry_hover_degrees_half = entry_hover_degrees * 0.5
@@ -415,7 +411,7 @@ HudElementCommandWheel._update_wheel_presentation = function(self, dt, t, ui_ren
 		local is_populated = entry.option ~= nil
 		local is_hover = false
 
-		-- Проверяем, что widget_angle не nil перед использованием
+
 		if widget_angle and is_populated and cursor_distance_from_center > hover_min_distance * scale then
 			local widget_angle_degrees = -(math.radians_to_degrees(widget_angle) - math.pi * 0.5) % 360
 			local angle_diff = (widget_angle_degrees - cursor_angle_degrees_from_center + 180 + 360) % 360 - 180
@@ -443,7 +439,7 @@ HudElementCommandWheel._update_wheel_presentation = function(self, dt, t, ui_ren
 
 		if hovered_entry then
 			local option = hovered_entry.option
-			-- Используем игровую локализацию для ключей, начинающихся с "loc_", иначе используем локализацию мода
+
 			local display_name
 			if option.label_key and string.sub(option.label_key, 1, 4) == "loc_" then
 				display_name = Localize(option.label_key)
@@ -498,17 +494,17 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 		return
 	end
 
-	-- Проверяем, не открыт ли чат (если чат использует ввод, не открываем колесо)
+
 	if Managers.ui and Managers.ui:chat_using_input() then
-		-- Если колесо было открыто, закрываем его
+
 		if self._wheel_active then
 			self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
 		end
 		return
 	end
 
-	-- Проверяем, нажата ли клавиша открытия колеса
-	-- Проверяем состояние клавиши напрямую через Keyboard/Mouse
+
+
 	local input_pressed = false
 	if is_in_valid_lvl() then
 		input_pressed = mod:_is_command_wheel_key_pressed()
@@ -520,19 +516,19 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 	if input_pressed and not start_time then
 		self:_on_wheel_start(t, input_service)
 	elseif not input_pressed and start_time then
-		-- При отпускании клавиши проверяем, был ли выбран элемент
+
 		local hovered_entry, hovered_index = self:_is_wheel_entry_hovered(t)
 		if hovered_entry then
-			-- Активируем выбранный элемент
+
 			local option = hovered_entry.option
 			if option then
-				-- Безопасный вызов с проверкой
+
 				local success, err = pcall(function()
 					if option.action == "change_character" then
-						-- Специальная обработка для смены персонажа
+
 						mod:change_character()
 					elseif option.action == "exit_psychanium" then
-						-- Специальная обработка для выхода из псайкинариума
+
 						if Managers and Managers.state and Managers.state.game_mode then
 							Managers.state.game_mode:complete_game_mode()
 						end
@@ -548,13 +544,13 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 		self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
 	end
 
-	-- Проверяем, нужно ли показывать колесо
+
 	local draw_wheel = false
 	local start_time = wheel_context.input_start_time
 
 	if start_time then
 		draw_wheel = self._wheel_active
-		local always_draw_t = start_time + 0.1 -- небольшая задержка
+		local always_draw_t = start_time + 0.1
 
 		if always_draw_t < t then
 			draw_wheel = true
@@ -564,7 +560,7 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 	if draw_wheel and not self._wheel_active then
 		self._wheel_active = true
 		
-		-- Обновляем опции при открытии колеса, чтобы показывать правильную кнопку (training_grounds или exit_psychanium)
+
 		local options = generate_options_from_config(self._wheel_config)
 		self:_populate_wheel(options)
 
@@ -584,40 +580,40 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 		return
 	end
 
-	-- Проверяем, что input_service существует и имеет метод has
+
 	if not input_service or type(input_service.has) ~= "function" then
 		return
 	end
 
-	-- Закрытие при ESC (проверяем существование действия)
+
 	if input_service:has("cancel_pressed") and input_service:get("cancel_pressed") then
 		self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
 		return
 	end
 
-	-- Получаем объект Mouse для проверки правой кнопки мыши
+
 	local Mouse = rawget(_G, "Mouse")
 	local right_mouse_held = false
 	if Mouse then
 		right_mouse_held = Mouse.button(1) == 1
 	else
-		-- Альтернативный способ через input_service (проверяем существование действия)
+
 		if input_service:has("right_hold") then
 			right_mouse_held = input_service:get("right_hold") or false
 		end
 	end
 
-	-- Обработка перетаскивания правой кнопкой мыши
+
 	local hovered_entry, hovered_index = self:_is_wheel_entry_hovered(t)
 	
 	if hovered_entry and right_mouse_held then
-		-- Начинаем или продолжаем перетаскивание
+
 		if not mod.dragged_entry then
 			mod.dragged_entry = hovered_entry
 			mod.dragged_index = hovered_index
 		end
 
-		-- Если наведены на другой элемент, меняем местами
+
 		if hovered_index ~= mod.dragged_index then
 			local wheel_config = self._wheel_config
 			local replaced_id = wheel_config[hovered_index]
@@ -627,15 +623,15 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 			mod.dragged_entry = hovered_entry
 			mod.dragged_index = hovered_index
 
-			-- Обновляем колесо с новым порядком
+
 			local options = generate_options_from_config(wheel_config)
 			self:_populate_wheel(options)
 			
-			-- Сохраняем новый порядок
+
 			save_wheel_config(wheel_config)
 		end
 
-		-- Обновляем текст в центре
+
 		local wheel_background_widget = self._wheel_background_widget
 		if wheel_background_widget and mod.dragged_entry then
 			local option = mod.dragged_entry.option
@@ -650,32 +646,32 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 			end
 		end
 
-		-- Визуальная обратная связь при перетаскивании
+
 		self:_update_drag_visual_feedback(hovered_index)
 	else
-		-- Сбрасываем визуальную обратную связь
+
 		self:_reset_drag_visual_feedback()
 		
-		-- Сбрасываем перетаскивание
+
 		mod.dragged_entry = nil
 		mod.dragged_index = nil
 	end
 
-	-- Обработка выбора левой кнопкой мыши (только если не перетаскиваем)
+
 	if not right_mouse_held and input_service and type(input_service.has) == "function" then
 		local hovered_entry, hovered_index = self:_is_wheel_entry_hovered(t)
 		
-		-- Проверяем существование действия перед использованием
+
 		if hovered_entry and input_service:has("left_pressed") and input_service:get("left_pressed") then
 			local option = hovered_entry.option
 			if option then
-				-- Безопасный вызов с проверкой
+
 				local success, err = pcall(function()
 					if option.action == "change_character" then
-						-- Специальная обработка для смены персонажа
+
 						mod:change_character()
 					elseif option.action == "exit_psychanium" then
-						-- Специальная обработка для выхода из псайкинариума
+
 						if Managers and Managers.state and Managers.state.game_mode then
 							Managers.state.game_mode:complete_game_mode()
 						end
@@ -710,7 +706,7 @@ HudElementCommandWheel._on_wheel_stop = function(self, t, ui_renderer, render_se
 	self._wheel_active = false
 	self._close_delay = nil
 	
-	-- Сбрасываем состояние перетаскивания
+
 	mod.dragged_entry = nil
 	mod.dragged_index = nil
 	self:_reset_drag_visual_feedback()
@@ -759,7 +755,7 @@ HudElementCommandWheel._update_drag_visual_feedback = function(self, hovered_ind
 		local slice_style = style.slice
 
 		if i == hovered_index and entry.option then
-			-- Применяем смещение для перетаскиваемого элемента
+
 			local angle = entry.widget.content.angle or 0
 			local offset_x = math.sin(angle) * drag_offset
 			local offset_y = math.cos(angle) * drag_offset
@@ -771,7 +767,7 @@ HudElementCommandWheel._update_drag_visual_feedback = function(self, hovered_ind
 			if highlight_style then
 				highlight_style.offset[1] = offset_x
 				highlight_style.offset[2] = offset_y
-				-- Увеличиваем яркость для визуальной обратной связи
+
 				local hover_color = CommandWheelSettings.button_color_hover or {220, 0, 0, 0}
 				highlight_style.color[1] = math.min(255, hover_color[1] + 30)
 				highlight_style.color[2] = hover_color[2]
@@ -781,7 +777,7 @@ HudElementCommandWheel._update_drag_visual_feedback = function(self, hovered_ind
 			if slice_style then
 				slice_style.offset[1] = offset_x
 				slice_style.offset[2] = offset_y
-				-- Увеличиваем яркость для визуальной обратной связи
+
 				local hover_color = CommandWheelSettings.button_color_hover or {220, 0, 0, 0}
 				slice_style.color[1] = math.min(255, hover_color[1] + 30)
 				slice_style.color[2] = hover_color[2]
@@ -789,7 +785,7 @@ HudElementCommandWheel._update_drag_visual_feedback = function(self, hovered_ind
 				slice_style.color[4] = hover_color[4]
 			end
 		else
-			-- Сбрасываем смещение для остальных элементов
+
 			if icon_style then
 				icon_style.offset[1] = 0
 				icon_style.offset[2] = 0
@@ -797,7 +793,7 @@ HudElementCommandWheel._update_drag_visual_feedback = function(self, hovered_ind
 			if highlight_style then
 				highlight_style.offset[1] = 0
 				highlight_style.offset[2] = 0
-				-- Приглушаем цвет для неактивных элементов
+
 				local default_color = CommandWheelSettings.button_color_default or {190, 0, 0, 0}
 				highlight_style.color[1] = math.max(50, default_color[1] - 140)
 				highlight_style.color[2] = default_color[2]
@@ -807,7 +803,7 @@ HudElementCommandWheel._update_drag_visual_feedback = function(self, hovered_ind
 			if slice_style then
 				slice_style.offset[1] = 0
 				slice_style.offset[2] = 0
-				-- Приглушаем цвет для неактивных элементов
+
 				local default_color = CommandWheelSettings.button_color_default or {190, 0, 0, 0}
 				slice_style.color[1] = math.max(50, default_color[1] - 140)
 				slice_style.color[2] = default_color[2]
@@ -835,7 +831,7 @@ HudElementCommandWheel._reset_drag_visual_feedback = function(self)
 		if highlight_style then
 			highlight_style.offset[1] = 0
 			highlight_style.offset[2] = 0
-			-- Возвращаем нормальный цвет
+
 			local default_color = CommandWheelSettings.button_color_default or {190, 0, 0, 0}
 			highlight_style.color[1] = default_color[1]
 			highlight_style.color[2] = default_color[2]
@@ -845,7 +841,7 @@ HudElementCommandWheel._reset_drag_visual_feedback = function(self)
 		if slice_style then
 			slice_style.offset[1] = 0
 			slice_style.offset[2] = 0
-			-- Возвращаем нормальный цвет
+
 			local default_color = CommandWheelSettings.button_color_default or {190, 0, 0, 0}
 			slice_style.color[1] = default_color[1]
 			slice_style.color[2] = default_color[2]
@@ -858,15 +854,15 @@ end
 HudElementCommandWheel._draw_widgets = function(self, dt, t, input_service, ui_renderer, render_settings)
 	local active_progress = self._wheel_active_progress
 
-	-- Если колесо не активно, не рисуем ничего (включая фоновый виджет)
+
 	if active_progress == 0 then
 		return
 	end
 
-	-- Устанавливаем прозрачность на основе прогресса анимации
+
 	render_settings.alpha_multiplier = active_progress
 
-	-- Рисуем виджеты кнопок из entries
+
 	local entries = self._entries
 
 	if entries then
@@ -885,7 +881,7 @@ HudElementCommandWheel._draw_widgets = function(self, dt, t, input_service, ui_r
 		end
 	end
 
-	-- Рисуем остальные виджеты (wheel_background и т.д.)
+
 	HudElementCommandWheel.super._draw_widgets(self, dt, t, input_service, ui_renderer, render_settings)
 end
 

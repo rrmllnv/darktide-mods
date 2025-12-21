@@ -1,6 +1,5 @@
 local mod = get_mod("MourningstarCommandWheel")
 
--- Загружаем settings через io_dofile, чтобы settings() зарегистрировал глобальный объект
 mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_settings")
 local CommandWheelSettings = require("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/command_wheel_settings")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
@@ -43,13 +42,11 @@ local scenegraph_definition = {
 	},
 }
 
--- Цвета для линии и иконок (используются, если не заданы в настройках)
 local hover_color = CommandWheelSettings.line_color_hover or get_hud_color("color_tint_main_1", 255)
 local default_color = CommandWheelSettings.line_color_default or get_hud_color("color_tint_main_2", 255)
 local icon_hover_color = CommandWheelSettings.icon_color_hover or get_hud_color("color_tint_main_2", 255)
 local icon_default_color = CommandWheelSettings.icon_color_default or get_hud_color("color_tint_main_3", 255)
 
--- Применяем кастомные цвета, если они заданы как массивы
 if CommandWheelSettings.line_color_hover and type(CommandWheelSettings.line_color_hover) == "table" then
 	hover_color = CommandWheelSettings.line_color_hover
 end
@@ -128,7 +125,6 @@ local entry_widget_definition = UIWidget.create_definition({
 		change_function = function (content, style)
 			style.angle = math.pi + (content.angle or 0)
 
-			-- Вычисляем высоту линии на основе радиусов, если не задана явно
 			local line_height = CommandWheelSettings.line_height
 			if line_height == nil then
 				line_height = (CommandWheelSettings.max_radius - CommandWheelSettings.min_radius) * CommandWheelSettings.line_height_scale
@@ -169,7 +165,6 @@ local entry_widget_definition = UIWidget.create_definition({
 		change_function = function (content, style)
 			style.angle = math.pi + (content.angle or 0)
 
-			-- Применяем корректировку кривизны
 			local base_width = CommandWheelSettings.slice_width
 			local base_height = CommandWheelSettings.slice_height
 			style.size[1] = base_width * CommandWheelSettings.slice_curvature_scale_x
@@ -180,7 +175,6 @@ local entry_widget_definition = UIWidget.create_definition({
 			local ignore_alpha = false
 			local anim_hover_progress = hotspot.anim_hover_progress
 
-			-- Используем цвета кнопок для highlight
 			local default_button_color = CommandWheelSettings.button_color_default
 			local hover_button_color = CommandWheelSettings.button_color_hover
 			ColorUtilities.color_lerp(default_button_color, hover_button_color, anim_hover_progress, color, false)
@@ -211,7 +205,6 @@ local entry_widget_definition = UIWidget.create_definition({
 		change_function = function (content, style)
 			style.angle = math.pi + (content.angle or 0)
 
-			-- Применяем корректировку кривизны
 			local base_width = CommandWheelSettings.slice_width
 			local base_height = CommandWheelSettings.slice_height
 			style.size[1] = base_width * CommandWheelSettings.slice_curvature_scale_x
@@ -280,7 +273,6 @@ local widget_definitions = {
 				color = CommandWheelSettings.rhombus_color,
 			},
 			change_function = function (content, style)
-				-- Обновляем размер ромба динамически
 				local rhombus_width = CommandWheelSettings.rhombus_width or CommandWheelSettings.center_circle_size
 				local rhombus_height = CommandWheelSettings.rhombus_height or (CommandWheelSettings.center_circle_size * 0.256)
 				style.size[1] = rhombus_width
@@ -317,7 +309,6 @@ local widget_definitions = {
 				color = CommandWheelSettings.background_color,
 			},
 			change_function = function (content, style)
-				-- Обновляем размер фона динамически
 				style.size[1] = CommandWheelSettings.center_circle_size
 				style.size[2] = CommandWheelSettings.center_circle_size
 			end,
@@ -347,9 +338,6 @@ local widget_definitions = {
 			change_function = function (content, style)
 				style.angle = math.pi - (content.angle or 0)
 
-				-- Обновляем позицию стрелки в зависимости от размера центрального круга
-				-- Оригинальные значения: pivot (10, 147), offset (0, -133)
-				-- Масштабируем пропорционально center_circle_size (оригинал был 250)
 				local scale = CommandWheelSettings.center_circle_size / 250
 				local arrow_size_y = 28 * scale
 				local arrow_pivot_y = 147 * scale
