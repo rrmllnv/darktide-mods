@@ -90,6 +90,7 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 				color = Color.black(KillstreakWidgetSettings.killsboard_background_alpha, true),
 			}
 		},
+		-- Декоративные рамки (скрыты, если материал недоступен)
 		{
 			pass_type = "texture",
 			value = "content/ui/materials/frames/premium_store/details_upper",
@@ -103,7 +104,11 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 				disabled_color = Color.gray(255, true),
 				default_color = Color.gray(255, true),
 				hover_color = Color.gray(255, true),
-			}
+			},
+			visibility_function = function(content, style)
+				-- Скрываем в EndView, где материал недоступен
+				return not (content.end_view == true)
+			end,
 		},
 		{
 			pass_type = "texture",
@@ -118,7 +123,11 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 				disabled_color = Color.gray(255, true),
 				default_color = Color.gray(255, true),
 				hover_color = Color.gray(255, true),
-			}
+			},
+			visibility_function = function(content, style)
+				-- Скрываем в EndView, где материал недоступен
+				return not (content.end_view == true)
+			end,
 		},
 	}, "killsboard")
 end)

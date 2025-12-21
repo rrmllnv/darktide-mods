@@ -33,6 +33,10 @@ KillstreakView.on_enter = function(self)
     local end_view_z = self.end_view and 200 or base_z
     
     if self.killsboard_widget then
+        -- Передаем флаг end_view в content для visibility_function
+        if self.killsboard_widget.content then
+            self.killsboard_widget.content.end_view = self.end_view
+        end
         -- Устанавливаем видимость сразу, без анимации для view
         self.killsboard_widget.alpha_multiplier = 1
         self.killsboard_widget.visible = true

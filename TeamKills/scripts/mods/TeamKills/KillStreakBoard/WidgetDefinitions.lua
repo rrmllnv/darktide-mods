@@ -91,6 +91,8 @@ widget_definitions.killsboard = UIWidget.create_definition({
             color = Color.black(KillstreakWidgetSettings.killsboard_background_alpha, true),
         }
     },
+    -- Декоративные рамки (скрыты, если материал недоступен)
+    -- Используем visibility_function для безопасной проверки
     {
         pass_type = "texture",
         value = "content/ui/materials/frames/premium_store/details_upper",
@@ -104,7 +106,12 @@ widget_definitions.killsboard = UIWidget.create_definition({
             disabled_color = Color.gray(255, true),
             default_color = Color.gray(255, true),
             hover_color = Color.gray(255, true),
-        }
+        },
+        visibility_function = function(content, style)
+            -- Скрываем в EndView, где материал недоступен
+            -- Проверяем через content.end_view флаг, если он установлен
+            return not (content.end_view == true)
+        end,
     },
     {
         pass_type = "texture",
@@ -119,7 +126,11 @@ widget_definitions.killsboard = UIWidget.create_definition({
             disabled_color = Color.gray(255, true),
             default_color = Color.gray(255, true),
             hover_color = Color.gray(255, true),
-        }
+        },
+        visibility_function = function(content, style)
+            -- Скрываем в EndView, где материал недоступен
+            return not (content.end_view == true)
+        end,
     },
 }, "killsboard")
 
