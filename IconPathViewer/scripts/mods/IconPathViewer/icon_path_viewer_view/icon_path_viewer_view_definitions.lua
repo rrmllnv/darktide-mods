@@ -206,14 +206,14 @@ local blueprints = {
 	icon_box = {
 		size = elements_size,
 		pass_template = {
-		{
+			{
 			content_id = "hotspot",
-			pass_type = "hotspot",
+				pass_type = "hotspot",
 			content = {
-				on_hover_sound = UISoundEvents.default_mouse_hover,
-				on_pressed_sound = UISoundEvents.default_click,
-			}
-		},
+					on_hover_sound = UISoundEvents.default_mouse_hover,
+					on_pressed_sound = UISoundEvents.default_click,
+				}
+			},
 			{
 				pass_type = "texture",
 				style_id = "background",
