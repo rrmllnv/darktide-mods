@@ -5,23 +5,24 @@ local function localize_text(label_key)
 		return ""
 	end
 	
-	-- Сначала пробуем локализацию мода (mod:localize работает для всех ключей из файла локализации)
-	local success, mod_result = pcall(function()
+	-- Используем mod:localize для всех ключей (DMF автоматически загружает локализацию из файла)
+	-- mod:localize автоматически выбирает правильный язык (ru, en и т.д.)
+	local success, result = pcall(function()
 		return mod:localize(label_key)
 	end)
 	
-	if success and mod_result and mod_result ~= "" and mod_result ~= label_key then
-		return mod_result
+	if success and result and result ~= "" and result ~= label_key then
+		return result
 	end
 	
-	-- Для ключей с префиксом loc_ пробуем глобальную локализацию как fallback
+	-- Fallback: для ключей с префиксом loc_ пробуем глобальную локализацию
 	if string.sub(label_key, 1, 4) == "loc_" then
-		local success, result = pcall(function()
+		local success, global_result = pcall(function()
 			return Localize(label_key)
 		end)
 		
-		if success and result and result ~= "" and result ~= label_key then
-			return result
+		if success and global_result and global_result ~= "" and global_result ~= label_key then
+			return global_result
 		end
 	end
 	
