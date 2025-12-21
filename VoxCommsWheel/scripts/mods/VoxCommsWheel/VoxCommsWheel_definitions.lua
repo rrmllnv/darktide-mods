@@ -83,41 +83,12 @@ local simple_button_font_setting_name = "button_medium"
 local simple_button_font_settings = UIFontSettings[simple_button_font_setting_name]
 local simple_button_font_color = simple_button_font_settings.text_color
 
--- Виджет для команды (с текстом вместо иконок, но место для иконок оставлено)
+-- Виджет для команды (только текст, иконки убраны)
 local entry_widget_definition = UIWidget.create_definition({
 	{
 		content_id = "hotspot",
 		pass_type = "hotspot",
 		content = default_button_content,
-	},
-	-- Иконка команды
-	{
-		pass_type = "texture",
-		value_id = "icon",
-		value = "content/ui/materials/base/ui_default_base",
-		style_id = "icon",
-		style = {
-			horizontal_alignment = "center",
-			vertical_alignment = "center",
-			size = {
-				CommandWheelSettings.icon_size,
-				CommandWheelSettings.icon_size,
-			},
-			offset = {
-				0,
-				0,
-				100,
-			},
-			color = icon_default_color,
-		},
-		change_function = function (content, style)
-			local color = style.color
-			local ignore_alpha = false
-			local hotspot = content.hotspot
-			local anim_hover_progress = hotspot.anim_hover_progress
-
-			ColorUtilities.color_lerp(icon_default_color, icon_hover_color, anim_hover_progress, color, ignore_alpha)
-		end,
 	},
 	-- Линия
 	{
@@ -229,35 +200,7 @@ local entry_widget_definition = UIWidget.create_definition({
 			style.size[2] = base_height * CommandWheelSettings.slice_curvature_scale_y
 		end,
 	},
-	-- Текст команды (основной элемент)
-	{
-		pass_type = "text",
-		value_id = "text",
-		value = "",
-		style_id = "text",
-		style = {
-			text_horizontal_alignment = "center",
-			text_vertical_alignment = "center",
-			offset = {
-				0,
-				0,
-				200,
-			},
-			font_type = simple_button_font_settings.font_type,
-			font_size = CommandWheelSettings.text_font_size,
-			text_color = CommandWheelSettings.text_color,
-			default_text_color = CommandWheelSettings.text_color,
-		},
-		change_function = function (content, style)
-			local default_text_color = CommandWheelSettings.text_color
-			local hover_text_color = CommandWheelSettings.text_color_hover
-			local text_color = style.text_color
-			local hotspot = content.hotspot
-			local anim_hover_progress = hotspot.anim_hover_progress
-
-			ColorUtilities.color_lerp(default_text_color, hover_text_color, anim_hover_progress, text_color, false)
-		end,
-	},
+	-- Текст теперь отрисовывается через UIRenderer.draw_text в _draw_widgets
 }, "pivot")
 
 local wheel_font_style = table.clone(UIFontSettings.hud_body)
@@ -295,13 +238,13 @@ local center_page_button_definition = UIWidget.create_definition({
 				0,
 				1,
 			},
-			color = { 200, 50, 50, 50 },
+			color = { 0, 50, 50, 50 },
 		},
 		change_function = function (content, style)
 			local hotspot = content.hotspot
 			local anim_hover_progress = hotspot.anim_hover_progress
 			local color = style.color
-			local default_color = { 200, 50, 50, 50 }
+			local default_color = { 0, 50, 50, 50 }
 			local hover_color = { 255, 100, 100, 100 }
 			ColorUtilities.color_lerp(default_color, hover_color, anim_hover_progress, color, false)
 		end,
@@ -311,18 +254,44 @@ local center_page_button_definition = UIWidget.create_definition({
 		value_id = "page_text",
 		value = "1/2",
 		style_id = "page_text",
-		style = {
-			font_type = simple_button_font_settings.font_type,
-			font_size = 24,
-			text_horizontal_alignment = "center",
-			text_vertical_alignment = "center",
-			offset = {
-				0,
-				0,
-				10,
+			style = {
+				font_type = simple_button_font_settings.font_type,
+				font_size = 24,
+				text_horizontal_alignment = "center",
+				text_vertical_alignment = "center",
+				offset = {
+					0,
+					0,
+					10,
+				},
+				text_color = { 255, 255, 255, 255 },
+				default_text_color = { 255, 255, 255, 255 },
+				hover_text_color = { 255, 255, 255, 255 }, -- Явно устанавливаем белый цвет при hover
+				hover_color = { 255, 255, 255, 255 }, -- Также устанавливаем hover_color для совместимости
 			},
-			text_color = { 255, 255, 255, 255 },
-		},
+		change_function = function (content, style)
+			-- Полный контроль цвета текста, чтобы предотвратить автоматическое применение желтого цвета
+			local text_color = style.text_color
+			
+			-- Всегда устанавливаем RGB в белый (предотвращаем желтый цвет)
+			text_color[1] = 255
+			text_color[2] = 255
+			text_color[3] = 255
+			
+			-- Альфа-канал: если есть hover на слоты (force_hover), скрываем текст
+			-- Если есть hover на саму кнопку, показываем текст
+			local any_hover = content.force_hover or false
+			local hotspot = content.hotspot
+			local button_hover_progress = hotspot and hotspot.anim_hover_progress or 0
+			
+			if button_hover_progress > 0 then
+				-- Hover на саму кнопку - полная видимость
+				text_color[4] = 255
+			else
+				-- Hover на слоты - скрываем текст
+				text_color[4] = any_hover and 0 or 255
+			end
+		end,
 	},
 }, "background")
 

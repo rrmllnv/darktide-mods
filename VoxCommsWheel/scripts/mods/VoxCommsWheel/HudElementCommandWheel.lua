@@ -11,6 +11,9 @@ local Pages = require("VoxCommsWheel/scripts/mods/VoxCommsWheel/VoxCommsWheel_pa
 local InputDevice = require("scripts/managers/input/input_device")
 local UISoundEvents = require("scripts/settings/ui/ui_sound_events")
 local UIWidget = require("scripts/managers/ui/ui_widget")
+local UIRenderer = require("scripts/managers/ui/ui_renderer")
+local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
+local ColorUtilities = require("scripts/utilities/ui/colors")
 local Vector3 = Vector3
 local RESOLUTION_LOOKUP = RESOLUTION_LOOKUP
 
@@ -46,23 +49,13 @@ local function generate_options_from_page(current_page)
 		return options
 	end
 	
-	-- Первый слот - кнопка переключения страниц (в центре)
-	options[1] = {
-		id = "switch_page",
-		label_key = "loc_page_switch",
-		icon = "content/ui/materials/base/ui_default_base",
-		action = "switch_page",
-		page_number = current_page,
-		page_name_key = page_config.name_key,
-	}
-	
-	-- Остальные слоты - команды страницы
+	-- Все слоты - команды страницы (центральная кнопка переключения страниц отдельно)
 	local commands = page_config.commands
 	if commands and type(commands) == "table" then
-		for i = 1, math.min(#commands, CommandWheelSettings.wheel_slots - 1) do
+		for i = 1, math.min(#commands, CommandWheelSettings.wheel_slots) do
 			local command_id = commands[i]
 			if command_id and button_definitions_by_id and button_definitions_by_id[command_id] then
-				options[i + 1] = button_definitions_by_id[command_id]
+				options[i] = button_definitions_by_id[command_id]
 			end
 		end
 	end
@@ -145,7 +138,6 @@ HudElementVoxCommsWheel._populate_wheel = function(self, options)
 			entry.option = option
 
 			if option then
-				content.icon = option.icon or "content/ui/materials/base/ui_default_base"
 				local localized_text = localize_text(option.label_key)
 				content.text = localized_text or option.label_key or ""
 				
@@ -204,6 +196,34 @@ HudElementVoxCommsWheel.update = function(self, dt, t, ui_renderer, render_setti
 
 	if self._wheel_active then
 		self:_update_wheel_presentation(dt, t, ui_renderer, render_settings, input_service)
+		
+		-- Обновление force_hover для центральной кнопки (даже если нет курсора)
+		-- Альфа-канал теперь полностью контролируется в change_function виджета
+		if self._center_page_button_widget then
+			-- Проверяем, есть ли hover на слоты напрямую через entries
+			local any_hover = false
+			local entries = self._entries
+			if entries then
+				for i = 1, #entries do
+					local entry = entries[i]
+					if entry and entry.widget then
+						local widget = entry.widget
+						if widget.content and widget.content.hotspot and widget.content.hotspot.is_hover then
+							any_hover = true
+							break
+						end
+					end
+				end
+			end
+			
+			-- Также проверяем через content.force_hover (на случай если _update_wheel_presentation не вызвался)
+			if not any_hover then
+				any_hover = self._center_page_button_widget.content.force_hover or false
+			end
+			
+			-- Устанавливаем force_hover для change_function
+			self._center_page_button_widget.content.force_hover = any_hover
+		end
 	end
 
 	self:_handle_input(t, dt, ui_renderer, render_settings, input_service)
@@ -346,6 +366,11 @@ HudElementVoxCommsWheel._update_wheel_presentation = function(self, dt, t, ui_re
 		local distance = math.distance_2d(center_x, center_y, cursor[1], cursor[2])
 		center_button_hover = distance <= center_radius * scale
 		self._center_page_button_widget.content.hotspot.force_hover = center_button_hover
+		-- Устанавливаем force_hover для изменения альфа-канала текста при наведении на слоты
+		self._center_page_button_widget.content.force_hover = any_hover
+		
+		-- Устанавливаем force_hover для change_function (альфа-канал теперь контролируется в change_function)
+		-- Не нужно напрямую изменять text_color, так как это делается в change_function
 	end
 
 	local wheel_background_widget = self._wheel_background_widget
@@ -527,12 +552,6 @@ HudElementVoxCommsWheel._handle_input = function(self, t, dt, ui_renderer, rende
 		if hovered_entry and input_service:has("left_pressed") and input_service:get("left_pressed") then
 			local option = hovered_entry.option
 			
-			-- Переключение страниц
-			if option and option.action == "switch_page" then
-				self:switch_page(1)
-				return
-			end
-			
 			-- Обычная команда
 			if activate_option(option) then
 				self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
@@ -618,6 +637,83 @@ HudElementVoxCommsWheel._draw_widgets = function(self, dt, t, input_service, ui_
 	end
 
 	HudElementVoxCommsWheel.super._draw_widgets(self, dt, t, input_service, ui_renderer, render_settings)
+	
+	-- Отрисовка текста через UIRenderer.draw_text (ВАРИАНТ 3)
+	if active_progress > 0 then
+		local simple_button_font_setting_name = "button_medium"
+		local simple_button_font_settings = UIFontSettings[simple_button_font_setting_name]
+		local font_type = simple_button_font_settings.font_type
+		local font_size = CommandWheelSettings.text_font_size or 16
+		local text_offset_y = 0--35 -- Смещение текста вниз от центра виджета
+		local text_offset_x = -35 -- Смещение текста вниз от центра виджета
+		
+		-- Опции для текста
+		local text_options = {
+			text_horizontal_alignment = "center",
+			text_vertical_alignment = "center",
+		}
+		
+		-- Таблицы для цветов (переиспользуем для оптимизации)
+		local default_text_color = {255, 255, 255, 255} -- Белый
+		local hover_text_color = {255, 255, 100, 255} -- Желтый при наведении
+		local text_color_table = {255, 255, 255, 255}
+		
+		-- Позиция и размер для текста
+		local text_position = Vector3(0, 0, 500) -- Высокий z-слой
+		local text_size = Vector3(200, 50, 0)
+		
+		for i = 1, #entries do
+			local entry = entries[i]
+			if entry and entry.option and entry.widget then
+				local widget = entry.widget
+				local content = widget.content
+				
+				if content.visible and content.text and content.text ~= "" then
+					local widget_offset = widget.offset
+					local scenegraph = self._ui_scenegraph
+					
+					if scenegraph then
+						-- Получаем мировую позицию pivot через UIScenegraph
+						local UIScenegraph = require("scripts/managers/ui/ui_scenegraph")
+						local pivot_world_pos = UIScenegraph.world_position(scenegraph, "pivot")
+						
+						if pivot_world_pos then
+							-- Вычисляем мировую позицию текста
+							local world_x = pivot_world_pos[1] + widget_offset[1] + text_offset_x
+							local world_y = pivot_world_pos[2] + widget_offset[2] + text_offset_y
+							local world_z = 500 -- Высокий z-слой для текста
+							
+							text_position[1] = world_x
+							text_position[2] = world_y
+							text_position[3] = world_z
+						
+						-- Определяем цвет текста (желтый при наведении, белый по умолчанию)
+						local hotspot = content.hotspot
+						local anim_hover_progress = hotspot and hotspot.anim_hover_progress or 0
+						
+						-- Интерполируем цвет используя ColorUtilities
+						ColorUtilities.color_lerp(default_text_color, hover_text_color, anim_hover_progress, text_color_table, false)
+						
+						-- Применяем прозрачность из active_progress
+						text_color_table[4] = math.floor(text_color_table[4] * active_progress)
+						
+							-- Рисуем текст
+							UIRenderer.draw_text(
+								ui_renderer,
+								content.text,
+								font_size,
+								font_type,
+								text_position,
+								text_size,
+								text_color_table,
+								text_options
+							)
+						end
+					end
+				end
+			end
+		end
+	end
 end
 
 return HudElementVoxCommsWheel
