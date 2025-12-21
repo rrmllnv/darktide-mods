@@ -33,6 +33,6 @@ return {
 	},
 	i18n_show_last_hit_damage_notification = {
 		en = "Show Last Hit Damage",
-		ru = "Показать урон посл. удара",
+		ru = "Урон последнего удара",
 	},
 }
