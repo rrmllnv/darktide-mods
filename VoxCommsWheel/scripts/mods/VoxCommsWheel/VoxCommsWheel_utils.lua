@@ -5,10 +5,27 @@ local function localize_text(label_key)
 		return ""
 	end
 	
+	-- Для ключей с префиксом loc_ используем Localize (глобальная локализация)
 	if string.sub(label_key, 1, 4) == "loc_" then
-		return Localize(label_key)
+		local success, result = pcall(function()
+			return Localize(label_key)
+		end)
+		
+		if success and result and result ~= "" and result ~= label_key then
+			return result
+		end
+		
+		-- Fallback на локализацию мода, если Localize не сработал
+		local mod_result = mod:localize(label_key)
+		if mod_result and mod_result ~= "" and mod_result ~= label_key then
+			return mod_result
+		end
+		
+		-- Если ничего не найдено, возвращаем ключ
+		return label_key
 	else
-		return mod:localize(label_key)
+		-- Для ключей без префикса loc_ используем локализацию мода
+		return mod:localize(label_key) or label_key
 	end
 end
 
