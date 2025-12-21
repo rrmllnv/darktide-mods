@@ -203,9 +203,9 @@ local blueprints = {
 
 			content.hotspot.pressed_callback = callback_name and callback(parent, callback_name, widget, element)
 			content.icon_index = element.icon_index
-			content.icon_path = element.icon_path
+			content.icon_path = element.icon_path or element.icon
 			content.icon_path_short = element.icon_path_short
-			content.icon = element.icon_path
+			content.icon = element.icon or element.icon_path -- Используем icon для отображения
 		end
 	},
 	spacing_vertical = {

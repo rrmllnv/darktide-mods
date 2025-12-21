@@ -39,73 +39,51 @@ IconPathViewerView._setup_grid = function(self)
 	self._icon_table_element:set_visibility(true)
 	self._icon_table_element:present_grid_layout({}, {})
 	
-	local layout = {}
+	-- ТОЧНАЯ КОПИЯ логики из BetterLoadouts
+	local ViewElementProfilePresetsSettings = require("scripts/ui/view_elements/view_element_profile_presets/view_element_profile_presets_settings")
 	
-	-- Получаем пути иконок из BetterLoadouts или используем встроенный список
-	local icon_paths = {}
-	local icon_paths_lookup = {}
+	-- Private preset-icons pool (как в BetterLoadouts)
+	local PRIVATE_ICON_LOOKUP, PRIVATE_ICON_KEYS = {}, {}
 	
-	-- Пробуем получить пути из настроек игры (как в BetterLoadouts)
-	local success, ViewElementProfilePresetsSettings = pcall(require, "scripts/ui/view_elements/view_element_profile_presets/view_element_profile_presets_settings")
-	if success and ViewElementProfilePresetsSettings then
-		local ref = ViewElementProfilePresetsSettings and ViewElementProfilePresetsSettings.optional_preset_icon_reference_keys or {}
-		local lu = ViewElementProfilePresetsSettings and ViewElementProfilePresetsSettings.optional_preset_icons_lookup or {}
-		
-		-- Добавляем все иконки из ванильных настроек (как в BetterLoadouts)
-		-- Сначала проходим по reference_keys
-		for i = 1, #ref do
-			local vk = ref[i]
-			local vmat = lu[vk]
-			-- Добавляем материал (путь к иконке)
-			if vk and vmat and type(vmat) == "string" and vmat ~= "" and not icon_paths_lookup[vmat] then
-				icon_paths[#icon_paths + 1] = vmat
-				icon_paths_lookup[vmat] = true
+	-- Функция регистрации (как в BetterLoadouts)
+	local function _register_private(list)
+		for i = 1, #list do
+			local key = list[i]
+			if key and not PRIVATE_ICON_LOOKUP[key] then
+				PRIVATE_ICON_LOOKUP[key] = key
+				PRIVATE_ICON_KEYS[#PRIVATE_ICON_KEYS + 1] = key
 			end
-			-- Также добавляем ключ, если он является строкой и отличается от материала
-			if vk and type(vk) == "string" and vk ~= "" and vk ~= vmat and not icon_paths_lookup[vk] then
-				icon_paths[#icon_paths + 1] = vk
-				icon_paths_lookup[vk] = true
+		end
+	end
+	
+	-- Функция заполнения (ТОЧНАЯ КОПИЯ из BetterLoadouts)
+	local function _seed_private_from_vanilla_then_custom()
+		local S   = ViewElementProfilePresetsSettings
+		local ref = S and S.optional_preset_icon_reference_keys or {}
+		local lu  = S and S.optional_preset_icons_lookup or {}
+
+		-- Сначала добавляем все из reference_keys (как в BetterLoadouts)
+		for i = 1, #ref do
+			local vk   = ref[i]
+			local vmat = lu[vk]
+			if vk and vmat and not PRIVATE_ICON_LOOKUP[vk] then
+				PRIVATE_ICON_LOOKUP[vk] = vmat
+				PRIVATE_ICON_KEYS[#PRIVATE_ICON_KEYS + 1] = vk
 			end
 		end
 		
-		-- Также проходим по всем ключам в lookup (может быть больше, чем в reference_keys)
+		-- Также добавляем ВСЕ ключи из lookup (на случай если там больше, чем в reference_keys)
 		if lu then
 			for vk, vmat in pairs(lu) do
-				-- Добавляем материал (путь к иконке)
-				if vk and vmat and type(vmat) == "string" and vmat ~= "" and not icon_paths_lookup[vmat] then
-					icon_paths[#icon_paths + 1] = vmat
-					icon_paths_lookup[vmat] = true
-				end
-				-- Также добавляем ключ, если он является строкой и отличается от материала
-				if vk and type(vk) == "string" and vk ~= "" and vk ~= vmat and not icon_paths_lookup[vk] then
-					icon_paths[#icon_paths + 1] = vk
-					icon_paths_lookup[vk] = true
+				if vk and vmat and not PRIVATE_ICON_LOOKUP[vk] then
+					PRIVATE_ICON_LOOKUP[vk] = vmat
+					PRIVATE_ICON_KEYS[#PRIVATE_ICON_KEYS + 1] = vk
 				end
 			end
 		end
-		
-		mod:info("Loaded %d icon paths from ViewElementProfilePresetsSettings", #icon_paths)
-	end
-	
-	-- Пробуем получить пути из BetterLoadouts
-	local better_loadouts_mod = get_mod("BetterLoadouts")
-	if better_loadouts_mod and better_loadouts_mod.BL and better_loadouts_mod.BL.DEFAULT_CUSTOM_ICON_PATHS then
-		for i = 1, #better_loadouts_mod.BL.DEFAULT_CUSTOM_ICON_PATHS do
-			local path = better_loadouts_mod.BL.DEFAULT_CUSTOM_ICON_PATHS[i]
-			if path and type(path) == "string" and path ~= "" and not icon_paths_lookup[path] then
-				-- Пропускаем закомментированные пути
-				if not string.match(path, "^%s*%-%-") then
-					icon_paths[#icon_paths + 1] = path
-					icon_paths_lookup[path] = true
-				end
-			end
-		end
-		mod:info("Total icon paths after BetterLoadouts: %d", #icon_paths)
-	end
-	
-	-- Если ничего не найдено, используем встроенный список
-	if #icon_paths == 0 then
-		icon_paths = {
+
+		-- Встроенный список путей (скопирован из BetterLoadouts/constants.lua)
+		local DEFAULT_CUSTOM_ICON_PATHS = {
 			"content/ui/materials/icons/item_types/ranged_weapons",
 			"content/ui/materials/icons/circumstances/assault_01",
 			"content/ui/materials/icons/item_types/weapons",
@@ -117,24 +95,31 @@ IconPathViewerView._setup_grid = function(self)
 			"content/ui/materials/icons/pocketables/hud/scripture",
 			"content/ui/materials/icons/pocketables/hud/corrupted_auspex_scanner",
 		}
-		mod:info("Using built-in icon paths list (%d paths)", #icon_paths)
+		_register_private(DEFAULT_CUSTOM_ICON_PATHS)
 	end
 	
-	-- Создаем layout для каждой иконки
-	for i = 1, #icon_paths do
-		local icon_path = icon_paths[i]
-		if icon_path and type(icon_path) == "string" and icon_path ~= "" then
-			-- Пропускаем закомментированные пути
-			if not string.match(icon_path, "^%s*%-%-") then
-				layout[#layout + 1] = {
-					widget_type = "icon_box",
-					icon_index = i,
-					icon_path = icon_path,
-					icon_path_short = string.match(icon_path, "([^/]+)$") or icon_path,
-				}
-			end
+	_seed_private_from_vanilla_then_custom()
+	
+	mod:info("PRIVATE_ICON_KEYS count: %d", #PRIVATE_ICON_KEYS)
+	
+	-- Создаем layout ТОЧНО как в BetterLoadouts (строки 150-157)
+	local layout = {}
+	for i = 1, #PRIVATE_ICON_KEYS do
+		local key = PRIVATE_ICON_KEYS[i]
+		local mat = PRIVATE_ICON_LOOKUP[key]
+		if mat then
+			layout[#layout + 1] = {
+				widget_type = "icon_box",
+				icon_index = i,
+				icon_key = key,
+				icon = mat, -- Материал (путь к иконке) для отображения
+				icon_path = mat, -- Материал (путь к иконке) для копирования
+				icon_path_short = string.match(key, "([^/]+)$") or key,
+			}
 		end
 	end
+	
+	mod:info("Layout entries count: %d", #layout)
 
 	local spacing_entry = {
 		widget_type = "spacing_vertical"
@@ -146,6 +131,8 @@ IconPathViewerView._setup_grid = function(self)
 	local left_click_callback = callback(self, "cb_on_icon_left_pressed")
 
 	self._icon_table_element:present_grid_layout(layout, definitions.blueprints, left_click_callback)
+	
+	mod:info("Loaded %d icons from BetterLoadouts logic", #PRIVATE_ICON_KEYS)
 end
 
 IconPathViewerView.cb_on_icon_left_pressed = function(self, widget, element)
