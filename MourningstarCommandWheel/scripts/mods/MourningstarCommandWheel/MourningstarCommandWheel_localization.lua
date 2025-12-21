@@ -1,7 +1,7 @@
 return {
   mod_name = {
     en = "Mourningstar Command Wheel",
-    ru = "Колесо команд Морнингстар",
+    ru = "Колесо команд Моунингстар",
   },
   mod_description = {
     en = "A convenient radial menu system for quick access to all hub menus and features.",
