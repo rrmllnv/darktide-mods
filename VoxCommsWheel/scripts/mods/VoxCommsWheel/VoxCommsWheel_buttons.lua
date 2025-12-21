@@ -56,7 +56,7 @@ local button_definitions = {
 	{
 		id = "need_help",
 		label_key = "loc_command_need_help",
-		icon = "content/ui/materials/icons/presets/preset_03",
+		icon = "content/ui/materials/hud/interactions/icons/help",
 		voice_event_data = {
 			voice_tag_concept = VOQueryConstants.concepts.generic_mission_vo,
 			voice_tag_id = "calling_for_help",
