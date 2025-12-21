@@ -162,21 +162,43 @@ HudElementCompassBar.init = function(self, parent, draw_layer, start_scale)
 	self._initial_scan_done = false
 end
 
--- Настройка отслеживания боссов
-HudElementCompassBar._setup_boss_tracking = function(self)
+-- Глобальный флаг для отслеживания, был ли хук уже создан
+local boss_tracking_hook_setup = false
+
+-- Настройка отслеживания боссов (вызывается только один раз глобально)
+local function setup_boss_tracking_global()
+	if boss_tracking_hook_setup then
+		return
+	end
+	
 	-- Хук на событие начала и окончания боя с боссом
-	mod:hook_safe(Managers.event, "trigger", function(self, event_name, unit, ...)
-		if event_name == "boss_encounter_start" and unit then
-			-- Отслеживаем боссов через событие начала боя с боссом
-			local breed = fetch_breed(unit)
-			if breed and should_track_enemy(breed) then
-				add_enemy_marker(unit, breed)
+	mod:hook_safe(Managers.event, "trigger", function(event_manager, event_name, ...)
+		-- Проверяем, что это событие босса
+		if event_name == "boss_encounter_start" or event_name == "boss_encounter_end" then
+			-- Первый аргумент после event_name может быть unit
+			local unit = select(1, ...)
+			if unit then
+				if event_name == "boss_encounter_start" then
+					-- Отслеживаем боссов через событие начала боя с боссом
+					local breed = fetch_breed(unit)
+					if breed and should_track_enemy(breed) then
+						add_enemy_marker(unit, breed)
+					end
+				elseif event_name == "boss_encounter_end" then
+					-- Удаляем босса при завершении боя
+					remove_boss_marker(unit)
+				end
 			end
-		elseif event_name == "boss_encounter_end" and unit then
-			-- Удаляем босса при завершении боя
-			remove_boss_marker(unit)
 		end
 	end)
+	
+	boss_tracking_hook_setup = true
+end
+
+-- Настройка отслеживания боссов
+HudElementCompassBar._setup_boss_tracking = function(self)
+	-- Вызываем глобальную настройку хука (только один раз)
+	setup_boss_tracking_global()
 end
 
 -- Получаем угол направления камеры
