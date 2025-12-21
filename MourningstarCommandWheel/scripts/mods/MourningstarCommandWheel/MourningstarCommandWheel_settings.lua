@@ -33,3 +33,4 @@ local command_wheel_settings = {
 }
 
 return settings("CommandWheelSettings", command_wheel_settings)
+
