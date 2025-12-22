@@ -333,7 +333,9 @@ function notifications.show_incoming_damage(args)
 
 	if is_self_damage then
 		local self_template = notifications.loc("friendly_fire_line1_self")
-		message = notifications.safe_format(self_template, "You damaged yourself")
+		local self_message_base = notifications.safe_format(self_template, "You damaged yourself")
+		-- Добавляем урон к line1 для self damage
+		message = notifications.safe_format("%s %s", "%s %s", self_message_base, damage_line)
 	else
 		local unknown_name = notifications.loc("friendly_fire_unknown_player")
 		local name = player_name or unknown_name
@@ -446,16 +448,20 @@ function notifications.show_outgoing_damage(args)
 	local show_team_total = mod.settings.show_team_total_damage ~= false
 
 	local unknown_name = notifications.loc("friendly_fire_unknown_player")
-	local name = player_name or unknown_name
-	local is_unknown = name == unknown_name
-	if name and not string.find(name, "{#") and not is_unknown then
+	local name = player_name
+	if not name or name == "" then
+		name = unknown_name
+	end
+	local is_unknown = (name == unknown_name) or (name == "")
+	
+	if name and name ~= "" and not string.find(name, "{#") and not is_unknown then
 		name = Text.apply_color_to_text(name, Color.ui_orange_light(255, true))
 	end
 
 	local line1_template = is_unknown and notifications.loc("friendly_fire_outgoing_line1_unknown") or notifications.loc("friendly_fire_outgoing_line1_ally")
 	local line1 = notifications.safe_format(line1_template, "You damaged player %s", tostring(name or unknown_name))
 
-	local line2 = notifications.make_damage_phrase(damage_amount)
+	local line2 = notifications.make_damage_phrase(damage_amount or 0)
 	local line3 = ""
 
 	if show_total and total_damage and total_damage > 0 then
