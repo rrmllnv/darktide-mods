@@ -15,18 +15,6 @@ return {
     en = "Hotkeys",
     ru = "Горячие клавиши",
   },
-  i18n_main_menu_section = {
-    en = "Main Character Selection Menu",
-    ru = "Главное меню выбора персонажа",
-  },
-  enable_hub_menu_button = {
-    en = "Enable Hub Menu",
-    ru = "Включить меню хаба",
-  },
-  enable_hub_menu_button_description = {
-    en = "Show the Hub Menu button in the main character selection menu.",
-    ru = "Показывать кнопку меню хаба в главном меню выбора персонажа.",
-  },
   open_command_wheel_key = {
     en = "Open Command Wheel",
     ru = "Открыть колесо команд",
@@ -252,25 +240,5 @@ return {
     en = Localize("loc_group_finder_menu_title"),
     ["zh-cn"] = Localize("loc_group_finder_menu_title"),
     ru = Localize("loc_group_finder_menu_title"),
-  },
-  loc_toggle_view_buttons = {
-    en = "Toggle Buttons",
-    ["zh-cn"] = "切换按钮",
-    ru = "Переключить кнопки",
-  },
-  main_menu_open_menu_button = {
-    en = "Hub Menu",
-    ["zh-cn"] = "大厅菜单",
-    ru = "Меню Хаба",
-  },
-  main_menu_view_title = {
-    en = "Hub Menu",
-    ["zh-cn"] = "大厅菜单",
-    ru = "Меню Хаба",
-  },
-  loc_back = {
-    en = "Back",
-    ["zh-cn"] = "返回",
-    ru = "Назад",
   },
 }
