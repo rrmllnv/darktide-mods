@@ -1,16 +1,16 @@
 local mod = get_mod("MourningstarCommandWheel")
 
 -- Добавляем глобальную локализацию для переключения кнопок
-mod:add_global_localize_strings({
-	loc_toggle_view_buttons = {
-		en = "Toggle Buttons",
-		["zh-cn"] = "切换按钮",
-		ru = "Переключить кнопки",
-		ja = "ボタンの切り替え",
-		["zh-tw"] = "切換按鈕",
-		ko = "버튼 전환",
-	}
-})
+-- mod:add_global_localize_strings({
+-- 	loc_toggle_view_buttons = {
+-- 		en = "Toggle Buttons",
+-- 		["zh-cn"] = "切换按钮",
+-- 		ru = "Переключить кнопки",
+-- 		ja = "ボタンの切り替え",
+-- 		["zh-tw"] = "切換按鈕",
+-- 		ko = "버튼 전환",
+-- 	}
+-- })
 
 local Promise = require("scripts/foundation/utilities/promise")
 local UIWidget = require("scripts/managers/ui/ui_widget")

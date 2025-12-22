@@ -3,6 +3,7 @@ local UIWidget = require("scripts/managers/ui/ui_widget")
 local ButtonPassTemplates = require("scripts/ui/pass_templates/button_pass_templates")
 local UISettings = require("scripts/settings/ui/ui_settings")
 local UIWorkspaceSettings = require("scripts/settings/ui/ui_workspace_settings")
+local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 
 local button_size = { 300, 50 }
 local button_spacing = 60
@@ -69,56 +70,93 @@ end
 local widget_definitions = {
 	background = UIWidget.create_definition({
 		{
-			value = "content/ui/materials/backgrounds/terminal_basic",
 			pass_type = "texture",
+			style_id = "background",
+			value = "content/ui/materials/backgrounds/terminal_basic",
 			style = {
 				horizontal_alignment = "center",
 				scale_to_material = true,
 				vertical_alignment = "center",
 				size_addition = {
-					30,
-					30
+					40,
+					40,
 				},
 				offset = {
 					0,
 					0,
-					1
+					0,
 				},
-				color = Color.terminal_grid_background_gradient(255, true),
-			}
-		},
-		{
-			pass_type = "rect",
-			style = {
-				color = Color.black(100, true)
+				color = Color.terminal_grid_background(255, true),
 			},
-			offset = {
-				0,
-				0,
-				2
-			}
+		},
+		-- {
+		-- 	pass_type = "rect",
+		-- 	style = {
+		-- 		color = Color.black(100, true)
+		-- 	},
+		-- 	offset = {
+		-- 		0,
+		-- 		0,
+		-- 		1
+		-- 	}
+		-- },
+		{
+			pass_type = "texture_uv",
+			style_id = "top_divider",
+			value = "content/ui/materials/dividers/horizontal_frame_big_lower",
+			value_id = "top_divider",
+			style = {
+				horizontal_alignment = "center",
+				scale_to_material = true,
+				vertical_alignment = "top",
+				size_addition = {
+					30,
+					0,
+				},
+				size = {
+					nil,
+					36,
+				},
+				offset = {
+					0,
+					-20,
+					2,
+				},
+				uvs = {
+					{
+						0,
+						1,
+					},
+					{
+						1,
+						0,
+					},
+				},
+			},
 		},
 		{
 			pass_type = "texture",
-			style_id = "frame",
-			value = "content/ui/materials/frames/frame_tile_2px",
+			style_id = "bottom_divider",
+			value = "content/ui/materials/dividers/horizontal_frame_big_lower",
+			value_id = "bottom_divider",
 			style = {
 				horizontal_alignment = "center",
-				vertical_alignment = "center",
-				offset = { 0, 0, 6 },
-				color = Color.terminal_frame(nil, true),
-			}
-		},
-		{
-			pass_type = "texture",
-			style_id = "corner",
-			value = "content/ui/materials/frames/frame_corner_2px",
-			style = {
-				horizontal_alignment = "center",
-				vertical_alignment = "center",
-				offset = { 0, 0, 7 },
-				color = Color.terminal_corner(nil, true),
-			}
+				scale_to_material = true,
+				vertical_alignment = "bottom",
+				size_addition = {
+					30,
+					0,
+				},
+				size = {
+					nil,
+					36,
+				},
+				offset = {
+					0,
+					20,
+					2,
+				},
+			},
 		},
 	}, "background"),
 	
