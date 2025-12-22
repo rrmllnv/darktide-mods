@@ -137,17 +137,12 @@ function notifications.format_number(number)
 end
 
 function notifications.make_damage_phrase(amount)
-	local safe_amount = amount or 0
-	if safe_amount <= 0 then
-		return ""
-	end
-	
-	local damage_value = Text.apply_color_to_text(notifications.format_number(safe_amount), mod.COLOR_DAMAGE)
+	local damage_value = Text.apply_color_to_text(notifications.format_number(amount), mod.COLOR_DAMAGE)
 	local localization_manager = Managers.localization
 	local language = localization_manager and localization_manager:language() or "en"
 
 	if language == "ru" then
-		local n = math.abs(math.floor(safe_amount))
+		local n = math.abs(math.floor(amount or 0))
 		local last_two = n % 100
 		local last = n % 10
 		local word_key
@@ -226,12 +221,22 @@ local function notification_data(lines, options)
 	local portrait_target = portrait_player or notification_player or (Managers.player and Managers.player:local_player(1))
 	
 	local profile = nil
+	local is_portrait_valid = false
+	
 	if portrait_target then
-		local success, result = pcall(function()
-			return portrait_target:profile()
+		-- Проверяем, что объект не уничтожен, пытаясь получить его имя
+		local is_valid, _ = pcall(function()
+			return portrait_target:name()
 		end)
-		if success and result then
-			profile = result
+		
+		if is_valid then
+			local success, result = pcall(function()
+				return portrait_target:profile()
+			end)
+			if success and result then
+				profile = result
+				is_portrait_valid = true
+			end
 		end
 	end
 	
@@ -248,7 +253,7 @@ local function notification_data(lines, options)
 		color = (options and options.background_color) or mod.settings.notification_background_color or mod.COLOR_BACKGROUND,
 	}
 
-	if portrait_target and profile and (options == nil or options.use_player_portrait ~= false) then
+	if is_portrait_valid and portrait_target and profile and (options == nil or options.use_player_portrait ~= false) then
 		data.use_player_portrait = true
 		data.player = portrait_target
 	end
@@ -326,30 +331,19 @@ function notifications.show_incoming_damage(args)
 	local notification_player = args.notification_player
 	local portrait_player = args.portrait_player
 
-	local min_damage_threshold = mod.settings.min_damage_threshold or 0
-	local safe_damage_amount = damage_amount or 0
-	-- Проверяем порог урона, учитывая как текущий урон, так и общий урон
-	if safe_damage_amount <= min_damage_threshold and (not total_damage or total_damage <= min_damage_threshold) then
+	local min_damage_threshold = mod.settings.min_damage_threshold or 1
+	if damage_amount <= min_damage_threshold then
 		return
 	end
 
 	local show_total = mod.settings.show_total_damage ~= false
 	local show_team_total = mod.settings.show_team_total_damage ~= false
 	local message
-	
-	-- Используем damage_amount, если он больше 0, иначе используем total_damage
-	local display_damage = safe_damage_amount
-	if (not display_damage or display_damage <= 0) and total_damage and total_damage > 0 then
-		display_damage = total_damage
-	end
-	
-	local damage_line = notifications.make_damage_phrase(display_damage or 0)
+	local damage_line = notifications.make_damage_phrase(damage_amount)
 
 	if is_self_damage then
 		local self_template = notifications.loc("friendly_fire_line1_self")
-		local self_message_base = notifications.safe_format(self_template, "You damaged yourself")
-		-- Добавляем урон к line1 для self damage
-		message = notifications.safe_format("%s %s", "%s %s", self_message_base, damage_line)
+		message = notifications.safe_format(self_template, "You damaged yourself")
 	else
 		local unknown_name = notifications.loc("friendly_fire_unknown_player")
 		local name = player_name or unknown_name
@@ -453,10 +447,8 @@ function notifications.show_outgoing_damage(args)
 	local notification_player = args.notification_player
 	local portrait_player = args.portrait_player
 
-	local min_damage_threshold = mod.settings.min_damage_threshold or 0
-	local safe_damage_amount = damage_amount or 0
-	-- Проверяем порог урона, учитывая как текущий урон, так и общий урон
-	if safe_damage_amount <= min_damage_threshold and (not total_damage or total_damage <= min_damage_threshold) then
+	local min_damage_threshold = mod.settings.min_damage_threshold or 1
+	if damage_amount <= min_damage_threshold then
 		return
 	end
 
@@ -464,27 +456,16 @@ function notifications.show_outgoing_damage(args)
 	local show_team_total = mod.settings.show_team_total_damage ~= false
 
 	local unknown_name = notifications.loc("friendly_fire_unknown_player")
-	local name = player_name
-	if not name or name == "" then
-		name = unknown_name
-	end
-	local is_unknown = (name == unknown_name) or (name == "")
-	
-	if name and name ~= "" and not string.find(name, "{#") and not is_unknown then
+	local name = player_name or unknown_name
+	local is_unknown = name == unknown_name
+	if name and not string.find(name, "{#") and not is_unknown then
 		name = Text.apply_color_to_text(name, Color.ui_orange_light(255, true))
 	end
 
 	local line1_template = is_unknown and notifications.loc("friendly_fire_outgoing_line1_unknown") or notifications.loc("friendly_fire_outgoing_line1_ally")
 	local line1 = notifications.safe_format(line1_template, "You damaged player %s", tostring(name or unknown_name))
 
-	-- Используем damage_amount, если он больше 0, иначе используем total_damage
-	local display_damage = safe_damage_amount
-	if (not display_damage or display_damage <= 0) and total_damage and total_damage > 0 then
-		display_damage = total_damage
-	end
-	
-	local line2 = notifications.make_damage_phrase(display_damage or 0)
-	
+	local line2 = notifications.make_damage_phrase(damage_amount)
 	local line3 = ""
 
 	if show_total and total_damage and total_damage > 0 then
@@ -495,7 +476,7 @@ function notifications.show_outgoing_damage(args)
 
 	if source_text and source_text ~= "" then
 		local source_suffix = notifications.loc("friendly_fire_source_suffix")
-		line2 = notifications.safe_format("%s\n" .. source_suffix, "%s\n(%s)", line2, tostring(source_text))
+		line2 = notifications.safe_format("%s " .. source_suffix, "%s (%s)", line2, tostring(source_text))
 	end
 
 	if show_team_total and (team_total_damage or 0) > 0 then
