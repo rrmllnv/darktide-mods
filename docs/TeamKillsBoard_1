@@ -1,3 +1,4 @@
+
 local mod = get_mod("MourningstarCommandWheel")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local ButtonPassTemplates = require("scripts/ui/pass_templates/button_pass_templates")
@@ -76,12 +77,12 @@ local widget_definitions = {
 				scale_to_material = true,
 				vertical_alignment = "center",
 				size_addition = {
-					30,
-					30
+					40,
+					40
 				},
 				offset = {
-					0,
-					0,
+					-20,
+					-20,
 					1
 				},
 				color = Color.terminal_grid_background_gradient(255, true),
@@ -90,12 +91,12 @@ local widget_definitions = {
 		{
 			pass_type = "rect",
 			style = {
-				color = Color.black(100, true)
+				color = Color.black(255, true)
 			},
 			offset = {
 				0,
 				0,
-				2
+				0
 			}
 		},
 		{
