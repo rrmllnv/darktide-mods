@@ -7,7 +7,6 @@ mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandW
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_hotkeys")
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/HudElementCommandWheel")
 
--- Загружаем модуль горячих клавиш
 mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_hotkeys")
 
 local Utils = require("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_utils")
