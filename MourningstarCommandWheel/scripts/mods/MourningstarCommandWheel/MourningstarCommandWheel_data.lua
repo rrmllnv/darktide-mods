@@ -29,7 +29,7 @@ return {
           {
             setting_id = "enable_hub_menu_button",
             type = "checkbox",
-            default_value = true,
+            default_value = false,
             title = "enable_hub_menu_button",
             tooltip_text = "enable_hub_menu_button_description",
           },

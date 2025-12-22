@@ -254,5 +254,14 @@ end)
 mod.on_setting_changed = function(setting_id)
 	if setting_id == "open_command_wheel_key" then
 		mod._command_wheel_eval_func = nil
+	elseif setting_id == "enable_hub_menu_button" then
+		-- Обновляем видимость кнопки при изменении настройки
+		local main_menu_view = Managers.ui:view_instance("main_menu_view")
+		if main_menu_view then
+			local button_widget = main_menu_view._widgets_by_name and main_menu_view._widgets_by_name["main_menu_open_menu_button"]
+			if button_widget then
+				button_widget.content.visible = mod:get("enable_hub_menu_button")
+			end
+		end
 	end
 end

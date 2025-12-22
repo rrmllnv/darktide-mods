@@ -29,12 +29,7 @@ end
 -- Hook на main_menu_view_definitions для добавления одной кнопки
 local main_menu_definitions_file = "scripts/ui/views/main_menu_view/main_menu_view_definitions"
 mod:hook_require(main_menu_definitions_file, function(definitions)
-	-- Проверяем, включена ли настройка
-	if not mod:get("enable_hub_menu_button") then
-		return
-	end
-	
-	-- Добавляем одну кнопку для открытия view
+	-- Всегда добавляем определение кнопки, но видимость контролируем через content.visible
 	local button = UIWidget.create_definition(ButtonPassTemplates.terminal_button_small, _open_menu_button, {
 		text = mod:localize("main_menu_open_menu_button"),
 	})
@@ -51,11 +46,6 @@ end)
 
 -- Hook на MainMenuView._setup_interactions для установки callback
 mod:hook_safe(CLASS.MainMenuView, "_setup_interactions", function(self)
-	-- Проверяем, включена ли настройка
-	if not mod:get("enable_hub_menu_button") then
-		return
-	end
-	
 	local widgets_by_name = self._widgets_by_name
 
 	-- Устанавливаем callback для кнопки открытия view
@@ -67,6 +57,9 @@ mod:hook_safe(CLASS.MainMenuView, "_setup_interactions", function(self)
 				_open_main_menu_view()
 			end
 		end
+		
+		-- Устанавливаем видимость в зависимости от настройки
+		content.visible = mod:get("enable_hub_menu_button")
 	end
 
 	_setup_complete = true
@@ -76,17 +69,16 @@ end)
 mod:hook(CLASS.MainMenuView, "_handle_input", function(func, self, input_service, dt, t)
 	func(self, input_service, dt, t)
 
-	-- Проверяем, включена ли настройка
-	if not mod:get("enable_hub_menu_button") then
-		return
-	end
-
 	local is_in_matchmaking = Managers.party_immaterium:is_in_matchmaking()
 
-	-- Отключаем кнопку во время matchmaking
+	-- Обновляем видимость кнопки в зависимости от настройки
 	local button_widget = self._widgets_by_name[_open_menu_button]
 	if button_widget then
-		button_widget.content.hotspot.disabled = is_in_matchmaking
+		local enabled = mod:get("enable_hub_menu_button")
+		button_widget.content.visible = enabled
+		
+		-- Отключаем кнопку во время matchmaking или если настройка выключена
+		button_widget.content.hotspot.disabled = is_in_matchmaking or not enabled
 	end
 
 	if not _setup_complete then
