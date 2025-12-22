@@ -82,3 +82,7 @@ mod.activate_havoc_background_view = function(self)
 	activate_hub_view("havoc_background_view")
 end
 
+mod.activate_group_finder_view = function(self)
+	activate_hub_view("group_finder_view")
+end
+

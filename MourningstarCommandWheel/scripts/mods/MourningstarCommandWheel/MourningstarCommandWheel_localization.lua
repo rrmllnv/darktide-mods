@@ -164,4 +164,15 @@ return {
     ["zh-cn"] = "打开混乱模式菜单。",
     ru = "Открывает меню Хаоса.",
   },
+  -- group_finder_view
+  open_group_finder_view_key = {
+    en = Localize("loc_group_finder_menu_title"),
+    ["zh-cn"] = Localize("loc_group_finder_menu_title"),
+    ru = Localize("loc_group_finder_menu_title"),
+  },
+  open_group_finder_view_key_description = {
+    en = "Opens the Group Finder view.",
+    ["zh-cn"] = "打开组队查找界面。",
+    ru = "Открывает меню поиска группы.",
+  },
 }

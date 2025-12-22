@@ -130,6 +130,14 @@ return {
             keybind_type    = "function_call",
             function_name   = "activate_havoc_background_view",
           },
+          {
+            setting_id      = "open_group_finder_view_key",
+            type            = "keybind",
+            default_value   = {},
+            keybind_trigger = "pressed",
+            keybind_type    = "function_call",
+            function_name   = "activate_group_finder_view",
+          },
         },
       },
     }
