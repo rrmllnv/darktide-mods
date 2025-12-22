@@ -327,14 +327,23 @@ function notifications.show_incoming_damage(args)
 	local portrait_player = args.portrait_player
 
 	local min_damage_threshold = mod.settings.min_damage_threshold or 0
-	if damage_amount < min_damage_threshold then
+	local safe_damage_amount = damage_amount or 0
+	-- Проверяем порог урона, учитывая как текущий урон, так и общий урон
+	if safe_damage_amount <= min_damage_threshold and (not total_damage or total_damage <= min_damage_threshold) then
 		return
 	end
 
 	local show_total = mod.settings.show_total_damage ~= false
 	local show_team_total = mod.settings.show_team_total_damage ~= false
 	local message
-	local damage_line = notifications.make_damage_phrase(damage_amount)
+	
+	-- Используем damage_amount, если он больше 0, иначе используем total_damage
+	local display_damage = safe_damage_amount
+	if (not display_damage or display_damage <= 0) and total_damage and total_damage > 0 then
+		display_damage = total_damage
+	end
+	
+	local damage_line = notifications.make_damage_phrase(display_damage or 0)
 
 	if is_self_damage then
 		local self_template = notifications.loc("friendly_fire_line1_self")
@@ -447,7 +456,7 @@ function notifications.show_outgoing_damage(args)
 	local min_damage_threshold = mod.settings.min_damage_threshold or 0
 	local safe_damage_amount = damage_amount or 0
 	-- Проверяем порог урона, учитывая как текущий урон, так и общий урон
-	if safe_damage_amount < min_damage_threshold and (not total_damage or total_damage < min_damage_threshold) then
+	if safe_damage_amount <= min_damage_threshold and (not total_damage or total_damage <= min_damage_threshold) then
 		return
 	end
 
@@ -486,7 +495,7 @@ function notifications.show_outgoing_damage(args)
 
 	if source_text and source_text ~= "" then
 		local source_suffix = notifications.loc("friendly_fire_source_suffix")
-		line2 = notifications.safe_format("%s " .. source_suffix, "%s (%s)", line2, tostring(source_text))
+		line2 = notifications.safe_format("%s\n" .. source_suffix, "%s\n(%s)", line2, tostring(source_text))
 	end
 
 	if show_team_total and (team_total_damage or 0) > 0 then
