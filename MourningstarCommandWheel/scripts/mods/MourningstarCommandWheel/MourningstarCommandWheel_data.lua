@@ -15,6 +15,22 @@ return {
         function_name   = "command_wheel_held",
       },
       {
+        setting_id      = "open_inventory_view_key",
+        type            = "keybind",
+        default_value   = {},
+        keybind_trigger = "pressed",
+        keybind_type    = "function_call",
+        function_name   = "activate_inventory_background_view",
+      },
+      {
+        setting_id      = "open_change_character_key",
+        type            = "keybind",
+        default_value   = {},
+        keybind_trigger = "pressed",
+        keybind_type    = "function_call",
+        function_name   = "activate_change_character",
+      },
+      {
         setting_id      = "open_barber_view_key",
         type            = "keybind",
         default_value   = {},

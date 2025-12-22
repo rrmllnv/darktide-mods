@@ -15,25 +15,32 @@ return {
     en = "Key to open the command wheel.",
     ru = "Клавиша для открытия колеса команд.",
   },
-  enable_in_pykhanium = {
-    en = "Enable Hotkeys in the Psykhanium",
-    ru = "Включить горячие клавиши в " .. Localize("loc_training_ground_view") .. "е",
-    ["zh-cn"] = "在灵能室启用快捷键",
+  -- inventory_background_view
+  open_inventory_view_key = {
+    en = Localize("loc_character_view_display_name"),
+    ["zh-cn"] = Localize("loc_character_view_display_name"),
+    ru = Localize("loc_character_view_display_name"),
   },
-  close_menu_with_hotkey = {
-    en = "Close menus",
-    ru = "Закрытие меню клавишами",
-    ["zh-cn"] = "关闭菜单",
+  open_inventory_view_key_description = {
+    en = "Opens the Inventory view.",
+    ["zh-cn"] = "打开库存界面。",
+    ru = "Открывает меню Инвентаря персонажа.",
   },
-  close_menu_with_hotkey_tooltip = {
-    en = "Enables the closing of menus with their respective hotkeys.",
-    ru = "Позволяет закрывать меню с помощью соответствующих горячих клавиш.",
-    ["zh-cn"] = "允许用对应的快捷键关闭菜单。",
+  -- change_character
+  open_change_character_key = {
+    en = Localize("loc_exit_to_main_menu_display_name"),
+    ["zh-cn"] = Localize("loc_exit_to_main_menu_display_name"),
+    ru = Localize("loc_exit_to_main_menu_display_name"),
+  },
+  open_change_character_key_description = {
+    en = "Changes character (returns to main menu).",
+    ["zh-cn"] = "更换角色（返回主菜单）。",
+    ru = "Смена персонажа (возврат в главное меню).",
   },
   -- barber_vendor_background_view
   open_barber_view_key = {
-    en = "Barber",
-    ["zh-cn"] = "理发师",
+    en = Localize("loc_body_shop_view_display_name"),
+    ["zh-cn"] = Localize("loc_body_shop_view_display_name"),
     ru = Localize("loc_body_shop_view_display_name"),
   },
   open_barber_view_key_description = {
@@ -43,8 +50,8 @@ return {
   },
   -- contracts_background_view
   open_contracts_view_key = {
-    en = "Contracts",
-    ["zh-cn"] = "协议",
+    en = Localize("loc_marks_vendor_view_title"),
+    ["zh-cn"] = Localize("loc_marks_vendor_view_title"),
     ru = Localize("loc_marks_vendor_view_title"),
   },
   open_contracts_view_key_description = {
@@ -54,8 +61,8 @@ return {
   },
   -- crafting_view
   open_crafting_view_key = {
-    en = "Crafting",
-    ["zh-cn"] = "锻造",
+    en = Localize("loc_crafting_view"),
+    ["zh-cn"] = Localize("loc_crafting_view"),
     ru = Localize("loc_crafting_view"),
   },
   open_crafting_view_key_description = {
@@ -65,8 +72,8 @@ return {
   },
   -- credits_vendor_background_view
   open_credits_vendor_view_key = {
-    en = "Credits Vendor",
-    ["zh-cn"] = "商店",
+    en = Localize("loc_vendor_view_title"),
+    ["zh-cn"] = Localize("loc_vendor_view_title"),
     ru = Localize("loc_vendor_view_title"),
   },
   open_credits_vendor_view_key_description = {
@@ -74,21 +81,10 @@ return {
     ["zh-cn"] = "打开军械交易所界面。",
     ru = "Открывает меню покупки Снаряжения.",
   },
-  -- inbox_view
-  open_inbox_view_key = {
-    en = "Inbox",
-    ["zh-cn"] = "信件",
-    ru = "Послания",
-  },
-  open_inbox_view_key_description = {
-    en = "Opens the Inbox view.",
-    ["zh-cn"] = "打开信件界面。",
-    ru = "Открывает меню Выкупить любой лишний предмет.",
-  },
   -- mission_board_view
   open_mission_board_view_key = {
-    en = "Mission Board",
-    ["zh-cn"] = "任务面板",
+    en = Localize("loc_mission_board_view"),
+    ["zh-cn"] = Localize("loc_mission_board_view"),
     ru = Localize("loc_mission_board_view"),
   },
   open_mission_board_view_key_description = {
@@ -98,8 +94,8 @@ return {
   },
   -- store_view
   open_premium_store_view_key = {
-    en = "Premium Store",
-    ["zh-cn"] = "高级商店",
+    en = Localize("loc_store_view_display_name"),
+    ["zh-cn"] = Localize("loc_store_view_display_name"),
     ru = Localize("loc_store_view_display_name"),
   },
   open_premium_store_view_key_description = {
@@ -109,8 +105,8 @@ return {
   },
   -- training_grounds_view
   open_training_grounds_view_key = {
-    en = "Training Grounds",
-    ["zh-cn"] = "训练场",
+    en = Localize("loc_training_ground_view"),
+    ["zh-cn"] = Localize("loc_training_ground_view"),
     ru = Localize("loc_training_ground_view"),
   },
   open_training_grounds_view_key_description = {
@@ -120,9 +116,9 @@ return {
   },
   -- social_view
   open_social_view_key = {
-    en = "Social",
-    ["zh-cn"] = "社交",
-    ru = "Социальное меню",
+    en = Localize("loc_social_view_display_name"),
+    ["zh-cn"] = Localize("loc_social_view_display_name"),
+    ru = Localize("loc_social_view_display_name"),
   },
   open_social_view_key_description = {
     en = "Opens the Social view.",
@@ -130,8 +126,8 @@ return {
     ru = "Открывает меню управления Ударной группой, Друзьями, Приглашениями.",
   },
   open_commissary_view_key = {
-    en = "Commissary",
-    ["zh-cn"] = "杂货店",
+    en = Localize("loc_cosmetics_vendor_view_title"),
+    ["zh-cn"] = Localize("loc_cosmetics_vendor_view_title"),
     ru = Localize("loc_cosmetics_vendor_view_title"),
   },
   open_commissary_view_key_description = {
@@ -140,9 +136,9 @@ return {
     ru = "Открывает меню магазина Косметических предметов.",
   },
   open_penance_view_key = {
-    en = "Shrine Penitentax",
-    ["zh-cn"] = "神龛忏悔者",
-    ru = "Искупления",
+    en = Localize("loc_achievements_view_display_name"),
+    ["zh-cn"] = Localize("loc_achievements_view_display_name"),
+    ru = Localize("loc_achievements_view_display_name"),
   },
   open_penance_view_key_description = {
     en = "Opens the Penance view.",
@@ -151,13 +147,13 @@ return {
   },
   -- havoc_background
   open_havoc_background_view = {
-    en = "Havoc Mode",
-    ["zh-cn"] = "Havoc Mode",
-    ru = "Havoc Mode",
+    en = Localize("loc_havoc_name"),
+    ["zh-cn"] = Localize("loc_havoc_name"),
+    ru = Localize("loc_havoc_name"),
   },
   open_havoc_background_view_description = {
     en = "Opens the Havoc Menu.",
-    ["zh-cn"] = "Opens the Havoc Menu.",
-    ru = "Opens the Havoc Menu.",
+    ["zh-cn"] = "打开混乱模式菜单。",
+    ru = "Открывает меню Хаоса.",
   },
 }

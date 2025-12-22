@@ -30,6 +30,14 @@ local activate_hub_view = function(view)
 	end
 end
 
+mod.activate_inventory_background_view = function(self)
+	activate_hub_view("inventory_background_view")
+end
+
+mod.activate_change_character = function(self)
+	mod:change_character()
+end
+
 mod.activate_barber_vendor_background_view = function(self)
 	activate_hub_view("barber_vendor_background_view")
 end
