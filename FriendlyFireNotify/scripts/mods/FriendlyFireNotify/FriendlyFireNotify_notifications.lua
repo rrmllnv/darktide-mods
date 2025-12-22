@@ -137,12 +137,17 @@ function notifications.format_number(number)
 end
 
 function notifications.make_damage_phrase(amount)
-	local damage_value = Text.apply_color_to_text(notifications.format_number(amount), mod.COLOR_DAMAGE)
+	local safe_amount = amount or 0
+	if safe_amount <= 0 then
+		return ""
+	end
+	
+	local damage_value = Text.apply_color_to_text(notifications.format_number(safe_amount), mod.COLOR_DAMAGE)
 	local localization_manager = Managers.localization
 	local language = localization_manager and localization_manager:language() or "en"
 
 	if language == "ru" then
-		local n = math.abs(math.floor(amount or 0))
+		local n = math.abs(math.floor(safe_amount))
 		local last_two = n % 100
 		local last = n % 10
 		local word_key
@@ -440,7 +445,9 @@ function notifications.show_outgoing_damage(args)
 	local portrait_player = args.portrait_player
 
 	local min_damage_threshold = mod.settings.min_damage_threshold or 0
-	if damage_amount < min_damage_threshold then
+	local safe_damage_amount = damage_amount or 0
+	-- Проверяем порог урона, учитывая как текущий урон, так и общий урон
+	if safe_damage_amount < min_damage_threshold and (not total_damage or total_damage < min_damage_threshold) then
 		return
 	end
 
@@ -461,7 +468,14 @@ function notifications.show_outgoing_damage(args)
 	local line1_template = is_unknown and notifications.loc("friendly_fire_outgoing_line1_unknown") or notifications.loc("friendly_fire_outgoing_line1_ally")
 	local line1 = notifications.safe_format(line1_template, "You damaged player %s", tostring(name or unknown_name))
 
-	local line2 = notifications.make_damage_phrase(damage_amount or 0)
+	-- Используем damage_amount, если он больше 0, иначе используем total_damage
+	local display_damage = safe_damage_amount
+	if (not display_damage or display_damage <= 0) and total_damage and total_damage > 0 then
+		display_damage = total_damage
+	end
+	
+	local line2 = notifications.make_damage_phrase(display_damage or 0)
+	
 	local line3 = ""
 
 	if show_total and total_damage and total_damage > 0 then
