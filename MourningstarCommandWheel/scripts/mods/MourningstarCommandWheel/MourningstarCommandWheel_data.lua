@@ -34,6 +34,13 @@ return {
             tooltip_text = "enable_in_psykhanium_description",
           },
           {
+            setting_id = "enable_toggle_view",
+            type = "checkbox",
+            default_value = false,
+            title = "enable_toggle_view",
+            tooltip_text = "enable_toggle_view_description",
+          },
+          {
             setting_id      = "open_inventory_view_key",
             type            = "keybind",
             default_value   = {},

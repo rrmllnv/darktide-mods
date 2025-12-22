@@ -7,8 +7,6 @@ mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandW
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_hotkeys")
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/HudElementCommandWheel")
 
-mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_hotkeys")
-
 local Utils = require("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_utils")
 local is_in_valid_lvl = Utils.is_in_valid_lvl
 local is_in_psykhanium = Utils.is_in_psykhanium
@@ -39,13 +37,6 @@ local can_activate_view = function(ui_manager, view)
 			return ui_manager:view_is_available(view)
 		end)
 		if not success or not is_available then
-			return false
-		end
-	end
-	
-	-- Проверка настройки для псайкиниума
-	if is_in_psykhanium() then
-		if not mod:get("enable_in_psykhanium") then
 			return false
 		end
 	end
@@ -82,6 +73,49 @@ mod.open_view_safe = function(self, view)
 	
 	return false
 end
+
+mod.toggle_view_safe = function(self, view)
+	if not view then
+		return false
+	end
+	
+	local ui_manager = Managers.ui
+	if not ui_manager then
+		return false
+	end
+
+	if is_in_psykhanium() then
+		if not mod:get("enable_in_psykhanium") then
+			return false
+		end
+	end
+
+	local is_view_active = false
+	local success, result = pcall(function()
+		return ui_manager:view_active(view)
+	end)
+	if success and result then
+		is_view_active = true
+	end
+
+	if is_view_active then
+		local enable_toggle = mod:get("enable_toggle_view")
+		if enable_toggle then
+			local close_success = pcall(function()
+				ui_manager:close_view(view)
+			end)
+			
+			if close_success then
+				return true
+			end
+		end
+		return false
+	end
+	
+	return mod:open_view_safe(view)
+end
+
+mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_hotkeys")
 
 mod.change_character = function(self)
 	if not is_in_valid_lvl() then

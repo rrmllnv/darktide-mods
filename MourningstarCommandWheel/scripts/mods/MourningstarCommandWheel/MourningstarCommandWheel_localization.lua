@@ -25,6 +25,16 @@ return {
     ["zh-cn"] = "允许在灵能室使用快捷键打开菜单。",
     ru = "Разрешить использование горячих клавиш для открытия меню в " .. Localize("loc_training_ground_view") .. "е.",
   },
+  enable_toggle_view = {
+    en = "Toggle View on Hotkey Press",
+    ["zh-cn"] = "按热键切换视图",
+    ru = "Переключение окна горячей клавишей",
+  },
+  enable_toggle_view_description = {
+    en = "If enabled, pressing a hotkey for an already open view will close it.",
+    ["zh-cn"] = "如果启用，按下已打开视图的热键将关闭它。",
+    ru = "Если включено, повторное нажатие горячей клавиши для уже открытого окна закроет его.",
+  },
   open_command_wheel_key = {
     en = "Open Command Wheel",
     ru = "Открыть колесо команд",
