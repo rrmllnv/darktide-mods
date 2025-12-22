@@ -7,6 +7,14 @@ return {
     en = "A convenient radial menu system for quick access to all hub menus and features.",
     ru = "Удобная система радиального меню для быстрого доступа ко всем меню и функциям хаба.",
   },
+  i18n_command_wheel_section = {
+    en = "Command Wheel",
+    ru = "Колесо команд",
+  },
+  i18n_hotkeys_section = {
+    en = "Hotkeys",
+    ru = "Горячие клавиши",
+  },
   open_command_wheel_key = {
     en = "Open Command Wheel",
     ru = "Открыть колесо команд",
