@@ -175,4 +175,90 @@ return {
     ["zh-cn"] = "打开组队查找界面。",
     ru = "Открывает меню поиска группы.",
   },
+  -- Main menu buttons
+  main_menu_inventory_button = {
+    en = "Inventory",
+    ["zh-cn"] = "库存",
+    ru = "Инвентарь",
+  },
+  main_menu_barber_button = {
+    en = Localize("loc_body_shop_view_display_name"),
+    ["zh-cn"] = Localize("loc_body_shop_view_display_name"),
+    ru = Localize("loc_body_shop_view_display_name"),
+  },
+  main_menu_contracts_button = {
+    en = Localize("loc_marks_vendor_view_title"),
+    ["zh-cn"] = Localize("loc_marks_vendor_view_title"),
+    ru = Localize("loc_marks_vendor_view_title"),
+  },
+  main_menu_crafting_button = {
+    en = Localize("loc_crafting_view"),
+    ["zh-cn"] = Localize("loc_crafting_view"),
+    ru = Localize("loc_crafting_view"),
+  },
+  main_menu_credits_vendor_button = {
+    en = Localize("loc_vendor_view_title"),
+    ["zh-cn"] = Localize("loc_vendor_view_title"),
+    ru = Localize("loc_vendor_view_title"),
+  },
+  main_menu_mission_board_button = {
+    en = Localize("loc_mission_board_view"),
+    ["zh-cn"] = Localize("loc_mission_board_view"),
+    ru = Localize("loc_mission_board_view"),
+  },
+  main_menu_store_button = {
+    en = Localize("loc_store_view_display_name"),
+    ["zh-cn"] = Localize("loc_store_view_display_name"),
+    ru = Localize("loc_store_view_display_name"),
+  },
+  main_menu_training_grounds_button = {
+    en = Localize("loc_training_ground_view"),
+    ["zh-cn"] = Localize("loc_training_ground_view"),
+    ru = Localize("loc_training_ground_view"),
+  },
+  main_menu_social_button = {
+    en = Localize("loc_social_view_display_name"),
+    ["zh-cn"] = Localize("loc_social_view_display_name"),
+    ru = Localize("loc_social_view_display_name"),
+  },
+  main_menu_commissary_button = {
+    en = Localize("loc_cosmetics_vendor_view_title"),
+    ["zh-cn"] = Localize("loc_cosmetics_vendor_view_title"),
+    ru = Localize("loc_cosmetics_vendor_view_title"),
+  },
+  main_menu_penance_button = {
+    en = Localize("loc_achievements_view_display_name"),
+    ["zh-cn"] = Localize("loc_achievements_view_display_name"),
+    ru = Localize("loc_achievements_view_display_name"),
+  },
+  main_menu_havoc_button = {
+    en = Localize("loc_havoc_name"),
+    ["zh-cn"] = Localize("loc_havoc_name"),
+    ru = Localize("loc_havoc_name"),
+  },
+  main_menu_group_finder_button = {
+    en = Localize("loc_group_finder_menu_title"),
+    ["zh-cn"] = Localize("loc_group_finder_menu_title"),
+    ru = Localize("loc_group_finder_menu_title"),
+  },
+  loc_toggle_view_buttons = {
+    en = "Toggle Buttons",
+    ["zh-cn"] = "切换按钮",
+    ru = "Переключить кнопки",
+  },
+  main_menu_open_menu_button = {
+    en = "Hub Menu",
+    ["zh-cn"] = "大厅菜单",
+    ru = "Меню Хаба",
+  },
+  main_menu_view_title = {
+    en = "Hub Menu",
+    ["zh-cn"] = "大厅菜单",
+    ru = "Меню Хаба",
+  },
+  loc_back = {
+    en = "Back",
+    ["zh-cn"] = "返回",
+    ru = "Назад",
+  },
 }

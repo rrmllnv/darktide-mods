@@ -5,10 +5,50 @@ mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandW
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_utils")
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_buttons")
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_hotkeys")
+mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_main_menu_view")
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/HudElementCommandWheel")
 
 -- Загружаем модуль горячих клавиш
 mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_hotkeys")
+
+-- Загружаем модуль главного меню
+mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_main_menu")
+
+-- Регистрируем view для главного меню
+local UISoundEvents = require("scripts/settings/ui/ui_sound_events")
+local WwiseGameSyncSettings = require("scripts/settings/wwise_game_sync/wwise_game_sync_settings")
+
+mod:register_view({
+	view_name = "mourningstar_command_wheel_main_menu_view",
+	view_settings = {
+		init_view_function = function(ingame_ui_context)
+			return true
+		end,
+		state_bound = false,
+		path = "MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_main_menu_view",
+		class = "MourningstarCommandWheelMainMenuView",
+		disable_game_world = true,
+		load_always = true,
+		load_in_hub = false,
+		game_world_blur = 1.1,
+		enter_sound_events = {
+			UISoundEvents.system_menu_enter,
+		},
+		exit_sound_events = {
+			UISoundEvents.system_menu_exit,
+		},
+		wwise_states = {
+			options = WwiseGameSyncSettings.state_groups.options.ingame_menu,
+		},
+	},
+	view_transitions = {},
+	view_options = {
+		close_all = false,
+		close_previous = false,
+		close_transition_time = nil,
+		transition_time = nil,
+	},
+})
 
 local Utils = require("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_utils")
 local is_in_valid_lvl = Utils.is_in_valid_lvl
