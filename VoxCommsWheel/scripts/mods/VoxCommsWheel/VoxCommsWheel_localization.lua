@@ -45,7 +45,7 @@ return {
 		ru = "Мне это нужно",
 	},
 	loc_command_daemonhost = {
-		en = "Attention, Daemonhost",
+		en = "Attention,\n Daemonhost",
 		ru = "Внимание,\n Демонхост",
 	},
 	loc_command_daemonhost_alert = {
