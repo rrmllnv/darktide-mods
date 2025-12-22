@@ -11,7 +11,7 @@ mod:io_dofile("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/Mo
 
 local Utils = require("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_utils")
 local is_in_valid_lvl = Utils.is_in_valid_lvl
-local is_in_psychanium = Utils.is_in_psychanium
+local is_in_psykhanium = Utils.is_in_psykhanium
 
 local hud_elements = {
 	{
@@ -44,7 +44,7 @@ local can_activate_view = function(ui_manager, view)
 	end
 	
 	-- Проверка настройки для псайкиниума
-	if is_in_psychanium() then
+	if is_in_psykhanium() then
 		if not mod:get("enable_in_psykhanium") then
 			return false
 		end

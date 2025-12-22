@@ -16,7 +16,7 @@ local RESOLUTION_LOOKUP = RESOLUTION_LOOKUP
 local HOVER_GRACE_PERIOD = 0.4
 
 local is_in_valid_lvl = Utils.is_in_valid_lvl
-local is_in_psychanium = Utils.is_in_psychanium
+local is_in_psykhanium = Utils.is_in_psykhanium
 local localize_text = Utils.localize_text
 local activate_option = Utils.activate_option
 local apply_style_offset = Utils.apply_style_offset
@@ -82,15 +82,15 @@ end
 
 local function generate_options_from_config(wheel_config)
 	local options = {}
-	local in_psychanium = is_in_psychanium()
+	local in_psykhanium = is_in_psykhanium()
 	
 	for i, id in ipairs(wheel_config) do
 
-		if in_psychanium and id == "training_grounds" then
+		if in_psykhanium and id == "training_grounds" then
 			options[i] = button_definitions_by_id["exit_psychanium"]
 
 
-		elseif not in_psychanium and id == "exit_psychanium" then
+		elseif not in_psykhanium and id == "exit_psychanium" then
 			options[i] = nil
 
 		else

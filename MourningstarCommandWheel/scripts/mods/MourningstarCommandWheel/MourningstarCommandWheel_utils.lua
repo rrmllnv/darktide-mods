@@ -13,7 +13,7 @@ local function is_in_valid_lvl()
 	return false
 end
 
-local function is_in_psychanium()
+local function is_in_psykhanium()
 	if Managers and Managers.state and Managers.state.game_mode then
 		local game_mode_name = Managers.state.game_mode:game_mode_name()
 		return game_mode_name == "training_grounds" or game_mode_name == "shooting_range"
@@ -101,7 +101,7 @@ end
 
 return {
 	is_in_valid_lvl = is_in_valid_lvl,
-	is_in_psychanium = is_in_psychanium,
+	is_in_psykhanium = is_in_psykhanium,
 	localize_text = localize_text,
 	activate_option = activate_option,
 	find_device_for_key = find_device_for_key,
