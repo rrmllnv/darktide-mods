@@ -27,6 +27,13 @@ return {
         title = "i18n_hotkeys_section",
         sub_widgets = {
           {
+            setting_id = "enable_in_psykhanium",
+            type = "checkbox",
+            default_value = false,
+            title = "enable_in_psykhanium",
+            tooltip_text = "enable_in_psykhanium_description",
+          },
+          {
             setting_id      = "open_inventory_view_key",
             type            = "keybind",
             default_value   = {},

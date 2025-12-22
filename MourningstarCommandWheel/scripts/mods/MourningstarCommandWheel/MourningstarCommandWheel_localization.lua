@@ -15,6 +15,16 @@ return {
     en = "Hotkeys",
     ru = "Горячие клавиши",
   },
+  enable_in_psykhanium = {
+    en = "Enable Hotkeys in the Psykhanium",
+    ["zh-cn"] = "在灵能室启用快捷键",
+    ru = "Включить горячие клавиши в " .. Localize("loc_training_ground_view") .. "е",
+  },
+  enable_in_psykhanium_description = {
+    en = "Allow using hotkeys to open menus in the Psykhanium (Training Grounds).",
+    ["zh-cn"] = "允许在灵能室使用快捷键打开菜单。",
+    ru = "Разрешить использование горячих клавиш для открытия меню в " .. Localize("loc_training_ground_view") .. "е.",
+  },
   open_command_wheel_key = {
     en = "Open Command Wheel",
     ru = "Открыть колесо команд",
