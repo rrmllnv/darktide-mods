@@ -15,6 +15,18 @@ return {
     en = "Hotkeys",
     ru = "Горячие клавиши",
   },
+  i18n_main_menu_section = {
+    en = "Main Character Selection Menu",
+    ru = "Главное меню выбора персонажа",
+  },
+  enable_hub_menu_button = {
+    en = "Enable Hub Menu",
+    ru = "Включить меню хаба",
+  },
+  enable_hub_menu_button_description = {
+    en = "Show the Hub Menu button in the main character selection menu.",
+    ru = "Показывать кнопку меню хаба в главном меню выбора персонажа.",
+  },
   open_command_wheel_key = {
     en = "Open Command Wheel",
     ru = "Открыть колесо команд",

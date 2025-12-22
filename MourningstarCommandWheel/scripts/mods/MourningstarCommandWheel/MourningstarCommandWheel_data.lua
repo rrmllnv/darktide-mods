@@ -22,6 +22,20 @@ return {
         },
       },
       {
+        setting_id = "main_menu_group",
+        type = "group",
+        title = "i18n_main_menu_section",
+        sub_widgets = {
+          {
+            setting_id = "enable_hub_menu_button",
+            type = "checkbox",
+            default_value = true,
+            title = "enable_hub_menu_button",
+            tooltip_text = "enable_hub_menu_button_description",
+          },
+        },
+      },
+      {
         setting_id = "hotkeys_group",
         type = "group",
         title = "i18n_hotkeys_section",
