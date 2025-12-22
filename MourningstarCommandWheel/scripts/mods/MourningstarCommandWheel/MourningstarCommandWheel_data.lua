@@ -32,7 +32,7 @@ return {
             default_value   = {},
             keybind_trigger = "pressed",
             keybind_type    = "function_call",
-            function_name   = "activate_inventory_background_view",
+            function_name   = "open_inventory_background_view",
           },
           {
             setting_id      = "open_change_character_key",
@@ -40,7 +40,7 @@ return {
             default_value   = {},
             keybind_trigger = "pressed",
             keybind_type    = "function_call",
-            function_name   = "activate_change_character",
+            function_name   = "open_change_character",
           },
           {
             setting_id      = "open_barber_view_key",
@@ -48,7 +48,7 @@ return {
             default_value   = {},
             keybind_trigger = "pressed",
             keybind_type    = "function_call",
-            function_name   = "activate_barber_vendor_background_view",
+            function_name   = "open_barber_vendor_background_view",
           },
           {
             setting_id      = "open_contracts_view_key",
@@ -56,7 +56,7 @@ return {
             default_value   = {},
             keybind_trigger = "pressed",
             keybind_type    = "function_call",
-            function_name   = "activate_contracts_background_view",
+            function_name   = "open_contracts_background_view",
           },
           {
             setting_id      = "open_crafting_view_key",
@@ -64,7 +64,7 @@ return {
             default_value   = {},
             keybind_trigger = "pressed",
             keybind_type    = "function_call",
-            function_name   = "activate_crafting_view",
+            function_name   = "open_crafting_view",
           },
           {
             setting_id      = "open_credits_vendor_view_key",
@@ -72,7 +72,7 @@ return {
             default_value   = {},
             keybind_trigger = "pressed",
             keybind_type    = "function_call",
-            function_name   = "activate_credits_vendor_background_view",
+            function_name   = "open_credits_vendor_background_view",
           },
           {
             setting_id      = "open_mission_board_view_key",
@@ -80,7 +80,7 @@ return {
             default_value   = {},
             keybind_trigger = "pressed",
             keybind_type    = "function_call",
-            function_name   = "activate_mission_board_view",
+            function_name   = "open_mission_board_view",
           },
           {
             setting_id      = "open_premium_store_view_key",
@@ -88,7 +88,7 @@ return {
             default_value   = {},
             keybind_trigger = "pressed",
             keybind_type    = "function_call",
-            function_name   = "activate_store_view",
+            function_name   = "open_store_view",
           },
           {
             setting_id      = "open_training_grounds_view_key",
@@ -96,7 +96,7 @@ return {
             default_value   = {},
             keybind_trigger = "pressed",
             keybind_type    = "function_call",
-            function_name   = "activate_training_grounds_view",
+            function_name   = "open_training_grounds_view",
           },
           {
             setting_id      = "open_social_view_key",
@@ -104,7 +104,7 @@ return {
             default_value   = {},
             keybind_trigger = "pressed",
             keybind_type    = "function_call",
-            function_name   = "activate_social_view",
+            function_name   = "open_social_view",
           },
           {
             setting_id      = "open_commissary_view_key",
@@ -112,7 +112,7 @@ return {
             default_value   = {},
             keybind_trigger = "pressed",
             keybind_type    = "function_call",
-            function_name   = "activate_commissary_view",
+            function_name   = "open_commissary_view",
           },
           {
             setting_id      = "open_penance_view_key",
@@ -120,7 +120,7 @@ return {
             default_value   = {},
             keybind_trigger = "pressed",
             keybind_type    = "function_call",
-            function_name   = "activate_penance_overview_view",
+            function_name   = "open_penance_overview_view",
           },
           {
             setting_id      = "open_havoc_background_view",
@@ -128,7 +128,7 @@ return {
             default_value   = {},
             keybind_trigger = "pressed",
             keybind_type    = "function_call",
-            function_name   = "activate_havoc_background_view",
+            function_name   = "open_havoc_background_view",
           },
           {
             setting_id      = "open_group_finder_view_key",
@@ -136,7 +136,7 @@ return {
             default_value   = {},
             keybind_trigger = "pressed",
             keybind_type    = "function_call",
-            function_name   = "activate_group_finder_view",
+            function_name   = "open_group_finder_view",
           },
         },
       },

@@ -45,7 +45,7 @@ local can_activate_view = function(ui_manager, view)
 	return is_in_valid_lvl() and (not ui_manager:chat_using_input()) and (not ui_manager:has_active_view(view))
 end
 
-mod.activate_hub_view = function(self, view)
+mod.open_view_safe = function(self, view)
 	if not view then
 		return false
 	end
@@ -65,7 +65,7 @@ mod.activate_hub_view = function(self, view)
 		end)
 		
 		if not success then
-			mod:error("Failed to open view '%s': %s", view, tostring(result))
+			-- mod:error("Failed to open view '%s': %s", view, tostring(result))
 			return false
 		end
 		
@@ -84,13 +84,13 @@ mod.change_character = function(self)
 		if Managers.multiplayer_session and Managers.multiplayer_session.leave then
 			Managers.multiplayer_session:leave("exit_to_main_menu")
 		else
-			mod:error("multiplayer_session not available for character change")
+			-- mod:error("multiplayer_session not available for character change")
 			return false
 		end
 	end)
 	
 	if not success then
-		mod:error("Failed to change character: %s", tostring(err))
+		-- mod:error("Failed to change character: %s", tostring(err))
 		return false
 	end
 	

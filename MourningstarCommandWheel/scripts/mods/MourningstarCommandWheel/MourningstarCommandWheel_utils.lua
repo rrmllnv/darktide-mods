@@ -50,12 +50,12 @@ local function activate_option(option)
 				Managers.state.game_mode:complete_game_mode()
 			end
 		elseif option.view then
-			mod:activate_hub_view(option.view)
+			mod:open_view_safe(option.view)
 		end
 	end)
 	
 	if not success then
-		mod:error("Failed to activate action/view '%s': %s", tostring(option.action or option.view), tostring(err))
+		-- mod:error("Failed to activate action/view '%s': %s", tostring(option.action or option.view), tostring(err))
 		return false
 	end
 	
