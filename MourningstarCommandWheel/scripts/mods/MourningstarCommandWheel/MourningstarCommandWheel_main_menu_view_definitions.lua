@@ -78,28 +78,28 @@ local widget_definitions = {
 				scale_to_material = true,
 				vertical_alignment = "center",
 				size_addition = {
-					40,
-					40,
+					30,
+					30,
 				},
 				offset = {
 					0,
 					0,
-					0,
+					1,
 				},
 				color = Color.terminal_grid_background(255, true),
 			},
 		},
-		-- {
-		-- 	pass_type = "rect",
-		-- 	style = {
-		-- 		color = Color.black(100, true)
-		-- 	},
-		-- 	offset = {
-		-- 		0,
-		-- 		0,
-		-- 		1
-		-- 	}
-		-- },
+		{
+			pass_type = "rect",
+			style = {
+				color = Color.black(200, true)
+			},
+			offset = {
+				0,
+				0,
+				1
+			}
+		},
 		{
 			pass_type = "texture_uv",
 			style_id = "top_divider",
@@ -110,7 +110,7 @@ local widget_definitions = {
 				scale_to_material = true,
 				vertical_alignment = "top",
 				size_addition = {
-					30,
+					20,
 					0,
 				},
 				size = {
@@ -144,7 +144,7 @@ local widget_definitions = {
 				scale_to_material = true,
 				vertical_alignment = "bottom",
 				size_addition = {
-					30,
+					20,
 					0,
 				},
 				size = {
