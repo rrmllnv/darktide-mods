@@ -581,7 +581,7 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 		local key, label, group_name = data[1], data[2], data[3]
 		local has_data = false
 		
-		for _, player_data in pairs(players) do
+			for _, player_data in pairs(players) do
 			if player_data and player_data.account_id then
 				local account_id = player_data.account_id
 				local kills = 0
@@ -600,9 +600,17 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 					dmg = mod.saved_damage_by_category[account_id][key] or 0
 				end
 				
-				if kills > 0 or dmg > 0 then
+				-- Проверяем наличие данных в зависимости от настройки
+				if _settings.killsboard_show_empty_categories then
+					-- Показываем все категории
 					has_data = true
 					break
+				else
+					-- Показываем только категории с данными
+					if kills > 0 or dmg > 0 then
+						has_data = true
+						break
+					end
 				end
 			end
 		end

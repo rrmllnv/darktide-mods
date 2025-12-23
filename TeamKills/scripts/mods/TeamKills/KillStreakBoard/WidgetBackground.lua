@@ -18,13 +18,18 @@ end
 
 -- Функция для создания определения scenegraph для строк таблицы
 -- Используется в WidgetDefinitions.lua и TacticalOverlay.lua
+-- Примечание: начальный размер берется из настроек, но затем обновляется динамически
+-- через adjust_killsboard_size в зависимости от killsboard_dynamic_size:
+-- - true: размер вычисляется на основе количества строк (динамический)
+-- - false: используется фиксированный размер из killsboard_size[2]
 local function create_killsboard_rows_scenegraph(settings, base_z)
 	base_z = base_z or 100
 	
-	-- Вычисляем высоту области строк: общая высота минус отступы сверху и снизу
+	-- Вычисляем начальную высоту области строк: общая высота минус отступы сверху и снизу
 	-- При vertical_alignment = "top" размер ограничивает область снизу, создавая отступ снизу
 	-- Если killsboard_rows_bottom_offset = 10, то rows_height будет на 10 пикселей меньше,
 	-- что создаст визуальный отступ снизу (строки не будут доходить до низа фона)
+	-- Этот размер будет обновлен динамически через adjust_killsboard_size
 	local rows_height = settings.killsboard_size[2] - settings.killsboard_rows_top_offset - settings.killsboard_rows_bottom_offset
 	
 	return {
@@ -66,7 +71,7 @@ local function create_killsboard_background_passes(settings, base_x, base_z)
 		{
 			pass_type = "rect",
 			style = {
-				color = Color.black(200, true)
+				color = Color.black(240, true)
 			},
 			offset = {
 				base_x,
