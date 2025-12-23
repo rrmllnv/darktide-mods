@@ -18,10 +18,6 @@ end
 
 -- Функция для создания определения scenegraph для строк таблицы
 -- Используется в WidgetDefinitions.lua и TacticalOverlay.lua
--- Примечание: начальный размер берется из настроек, но затем обновляется динамически
--- через adjust_killsboard_size в зависимости от killsboard_dynamic_size:
--- - true: размер вычисляется на основе количества строк (динамический)
--- - false: используется фиксированный размер из killsboard_size[2]
 local function create_killsboard_rows_scenegraph(settings, base_z)
 	base_z = base_z or 100
 	
