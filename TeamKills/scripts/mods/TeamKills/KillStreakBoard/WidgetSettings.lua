@@ -30,6 +30,18 @@ local killstreak_widget_settings = {
     killsboard_rows_bottom_offset = 0, -- вертикальный отступ таблицы от низа фона
     killsboard_show_empty_categories = true, -- показывать категории без данных (true) или только с данными (false)
     killsboard_dynamic_size = false, -- динамический размер фона на основе количества строк (true) или фиксированный (false)
+    -- Настройки стиля текста категории (первый столбец)
+    killsboard_category_text_horizontal_alignment = "left", -- выравнивание текста категории по горизонтали
+    killsboard_category_text_vertical_alignment = "center", -- выравнивание текста категории по вертикали
+    killsboard_category_text_color_alpha = 255, -- альфа-канал для цвета текста категории (Color.terminal_text_header)
+    killsboard_category_text_color_use_terminal = true, -- использовать terminal цвет (true) или white (false)
+    killsboard_category_text_white_alpha = 200, -- альфа-канал для белого цвета текста категории (Color.white)
+    -- Настройки стиля текста столбцов K и D
+    killsboard_column_text_horizontal_alignment = "center", -- выравнивание текста столбцов K и D по горизонтали
+    killsboard_column_text_vertical_alignment = "center", -- выравнивание текста столбцов K и D по вертикали
+    killsboard_column_text_color_alpha = 255, -- альфа-канал для цвета текста столбцов K и D (Color.terminal_text_header)
+    killsboard_column_text_color_use_terminal = true, -- использовать terminal цвет (true) или white (false)
+    killsboard_column_text_white_alpha = 200, -- альфа-канал для белого цвета текста столбцов K и D (Color.white)
 }
 
 return killstreak_widget_settings
