@@ -460,8 +460,11 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		
 		-- Цвета для четных и нечетных строк
 		-- ВСЯ строка (все столбцы) должна иметь один цвет
-		local color_dark = Color.black(_settings.killsboard_row_color_dark_alpha, true)  -- черный
-		local color_light = Color.black(_settings.killsboard_row_color_light_alpha, true)  -- темно-серый
+		-- Используем функции Color напрямую из настроек
+		local color_dark_func = _settings.killsboard_row_color_dark_func or Color.black
+		local color_light_func = _settings.killsboard_row_color_light_func or Color.black
+		local color_dark = color_dark_func(_settings.killsboard_row_color_dark_alpha, true)
+		local color_light = color_light_func(_settings.killsboard_row_color_light_alpha, true)
 		
 		-- Проверяем, нужно ли подсвечивать эту категорию (из массива highlighted_categories)
 		local has_recent_kill = false

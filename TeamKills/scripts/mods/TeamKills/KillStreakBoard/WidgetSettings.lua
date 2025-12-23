@@ -1,5 +1,7 @@
 local mod = get_mod("TeamKills")
 
+local Color = Color
+
 local killstreak_widget_settings = {
     shading_environment = "content/shading_environments/ui/system_menu",
     killsboard_size = {1000, 900},
@@ -14,9 +16,12 @@ local killstreak_widget_settings = {
     killsboard_fade_length = 0.1,
     killsboard_font_size = 12, -- размер шрифта для обычных строк
     killsboard_font_size_header = 13, -- размер шрифта для заголовка
-    killsboard_row_color_dark_alpha = 0, -- альфа-канал для темного цвета четных строк (черный)
-    killsboard_row_color_light_alpha = 0, -- альфа-канал для светлого цвета нечетных строк (темно-серый)
-    killsboard_row_color_highlight_alpha = 220, -- альфа-канал для цвета подсветки строк с недавними убийствами (зеленый terminal_frame)
+-- Настройки цвета для строк (можно использовать любую функцию Color, например Color.black, Color.terminal_frame, Color.white и т.д.)
+    killsboard_row_color_dark_func = Color.terminal_grid_background, -- функция цвета для темных строк (четные)
+    killsboard_row_color_light_func = Color.terminal_grid_background, -- функция цвета для светлых строк (нечетные)
+    killsboard_row_color_dark_alpha = 20, -- альфа-канал для темного цвета четных строк
+    killsboard_row_color_light_alpha = 40, -- альфа-канал для светлого цвета нечетных строк
+    killsboard_row_color_highlight_alpha = 220, -- альфа-канал для цвета подсветки строк с недавними убийствами
     killsboard_header_bg_alpha = 0, -- альфа-канал для фона заголовка "KILLSTREAK BOARD"
     killsboard_subheader_bg_alpha = 0, -- альфа-канал для фона подзаголовка "Kills/Damage"
     killsboard_total_bg_alpha = 0, -- альфа-канал для фона строки "TOTAL"
