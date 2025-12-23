@@ -196,7 +196,10 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	local group_header = row_data.type == "group_header"
 	local spacer = row_data.type == "spacer"
 	
-	local row_height = (header or group_header) and _settings.killsboard_row_header_height or _settings.killsboard_row_height
+	-- Вычисляем высоту строки: для последней пустой строки добавляем отступ снизу
+	local base_row_height = (header or group_header) and _settings.killsboard_row_header_height or _settings.killsboard_row_height
+	local bottom_offset = row_data.bottom_offset or 0
+	local row_height = base_row_height + bottom_offset
 	-- Используем размер шрифта из settings
 	local font_size = (header or group_header) and _settings.killsboard_font_size_header or _settings.killsboard_font_size
 	
@@ -549,6 +552,9 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		pass_template[13].style.offset[1] = center_k4_d4 - (_settings.killsboard_column_player_bg_width / 2)
 	end
 	
+	-- Обновляем размер шаблона виджета с учетом новой высоты строки
+	size[2] = row_height
+	
 	-- Create widget
 	local widget_definition = UIWidget.create_definition(pass_template, "killsboard_rows", nil, size)
 	
@@ -561,6 +567,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 end
 
 mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, loaded_players, _obj, _create_widget_callback, ui_renderer)
+	local _settings = KillstreakWidgetSettings
 	local current_offset = 0
 	local visible_rows = 0
 	local total_height = 0
@@ -668,8 +675,8 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 	end
 	index = index + 1
 	
-	-- Empty row after total
-	local empty_row = {type = "spacer", name = "empty_after_total"}
+	-- Empty row after total (создает отступ снизу)
+	local empty_row = {type = "spacer", name = "empty_after_total", bottom_offset = _settings.killsboard_rows_bottom_offset or 0}
 	widget, row_height = self:create_killsboard_row_widget(index, current_offset, visible_rows, empty_row, widgets_by_name, players, _obj, _create_widget_callback, ui_renderer)
 	if widget then
 		row_widgets[#row_widgets + 1] = widget
@@ -682,18 +689,25 @@ end
 
 mod.adjust_killsboard_size = function(self, total_height, killsboard_widget, scenegraph, row_widgets)
 	local _settings = KillstreakWidgetSettings
-	local height = total_height + 75
-	height = math.max(height, 100) -- Минимальная высота 600
-	height = math.min(height, 990)
-	killsboard_widget.style.style_id_1.size[2] = height - 3 -- удалить если захочу вернуть тень
-	killsboard_widget.style.style_id_2.size[2] = height - 28 -- inner_shadow_medium
-	killsboard_widget.style.style_id_3.size[2] = height - 4 -- terminal_basic
-	killsboard_widget.style.style_id_4.size[2] = height -- черная подложка фона
-	killsboard_widget.style.style_id_5.offset[2] = -height / 2 -- details_upper
-	killsboard_widget.style.style_id_6.offset[2] = height / 2 - 50 -- details_lower_basic
+	-- total_height уже включает bottom_offset в последней пустой строке
+	-- Фон = total_height + top_offset + bottom_offset (чтобы создать отступ снизу)
+	local height = total_height + _settings.killsboard_rows_top_offset + _settings.killsboard_rows_bottom_offset
+	height = math.max(height, _settings.killsboard_min_height)
+	height = math.min(height, _settings.killsboard_max_height)
 	
+	-- Обновляем размер scenegraph фона
 	local killsboard_graph = scenegraph.killsboard
-	killsboard_graph.size[2] = height
+	if killsboard_graph then
+		killsboard_graph.size[2] = height
+	end
+	
+	-- Обновляем размер scenegraph для строк таблицы
+	-- killsboard_rows должен иметь размер total_height (который уже включает bottom_offset в последней строке)
+	-- Это создаст отступ снизу = bottom_offset между последней строкой и низом фона
+	local killsboard_rows_graph = scenegraph.killsboard_rows
+	if killsboard_rows_graph then
+		killsboard_rows_graph.size[2] = total_height
+	end
 end
 
 -- Экспортируем функцию get_players для использования в других модулях
