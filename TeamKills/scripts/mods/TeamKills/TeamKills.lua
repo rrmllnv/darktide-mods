@@ -610,6 +610,25 @@ function mod.open_killsboard()
 	end
 end
 
+function mod.toggle_killsboard()
+	-- Проверяем, включена ли настройка opt_show_killsboard
+	local opt_show_killsboard = mod:get("opt_show_killsboard") or 1
+	if opt_show_killsboard ~= 1 then
+		-- Если настройка выключена, горячая клавиша не работает
+		return
+	end
+	
+	-- Переключаем видимость killsboard в HUD
+	local current_show_killsboard = mod.show_killsboard or 1
+	if current_show_killsboard == 1 then
+		-- Скрываем
+		mod.show_killsboard = 2
+	else
+		-- Показываем
+		mod.show_killsboard = 1
+	end
+end
+
 -- Хук для отображения killstreak в конце миссии
 mod:hook(CLASS.EndView, "on_enter", function(func, self, ...)
 	func(self, ...)

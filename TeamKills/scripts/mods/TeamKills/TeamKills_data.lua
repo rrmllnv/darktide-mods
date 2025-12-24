@@ -261,6 +261,17 @@ return {
 							{text = "i18n_show_killsboard_show", value = 1},
 							{text = "i18n_show_killsboard_hide", value = 2},
 						},
+						sub_widgets = {
+							{
+								setting_id = "opt_toggle_killsboard",
+								type = "keybind",
+								title = "i18n_toggle_killsboard",
+								default_value = {},
+								keybind_trigger = "pressed",
+								keybind_type = "function_call",
+								function_name = "toggle_killsboard",
+							},
+						},
 					},
 					{
 						setting_id = "opt_show_killsboard_end_view",
@@ -276,7 +287,7 @@ return {
 						setting_id = "opt_open_killsboard",
 						type = "keybind",
 						title = "i18n_open_killsboard",
-						default_value = {"f7"},
+						default_value = {},
 						keybind_trigger = "pressed",
 						keybind_type = "function_call",
 						function_name = "open_killsboard",
