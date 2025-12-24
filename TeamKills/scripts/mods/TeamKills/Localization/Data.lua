@@ -172,6 +172,10 @@ return {
 		en = "Ruthless (1s)",
 		ru = "Безжалостный (1 c)",
 	},
+	i18n_killstreak_min_display = {
+		en = "Minimum killstreak to display",
+		ru = "Мин. убийств для отображения",
+	},
 	i18n_show_killsboard = {
 		en = "Show in tactical overlay",
 		ru = "Показать в тактическом оверлее",

@@ -82,6 +82,13 @@ return {
 							{text = "i18n_killstreak_difficulty_ruthless", value = 3},
 						},
 					},
+					{
+						setting_id = "opt_killstreak_min_display",
+						type = "numeric",
+						title = "i18n_killstreak_min_display",
+						default_value = 2,
+						range = {1, 50},
+					},
 				},
 			},
 			{

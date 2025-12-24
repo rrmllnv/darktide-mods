@@ -360,8 +360,9 @@ mod.get_killstreak_label = function(account_id)
 	end
 
 	local count = mod.player_killstreak[account_id]
+	local min_display = mod:get("opt_killstreak_min_display") or 2
 
-	if not count or count < 2 then
+	if not count or count < min_display then
 		return nil
 	end
 
