@@ -46,6 +46,12 @@ local killstreak_widget_settings = {
     killsboard_column_text_color_alpha = 255, -- альфа-канал для цвета текста столбцов K и D (Color.terminal_text_header)
     killsboard_column_text_color_use_terminal = true, -- использовать terminal цвет (true) или white (false)
     killsboard_column_text_white_alpha = 200, -- альфа-канал для белого цвета текста столбцов K и D (Color.white)
+    -- Настройки стиля текста "Данные отсутствуют"
+    killsboard_no_data_text_horizontal_alignment = "center", -- выравнивание текста "Данные отсутствуют" по горизонтали
+    killsboard_no_data_text_vertical_alignment = "center", -- выравнивание текста "Данные отсутствуют" по вертикали
+    killsboard_no_data_text_offset = 10, -- отступ текста "Данные отсутствуют" от левого края (используется с left_offset)
+    killsboard_no_data_text_color_func = Color.terminal_text_body_sub_header, -- функция цвета для текста "Данные отсутствуют"
+    killsboard_no_data_text_color_alpha = 255, -- альфа-канал для цвета текста "Данные отсутствуют"
 }
 
 return killstreak_widget_settings

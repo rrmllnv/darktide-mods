@@ -195,13 +195,14 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	local total = row_data.type == "total"
 	local group_header = row_data.type == "group_header"
 	local spacer = row_data.type == "spacer"
+	local no_data = row_data.type == "no_data"
 	
 	-- Вычисляем высоту строки: для последней пустой строки добавляем отступ снизу
-	local base_row_height = (header or group_header) and _settings.killsboard_row_header_height or _settings.killsboard_row_height
+	local base_row_height = (header or group_header or no_data) and _settings.killsboard_row_header_height or _settings.killsboard_row_height
 	local bottom_offset = row_data.bottom_offset or 0
 	local row_height = base_row_height + bottom_offset
 	-- Используем размер шрифта из settings
-	local font_size = (header or group_header) and _settings.killsboard_font_size_header or _settings.killsboard_font_size
+	local font_size = (header or group_header or no_data) and _settings.killsboard_font_size_header or _settings.killsboard_font_size
 	
 	-- Вычисляем отступ для центрирования контента
 	-- Ширина контента: column_header_width (300) + column_player_width * 4 (130 * 4 = 520) = 820
@@ -368,6 +369,12 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 				
 				pass_template[k_pass_map[player_num]].value = kills_text
 				pass_template[d_pass_map[player_num]].value = dmg_text
+				
+				-- Скрываем столбцы, если у игрока нет данных
+				local has_data = (total_kills > 0 or total_dmg > 0)
+				pass_template[k_pass_map[player_num]].style.visible = has_data
+				pass_template[d_pass_map[player_num]].style.visible = has_data
+				pass_template[background_pass_map[player_num]].style.visible = has_data
 			end
 			player_num = player_num + 1
 		end
@@ -378,6 +385,32 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 			pass_template[k_pass_map[i]].value = ""
 			pass_template[d_pass_map[i]].value = ""
 		end
+	elseif no_data then
+		-- No data row - показываем текст "Данные отсутствуют" как заголовок
+		local no_data_text = mod:localize("i18n_killsboard_no_data")
+		pass_template[1].value = no_data_text
+		-- Используем настройки из WidgetSettings
+		pass_template[1].style.text_horizontal_alignment = _settings.killsboard_no_data_text_horizontal_alignment
+		pass_template[1].style.text_vertical_alignment = _settings.killsboard_no_data_text_vertical_alignment
+		pass_template[1].style.offset[1] = left_offset + _settings.killsboard_no_data_text_offset
+		-- Применяем цвет текста из настроек (используем функцию Color напрямую)
+		local no_data_text_color_func = _settings.killsboard_no_data_text_color_func or Color.terminal_text_body_sub_header
+		local no_data_text_color = no_data_text_color_func(_settings.killsboard_no_data_text_color_alpha, true)
+		pass_template[1].style.text_color = no_data_text_color
+		pass_template[1].style.color = no_data_text_color
+		pass_template[1].style.default_color = no_data_text_color
+		pass_template[1].style.hover_color = no_data_text_color
+		pass_template[1].style.disabled_color = no_data_text_color
+		-- Скрываем все столбцы игроков
+		for i = 1, 4 do
+			pass_template[k_pass_map[i]].value = ""
+			pass_template[d_pass_map[i]].value = ""
+			pass_template[k_pass_map[i]].style.visible = false
+			pass_template[d_pass_map[i]].style.visible = false
+			pass_template[background_pass_map[i]].style.visible = false
+		end
+		-- Скрываем фон категории
+		pass_template[14].style.visible = false
 	else
 		-- Data row
 		local category_key = row_data.key
@@ -430,6 +463,12 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 				
 				pass_template[k_pass_map[player_num]].value = kills_text
 				pass_template[d_pass_map[player_num]].value = dmg_text
+				
+				-- Скрываем столбцы, если у игрока нет данных
+				local has_data = (kills > 0 or dmg > 0)
+				pass_template[k_pass_map[player_num]].style.visible = has_data
+				pass_template[d_pass_map[player_num]].style.visible = has_data
+				pass_template[background_pass_map[player_num]].style.visible = has_data
 			end
 			player_num = player_num + 1
 		end
@@ -454,6 +493,9 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	elseif spacer then
 		-- Фон для пустой строки (настраивается через killsboard_spacer_bg_alpha, по умолчанию 0 = прозрачный)
 		row_color = Color.black(_settings.killsboard_spacer_bg_alpha, true)
+	elseif no_data then
+		-- Для no_data не устанавливаем фон, чтобы не было видно столбцов
+		row_color = nil
 	else
 		-- Определяем четность строки (visible_rows уже учитывает header и subheader)
 		local is_even_row = visible_rows % 2 == 0
@@ -507,8 +549,8 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		row_color = has_recent_kill and Color.terminal_frame(_settings.killsboard_row_color_highlight_alpha, true) or base_row_color
 	end
 	
-	-- Применяем фоны для всех типов строк
-	if row_color then
+	-- Применяем фоны для всех типов строк (кроме no_data)
+	if row_color and not no_data then
 		-- bg_category (столбец категорий) - индекс 14
 		pass_template[14].style.size[2] = row_height
 		pass_template[14].style.visible = true
@@ -646,11 +688,35 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 		end
 	end
 	
+	-- Проверяем, есть ли реальные data строки (не только group_header)
+	local has_data_rows = false
+	for _, category_data in ipairs(categories_to_show) do
+		if category_data.type == "data" then
+			has_data_rows = true
+			break
+		end
+	end
+	
 	local index = 1
+	
+	-- Если нет данных, показываем только текст "Данные отсутствуют"
+	if not has_data_rows then
+		-- Создаем виджет с текстом "Данные отсутствуют"
+		local no_data_row = {type = "no_data", name = "no_data"}
+		widget, row_height = self:create_killsboard_row_widget(index, current_offset + 80, visible_rows, no_data_row, widgets_by_name, players, _obj, _create_widget_callback, ui_renderer)
+		if widget then
+			row_widgets = row_widgets or {}
+			row_widgets[#row_widgets + 1] = widget
+			widgets_by_name = widgets_by_name or {}
+			widgets_by_name["killsboard_row_no_data"] = widget
+			current_offset = current_offset + row_height
+		end
+		return row_widgets, current_offset
+	end
 	
 	-- Header
 	local header_row = {type = "header", name = "header"}
-	local widget, row_height = self:create_killsboard_row_widget(index, current_offset, visible_rows, header_row, widgets_by_name, players, _obj, _create_widget_callback, ui_renderer)
+	widget, row_height = self:create_killsboard_row_widget(index, current_offset, visible_rows, header_row, widgets_by_name, players, _obj, _create_widget_callback, ui_renderer)
 	if widget then
 		row_widgets = row_widgets or {}
 		row_widgets[#row_widgets + 1] = widget

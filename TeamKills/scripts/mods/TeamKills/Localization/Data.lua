@@ -252,4 +252,8 @@ return {
 		en = "KillStreak Board",
 		ru = "Доска серии убийств",
 	},
+	i18n_killsboard_no_data = {
+		en = "No data available",
+		ru = "Данные отсутствуют",
+	},
 }
