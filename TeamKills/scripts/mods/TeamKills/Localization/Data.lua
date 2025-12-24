@@ -197,8 +197,8 @@ return {
 		ru = "Скрыть",
 	},
 	i18n_toggle_killsboard = {
-		en = "Toggle Killsboard",
-		ru = "Переключить доску убийств",
+		en = "Toggle board visibility",
+		ru = "Переключить видимость доски",
 	},
 	i18n_open_killsboard = {
 		en = "Open (Hub only)",
