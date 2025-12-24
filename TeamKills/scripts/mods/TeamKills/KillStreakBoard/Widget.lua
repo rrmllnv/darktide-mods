@@ -471,10 +471,28 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		if row_data.type == "data" and row_data.key then
 			local category_key = row_data.key
 			
+			-- Получаем настройки подсветки
+			local highlight_my_killstreaks = mod:get("opt_highlight_my_killstreaks") ~= false
+			local highlight_team_killstreaks = mod:get("opt_highlight_team_killstreaks") ~= false
+			
+			-- Получаем local_account_id для проверки
+			local local_account_id = nil
+			if Managers and Managers.player then
+				local local_player = Managers.player:local_player(1)
+				if local_player then
+					local_account_id = local_player:account_id() or local_player:name()
+				end
+			end
+			
 			for _, player_data in pairs(players) do
 				if player_data and player_data.account_id then
 					local account_id = player_data.account_id
-					if mod.highlighted_categories and mod.highlighted_categories[account_id] and mod.highlighted_categories[account_id][category_key] then
+					local is_local_player = (local_account_id and account_id == local_account_id)
+					
+					-- Проверяем настройки: для локального игрока - highlight_my_killstreaks, для остальных - highlight_team_killstreaks
+					local should_check_highlight = (is_local_player and highlight_my_killstreaks) or (not is_local_player and highlight_team_killstreaks)
+					
+					if should_check_highlight and mod.highlighted_categories and mod.highlighted_categories[account_id] and mod.highlighted_categories[account_id][category_key] then
 						has_recent_kill = true
 						break
 					end

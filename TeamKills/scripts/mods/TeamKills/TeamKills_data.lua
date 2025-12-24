@@ -291,6 +291,20 @@ return {
 						},
 					},
 					{
+						setting_id = "opt_highlight_my_killstreaks",
+						type = "checkbox",
+						title = "i18n_highlight_my_killstreaks",
+						tooltip_text = "i18n_highlight_my_killstreaks_tooltip",
+						default_value = true,
+					},
+					{
+						setting_id = "opt_highlight_team_killstreaks",
+						type = "checkbox",
+						title = "i18n_highlight_team_killstreaks",
+						tooltip_text = "i18n_highlight_team_killstreaks_tooltip",
+						default_value = true,
+					},
+					{
 						setting_id = "opt_open_killsboard",
 						type = "keybind",
 						title = "i18n_open_killsboard",

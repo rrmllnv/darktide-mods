@@ -204,6 +204,22 @@ return {
 		en = "Toggle board visibility",
 		ru = "Переключить видимость доски",
 	},
+	i18n_highlight_my_killstreaks = {
+		en = "Highlight my killstreaks",
+		ru = "Подсвечивать мои серии убийств",
+	},
+	i18n_highlight_my_killstreaks_tooltip = {
+		en = "Damage dealt before the killstreak countdown started is not highlighted",
+		ru = "Урон нанесенный до начала отсчета серии убийств не подсвечиваются",
+	},
+	i18n_highlight_team_killstreaks = {
+		en = "Highlight team killstreaks",
+		ru = "Подсвечивать серии убийств команды",
+	},
+	i18n_highlight_team_killstreaks_tooltip = {
+		en = "Damage dealt before the killstreak countdown started is not highlighted",
+		ru = "Урон нанесенный до начала отсчета серии убийств не подсвечиваются",
+	},
 	i18n_open_killsboard = {
 		en = "Open (Hub only)",
 		ru = "Открывать (только в хабе)",
