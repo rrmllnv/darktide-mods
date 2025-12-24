@@ -195,8 +195,11 @@ local widget_definitions = {
 					},
 				},
 				visibility_function = function (content)
-					local show_background = mod.show_background or mod:get("opt_show_background") or 1
-					return content.visible and show_background == 1
+					local show_background = mod.show_background
+					if show_background == nil then
+						show_background = mod:get("opt_show_background") ~= false
+					end
+					return content.visible and show_background
 				end,
 			},
 			{

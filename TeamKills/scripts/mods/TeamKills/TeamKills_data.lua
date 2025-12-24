@@ -59,13 +59,9 @@ return {
 					},
 					{
 						setting_id = "opt_show_killstreaks",
-						type = "dropdown",
+						type = "checkbox",
 						title = "i18n_show_killstreaks",
-						default_value = 1,
-						options = {
-							{text = "i18n_show_killstreaks_show", value = 1},
-							{text = "i18n_show_killstreaks_hide", value = 2},
-						},
+						default_value = true,
 					},
 					{
 						setting_id = "opt_killstreak_difficulty",
@@ -193,13 +189,9 @@ return {
 					},
 					{
 						setting_id = "opt_show_background",
-						type = "dropdown",
+						type = "checkbox",
 						title = "i18n_show_background",
-						default_value = 1,
-						options = {
-							{text = "i18n_show_background_show", value = 1},
-							{text = "i18n_show_background_hide", value = 2},
-						},
+						default_value = true,
 					},
 					{
 						setting_id = "opt_font_size",
@@ -257,13 +249,9 @@ return {
 				sub_widgets = {
 					{
 						setting_id = "opt_show_killsboard",
-						type = "dropdown",
+						type = "checkbox",
 						title = "i18n_show_killsboard",
-						default_value = 1,
-						options = {
-							{text = "i18n_show_killsboard_show", value = 1},
-							{text = "i18n_show_killsboard_hide", value = 2},
-						},
+						default_value = true,
 						sub_widgets = {
 							{
 								setting_id = "opt_toggle_killsboard",
@@ -278,13 +266,9 @@ return {
 					},
 					{
 						setting_id = "opt_show_killsboard_end_view",
-						type = "dropdown",
+						type = "checkbox",
 						title = "i18n_show_killsboard_end_view",
-						default_value = 1,
-						options = {
-							{text = "i18n_show_killsboard_end_view_show", value = 1},
-							{text = "i18n_show_killsboard_end_view_hide", value = 2},
-						},
+						default_value = true,
 					},
 					{
 						setting_id = "opt_highlight_my_killstreaks",

@@ -36,7 +36,7 @@ mod.saved_damage_by_category = {}
 mod.saved_player_kills = {}
 mod.saved_player_damage = {}
 mod.display_mode = mod:get("opt_display_mode") or 1
-mod.show_background = mod:get("opt_show_background") or 1
+mod.show_background = mod:get("opt_show_background") ~= false
 mod.opacity = mod:get("opt_opacity") or 100
 
 for _, hud_element in ipairs(hud_elements) do
@@ -128,7 +128,7 @@ local function recreate_hud()
     mod.show_kills = mod:get("opt_show_kills") ~= false
     mod.show_total_damage = mod:get("opt_show_total_damage") ~= false
     mod.show_last_damage = mod:get("opt_show_last_damage") == true
-    mod.show_killstreaks = mod:get("opt_show_killstreaks") or 1
+    mod.show_killstreaks = mod:get("opt_show_killstreaks") ~= false
     local ks_diff = mod:get("opt_killstreak_difficulty") or 2
     if ks_diff == 1 then
         mod.killstreak_duration_seconds = mod.KILLSTREAK_DURATION_EASY
@@ -141,9 +141,9 @@ local function recreate_hud()
     mod.damage_color = mod:get("opt_damage_color") or "orange"
     mod.last_damage_color = mod:get("opt_last_damage_color") or "orange"
     mod.font_size = mod:get("opt_font_size") or 16
-    mod.show_background = mod:get("opt_show_background") or 1
+    mod.show_background = mod:get("opt_show_background") ~= false
     mod.opacity = mod:get("opt_opacity") or 100
-    mod.show_killsboard = mod:get("opt_show_killsboard") or 1
+    mod.show_killsboard = mod:get("opt_show_killsboard") ~= false
 end
 
 mod.on_all_mods_loaded = function()
@@ -168,7 +168,7 @@ mod.on_setting_changed = function()
     mod.show_total_damage = mod:get("opt_show_total_damage") ~= false
     mod.show_last_damage = mod:get("opt_show_last_damage") == true
     mod.show_team_summary = mod:get("opt_show_team_summary") ~= false
-    mod.show_killstreaks = mod:get("opt_show_killstreaks") or 1
+    mod.show_killstreaks = mod:get("opt_show_killstreaks") ~= false
     local ks_diff = mod:get("opt_killstreak_difficulty") or 2
     if ks_diff == 1 then
         mod.killstreak_duration_seconds = mod.KILLSTREAK_DURATION_EASY
@@ -181,13 +181,13 @@ mod.on_setting_changed = function()
     mod.damage_color = mod:get("opt_damage_color") or "orange"
     mod.last_damage_color = mod:get("opt_last_damage_color") or "orange"
     mod.font_size = mod:get("opt_font_size") or 16
-    mod.show_background = mod:get("opt_show_background") or 1
+    mod.show_background = mod:get("opt_show_background") ~= false
     mod.opacity = mod:get("opt_opacity") or 100
-    mod.show_killsboard = mod:get("opt_show_killsboard") or 1
-    local show_killsboard_end_view = mod:get("opt_show_killsboard_end_view") or 1
+    mod.show_killsboard = mod:get("opt_show_killsboard") ~= false
+    local show_killsboard_end_view = mod:get("opt_show_killsboard_end_view") ~= false
     -- Обновляем флаг, если мы уже в EndView
     if mod.killsboard_show_in_end_view then
-        mod.killsboard_show_in_end_view = (show_killsboard_end_view == 1)
+        mod.killsboard_show_in_end_view = show_killsboard_end_view
     end
 
     if mod.hud_element then
@@ -355,7 +355,7 @@ mod.update_killstreak_timers = function(dt)
 end
 
 mod.get_killstreak_label = function(account_id)
-	if mod.show_killstreaks ~= 1 then
+	if not mod.show_killstreaks then
 		return nil
 	end
 
@@ -613,21 +613,19 @@ end
 
 function mod.toggle_killsboard()
 	-- Проверяем, включена ли настройка opt_show_killsboard
-	local opt_show_killsboard = mod:get("opt_show_killsboard") or 1
-	if opt_show_killsboard ~= 1 then
+	local opt_show_killsboard = mod:get("opt_show_killsboard") ~= false
+	if not opt_show_killsboard then
 		-- Если настройка выключена, горячая клавиша не работает
 		return
 	end
 	
 	-- Переключаем видимость killsboard в HUD
-	local current_show_killsboard = mod.show_killsboard or 1
-	if current_show_killsboard == 1 then
-		-- Скрываем
-		mod.show_killsboard = 2
-	else
-		-- Показываем
-		mod.show_killsboard = 1
+	local current_show_killsboard = mod.show_killsboard
+	if current_show_killsboard == nil then
+		current_show_killsboard = mod:get("opt_show_killsboard") ~= false
 	end
+	-- Переключаем: если true, то false, если false, то true
+	mod.show_killsboard = not current_show_killsboard
 end
 
 -- Хук для отображения killstreak в конце миссии
@@ -636,8 +634,8 @@ mod:hook(CLASS.EndView, "on_enter", function(func, self, ...)
 	-- Сохраняем данные миссии для показа в карусели (НЕ очищаем здесь!)
 	save_mission_data()
 	
-	local show_killsboard_end_view = mod:get("opt_show_killsboard_end_view") or 1
-	if show_killsboard_end_view == 1 then
+	local show_killsboard_end_view = mod:get("opt_show_killsboard_end_view") ~= false
+	if show_killsboard_end_view then
 		mod:show_killstreak_view({end_view = true})
 	end
 end)

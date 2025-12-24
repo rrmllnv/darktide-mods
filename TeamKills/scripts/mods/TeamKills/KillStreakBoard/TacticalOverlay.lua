@@ -77,8 +77,11 @@ mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, 
 	self.killsboard_row_widgets = self.killsboard_row_widgets or {}
 	local killsboard_widget = self._widgets_by_name["killsboard"]
 	
-	local show_killsboard = mod.show_killsboard or mod:get("opt_show_killsboard") or 1
-	local show_killsboard_end_view = mod:get("opt_show_killsboard_end_view") or 1
+	local show_killsboard = mod.show_killsboard
+	if show_killsboard == nil then
+		show_killsboard = mod:get("opt_show_killsboard") ~= false
+	end
+	local show_killsboard_end_view = mod:get("opt_show_killsboard_end_view") ~= false
 	local delete = false
 	
 	-- Удаляем виджеты только если:
@@ -89,10 +92,10 @@ mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, 
 		delete = true
 	elseif not self._active and mod.killsboard_hud_active and not mod.killsboard_show_in_end_view then
 		delete = true
-	elseif show_killsboard ~= 1 and mod.killsboard_hud_active and not mod.killsboard_show_in_end_view then
+	elseif not show_killsboard and mod.killsboard_hud_active and not mod.killsboard_show_in_end_view then
 		-- Удаляем виджеты, если настройка выключена (но не в EndView)
 		delete = true
-	elseif mod.killsboard_show_in_end_view and show_killsboard_end_view ~= 1 then
+	elseif mod.killsboard_show_in_end_view and not show_killsboard_end_view then
 		-- Удаляем виджеты, если мы в EndView, но настройка show_killsboard_end_view выключена
 		delete = true
 	end
@@ -108,7 +111,7 @@ mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, 
 			self.killsboard_row_widgets = {}
 		end
 		-- Сбрасываем флаг активности, чтобы виджеты могли быть пересозданы при следующем показе
-		if show_killsboard ~= 1 and not mod.killsboard_show_in_end_view then
+		if not show_killsboard and not mod.killsboard_show_in_end_view then
 			mod.killsboard_hud_active = false
 		end
 	end
@@ -116,22 +119,22 @@ mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, 
 	-- Создаем/обновляем виджеты если:
 	-- 1. Tactical overlay активен и killsboard_hud_active еще false
 	-- 2. Мы в EndView и настройка включена (независимо от активности tactical overlay)
-	-- 3. show_killsboard == 1, но виджеты пустые или отсутствуют (после переключения видимости)
+	-- 3. show_killsboard включен, но виджеты пустые или отсутствуют (после переключения видимости)
 	local should_create = false
 	if self._active and not mod.killsboard_hud_active then
 		should_create = true
-	elseif mod.killsboard_show_in_end_view and show_killsboard_end_view == 1 and show_killsboard == 1 then
+	elseif mod.killsboard_show_in_end_view and show_killsboard_end_view and show_killsboard then
 		-- В EndView создаем виджеты, даже если tactical overlay не активен
 		if not mod.killsboard_hud_active or #(self.killsboard_row_widgets or {}) == 0 then
 			should_create = true
 		end
-	elseif show_killsboard == 1 and mod.killsboard_hud_active and (#(self.killsboard_row_widgets or {}) == 0) then
+	elseif show_killsboard and mod.killsboard_hud_active and (#(self.killsboard_row_widgets or {}) == 0) then
 		-- Если show_killsboard включен, но виджеты пустые (после переключения видимости), пересоздаем их
 		should_create = true
 	end
 	
 	if should_create then
-		if show_killsboard == 1 then
+		if show_killsboard then
 			local players = get_players()
 			local row_widgets, total_height = mod:setup_killsboard_row_widgets(self.killsboard_row_widgets, self._widgets_by_name, players, self, "_create_widget", ui_renderer)
 			self.killsboard_row_widgets = row_widgets
@@ -147,7 +150,7 @@ mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, 
 	-- Показываем killsboard если:
 	-- 1. Обычные условия (show_killsboard включен, не в hub)
 	-- 2. ИЛИ мы в EndView и обе настройки включены
-	local should_show = (show_killsboard == 1 and not in_hub and not in_prologue_hub) or (mod.killsboard_show_in_end_view and show_killsboard == 1 and show_killsboard_end_view == 1)
+	local should_show = (show_killsboard and not in_hub and not in_prologue_hub) or (mod.killsboard_show_in_end_view and show_killsboard and show_killsboard_end_view)
 	if killsboard_widget then
 		killsboard_widget.visible = should_show
 	end
@@ -162,7 +165,7 @@ mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, 
 	
 	-- Обновляем флаг активности: true если tactical overlay активен ИЛИ мы в EndView, И show_killsboard включен
 	-- Если show_killsboard выключен, сбрасываем флаг, чтобы виджеты могли быть пересозданы при следующем показе
-	if show_killsboard == 1 then
+	if show_killsboard then
 		mod.killsboard_hud_active = self._active or mod.killsboard_show_in_end_view
 	else
 		-- Если show_killsboard выключен и не в EndView, сбрасываем флаг
