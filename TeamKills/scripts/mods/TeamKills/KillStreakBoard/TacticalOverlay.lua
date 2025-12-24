@@ -107,11 +107,16 @@ mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, 
 			end
 			self.killsboard_row_widgets = {}
 		end
+		-- Сбрасываем флаг активности, чтобы виджеты могли быть пересозданы при следующем показе
+		if show_killsboard ~= 1 and not mod.killsboard_show_in_end_view then
+			mod.killsboard_hud_active = false
+		end
 	end
 	
 	-- Создаем/обновляем виджеты если:
 	-- 1. Tactical overlay активен и killsboard_hud_active еще false
 	-- 2. Мы в EndView и настройка включена (независимо от активности tactical overlay)
+	-- 3. show_killsboard == 1, но виджеты пустые или отсутствуют (после переключения видимости)
 	local should_create = false
 	if self._active and not mod.killsboard_hud_active then
 		should_create = true
@@ -120,6 +125,9 @@ mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, 
 		if not mod.killsboard_hud_active or #(self.killsboard_row_widgets or {}) == 0 then
 			should_create = true
 		end
+	elseif show_killsboard == 1 and mod.killsboard_hud_active and (#(self.killsboard_row_widgets or {}) == 0) then
+		-- Если show_killsboard включен, но виджеты пустые (после переключения видимости), пересоздаем их
+		should_create = true
 	end
 	
 	if should_create then
@@ -152,6 +160,14 @@ mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, 
 		end
 	end
 	
-	-- Обновляем флаг активности: true если tactical overlay активен ИЛИ мы в EndView
-	mod.killsboard_hud_active = self._active or mod.killsboard_show_in_end_view
+	-- Обновляем флаг активности: true если tactical overlay активен ИЛИ мы в EndView, И show_killsboard включен
+	-- Если show_killsboard выключен, сбрасываем флаг, чтобы виджеты могли быть пересозданы при следующем показе
+	if show_killsboard == 1 then
+		mod.killsboard_hud_active = self._active or mod.killsboard_show_in_end_view
+	else
+		-- Если show_killsboard выключен и не в EndView, сбрасываем флаг
+		if not mod.killsboard_show_in_end_view then
+			mod.killsboard_hud_active = false
+		end
+	end
 end)
