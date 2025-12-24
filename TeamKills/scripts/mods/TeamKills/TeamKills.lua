@@ -167,7 +167,7 @@ mod.on_setting_changed = function()
     mod.show_kills = mod:get("opt_show_kills") ~= false
     mod.show_total_damage = mod:get("opt_show_total_damage") ~= false
     mod.show_last_damage = mod:get("opt_show_last_damage") == true
-    mod.show_team_summary = mod:get("opt_show_team_summary") or 1
+    mod.show_team_summary = mod:get("opt_show_team_summary") ~= false
     mod.show_killstreaks = mod:get("opt_show_killstreaks") or 1
     local ks_diff = mod:get("opt_killstreak_difficulty") or 2
     if ks_diff == 1 then

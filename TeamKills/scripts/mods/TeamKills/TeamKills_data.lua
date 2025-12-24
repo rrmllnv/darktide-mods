@@ -41,13 +41,9 @@ return {
 					},
 					{
 						setting_id = "opt_show_team_summary",
-						type = "dropdown",
+						type = "checkbox",
 						title = "i18n_show_team_summary",
-						default_value = 1,
-						options = {
-							{text = "i18n_show_team_summary_show", value = 1},
-							{text = "i18n_show_team_summary_hide", value = 2},
-						},
+						default_value = true,
 					},
 					{
 						setting_id = "opt_display_mode",

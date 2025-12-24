@@ -319,8 +319,11 @@ TeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, in
     local show_total_damage = mod.show_total_damage ~= false
     local show_last_damage = mod.show_last_damage == true
     local display_mode = mod.display_mode or mod:get("opt_display_mode") or 1
-    local team_summary_setting = mod.show_team_summary or mod:get("opt_show_team_summary") or 1
-    local show_team_summary = team_summary_setting == 1
+    local team_summary_setting = mod.show_team_summary
+    if team_summary_setting == nil then
+        team_summary_setting = mod:get("opt_show_team_summary") ~= false
+    end
+    local show_team_summary = team_summary_setting
     local show_player_lines = display_mode ~= 3
     local show_only_me = display_mode == 2
     local exclude_me = display_mode == 4
