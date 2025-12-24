@@ -150,6 +150,30 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 	local boss_name_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", white_rgb[1], white_rgb[2], white_rgb[3], boss_name)
 	table.insert(lines, boss_name_text)
 	
+	-- Определяем, кто убил босса (последний, кто взаимодействовал с ним)
+	local killer_player = nil
+	if mod.last_enemy_interaction and mod.last_enemy_interaction[unit] then
+		local killer_unit = mod.last_enemy_interaction[unit]
+		killer_player = mod.player_from_unit(killer_unit)
+	end
+	
+	-- Добавляем ник убийцы босса (только если точно определен)
+	if killer_player then
+		local killer_account_id = killer_player:account_id() or killer_player:name()
+		local killer_name = current_players[killer_account_id]
+		if not killer_name then
+			killer_name = killer_player.character_name and killer_player:character_name() or killer_player:name() or tostring(killer_account_id)
+		end
+		
+		-- Применяем цвет к нику игрока
+		local killer_name_text = killer_name
+		local killer_color = get_player_color(killer_account_id)
+		if killer_color then
+			killer_name_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", killer_color[1], killer_color[2], killer_color[3], killer_name)
+		end
+		table.insert(lines, mod:localize("i18n_notification_killed_by") .. killer_name_text)
+	end
+	
 	-- Общий урон команды
 	if show_total_damage and total_damage > 0 then
 		local total_damage_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", damage_rgb[1], damage_rgb[2], damage_rgb[3], mod.format_number(math.floor(total_damage)))

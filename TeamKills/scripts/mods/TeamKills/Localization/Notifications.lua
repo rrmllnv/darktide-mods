@@ -23,6 +23,10 @@ return {
 		en = "Last Hit: ",
 		ru = "Последний удар: ",
 	},
+	i18n_notification_killed_by = {
+		en = "Killed by: ",
+		ru = "Убил босса: ",
+	},
 	i18n_show_total_damage_notification = {
 		en = "Show Total Damage",
 		ru = "Показать общий урон",
