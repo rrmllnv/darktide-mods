@@ -67,15 +67,15 @@ KillstreakView.on_enter = function(self)
             self._ui_scenegraph.killsboard.position[3] = end_view_z
         end
         if self._ui_scenegraph and self._ui_scenegraph.killsboard_rows then
-            -- Увеличиваем z-позицию для scenegraph
-            self._ui_scenegraph.killsboard_rows.position[3] = end_view_z + 1
+            -- Увеличиваем z-позицию для scenegraph (base_z + 3, чтобы строки были поверх всех элементов фона)
+            self._ui_scenegraph.killsboard_rows.position[3] = end_view_z + 3
         end
         -- Увеличиваем z-позицию для всех строк
         if self.row_widgets then
             for i = 1, #self.row_widgets do
                 local widget = self.row_widgets[i]
                 if widget and widget.offset then
-                    widget.offset[3] = end_view_z + 1
+                    widget.offset[3] = end_view_z + 3
                 end
             end
         end

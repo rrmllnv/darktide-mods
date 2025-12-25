@@ -33,7 +33,8 @@ local function create_killsboard_rows_scenegraph(settings, base_z)
 		parent = "killsboard",
 		horizontal_alignment = "center",
 		size = {settings.killsboard_size[1], rows_height},
-		position = {0, settings.killsboard_rows_top_offset, base_z + 1}
+		-- Используем base_z + 3, чтобы строки были поверх всех элементов фона (фон: base_z+1, dividers: base_z+2)
+		position = {0, settings.killsboard_rows_top_offset, base_z + 3}
 	}
 end
 

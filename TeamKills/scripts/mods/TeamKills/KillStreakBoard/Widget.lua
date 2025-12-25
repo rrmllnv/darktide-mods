@@ -658,7 +658,8 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	if widget_definition then
 		widget = _obj[_create_widget_callback](_obj, name, widget_definition)
 		widget.alpha_multiplier = 0
-		widget.offset = {0, current_offset, base_z + 1}
+		-- Используем base_z + 3, чтобы строки были поверх всех элементов фона (фон: base_z+1, dividers: base_z+2)
+		widget.offset = {0, current_offset, base_z + 3}
 		return widget, row_height
 	end
 end
