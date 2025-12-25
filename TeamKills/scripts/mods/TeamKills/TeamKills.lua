@@ -631,26 +631,6 @@ function mod.toggle_killsboard()
 	mod.show_killsboard = not current_show_killsboard
 end
 
-function mod.toggle_killsboard_end_view()
-	-- Проверяем, включена ли настройка opt_show_killsboard_end_view
-	local opt_show_killsboard_end_view = mod:get("opt_show_killsboard_end_view") ~= false
-	if not opt_show_killsboard_end_view then
-		-- Если настройка выключена, горячая клавиша не работает
-		return
-	end
-	
-	-- Переключаем видимость killsboard в EndView
-	if mod.killsboard_show_in_end_view then
-		-- Скрываем
-		mod.killsboard_show_in_end_view = false
-		mod:close_killstreak_view()
-	else
-		-- Показываем
-		mod.killsboard_show_in_end_view = true
-		mod:show_killstreak_view({end_view = true})
-	end
-end
-
 -- Хук для отображения killstreak в конце миссии
 mod:hook(CLASS.EndView, "on_enter", function(func, self, ...)
 	func(self, ...)

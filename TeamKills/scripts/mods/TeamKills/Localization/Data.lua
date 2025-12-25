@@ -204,10 +204,6 @@ return {
 		en = "Toggle board visibility",
 		ru = "Переключить видимость доски",
 	},
-	i18n_toggle_killsboard_end_view = {
-		en = "Toggle board visibility in end view",
-		ru = "Переключить видимость доски в конце миссии",
-	},
 	i18n_highlight_my_killstreaks = {
 		en = "Highlight my killstreaks",
 		ru = "Подсвечивать мои серии убийств",
