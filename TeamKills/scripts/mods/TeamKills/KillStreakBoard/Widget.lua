@@ -839,6 +839,7 @@ mod.adjust_killsboard_size = function(self, total_height, killsboard_widget, sce
 	local killsboard_graph = scenegraph.killsboard
 	if killsboard_graph then
 		killsboard_graph.size[2] = height
+		killsboard_graph.dirty = true
 	end
 	
 	-- Обновляем размер scenegraph для строк таблицы
@@ -847,6 +848,8 @@ mod.adjust_killsboard_size = function(self, total_height, killsboard_widget, sce
 	local killsboard_rows_graph = scenegraph.killsboard_rows
 	if killsboard_rows_graph then
 		killsboard_rows_graph.size[2] = total_height
+		-- Помечаем scenegraph как dirty для пересчета позиции
+		killsboard_rows_graph.dirty = true
 	end
 end
 

@@ -21,12 +21,10 @@ end
 local function create_killsboard_rows_scenegraph(settings, base_z)
 	base_z = base_z or settings.killsboard_base_z or 200
 	
-	-- Вычисляем начальную высоту области строк: общая высота минус отступы сверху и снизу
-	-- При vertical_alignment = "top" размер ограничивает область снизу, создавая отступ снизу
-	-- Если killsboard_rows_bottom_offset = 10, то rows_height будет на 10 пикселей меньше,
-	-- что создаст визуальный отступ снизу (строки не будут доходить до низа фона)
-	-- Этот размер будет обновлен динамически через adjust_killsboard_size
-	local rows_height = settings.killsboard_size[2] - settings.killsboard_rows_top_offset - settings.killsboard_rows_bottom_offset
+	-- Используем минимальную высоту как начальный размер, чтобы избежать смещения при первом отображении
+	-- Размер будет обновлен через adjust_killsboard_size после создания строк
+	local initial_height = settings.killsboard_min_height or settings.killsboard_size[2]
+	local rows_height = initial_height - settings.killsboard_rows_top_offset - settings.killsboard_rows_bottom_offset
 	
 	return {
 		vertical_alignment = "top",
