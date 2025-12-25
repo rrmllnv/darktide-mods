@@ -39,4 +39,8 @@ return {
 		en = "Show Last Hit Damage",
 		ru = "Урон последнего удара",
 	},
+	i18n_show_killer_name_notification = {
+		en = "Show killer name",
+		ru = "Показать имя убийцы",
+	},
 }

@@ -157,8 +157,9 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 		killer_player = mod.player_from_unit(killer_unit)
 	end
 	
-	-- Добавляем ник убийцы босса (только если точно определен)
-	if killer_player then
+	-- Добавляем ник убийцы босса (только если точно определен и настройка включена)
+	local show_killer_name = mod:get("opt_show_killer_name_notification") ~= false
+	if killer_player and show_killer_name then
 		local killer_account_id = killer_player:account_id() or killer_player:name()
 		local killer_name = current_players[killer_account_id]
 		if not killer_name then

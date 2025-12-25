@@ -238,6 +238,12 @@ return {
 								title = "i18n_show_last_hit_damage_notification",
 								default_value = true,
 							},
+							{
+								setting_id = "opt_show_killer_name_notification",
+								type = "checkbox",
+								title = "i18n_show_killer_name_notification",
+								default_value = true,
+							},
 						},
 					},
 				},
