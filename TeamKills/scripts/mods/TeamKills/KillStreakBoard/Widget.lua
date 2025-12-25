@@ -228,7 +228,15 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	local bottom_offset = row_data.bottom_offset or 0
 	local row_height = base_row_height + bottom_offset
 	-- Используем размер шрифта из settings
-	local font_size = (header or group_header or no_data) and _settings.killsboard_font_size_header or _settings.killsboard_font_size
+	-- Для заголовка с именами игроков используем отдельный размер шрифта
+	local font_size
+	if header then
+		font_size = _settings.killsboard_font_size_player_names
+	elseif group_header or no_data then
+		font_size = _settings.killsboard_font_size_header
+	else
+		font_size = _settings.killsboard_font_size
+	end
 	
 	-- Вычисляем отступ для центрирования контента
 	-- Ширина контента: column_header_width (300) + column_player_width * 4 (130 * 4 = 520) = 820
