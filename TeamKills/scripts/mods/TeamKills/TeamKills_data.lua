@@ -275,6 +275,17 @@ return {
 						type = "checkbox",
 						title = "i18n_show_killsboard_end_view",
 						default_value = true,
+						sub_widgets = {
+							{
+								setting_id = "opt_toggle_killsboard_end_view",
+								type = "keybind",
+								title = "i18n_toggle_killsboard_end_view",
+								default_value = {},
+								keybind_trigger = "pressed",
+								keybind_type = "function_call",
+								function_name = "toggle_killsboard_end_view",
+							},
+						},
 					},
 					{
 						setting_id = "opt_highlight_my_killstreaks",
