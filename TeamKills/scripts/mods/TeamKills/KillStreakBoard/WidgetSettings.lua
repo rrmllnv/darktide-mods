@@ -16,8 +16,8 @@ local killstreak_widget_settings = {
     killsboard_category_text_offset = 10, -- отступ текста категории от левого края столбца
     killsboard_fade_length = 0.1,
     killsboard_font_size = 12, -- размер шрифта для обычных строк
-    killsboard_font_size_header = 13, -- размер шрифта для заголовков категорий и "Данные отсутствуют"
-    killsboard_font_size_player_names = 15, -- размер шрифта для имен игроков в заголовке таблицы
+    killsboard_font_size_header = 14, -- размер шрифта для заголовков категорий и "Данные отсутствуют"
+    killsboard_font_size_player_names = 16, -- размер шрифта для имен игроков в заголовке таблицы
 -- Настройки цвета для строк (можно использовать любую функцию Color, например Color.black, Color.terminal_frame, Color.white и т.д.)
     killsboard_row_color_dark_func = Color.terminal_grid_background, -- функция цвета для темных строк (четные)
     killsboard_row_color_light_func = Color.terminal_grid_background, -- функция цвета для светлых строк (нечетные)
