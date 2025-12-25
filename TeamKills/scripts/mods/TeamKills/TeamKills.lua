@@ -9,6 +9,7 @@ local Text = mod:original_require("scripts/utilities/ui/text")
 mod:io_dofile("TeamKills/scripts/mods/TeamKills/TeamKills_constants")
 mod:io_dofile("TeamKills/scripts/mods/TeamKills/TeamKills_notifications")
 mod:io_dofile("TeamKills/scripts/mods/TeamKills/HUD/BossDamageTracker")
+mod:io_dofile("TeamKills/scripts/mods/TeamKills/TeamKills_api")
 
 local hud_elements = {
 	{
@@ -674,6 +675,4 @@ mod:hook(CLASS.EndPlayerView, "on_exit", function(func, self, ...)
 		if view then view:move_killsboard(-300, 0) end
 	end
 end)
-
-
 
