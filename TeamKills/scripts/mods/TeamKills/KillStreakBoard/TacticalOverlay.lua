@@ -25,8 +25,8 @@ mod:hook_require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_
 	
 	-- Используем единое определение scenegraph для строк из WidgetBackground.lua
 	local rows_scenegraph = WidgetBackground.create_killsboard_rows_scenegraph(KillstreakWidgetSettings, base_z)
-	-- Для TacticalOverlay используем base_z - 1 вместо base_z + 1
-	rows_scenegraph.position[3] = base_z - 1
+	-- Используем base_z + 1, чтобы строки были поверх фона
+	rows_scenegraph.position[3] = base_z + 1
 	instance.scenegraph_definition.killsboard_rows = rows_scenegraph
 	-- Используем единое определение фона из WidgetBackground.lua
 	local background_passes = WidgetBackground.create_killsboard_background_passes(KillstreakWidgetSettings, base_x, base_z)

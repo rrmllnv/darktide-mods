@@ -30,8 +30,8 @@ KillstreakView.on_enter = function(self)
     -- Виджет создается автоматически из определений через super.on_enter
     self.killsboard_widget = self._widgets_by_name["killsboard"]
     
-    -- В EndView увеличиваем z-позицию для отображения поверх игровых элементов
-    local end_view_z = self.end_view and 200 or base_z
+    -- В EndView используем то же значение base_z из настроек для консистентности
+    local end_view_z = base_z
     
     if self.killsboard_widget then
         -- Передаем флаг end_view в content для visibility_function
