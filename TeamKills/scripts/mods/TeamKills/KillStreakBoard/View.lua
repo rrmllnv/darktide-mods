@@ -41,38 +41,24 @@ KillstreakView.on_enter = function(self)
         -- Устанавливаем видимость сразу, без анимации для view
         self.killsboard_widget.alpha_multiplier = 1
         self.killsboard_widget.visible = true
-        if not self.end_view then
-            self.killsboard_widget.offset = {0, 0, base_z}
-        else
-            -- В EndView опускаем рамку вниз, чтобы она совпадала с таблицей
-            self.killsboard_widget.offset = {0, 0, end_view_z}
-            -- Увеличиваем z-позицию для всех стилей виджета в EndView
-            if self.killsboard_widget.style then
-                for style_name, style in pairs(self.killsboard_widget.style) do
-                    if style.offset then
-                        style.offset[3] = (style.offset[3] or base_z) + (end_view_z - base_z)
-                    end
-                end
-            end
-        end
+        -- Не устанавливаем offset[3], z-координата берется из scenegraph
     end
     
     self.row_widgets = {}
     self:setup_row_widgets()
     
-    -- В EndView увеличиваем z-позицию для отображения поверх игровых элементов
-    if self.end_view then
-        -- Увеличиваем z-позицию для основного scenegraph killsboard
-        if self._ui_scenegraph and self._ui_scenegraph.killsboard then
-            self._ui_scenegraph.killsboard.position[3] = end_view_z
+    -- Устанавливаем z-позиции для scenegraph (работает и для обычного view, и для EndView)
+    if self._ui_scenegraph then
+        -- Основной контейнер killsboard имеет base_z
+        if self._ui_scenegraph.killsboard then
+            self._ui_scenegraph.killsboard.position[3] = base_z
         end
-        if self._ui_scenegraph and self._ui_scenegraph.killsboard_rows then
-            -- position[3] должен быть 10 (не end_view_z + 10), так как parent "killsboard" уже имеет base_z
-            -- Итоговая z будет base_z + 10, что обеспечивает, что строки будут поверх всех элементов фона и других слоев
+        -- killsboard_rows имеет position[3] = 10 относительно parent "killsboard"
+        -- Итоговая z = base_z + 10, что обеспечивает, что строки будут поверх всех элементов фона
+        -- (фон: base_z+1, dividers: base_z+1, строки: base_z+10)
+        if self._ui_scenegraph.killsboard_rows then
             self._ui_scenegraph.killsboard_rows.position[3] = 10
         end
-        -- offset[3] не изменяем, z-координата берется из scenegraph
-        -- offset используется только для вертикального позиционирования строк
     end
 end
 
