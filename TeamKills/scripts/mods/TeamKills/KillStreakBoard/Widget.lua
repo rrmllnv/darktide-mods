@@ -3,10 +3,36 @@ local mod = get_mod("TeamKills")
 local Color = Color
 local Managers = Managers
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
+local UISettings = mod:original_require("scripts/settings/ui/ui_settings")
 
 local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetSettings")
 local base_z = KillstreakWidgetSettings.killsboard_base_z
 local base_x = 0
+
+-- Функция для получения цвета игрока по account_id
+local function get_player_color(account_id)
+	if not account_id or not Managers.player then
+		return nil
+	end
+	
+	local players = Managers.player:players()
+	for _, player in pairs(players) do
+		if player then
+			local player_account_id = player:account_id() or player:name()
+			if player_account_id == account_id then
+				local slot = player:slot()
+				if slot and UISettings.player_slot_colors[slot] then
+					local color = UISettings.player_slot_colors[slot]
+					-- Color формат: [alpha, r, g, b]
+					return {color[2], color[3], color[4]}
+				end
+				break
+			end
+		end
+	end
+	
+	return nil
+end
 
 -- Функция локализации для врагов
 local function localize_enemy(key)
@@ -274,6 +300,14 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 				if string.len(name) > 12 then
 					name = string.sub(name, 1, 12)
 				end
+				
+				-- Применяем цвет игрока к имени
+				local account_id = player_data.account_id
+				local player_color = get_player_color(account_id)
+				if player_color then
+					name = string.format("{#color(%d,%d,%d)}%s{#reset()}", player_color[1], player_color[2], player_color[3], name)
+				end
+				
 				-- В заголовке показываем имя в столбце K, по центру
 				pass_template[k_pass_map[num_players]].value = name
 				pass_template[d_pass_map[num_players]].value = ""
