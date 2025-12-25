@@ -1,5 +1,7 @@
 local mod = get_mod("TeamKills")
 
+mod.version = "2.0.0"
+
 local Breed = mod:original_require("scripts/utilities/breed")
 local Text = mod:original_require("scripts/utilities/ui/text")
 
