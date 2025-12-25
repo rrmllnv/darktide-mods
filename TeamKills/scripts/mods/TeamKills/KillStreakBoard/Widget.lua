@@ -412,11 +412,11 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 				pass_template[k_pass_map[player_num]].value = kills_text
 				pass_template[d_pass_map[player_num]].value = dmg_text
 				
-				-- Скрываем столбцы, если у игрока нет данных
-				local has_data = (total_kills > 0 or total_dmg > 0)
-				pass_template[k_pass_map[player_num]].style.visible = has_data
-				pass_template[d_pass_map[player_num]].style.visible = has_data
-				pass_template[background_pass_map[player_num]].style.visible = has_data
+				-- Столбцы всегда видны, если игрок присутствует в списке
+				-- Значения "0" будут отображаться, если данных нет
+				pass_template[k_pass_map[player_num]].style.visible = true
+				pass_template[d_pass_map[player_num]].style.visible = true
+				pass_template[background_pass_map[player_num]].style.visible = true
 			end
 			player_num = player_num + 1
 		end
@@ -506,11 +506,11 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 				pass_template[k_pass_map[player_num]].value = kills_text
 				pass_template[d_pass_map[player_num]].value = dmg_text
 				
-				-- Скрываем столбцы, если у игрока нет данных
-				local has_data = (kills > 0 or dmg > 0)
-				pass_template[k_pass_map[player_num]].style.visible = has_data
-				pass_template[d_pass_map[player_num]].style.visible = has_data
-				pass_template[background_pass_map[player_num]].style.visible = has_data
+				-- Столбцы всегда видны, если игрок присутствует в списке
+				-- Значения "0" будут отображаться, если данных нет
+				pass_template[k_pass_map[player_num]].style.visible = true
+				pass_template[d_pass_map[player_num]].style.visible = true
+				pass_template[background_pass_map[player_num]].style.visible = true
 			end
 			player_num = player_num + 1
 		end
