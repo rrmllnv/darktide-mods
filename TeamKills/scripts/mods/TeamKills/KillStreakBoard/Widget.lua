@@ -139,6 +139,7 @@ local categories = {
 	-- Melee lessers
 	{"renegade_melee", "loc_breed_display_name_renegade_melee", "Melee Lessers"},
 	{"cultist_ritualist", "loc_breed_display_name_cultist_ritualist", "Melee Lessers"},
+	{"chaos_mutator_ritualist", "loc_breed_display_name_cultist_ritualist", "Melee Lessers"},
 	{"cultist_melee", "loc_breed_display_name_cultist_melee", "Melee Lessers"},
 	{"chaos_armored_infected", "loc_chaos_armored_infected_breed_name", "Melee Lessers"},
 	{"chaos_mutated_poxwalker", "loc_breed_display_name_chaos_mutated_poxwalker", "Melee Lessers"},

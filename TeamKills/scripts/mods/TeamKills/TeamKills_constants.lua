@@ -8,6 +8,7 @@ mod.melee_lessers = {
 	"chaos_armored_infected",
 	"cultist_melee",
 	"cultist_ritualist",
+	"chaos_mutator_ritualist",
 	"renegade_melee",
 }
 
