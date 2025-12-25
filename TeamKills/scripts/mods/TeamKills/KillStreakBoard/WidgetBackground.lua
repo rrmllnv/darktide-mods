@@ -5,7 +5,7 @@ local Color = Color
 -- Функция для создания определения scenegraph для основного контейнера доски
 -- Используется в WidgetDefinitions.lua и TacticalOverlay.lua
 local function create_killsboard_scenegraph(settings, base_z)
-	base_z = base_z or 100
+	base_z = base_z or settings.killsboard_base_z or 200
 	
 	return {
 		vertical_alignment = "center",
@@ -19,7 +19,7 @@ end
 -- Функция для создания определения scenegraph для строк таблицы
 -- Используется в WidgetDefinitions.lua и TacticalOverlay.lua
 local function create_killsboard_rows_scenegraph(settings, base_z)
-	base_z = base_z or 100
+	base_z = base_z or settings.killsboard_base_z or 200
 	
 	-- Вычисляем начальную высоту области строк: общая высота минус отступы сверху и снизу
 	-- При vertical_alignment = "top" размер ограничивает область снизу, создавая отступ снизу
@@ -41,7 +41,7 @@ end
 -- Используется в WidgetDefinitions.lua и TacticalOverlay.lua
 local function create_killsboard_background_passes(settings, base_x, base_z)
 	base_x = base_x or 0
-	base_z = base_z or 100
+	base_z = base_z or settings.killsboard_base_z or 200
 	
 	return {
 		{

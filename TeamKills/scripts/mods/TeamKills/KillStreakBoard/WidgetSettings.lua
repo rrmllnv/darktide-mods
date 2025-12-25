@@ -5,6 +5,7 @@ local Color = Color
 local killstreak_widget_settings = {
     shading_environment = "content/shading_environments/ui/system_menu",
     killsboard_size = {1000, 900},
+    killsboard_base_z = 200, -- Z-координата для отображения поверх других модов (больше = выше)
     killsboard_row_height = 16, -- 20
     killsboard_row_header_height = 22, -- 30
     killsboard_column_kills_width = 60, -- ширина для столбца K (убийства)

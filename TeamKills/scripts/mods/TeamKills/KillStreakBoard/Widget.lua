@@ -5,7 +5,7 @@ local Managers = Managers
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 
 local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetSettings")
-local base_z = 100
+local base_z = KillstreakWidgetSettings.killsboard_base_z
 local base_x = 0
 
 -- Функция локализации для врагов

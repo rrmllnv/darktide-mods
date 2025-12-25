@@ -1,7 +1,8 @@
 local mod = get_mod("TeamKills")
 local UIRenderer = mod:original_require("scripts/managers/ui/ui_renderer")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
-local base_z = 100
+local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetSettings")
+local base_z = KillstreakWidgetSettings.killsboard_base_z
 
 -- Загружаем общий виджет
 mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/Widget")

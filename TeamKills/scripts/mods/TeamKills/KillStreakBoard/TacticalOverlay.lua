@@ -10,7 +10,7 @@ mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/Widget")
 
 local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetSettings")
 local WidgetBackground = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetBackground")
-local base_z = 100
+local base_z = KillstreakWidgetSettings.killsboard_base_z
 local base_x = 0
 
 -- Используем функцию get_players из Widget

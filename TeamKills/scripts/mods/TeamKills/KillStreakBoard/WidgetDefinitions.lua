@@ -5,7 +5,7 @@ local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local Color = Color
 local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetSettings")
 local WidgetBackground = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetBackground")
-local base_z = 100
+local base_z = KillstreakWidgetSettings.killsboard_base_z
 
 local scenegraph_definition = {
     screen = UIWorkspaceSettings.screen,
