@@ -51,7 +51,7 @@ end
 -- Делаем точно как в scoreboard - без изменения start_layer, просто рисуем после func()
 mod:hook(CLASS.HudElementTacticalOverlay, "_draw_widgets", function(func, self, dt, t, input_service, ui_renderer, render_settings)
 	if func then
-		func(self, dt, t, input_service, ui_renderer, render_settings)
+	func(self, dt, t, input_service, ui_renderer, render_settings)
 	end
 	
 	local killsboard_widget = self._widgets_by_name and self._widgets_by_name["killsboard"]
@@ -166,7 +166,7 @@ mod:hook(CLASS.HudElementTacticalOverlay, "update", function(func, self, dt, t, 
 	-- Обновляем флаг активности: true если tactical overlay активен ИЛИ мы в EndView, И show_killsboard включен
 	-- Если show_killsboard выключен, сбрасываем флаг, чтобы виджеты могли быть пересозданы при следующем показе
 	if show_killsboard then
-		mod.killsboard_hud_active = self._active or mod.killsboard_show_in_end_view
+	mod.killsboard_hud_active = self._active or mod.killsboard_show_in_end_view
 	else
 		-- Если show_killsboard выключен и не в EndView, сбрасываем флаг
 		if not mod.killsboard_show_in_end_view then

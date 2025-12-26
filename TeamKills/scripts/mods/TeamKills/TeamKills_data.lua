@@ -111,6 +111,51 @@ return {
 				},
 			},
 			{
+				setting_id = "opt_hud_shot_tracker",
+				type = "group",
+				title = "i18n_hud_shot_tracker_title",
+				sub_widgets = {
+					{
+						setting_id = "opt_show_shot_tracker",
+						type = "checkbox",
+						title = "i18n_show_shot_tracker",
+						default_value = true,
+						sub_widgets = {
+							{
+								setting_id = "opt_show_shots_fired",
+								type = "checkbox",
+								title = "i18n_show_shots_fired",
+								default_value = true,
+							},
+							{
+								setting_id = "opt_show_shots_missed",
+								type = "checkbox",
+								title = "i18n_show_shots_missed",
+								default_value = true,
+							},
+							{
+								setting_id = "opt_show_head_shot_kill",
+								type = "checkbox",
+								title = "i18n_show_head_shot_kill",
+								default_value = true,
+							},
+						},
+					},
+					{
+						setting_id = "opt_shot_tracker_display_mode",
+						type = "dropdown",
+						title = "i18n_shot_tracker_display_mode",
+						default_value = 1,
+						options = {
+							{text = "i18n_display_mode_all", value = 1},
+							{text = "i18n_display_mode_only_me", value = 2},
+							{text = "i18n_display_mode_except_me", value = 4},
+							{text = "i18n_display_mode_hide_all", value = 3},
+						},
+					},
+				},
+			},
+			{
 				setting_id = "opt_hud_general_settings",
 				type = "group",
 				title = "i18n_hud_general_settings_title",

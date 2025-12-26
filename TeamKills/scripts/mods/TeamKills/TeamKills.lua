@@ -21,6 +21,17 @@ local hud_elements = {
 	},
 }
 
+-- Добавляем ShotTracker только если настройка включена
+if mod:get("opt_show_shot_tracker") ~= false then
+	table.insert(hud_elements, {
+		filename = "TeamKills/scripts/mods/TeamKills/HUD/ShotTracker",
+		class_name = "ShotTracker",
+		visibility_groups = {
+			"alive",
+		},
+	})
+end
+
 mod.player_kills = {}
 mod.player_damage = {}
 mod.player_last_damage = {}
@@ -42,12 +53,43 @@ mod.display_mode = mod:get("opt_display_mode") or 1
 mod.show_background = mod:get("opt_show_background") ~= false
 mod.opacity = mod:get("opt_opacity") or 100
 
+-- Статистики для ShotTracker (в реальном времени)
+mod.player_shots_fired = {} -- {account_id = count}
+mod.player_shots_missed = {} -- {account_id = count}
+mod.player_head_shot_kill = {} -- {account_id = count}
+
 for _, hud_element in ipairs(hud_elements) do
 	mod:add_require_path(hud_element.filename)
 end
 
+-- Всегда добавляем require для ShotTracker, чтобы файл был доступен
+-- (элемент будет зарегистрирован только если настройка включена)
+mod:add_require_path("TeamKills/scripts/mods/TeamKills/HUD/ShotTracker")
+
 mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, params)
-	for _, hud_element in ipairs(hud_elements) do
+	-- Пересобираем hud_elements каждый раз, чтобы учесть изменения настроек
+	local current_hud_elements = {
+		{
+			filename = "TeamKills/scripts/mods/TeamKills/HUD/TeamKillsTracker",
+			class_name = "TeamKillsTracker",
+			visibility_groups = {
+				"alive",
+			},
+		},
+	}
+	
+	-- Добавляем ShotTracker только если настройка включена
+	if mod:get("opt_show_shot_tracker") ~= false then
+		table.insert(current_hud_elements, {
+			filename = "TeamKills/scripts/mods/TeamKills/HUD/ShotTracker",
+			class_name = "ShotTracker",
+			visibility_groups = {
+				"alive",
+			},
+		})
+	end
+	
+	for _, hud_element in ipairs(current_hud_elements) do
 		if not table.find_by_key(elements, "class_name", hud_element.class_name) then
 			table.insert(elements, {
 				class_name = hud_element.class_name,
@@ -127,6 +169,10 @@ local function recreate_hud()
     mod.display_killstreak_damage_by_category = {}  -- {account_id: {category_key: damage}} - урон для отображения
     mod.boss_damage = {}  -- {[unit] = {[account_id] = damage}} - урон по боссам
     mod.boss_last_damage = {}  -- {[unit] = {[account_id] = last_damage}} - последний урон по боссам
+    -- Очищаем статистики выстрелов
+    mod.player_shots_fired = {}
+    mod.player_shots_missed = {}
+    mod.player_head_shot_kill = {}
     mod.display_mode = mod:get("opt_display_mode") or 1
     mod.show_kills = mod:get("opt_show_kills") ~= false
     mod.show_total_damage = mod:get("opt_show_total_damage") ~= false
@@ -234,28 +280,11 @@ local function save_mission_data()
 end
 
 function mod.on_game_state_changed(status, state_name)
-	-- При переходе в хаб - полностью очищаем ВСЕ данные (включая saved и display)
 	if status == "enter" then
 		local game_mode_name = Managers.state and Managers.state.game_mode and Managers.state.game_mode:game_mode_name()
 		if game_mode_name == "hub" then
-			-- Полностью очищаем ВСЕ данные при переходе в хаб
-			mod.player_kills = {}
-			mod.player_damage = {}
-			mod.player_last_damage = {}
-			mod.killed_units = {}
-			mod.player_killstreak = {}
-			mod.player_killstreak_timer = {}
-			mod.last_enemy_interaction = {}
-			mod.kills_by_category = {}
-			mod.damage_by_category = {}
-			mod.last_kill_time_by_category = {}
-			mod.highlighted_categories = {}
-			mod.killstreak_kills_by_category = {}
-			mod.killstreak_damage_by_category = {}
-			mod.display_killstreak_kills_by_category = {}
-			mod.display_killstreak_damage_by_category = {}
-			mod.boss_damage = {}
-			mod.boss_last_damage = {}
+			-- При переходе в хаб - полностью очищаем ВСЕ данные (включая saved)
+			recreate_hud()
 			-- Очищаем также saved данные
 			mod.saved_kills_by_category = {}
 			mod.saved_damage_by_category = {}
@@ -263,7 +292,7 @@ function mod.on_game_state_changed(status, state_name)
 			mod.saved_player_damage = {}
 			mod.killsboard_show_in_end_view = false
 		elseif (state_name == 'GameplayStateRun' or state_name == "StateGameplay") and status == "enter" then
-			-- При входе в новую миссию также очищаем данные
+			-- При входе в новую миссию очищаем данные
 			recreate_hud()
 			mod.killsboard_show_in_end_view = false
 		end
@@ -422,6 +451,54 @@ end
 local function is_local_session()
     local game_mode_name = Managers.state.game_mode and Managers.state.game_mode:game_mode_name()
     return game_mode_name == "shooting_range" or game_mode_name == "hub"
+end
+
+-- Хук для отслеживания статистик выстрелов в реальном времени
+if CLASS and CLASS.StatsManager then
+	mod:hook(CLASS.StatsManager, "record_private", function(func, self, stat_name, player, ...)
+		-- Вызываем оригинальную функцию
+		func(self, stat_name, player, ...)
+	
+	if not player then
+		return
+	end
+	
+	-- Получаем account_id только для локального игрока
+	-- Статистики с флагом no_sync не синхронизируются, поэтому доступны только для локального игрока
+	local account_id = player:account_id() or player:name()
+	if not account_id then
+		return
+	end
+	
+	-- Инициализируем счетчики если их нет
+	mod.player_shots_fired = mod.player_shots_fired or {}
+	mod.player_shots_missed = mod.player_shots_missed or {}
+	mod.player_head_shot_kill = mod.player_head_shot_kill or {}
+	
+	-- Отслеживаем hook_ranged_attack_concluded для shots_fired и shots_missed
+	-- Только для локального игрока (статистики с no_sync не синхронизируются)
+	if stat_name == "hook_ranged_attack_concluded" then
+		local hit_minion, hit_weakspot, killing_blow, last_round_in_clip = ...
+		
+		-- shots_fired: всегда увеличиваем при каждом выстреле
+		mod.player_shots_fired[account_id] = (mod.player_shots_fired[account_id] or 0) + 1
+		
+		-- shots_missed: увеличиваем если не попали в миньона
+		if not hit_minion then
+			mod.player_shots_missed[account_id] = (mod.player_shots_missed[account_id] or 0) + 1
+		end
+		
+		-- head_shot_kill: если это был killing blow и попадание в weakspot
+		-- Считаем только здесь для ranged kills, чтобы избежать двойного подсчета
+		if killing_blow and hit_weakspot then
+			mod.player_head_shot_kill[account_id] = (mod.player_head_shot_kill[account_id] or 0) + 1
+		end
+	end
+	
+	-- hook_kill не используем для head_shot_kill, так как для ranged kills
+	-- это уже учтено в hook_ranged_attack_concluded, а для melee kills
+	-- headshot не относится к статистике выстрелов
+	end)
 end
 
 mod:hook_safe(CLASS.AttackReportManager, "add_attack_result",

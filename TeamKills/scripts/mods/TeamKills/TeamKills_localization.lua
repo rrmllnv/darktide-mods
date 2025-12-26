@@ -8,9 +8,13 @@ local function merge(into, from)
 end
 
 local function load(path)
-	local chunk = mod:io_dofile(path)
-	if chunk then
+	local success, chunk = pcall(function()
+		return mod:io_dofile(path)
+	end)
+	if success and chunk then
 		merge(localization, chunk)
+	else
+		mod:error("Failed to load localization file: %s", path)
 	end
 end
 

@@ -256,4 +256,28 @@ return {
 		en = "No data available",
 		ru = "Данные отсутствуют",
 	},
+	i18n_show_shot_tracker = {
+		en = "Show Shot Tracker",
+		ru = "Показать Shot Tracker",
+	},
+	i18n_show_shots_fired = {
+		en = "Show Shots Fired",
+		ru = "Показывать Выстрелов",
+	},
+	i18n_show_shots_missed = {
+		en = "Show Shots Missed",
+		ru = "Показывать Промахов",
+	},
+	i18n_show_head_shot_kill = {
+		en = "Show Headshots",
+		ru = "Показывать Попаданий в голову",
+	},
+	i18n_shot_tracker_display_mode = {
+		en = "Player lines display",
+		ru = "Отображение строк игроков",
+	},
+	i18n_hud_shot_tracker_title = {
+		en = "HUD Shot Tracker",
+		ru = "HUD Трекер выстрелов",
+	},
 }
