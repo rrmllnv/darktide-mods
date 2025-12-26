@@ -167,35 +167,6 @@ local widget_definitions = {
 	ShotTrackerWidget = UIWidget.create_definition(
 		{
 			{
-				value = "content/ui/materials/hud/backgrounds/terminal_background_team_panels",
-				pass_type = "texture",
-				style_id = "panel_background",
-				style = {
-					horizontal_alignment = "left",
-					color = Color.terminal_background_gradient(178.5, true),
-					size = {
-						base_size[1],
-						base_size[2],
-					},
-					offset = {
-						0,
-						0,
-						0,
-					},
-				},
-				visibility_function = function (content)
-					local show_tracker = mod:get("opt_show_shot_tracker")
-					if show_tracker == false then
-						return false
-					end
-					local show_background = mod.shot_tracker_show_background
-					if show_background == nil then
-						show_background = mod:get("opt_shot_tracker_show_background") ~= false
-					end
-					return content.visible and show_background
-				end,
-			},
-			{
 				pass_type = "texture",
 				style_id = "icon_shots_fired",
 				value_id = "icon_shots_fired",
