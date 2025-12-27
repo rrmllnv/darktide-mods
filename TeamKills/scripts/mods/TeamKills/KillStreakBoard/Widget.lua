@@ -34,9 +34,30 @@ local function get_player_color(account_id)
 	return nil
 end
 
+-- Маппинг breed_name на ключи локализации мода для mutator вариантов
+local mutator_localization_map = {
+	["chaos_mutator_daemonhost"] = "i18n_breed_chaos_mutator_daemonhost",
+	["renegade_flamer_mutator"] = "i18n_breed_renegade_flamer_mutator",
+	["cultist_mutant_mutator"] = "i18n_breed_cultist_mutant_mutator",
+	["chaos_hound_mutator"] = "i18n_breed_chaos_hound_mutator",
+	["chaos_mutator_ritualist"] = "i18n_breed_chaos_mutator_ritualist",
+}
+
 -- Функция локализации для врагов
-local function localize_enemy(key)
-	if key:match("^loc_") then
+local function localize_enemy(breed_name, key)
+	-- Сначала проверяем, есть ли специальный ключ локализации мода для mutator вариантов
+	if breed_name and mutator_localization_map[breed_name] then
+		local mod_loc_key = mutator_localization_map[breed_name]
+		local success, result = pcall(function()
+			return mod:localize(mod_loc_key)
+		end)
+		if success and result and result ~= "" then
+			return result
+		end
+	end
+	
+	-- Для обычных врагов используем игровой ключ локализации
+	if key then
 		local success, result = pcall(function()
 			return Localize(key)
 		end)
@@ -44,7 +65,7 @@ local function localize_enemy(key)
 			return result
 		end
 	end
-	return key
+	return key or breed_name or ""
 end
 
 -- Маппинг названий групп на ключи локализации
@@ -119,18 +140,18 @@ local categories = {
 	{"cultist_berzerker", "loc_breed_display_name_cultist_berzerker", "Melee Elites"},
 	-- Specials
 	{"cultist_flamer", "loc_breed_display_name_cultist_flamer", "Specials"},
-	{"renegade_flamer_mutator", "loc_breed_display_name_renegade_flamer", "Specials"},
 	{"renegade_flamer", "loc_breed_display_name_renegade_flamer", "Specials"},
+	{"renegade_flamer_mutator", "loc_breed_display_name_renegade_flamer", "Specials"},
 	{"renegade_sniper", "loc_breed_display_name_renegade_sniper", "Specials"},
 	{"cultist_grenadier", "loc_breed_display_name_cultist_grenadier", "Specials"},
 	{"renegade_grenadier", "loc_breed_display_name_renegade_grenadier", "Specials"},
 	{"chaos_poxwalker_bomber", "loc_breed_display_name_chaos_poxwalker_bomber", "Specials"},
 	-- Disablers
 	{"renegade_netgunner", "loc_breed_display_name_renegade_netgunner", "Disablers"},
-	{"cultist_mutant_mutator", "loc_breed_display_name_cultist_mutant", "Disablers"},
 	{"cultist_mutant", "loc_breed_display_name_cultist_mutant", "Disablers"},
-	{"chaos_hound_mutator", "loc_breed_display_name_chaos_hound", "Disablers"},
+	{"cultist_mutant_mutator", "loc_breed_display_name_cultist_mutant", "Disablers"},
 	{"chaos_hound", "loc_breed_display_name_chaos_hound", "Disablers"},
+	{"chaos_hound_mutator", "loc_breed_display_name_chaos_hound", "Disablers"},
 	-- Ranged lessers
 	{"renegade_rifleman", "loc_breed_display_name_renegade_rifleman", "Ranged Lessers"},
 	{"renegade_assault", "loc_breed_display_name_renegade_assault", "Ranged Lessers"},
@@ -729,7 +750,7 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 				table.insert(categories_to_show, {type = "group_header", name = "group_" .. group_name, group_name = group_name})
 				current_group = group_name
 			end
-			table.insert(categories_to_show, {type = "data", key = key, label = localize_enemy(label)})
+			table.insert(categories_to_show, {type = "data", key = key, label = localize_enemy(key, label)})
 		end
 	end
 	

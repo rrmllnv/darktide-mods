@@ -35,7 +35,7 @@ local killstreak_widget_settings = {
     killsboard_background_width_offset = 10, -- уменьшение ширины подложки (вычитается с каждой стороны, итого -40 от общей ширины)
     killsboard_rows_top_offset = 0, -- вертикальный отступ таблицы от верха фона
     killsboard_rows_bottom_offset = 0, -- вертикальный отступ таблицы от низа фона
-    killsboard_show_empty_categories = false, -- показывать категории без данных (true) или только с данными (false)
+    killsboard_show_empty_categories = true, -- показывать категории без данных (true) или только с данными (false)
     -- Настройки стиля текста категории (первый столбец)
     killsboard_category_text_horizontal_alignment = "left", -- выравнивание текста категории по горизонтали
     killsboard_category_text_vertical_alignment = "center", -- выравнивание текста категории по вертикали

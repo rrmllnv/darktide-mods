@@ -39,4 +39,24 @@ return {
 		en = "Damage",
 		ru = "Урон",
 	},
+	i18n_breed_chaos_mutator_daemonhost = {
+		en = "Daemonhost Mutator",
+		ru = "Демонхост Мутатор",
+	},
+	i18n_breed_renegade_flamer_mutator = {
+		en = "Scab Flamer Mutator",
+		ru = "Скаб-огнеметчик Мутатор",
+	},
+	i18n_breed_cultist_mutant_mutator = {
+		en = "Mutant Mutator",
+		ru = "Мутант Мутатор",
+	},
+	i18n_breed_chaos_hound_mutator = {
+		en = "Pox Hound Mutator",
+		ru = "Чумная Гончая Мутатор",
+	},
+	i18n_breed_chaos_mutator_ritualist = {
+		en = "Dreg Ritualist Mutator",
+		ru = "Отброс-культист Мутатор",
+	},
 }
