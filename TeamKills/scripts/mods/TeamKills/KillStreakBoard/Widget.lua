@@ -340,8 +340,29 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 			num_players = num_players + 1
 			if num_players <= 4 then
 				local name = player_data.name or "Unknown"
-				if string.len(name) > 12 then
-					name = string.sub(name, 1, 12)
+				
+				-- Проверяем, есть ли символ архетипа в начале имени
+				-- Символ архетипа + пробел занимают примерно 2-3 визуальных символа
+				-- Оставляем место: 199px / ~12px per char ≈ 16 символов максимум
+				-- Но с учетом символа класса, ограничиваем имя до 14 символов
+				local max_name_length = 14
+				
+				-- Находим позицию первого пробела (после символа класса)
+				local space_pos = string.find(name, " ")
+				if space_pos then
+					-- Есть символ класса, обрезаем только часть после него
+					local symbol_part = string.sub(name, 1, space_pos) -- символ + пробел
+					local name_part = string.sub(name, space_pos + 1) -- само имя
+					
+					if string.len(name_part) > max_name_length then
+						name_part = string.sub(name_part, 1, max_name_length)
+					end
+					name = symbol_part .. name_part
+				else
+					-- Нет символа класса, обрезаем всё имя
+					if string.len(name) > max_name_length then
+						name = string.sub(name, 1, max_name_length)
+					end
 				end
 				
 				-- Применяем цвет игрока к имени
