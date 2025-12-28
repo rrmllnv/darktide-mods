@@ -305,6 +305,30 @@ mod:hook_safe(CLASS.HudElementBossHealth, "event_boss_encounter_end", function(s
 		return
 	end
 	
+	-- Проверяем, что босс действительно мертв, а не просто энкаунтер закончился
+	-- event_boss_encounter_end может вызываться при окончании миссии или уходе босса
+	if not unit or not Unit.alive(unit) then
+		-- Unit уже удален из мира - босс точно умер
+	else
+		-- Unit еще существует, проверяем через health extension
+		local health_extension = ScriptUnit.has_extension(unit, "health_system")
+		if health_extension then
+			-- Проверяем, что босс мертв
+			if health_extension.is_alive and health_extension:is_alive() then
+				-- Босс еще жив, не показываем уведомление
+				return
+			end
+			-- Дополнительная проверка через is_dead
+			if health_extension.is_dead and not health_extension.is_dead then
+				-- Босс еще жив
+				return
+			end
+		else
+			-- Нет health extension, не можем проверить состояние - не показываем уведомление
+			return
+		end
+	end
+	
 	-- Получаем данные об уроне по этому боссу
 	local damage_lines = format_boss_damage_text_for_notification(unit, boss_extension)
 	
