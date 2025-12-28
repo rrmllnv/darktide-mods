@@ -34,6 +34,17 @@ local function get_opacity_alpha()
 	return math.floor((opacity / 100) * 255)
 end
 
+-- Функция для скрытия виджета и очистки содержимого
+local function hide_shot_tracker_widget(widget)
+	widget.content.visible = false
+	widget.content.text_shots_fired = ""
+	widget.content.text_shots_missed = ""
+	widget.content.text_head_shot_kill = ""
+	widget.content.icon_shots_fired = nil
+	widget.content.icon_shots_missed = nil
+	widget.content.icon_head_shot_kill = nil
+end
+
 -- Позиция под TeamKillsTracker, та же ширина
 local team_kills_width = panel_size[1]
 local shot_tracker_width = team_kills_width
@@ -337,13 +348,7 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 	local widget = self._widgets_by_name.ShotTrackerWidget
 
 	if self.is_in_hub then
-		widget.content.visible = false
-		widget.content.text_shots_fired = ""
-		widget.content.text_shots_missed = ""
-		widget.content.text_head_shot_kill = ""
-		widget.content.icon_shots_fired = nil
-		widget.content.icon_shots_missed = nil
-		widget.content.icon_head_shot_kill = nil
+		hide_shot_tracker_widget(widget)
 		return
 	else
 		widget.content.visible = true
@@ -352,25 +357,13 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 	-- Получаем статистики только для локального игрока
 	local local_player = Managers.player and Managers.player:local_player(1)
 	if not local_player then
-		widget.content.visible = false
-		widget.content.text_shots_fired = ""
-		widget.content.text_shots_missed = ""
-		widget.content.text_head_shot_kill = ""
-		widget.content.icon_shots_fired = nil
-		widget.content.icon_shots_missed = nil
-		widget.content.icon_head_shot_kill = nil
+		hide_shot_tracker_widget(widget)
 		return
 	end
 	
 	local local_account_id = local_player:account_id() or local_player:name()
 	if not local_account_id then
-		widget.content.visible = false
-		widget.content.text_shots_fired = ""
-		widget.content.text_shots_missed = ""
-		widget.content.text_head_shot_kill = ""
-		widget.content.icon_shots_fired = nil
-		widget.content.icon_shots_missed = nil
-		widget.content.icon_head_shot_kill = nil
+		hide_shot_tracker_widget(widget)
 		return
 	end
 	

@@ -11,27 +11,6 @@ mod:io_dofile("TeamKills/scripts/mods/TeamKills/TeamKills_notifications")
 mod:io_dofile("TeamKills/scripts/mods/TeamKills/HUD/BossDamageTracker")
 mod:io_dofile("TeamKills/scripts/mods/TeamKills/TeamKills_api")
 
-local hud_elements = {
-	{
-		filename = "TeamKills/scripts/mods/TeamKills/HUD/TeamKillsTracker",
-		class_name = "TeamKillsTracker",
-		visibility_groups = {
-			"alive",
-		},
-	},
-}
-
--- Добавляем ShotTracker только если настройка включена
-if mod:get("opt_show_shot_tracker") ~= false then
-	table.insert(hud_elements, {
-		filename = "TeamKills/scripts/mods/TeamKills/HUD/ShotTracker",
-		class_name = "ShotTracker",
-		visibility_groups = {
-			"alive",
-		},
-	})
-end
-
 mod.player_kills = {}
 mod.player_damage = {}
 mod.player_last_damage = {}
@@ -58,12 +37,8 @@ mod.player_shots_fired = {} -- {account_id = count}
 mod.player_shots_missed = {} -- {account_id = count}
 mod.player_head_shot_kill = {} -- {account_id = count}
 
-for _, hud_element in ipairs(hud_elements) do
-	mod:add_require_path(hud_element.filename)
-end
-
--- Всегда добавляем require для ShotTracker, чтобы файл был доступен
--- (элемент будет зарегистрирован только если настройка включена)
+-- Всегда добавляем require для HUD элементов, чтобы файлы были доступны
+mod:add_require_path("TeamKills/scripts/mods/TeamKills/HUD/TeamKillsTracker")
 mod:add_require_path("TeamKills/scripts/mods/TeamKills/HUD/ShotTracker")
 
 mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, params)
@@ -151,6 +126,13 @@ mod.get_last_damage_color_string = function()
 	return string.format("{#color(%d,%d,%d)}", rgb[1], rgb[2], rgb[3])
 end
 
+local function clear_saved_data()
+	mod.saved_kills_by_category = {}
+	mod.saved_damage_by_category = {}
+	mod.saved_player_kills = {}
+	mod.saved_player_damage = {}
+end
+
 local function recreate_hud()
     mod.player_kills = {}
     mod.player_damage = {}
@@ -215,6 +197,8 @@ mod.on_all_mods_loaded = function()
 		if not package_manager:is_loading("packages/ui/hud/player_weapon/player_weapon") and not package_manager:has_loaded("packages/ui/hud/player_weapon/player_weapon") then
 			package_manager:load("packages/ui/hud/player_weapon/player_weapon", "TeamKills", nil, true)
 		end
+	else
+		mod:echo("[TeamKills] Warning: Package manager not found, icons may not display correctly")
 	end
 	recreate_hud()
 	mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/TacticalOverlay")
@@ -295,11 +279,7 @@ function mod.on_game_state_changed(status, state_name)
 		if game_mode_name == "hub" then
 			-- При переходе в хаб - полностью очищаем ВСЕ данные (включая saved)
 			recreate_hud()
-			-- Очищаем также saved данные
-			mod.saved_kills_by_category = {}
-			mod.saved_damage_by_category = {}
-			mod.saved_player_kills = {}
-			mod.saved_player_damage = {}
+			clear_saved_data()
 			mod.killsboard_show_in_end_view = false
 		elseif (state_name == 'GameplayStateRun' or state_name == "StateGameplay") and status == "enter" then
 			-- При входе в новую миссию очищаем данные
@@ -457,17 +437,16 @@ mod.player_from_unit = function(unit)
 	return nil
 end
 
--- Проверяем, локальная ли сессия (для корректного подсчёта overkill)
-local function is_local_session()
+-- Проверяем, нужно ли учитывать overkill (в локальных сессиях подсчет отличается)
+local function is_overkill_session()
     local game_mode_name = Managers.state.game_mode and Managers.state.game_mode:game_mode_name()
     return game_mode_name == "shooting_range" or game_mode_name == "hub"
 end
 
 -- Хук для отслеживания статистик выстрелов в реальном времени
-if CLASS and CLASS.StatsManager then
-	mod:hook(CLASS.StatsManager, "record_private", function(func, self, stat_name, player, ...)
-		-- Вызываем оригинальную функцию
-		func(self, stat_name, player, ...)
+mod:hook(CLASS.StatsManager, "record_private", function(func, self, stat_name, player, ...)
+	-- Вызываем оригинальную функцию
+	func(self, stat_name, player, ...)
 	
 	if not player then
 		return
@@ -508,8 +487,7 @@ if CLASS and CLASS.StatsManager then
 	-- hook_kill не используем для head_shot_kill, так как для ranged kills
 	-- это уже учтено в hook_ranged_attack_concluded, а для melee kills
 	-- headshot не относится к статистике выстрелов
-	end)
-end
+end)
 
 mod:hook_safe(CLASS.AttackReportManager, "add_attack_result",
 function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, hit_world_position, hit_weakspot, damage,
@@ -546,11 +524,11 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                 -- При смерти: вычисляем здоровье, которое осталось у цели перед ударом
                 local attacked_unit_damage_taken = unit_health_extension and unit_health_extension:damage_taken()
                 local defender_max_health = unit_health_extension and unit_health_extension:max_health()
-                local is_local = is_local_session()
+                local is_overkill = is_overkill_session()
                 
-                if defender_max_health and not is_local then
+                if defender_max_health and not is_overkill then
                     health_damage = defender_max_health - (attacked_unit_damage_taken or 0)
-                elseif defender_max_health and is_local then
+                elseif defender_max_health and is_overkill then
                     health_damage = defender_max_health - (attacked_unit_damage_taken or 0) + (damage or 0)
                 else
                     health_damage = damage or 1
@@ -688,11 +666,6 @@ mod.killstreak_opened = function(self)
 end
 
 function mod.open_killsboard()
-	-- Проверяем, находимся ли мы в хабе
-	if not mod._is_in_hub() then
-		-- return
-	end
-	
 	-- Открываем или закрываем killstreak view
 	if mod:killstreak_opened() then
 		mod:close_killstreak_view()
