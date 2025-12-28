@@ -220,6 +220,14 @@ return {
 		en = "Damage dealt before the killstreak countdown started is not highlighted",
 		ru = "Урон нанесенный до начала отсчета серии убийств не подсвечиваются",
 	},
+	i18n_show_killstreak_progress_in_killsboard = {
+		en = "Show killstreak progress in brackets",
+		ru = "Показывать прогресс серии убийств в скобках",
+	},
+	i18n_show_killstreak_progress_in_killsboard_tooltip = {
+		en = "Display kills and damage gained during active killstreak in brackets, e.g. 25 (+5)",
+		ru = "Отображать убийства и урон, полученные во время активной серии, в скобках, например: 25 (+5)",
+	},
 	i18n_open_killsboard = {
 		en = "Open (Hub only)",
 		ru = "Открывать (только в хабе)",
