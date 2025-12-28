@@ -205,6 +205,16 @@ mod.on_all_mods_loaded = function()
 		if not package_manager:is_loading("packages/ui/views/end_player_view/end_player_view") and not package_manager:has_loaded("packages/ui/views/end_player_view/end_player_view") then
 			package_manager:load("packages/ui/views/end_player_view/end_player_view", "TeamKills", nil, true)
 		end
+		-- Load packages for weapon action icons (для ShotTracker)
+		if not package_manager:is_loading("packages/ui/views/inventory_view/inventory_view") and not package_manager:has_loaded("packages/ui/views/inventory_view/inventory_view") then
+			package_manager:load("packages/ui/views/inventory_view/inventory_view", "TeamKills", nil, true)
+		end
+		if not package_manager:is_loading("packages/ui/views/inventory_weapons_view/inventory_weapons_view") and not package_manager:has_loaded("packages/ui/views/inventory_weapons_view/inventory_weapons_view") then
+			package_manager:load("packages/ui/views/inventory_weapons_view/inventory_weapons_view", "TeamKills", nil, true)
+		end
+		if not package_manager:is_loading("packages/ui/hud/player_weapon/player_weapon") and not package_manager:has_loaded("packages/ui/hud/player_weapon/player_weapon") then
+			package_manager:load("packages/ui/hud/player_weapon/player_weapon", "TeamKills", nil, true)
+		end
 	end
 	recreate_hud()
 	mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/TacticalOverlay")
