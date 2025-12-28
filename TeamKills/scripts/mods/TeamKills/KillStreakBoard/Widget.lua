@@ -202,6 +202,19 @@ local function get_players()
 								name = player:name() or name
 							end
 							
+							-- Получаем текстовый символ архетипа
+							local symbol = nil
+							if player.profile then
+								local profile = player:profile()
+								if profile and profile.archetype then
+									local archetype_name = profile.archetype.name
+									symbol = archetype_name and UISettings.archetype_font_icon[archetype_name]
+								end
+							end
+							if symbol then
+								name = symbol .. " " .. name
+							end
+							
 							local player_data = {
 								account_id = account_id,
 								name = name,
