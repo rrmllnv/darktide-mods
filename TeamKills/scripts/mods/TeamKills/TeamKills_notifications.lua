@@ -29,7 +29,7 @@ local function get_player_color(account_id)
 end
 
 -- Функция для формирования текста урона для уведомления с цветами
-local function format_boss_damage_text_for_notification(unit, boss_extension)
+local function format_boss_damage_text_for_notification(unit, boss_extension, attack_data)
 	local boss_damage_data = mod.boss_damage and mod.boss_damage[unit]
 	if not boss_damage_data or not next(boss_damage_data) then
 		return nil
@@ -182,6 +182,48 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 		table.insert(lines, killer_line)
 	end
 	
+	-- Добавляем информацию о деталях убийства из attack_data (если доступно)
+	if attack_data and type(attack_data) == "table" and show_killer_name then
+		local kill_details = {}
+		
+		-- Название оружия
+		if attack_data.weapon_template_name and attack_data.weapon_template_name ~= "none" then
+			-- Локализуем название оружия через игровую систему
+			local weapon_display_name = attack_data.weapon_template_name
+			-- Попробуем получить локализованное имя (если есть)
+			local success, localized = pcall(function()
+				return Localize("loc_weapon_display_name_" .. attack_data.weapon_template_name)
+			end)
+			if success and localized and localized ~= ("loc_weapon_display_name_" .. attack_data.weapon_template_name) then
+				weapon_display_name = localized
+			end
+			table.insert(kill_details, weapon_display_name)
+		end
+		
+		-- Теги убийства (weakspot, crit, backstab)
+		local kill_tags = {}
+		if attack_data.hit_weakspot then
+			table.insert(kill_tags, "Weakspot")
+		end
+		if attack_data.is_critical_hit then
+			table.insert(kill_tags, "Critical")
+		end
+		if attack_data.is_backstab then
+			table.insert(kill_tags, "Backstab")
+		end
+		
+		-- Добавляем теги к деталям
+		if #kill_tags > 0 then
+			table.insert(kill_details, table.concat(kill_tags, ", "))
+		end
+		
+		-- Формируем строку с деталями убийства
+		if #kill_details > 0 then
+			local details_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", white_rgb[1], white_rgb[2], white_rgb[3], table.concat(kill_details, " • "))
+			table.insert(lines, "  " .. details_text)
+		end
+	end
+	
 	-- Общий урон команды
 	if show_total_damage and total_damage > 0 then
 		local total_damage_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", damage_rgb[1], damage_rgb[2], damage_rgb[3], mod.format_number(math.floor(total_damage)))
@@ -305,36 +347,20 @@ mod:hook_safe(CLASS.HudElementBossHealth, "event_boss_encounter_end", function(s
 		return
 	end
 	
-	-- Проверяем, что босс действительно мертв, а не просто энкаунтер закончился
-	-- event_boss_encounter_end может вызываться при окончании миссии или уходе босса
-	local is_dead = false
-	
-	if not unit or not Unit.alive(unit) then
-		-- Unit уже удален из мира - босс точно умер
-		is_dead = true
-	else
-		-- Unit еще существует, проверяем через health extension
-		local health_extension = ScriptUnit.has_extension(unit, "health_system")
-		if health_extension then
-			-- Проверяем через is_alive() - если функция существует
-			if type(health_extension.is_alive) == "function" then
-				is_dead = not health_extension:is_alive()
-			-- Если нет функции, проверяем через поле is_dead
-			elseif health_extension.is_dead ~= nil then
-				is_dead = health_extension.is_dead == true
-			end
-		end
-	end
-	
-	-- Если босс не мертв, не показываем уведомление
-	if not is_dead then
+	-- Проверяем, что у нас есть данные об уроне по этому боссу
+	-- Если данных нет, значит либо босс не умер, либо мы его не отслеживали
+	if not mod.boss_damage or not mod.boss_damage[unit] or not next(mod.boss_damage[unit]) then
 		return
 	end
 	
-	-- Получаем данные об уроне по этому боссу
-	local damage_lines = format_boss_damage_text_for_notification(unit, boss_extension)
+	mod:echo("[TeamKills] Boss encounter ended with damage data")
+	
+	-- Получаем данные об уроне по этому боссу (передаем nil вместо attack_data)
+	local damage_lines = format_boss_damage_text_for_notification(unit, boss_extension, nil)
 	
 	if damage_lines and #damage_lines > 0 then
+		mod:echo("[TeamKills] Sending notification with " .. tostring(#damage_lines) .. " lines")
+		
 		-- Объединяем все строки в line_1 с переносами \n - система автоматически разобьет на строки
 		local all_lines = table.concat(damage_lines, "\n")
 		local notification_data = {
@@ -345,7 +371,10 @@ mod:hook_safe(CLASS.HudElementBossHealth, "event_boss_encounter_end", function(s
 		-- Отправляем уведомление с информацией об уроне
 		if Managers.event then
 			Managers.event:trigger("event_add_notification_message", "custom", notification_data)
+			mod:echo("[TeamKills] Notification sent!")
 		end
+	else
+		mod:echo("[TeamKills] No damage lines generated")
 	end
 	
 	-- Очищаем данные об уроне по боссу после отправки уведомления
