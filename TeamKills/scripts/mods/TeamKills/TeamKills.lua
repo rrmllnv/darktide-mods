@@ -665,15 +665,6 @@ mod.killstreak_opened = function(self)
 	return ui_manager and ui_manager:view_active("killstreak_view") and not ui_manager:is_view_closing("killstreak_view")
 end
 
-function mod.open_killsboard()
-	-- Открываем или закрываем killstreak view
-	if mod:killstreak_opened() then
-		mod:close_killstreak_view()
-	else
-		mod:show_killstreak_view()
-	end
-end
-
 function mod.toggle_killsboard()
 	-- Проверяем, включена ли настройка opt_show_killsboard
 	local opt_show_killsboard = mod:get("opt_show_killsboard") ~= false
