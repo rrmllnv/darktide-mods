@@ -161,18 +161,6 @@ return {
 							},
 						},
 					},
-					{
-						setting_id = "opt_shot_tracker_display_mode",
-						type = "dropdown",
-						title = "i18n_shot_tracker_display_mode",
-						default_value = 1,
-						options = {
-							{text = "i18n_display_mode_all", value = 1},
-							{text = "i18n_display_mode_only_me", value = 2},
-							{text = "i18n_display_mode_except_me", value = 4},
-							{text = "i18n_display_mode_hide_all", value = 3},
-						},
-					},
 				},
 			},
 			{
@@ -235,15 +223,9 @@ return {
 						default_value = true,
 						sub_widgets = {
 							{
-								setting_id = "opt_show_total_damage_notification",
+								setting_id = "opt_show_killer_name_notification",
 								type = "checkbox",
-								title = "i18n_show_total_damage_notification",
-								default_value = true,
-							},
-							{
-								setting_id = "opt_show_max_damage_notification",
-								type = "checkbox",
-								title = "i18n_show_max_damage_notification",
+								title = "i18n_show_killer_name_notification",
 								default_value = true,
 							},
 							{
@@ -253,9 +235,15 @@ return {
 								default_value = true,
 							},
 							{
-								setting_id = "opt_show_killer_name_notification",
+								setting_id = "opt_show_total_damage_notification",
 								type = "checkbox",
-								title = "i18n_show_killer_name_notification",
+								title = "i18n_show_total_damage_notification",
+								default_value = true,
+							},
+							{
+								setting_id = "opt_show_max_damage_notification",
+								type = "checkbox",
+								title = "i18n_show_max_damage_notification",
 								default_value = true,
 							},
 						},

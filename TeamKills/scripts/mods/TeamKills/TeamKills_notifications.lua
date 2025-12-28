@@ -111,16 +111,8 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 		return a.damage > b.damage
 	end)
 	
-	-- Находим игрока с максимальным уроном и последним ударом
+	-- Находим игрока с максимальным суммарным уроном
 	local max_damage_player = players_with_damage[1]
-	local max_last_damage_player = nil
-	local max_last_damage = 0
-	for _, player in ipairs(players_with_damage) do
-		if player.last_damage > max_last_damage then
-			max_last_damage = player.last_damage
-			max_last_damage_player = player
-		end
-	end
 	
 	-- Получаем название босса
 	local boss_name = ""
@@ -150,17 +142,25 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 	local boss_name_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", white_rgb[1], white_rgb[2], white_rgb[3], boss_name)
 	table.insert(lines, boss_name_text)
 	
-	-- Определяем, кто убил босса (последний, кто взаимодействовал с ним)
+	-- Определяем, кто убил босса (killing blow - последний игрок, который нанес урон)
+	-- В игре killing blow определяется через attack_result == "died" в AttackReportManager
 	local killer_player = nil
+	local killer_account_id = nil
+	local killer_last_damage = 0
 	if mod.last_enemy_interaction and mod.last_enemy_interaction[unit] then
 		local killer_unit = mod.last_enemy_interaction[unit]
 		killer_player = mod.player_from_unit(killer_unit)
+		if killer_player then
+			killer_account_id = killer_player:account_id() or killer_player:name()
+			-- Получаем последний урон killer'а
+			killer_last_damage = boss_last_damage_data and boss_last_damage_data[killer_account_id] or 0
+		end
 	end
 	
-	-- Добавляем ник убийцы босса (только если точно определен и настройка включена)
+	-- Добавляем ник убийцы босса с его последним уроном (если это игрок)
 	local show_killer_name = mod:get("opt_show_killer_name_notification") ~= false
+	local show_last_damage = mod:get("opt_show_last_hit_damage_notification") ~= false
 	if killer_player and show_killer_name then
-		local killer_account_id = killer_player:account_id() or killer_player:name()
 		local killer_name = current_players[killer_account_id]
 		if not killer_name then
 			killer_name = killer_player.character_name and killer_player:character_name() or killer_player:name() or tostring(killer_account_id)
@@ -172,7 +172,14 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 		if killer_color then
 			killer_name_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", killer_color[1], killer_color[2], killer_color[3], killer_name)
 		end
-		table.insert(lines, mod:localize("i18n_notification_killed_by") .. killer_name_text)
+		
+		-- Показываем killer'а с его последним уроном (если включено и урон > 0)
+		local killer_line = mod:localize("i18n_notification_killed_by") .. killer_name_text
+		if show_last_damage and killer_last_damage > 0 then
+			local last_dmg_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", last_damage_rgb[1], last_damage_rgb[2], last_damage_rgb[3], mod.format_number(math.floor(killer_last_damage)))
+			killer_line = killer_line .. " [" .. last_dmg_text .. "]"
+		end
+		table.insert(lines, killer_line)
 	end
 	
 	-- Общий урон команды
@@ -181,7 +188,7 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 		table.insert(lines, mod:localize("i18n_notification_total") .. total_damage_text)
 	end
 	
-	-- Игрок с максимальным уроном
+	-- Игрок с максимальным суммарным уроном (Top Damage)
 	if show_max_damage and max_damage_player then
 		local max_dmg = math.floor(max_damage_player.damage or 0)
 		local max_damage_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", damage_rgb[1], damage_rgb[2], damage_rgb[3], mod.format_number(max_dmg))
@@ -192,18 +199,6 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 			player_name = string.format("{#color(%d,%d,%d)}%s{#reset()}", max_damage_player.player_color[1], max_damage_player.player_color[2], max_damage_player.player_color[3], player_name)
 		end
 		table.insert(lines, mod:localize("i18n_notification_top") .. player_name .. " (" .. max_percent .. "%)" .. " " .. max_damage_text)
-	end
-	
-	-- Игрок с последним ударом
-	if show_last_damage and max_last_damage_player and max_last_damage > 0 then
-		local last_dmg = math.floor(max_last_damage)
-		local last_damage_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", last_damage_rgb[1], last_damage_rgb[2], last_damage_rgb[3], mod.format_number(last_dmg))
-		-- Применяем цвет к нику игрока
-		local player_name = max_last_damage_player.name
-		if max_last_damage_player.player_color then
-			player_name = string.format("{#color(%d,%d,%d)}%s{#reset()}", max_last_damage_player.player_color[1], max_last_damage_player.player_color[2], max_last_damage_player.player_color[3], player_name)
-		end
-		table.insert(lines, mod:localize("i18n_notification_last_hit") .. player_name .. " [" .. last_damage_text .. "]")
 	end
 	
 	-- Разделитель
@@ -239,7 +234,8 @@ local function format_boss_damage_text_for_notification(unit, boss_extension)
 			table.insert(parts, damage_text)
 		end
 		
-		-- Последний урон
+		-- Последний урон игрока (показываем для всех, но главный - это у killer'а)
+		-- Это последний зарегистрированный урон каждого игрока
 		if show_last_damage and player.last_damage > 0 then
 			local last_dmg = math.floor(player.last_damage)
 			local last_damage_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", last_damage_rgb[1], last_damage_rgb[2], last_damage_rgb[3], mod.format_number(last_dmg))
