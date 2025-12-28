@@ -13,7 +13,7 @@ return {
 	},
 	i18n_notification_total = {
 		en = "Total Damage: ",
-		ru = "Всего урон: ",
+		ru = "Общий урон: ",
 	},
 	i18n_notification_top = {
 		en = "Max: ",
