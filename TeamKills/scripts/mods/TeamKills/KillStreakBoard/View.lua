@@ -4,7 +4,6 @@ local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetSettings")
 local base_z = KillstreakWidgetSettings.killsboard_base_z
 
--- Загружаем общий виджет
 mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/Widget")
 
 local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetSettings")
@@ -27,35 +26,25 @@ KillstreakView.on_enter = function(self)
     
     KillstreakView.super.on_enter(self)
     
-    -- Виджет создается автоматически из определений через super.on_enter
     self.killsboard_widget = self._widgets_by_name["killsboard"]
     
-    -- В EndView используем то же значение base_z из настроек для консистентности
     local end_view_z = base_z
     
     if self.killsboard_widget then
-        -- Передаем флаг end_view в content для visibility_function
         if self.killsboard_widget.content then
             self.killsboard_widget.content.end_view = self.end_view
         end
-        -- Устанавливаем видимость сразу, без анимации для view
         self.killsboard_widget.alpha_multiplier = 1
         self.killsboard_widget.visible = true
-        -- Не устанавливаем offset[3], z-координата берется из scenegraph
     end
     
     self.row_widgets = {}
     self:setup_row_widgets()
     
-    -- Устанавливаем z-позиции для scenegraph (работает и для обычного view, и для EndView)
     if self._ui_scenegraph then
-        -- Основной контейнер killsboard имеет base_z
         if self._ui_scenegraph.killsboard then
             self._ui_scenegraph.killsboard.position[3] = base_z
         end
-        -- killsboard_rows имеет position[3] = 10 относительно parent "killsboard"
-        -- Итоговая z = base_z + 10, что обеспечивает, что строки будут поверх всех элементов фона
-        -- (фон: base_z+1, dividers: base_z+1, строки: base_z+10)
         if self._ui_scenegraph.killsboard_rows then
             self._ui_scenegraph.killsboard_rows.position[3] = 10
         end
@@ -63,15 +52,12 @@ KillstreakView.on_enter = function(self)
 end
 
 KillstreakView.setup_row_widgets = function(self)
-    -- Используем функцию get_players из Widget.lua
     local players = mod.get_players_for_killsboard()
     
-    -- Если нет игроков, создаем пустой список для отображения пустого view
     if not players or not next(players) then
         players = {}
     end
     
-    -- Используем общую функцию из Widget.lua
     local row_widgets, total_height = mod:setup_killsboard_row_widgets(
         self.row_widgets, 
         self._widgets_by_name, 
@@ -82,7 +68,6 @@ KillstreakView.setup_row_widgets = function(self)
     )
     self.row_widgets = row_widgets or {}
     
-    -- Устанавливаем видимость всех виджетов строк
     if self.row_widgets then
         for i = 1, #self.row_widgets do
             local widget = self.row_widgets[i]
@@ -93,7 +78,6 @@ KillstreakView.setup_row_widgets = function(self)
         end
     end
     
-    -- Устанавливаем минимальную высоту, если нет строк
     if total_height == 0 then
         total_height = 100
     end
@@ -104,7 +88,6 @@ KillstreakView.setup_row_widgets = function(self)
 end
 
 KillstreakView.move_killsboard = function(self, from_offset_x, to_offset_x, callback)
-    -- Аналогично move_scoreboard из scoreboard
     self.killsboard_move_timer = 0.75
     self.killsboard_move_from_offset = from_offset_x
     self.killsboard_move_to_offset = to_offset_x
@@ -166,14 +149,12 @@ end
 KillstreakView._draw_widgets = function(self, dt, input_service)
     UIRenderer.begin_pass(self._ui_renderer, self._ui_scenegraph, input_service, dt, self._render_settings)
     
-    -- Отрисовываем все виджеты из _widgets_by_name (включая killstreak и строки)
     for name, widget in pairs(self._widgets_by_name) do
         if widget then
             UIWidget.draw(widget, self._ui_renderer)
         end
     end
     
-    -- Также отрисовываем виджеты строк, если они не в _widgets_by_name
     if self.row_widgets then
         for i = 1, #self.row_widgets do
             local widget = self.row_widgets[i]

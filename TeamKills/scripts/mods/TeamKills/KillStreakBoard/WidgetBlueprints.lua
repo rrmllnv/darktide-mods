@@ -57,7 +57,7 @@ local blueprints = {
                 },
                 custom = true,
             },
-            {value_id = "d1", -- 3 = Damage for player 1
+            {value_id = "d1",
                 value = "",
                 pass_type = "text",
                 style = {
@@ -75,7 +75,7 @@ local blueprints = {
                 },
                 custom = true,
             },
-            {value_id = "bg1", -- 4 = Column background 1
+            {value_id = "bg1",
                 value = "",
                 pass_type = "texture",
                 style = {
@@ -89,8 +89,7 @@ local blueprints = {
                     visible = false,
                 }
             },
-            -- Player 2: K and D
-            {value_id = "k2", -- 5 = Kills for player 2
+            {value_id = "k2",
                 value = "",
                 pass_type = "text",
                 style = {
@@ -108,7 +107,7 @@ local blueprints = {
                 },
                 custom = true,
             },
-            {value_id = "d2", -- 6 = Damage for player 2
+            {value_id = "d2",
                 value = "",
                 pass_type = "text",
                 style = {
@@ -126,7 +125,7 @@ local blueprints = {
                 },
                 custom = true,
             },
-            {value_id = "bg2", -- 7 = Column background 2
+            {value_id = "bg2",
                 value = "",
                 pass_type = "texture",
                 style = {
@@ -140,8 +139,7 @@ local blueprints = {
                     visible = false,
                 }
             },
-            -- Player 3: K and D
-            {value_id = "k3", -- 8 = Kills for player 3
+            {value_id = "k3",
                 value = "",
                 pass_type = "text",
                 style = {
@@ -159,7 +157,7 @@ local blueprints = {
                 },
                 custom = true,
             },
-            {value_id = "d3", -- 9 = Damage for player 3
+            {value_id = "d3",
                 value = "",
                 pass_type = "text",
                 style = {
@@ -177,7 +175,7 @@ local blueprints = {
                 },
                 custom = true,
             },
-            {value_id = "bg3", -- 10 = Column background 3
+            {value_id = "bg3",
                 value = "",
                 pass_type = "texture",
                 style = {
@@ -191,8 +189,7 @@ local blueprints = {
                     visible = false,
                 }
             },
-            -- Player 4: K and D
-            {value_id = "k4", -- 11 = Kills for player 4
+            {value_id = "k4",
                 value = "",
                 pass_type = "text",
                 style = {
@@ -210,7 +207,7 @@ local blueprints = {
                 },
                 custom = true,
             },
-            {value_id = "d4", -- 12 = Damage for player 4
+            {value_id = "d4",
                 value = "",
                 pass_type = "text",
                 style = {
@@ -228,7 +225,7 @@ local blueprints = {
                 },
                 custom = true,
             },
-            {value_id = "bg4", -- 13 = Column background 4
+            {value_id = "bg4",
                 value = "",
                 pass_type = "texture",
                 style = {
@@ -242,7 +239,7 @@ local blueprints = {
                     visible = false,
                 }
             },
-            {value_id = "bg_category", -- 14 = Category column background
+            {value_id = "bg_category",
                 value = "",
                 pass_type = "texture",
                 style = {

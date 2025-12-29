@@ -13,12 +13,8 @@ local scenegraph_definition = {
     killsboard_rows = WidgetBackground.create_killsboard_rows_scenegraph(KillstreakWidgetSettings, base_z),
 }
 
--- Используем определение виджета из TacticalOverlay.lua
--- Виджет создается через hook_require в TacticalOverlay.lua
--- Здесь мы создаем копию для View
 local widget_definitions = {}
 
--- Создаем виджет killsboard используя единое определение фона
 local base_x = 0
 local background_passes = WidgetBackground.create_killsboard_background_passes(KillstreakWidgetSettings, base_x, base_z)
 
