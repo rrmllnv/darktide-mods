@@ -369,6 +369,21 @@ mod.update_killstreak_timers = function(dt)
 		timer = timer + dt
 
 		if timer > mod.killstreak_duration_seconds then
+			if mod.killstreak_kills_by_category and mod.killstreak_kills_by_category[account_id] then
+				mod.display_killstreak_kills_by_category = mod.display_killstreak_kills_by_category or {}
+				mod.display_killstreak_kills_by_category[account_id] = mod.display_killstreak_kills_by_category[account_id] or {}
+				for category_key, count in pairs(mod.killstreak_kills_by_category[account_id]) do
+					mod.display_killstreak_kills_by_category[account_id][category_key] = count
+				end
+			end
+			if mod.killstreak_damage_by_category and mod.killstreak_damage_by_category[account_id] then
+				mod.display_killstreak_damage_by_category = mod.display_killstreak_damage_by_category or {}
+				mod.display_killstreak_damage_by_category[account_id] = mod.display_killstreak_damage_by_category[account_id] or {}
+				for category_key, damage in pairs(mod.killstreak_damage_by_category[account_id]) do
+					mod.display_killstreak_damage_by_category[account_id][category_key] = damage
+				end
+			end
+			
 			mod.player_killstreak[account_id] = 0
 			mod.player_killstreak_timer[account_id] = nil
 			if mod.killstreak_damage_by_category and mod.killstreak_damage_by_category[account_id] then
@@ -621,7 +636,8 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                     mod.killstreak_damage_by_category[account_id][breed_name] = (mod.killstreak_damage_by_category[account_id][breed_name] or 0) + math.floor(health_damage)
                     
                     local current_killstreak = mod.player_killstreak[account_id] or 0
-                    if current_killstreak > 0 then
+                    local timer_exists = mod.player_killstreak_timer and mod.player_killstreak_timer[account_id]
+                    if current_killstreak > 0 and timer_exists then
                         mod.highlighted_categories = mod.highlighted_categories or {}
                         mod.highlighted_categories[account_id] = mod.highlighted_categories[account_id] or {}
                         mod.highlighted_categories[account_id][breed_name] = true
