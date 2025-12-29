@@ -180,14 +180,97 @@ local function _create_box_widget(scenegraph_id)
 	}, scenegraph_id)
 end
 
+local function _create_ammo_box_widget(scenegraph_id)
+	local text_style = table.clone(UIFontSettings.hud_body)
+	text_style.font_type = "machine_medium"
+	text_style.font_size = 70
+	text_style.drop_shadow = true
+	text_style.text_horizontal_alignment = "center"
+	text_style.text_vertical_alignment = "center"
+	text_style.text_color = UIHudSettings.color_tint_main_1
+	text_style.offset = { 0, -15, 2 }
+
+	local text_style_reserve = table.clone(text_style)
+	text_style_reserve.font_size = 30
+	text_style_reserve.offset = { 0, 30, 2 }
+
+	return UIWidget.create_definition({
+		{
+			pass_type = "rect",
+			style_id = "background",
+			value_id = "background",
+			style = {
+				color = { 200, 0, 0, 0 },
+				offset = { 0, 0, 0 },
+			},
+		},
+		{
+			pass_type = "text",
+			value_id = "text",
+			value = "",
+			style_id = "text",
+			style = text_style,
+		},
+		{
+			pass_type = "text",
+			value_id = "text_reserve",
+			value = "",
+			style_id = "text_reserve",
+			style = text_style_reserve,
+		},
+	}, scenegraph_id)
+end
+
+local function _create_ultimate_box_widget(scenegraph_id)
+	local text_style = table.clone(UIFontSettings.hud_body)
+	text_style.font_type = "machine_medium"
+	text_style.font_size = 18
+	text_style.drop_shadow = true
+	text_style.text_horizontal_alignment = "center"
+	text_style.text_vertical_alignment = "center"
+	text_style.text_color = UIHudSettings.color_tint_main_1
+	text_style.offset = { 0, 0, 2 }
+
+	local label_style = table.clone(text_style)
+	label_style.font_size = 12
+	label_style.text_vertical_alignment = "top"
+	label_style.offset = { 0, 2, 2 }
+
+	return UIWidget.create_definition({
+		{
+			pass_type = "rect",
+			style_id = "background",
+			value_id = "background",
+			style = {
+				color = { 200, 0, 0, 0 },
+				offset = { 0, 0, 0 },
+			},
+		},
+		{
+			pass_type = "text",
+			value_id = "text",
+			value = "",
+			style_id = "text",
+			style = text_style,
+		},
+		{
+			pass_type = "text",
+			value_id = "label",
+			value = "",
+			style_id = "label",
+			style = label_style,
+		},
+	}, scenegraph_id)
+end
+
 local function _create_widgets()
 	return {
 		stamina_bar = _create_bar_widget("stamina_bar", { 255, 100, 200, 255 }),
 		health_bar = _create_bar_widget("health_bar", { 255, 100, 255, 100 }),
 		ability_bar = _create_bar_widget("ability_bar", { 255, 255, 50, 50 }),
-		ammo_box = _create_box_widget("ammo_box"),
+		ammo_box = _create_ammo_box_widget("ammo_box"),
 		special_box = _create_box_widget("special_box"),
-		ultimate_box = _create_box_widget("ultimate_box"),
+		ultimate_box = _create_ultimate_box_widget("ultimate_box"),
 		stimm_box = _create_box_widget("stimm_box"),
 		grenades_box = _create_box_widget("grenades_box"),
 		pickup_box = _create_box_widget("pickup_box"),
@@ -373,10 +456,12 @@ HudElementDivisionHUD._update_ammo_box = function(self, player_unit, widget, opa
 	end
 
 	widget.content.visible = true
-	widget.content.text = string.format("%d\n%d", current_clip, current_reserve)
+	widget.content.text = string.format("%d", current_clip)
+	widget.content.text_reserve = string.format("%d", current_reserve)
 	widget.content.label = ""
 	widget.style.background.color[1] = 200 * opacity
 	widget.style.text.text_color[1] = 255 * opacity
+	widget.style.text_reserve.text_color[1] = 255 * opacity
 	widget.dirty = true
 end
 
