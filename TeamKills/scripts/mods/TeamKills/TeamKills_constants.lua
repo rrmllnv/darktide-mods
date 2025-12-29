@@ -57,6 +57,7 @@ mod.disablers = {
 mod.bosses = {
 	"chaos_beast_of_nurgle",
 	"chaos_daemonhost",
+	"chaos_mutator_daemonhost",
 	"chaos_spawn",
 	"chaos_plague_ogryn",
 	"chaos_plague_ogryn_sprayer",
