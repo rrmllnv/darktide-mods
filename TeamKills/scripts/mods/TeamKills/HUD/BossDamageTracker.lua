@@ -35,16 +35,16 @@ local function format_boss_damage_text(unit)
 	local players_with_damage = {}
 	for account_id, damage in pairs(boss_damage_data) do
 		if damage > 0 then
-		local display_name = current_players[account_id]
+			local display_name = current_players[account_id]
 			if display_name then
-			local last_damage = boss_last_damage_data and boss_last_damage_data[account_id] or 0
-			table.insert(players_with_damage, {
-				name = display_name,
+				local last_damage = boss_last_damage_data and boss_last_damage_data[account_id] or 0
+				table.insert(players_with_damage, {
+					name = display_name,
 					damage = math.floor(damage),
 					last_damage = math.floor(last_damage),
-				account_id = account_id
-			})
-		end
+					account_id = account_id
+				})
+			end
 		end
 	end
 	

@@ -29,17 +29,17 @@ local function format_boss_damage_text_for_notification(unit, boss_extension, at
 		if damage > 0 then
 			local display_name = current_players[account_id]
 			if display_name then
-			local last_damage = boss_last_damage_data and boss_last_damage_data[account_id] or 0
-			total_damage = total_damage + damage
+				local last_damage = boss_last_damage_data and boss_last_damage_data[account_id] or 0
+				total_damage = total_damage + damage
 				local player_color = mod.get_player_color(account_id)
-			table.insert(players_with_damage, {
-				name = display_name,
+				table.insert(players_with_damage, {
+					name = display_name,
 					damage = math.floor(damage),
 					last_damage = math.floor(last_damage),
-				account_id = account_id,
-				player_color = player_color
-			})
-		end
+					account_id = account_id,
+					player_color = player_color
+				})
+			end
 		end
 	end
 	
