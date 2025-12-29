@@ -353,14 +353,24 @@ mod:hook_safe(CLASS.HudElementBossHealth, "event_boss_encounter_end", function(s
 		return
 	end
 	
-	mod:echo("[TeamKills] Boss encounter ended with damage data")
+	-- ВАЖНО: Используем ту же проверку, что и для подсчета убийств
+	-- Если босс уже в mod.killed_units, значит он был зарегистрирован как убитый
+	-- Это гарантирует, что уведомление = количеству убийств
+	if not mod.killed_units or not mod.killed_units[unit] then
+		-- Очищаем данные
+		if mod.boss_damage and mod.boss_damage[unit] then
+			mod.boss_damage[unit] = nil
+		end
+		if mod.boss_last_damage and mod.boss_last_damage[unit] then
+			mod.boss_last_damage[unit] = nil
+		end
+		return
+	end
 	
 	-- Получаем данные об уроне по этому боссу (передаем nil вместо attack_data)
 	local damage_lines = format_boss_damage_text_for_notification(unit, boss_extension, nil)
 	
 	if damage_lines and #damage_lines > 0 then
-		mod:echo("[TeamKills] Sending notification with " .. tostring(#damage_lines) .. " lines")
-		
 		-- Объединяем все строки в line_1 с переносами \n - система автоматически разобьет на строки
 		local all_lines = table.concat(damage_lines, "\n")
 		local notification_data = {
@@ -371,10 +381,7 @@ mod:hook_safe(CLASS.HudElementBossHealth, "event_boss_encounter_end", function(s
 		-- Отправляем уведомление с информацией об уроне
 		if Managers.event then
 			Managers.event:trigger("event_add_notification_message", "custom", notification_data)
-			mod:echo("[TeamKills] Notification sent!")
 		end
-	else
-		mod:echo("[TeamKills] No damage lines generated")
 	end
 	
 	-- Очищаем данные об уроне по боссу после отправки уведомления
