@@ -9,7 +9,6 @@ local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills
 local base_z = KillstreakWidgetSettings.killsboard_base_z
 local base_x = 0
 
--- Функция для получения цвета игрока по account_id
 local function get_player_color(account_id)
 	if not account_id or not Managers.player then
 		return nil
@@ -23,7 +22,6 @@ local function get_player_color(account_id)
 				local slot = player:slot()
 				if slot and UISettings.player_slot_colors[slot] then
 					local color = UISettings.player_slot_colors[slot]
-					-- Color формат: [alpha, r, g, b]
 					return {color[2], color[3], color[4]}
 				end
 				break
@@ -34,7 +32,6 @@ local function get_player_color(account_id)
 	return nil
 end
 
--- Маппинг breed_name на ключи локализации мода для mutator вариантов
 local mutator_localization_map = {
 	["chaos_mutator_daemonhost"] = "i18n_breed_chaos_mutator_daemonhost",
 	["renegade_flamer_mutator"] = "i18n_breed_renegade_flamer_mutator",
@@ -43,9 +40,7 @@ local mutator_localization_map = {
 	["chaos_mutator_ritualist"] = "i18n_breed_chaos_mutator_ritualist",
 }
 
--- Функция локализации для врагов
 local function localize_enemy(breed_name, key)
-	-- Сначала проверяем, есть ли специальный ключ локализации мода для mutator вариантов
 	if breed_name and mutator_localization_map[breed_name] then
 		local mod_loc_key = mutator_localization_map[breed_name]
 		local success, result = pcall(function()
@@ -56,7 +51,6 @@ local function localize_enemy(breed_name, key)
 		end
 	end
 	
-	-- Для обычных врагов используем игровой ключ локализации
 	if key then
 		local success, result = pcall(function()
 			return Localize(key)
@@ -68,7 +62,6 @@ local function localize_enemy(breed_name, key)
 	return key or breed_name or ""
 end
 
--- Маппинг названий групп на ключи локализации
 local group_localization_map = {
 	["Melee Lessers"] = "i18n_stats_melee_lessers",
 	["Ranged Lessers"] = "i18n_stats_ranged_lessers",
@@ -79,12 +72,10 @@ local group_localization_map = {
 	["Bosses"] = "i18n_stats_bosses",
 }
 
--- Функция локализации для групп
 local function localize_group(group_name)
 	if group_name and group_localization_map[group_name] then
 		local loc_key = group_localization_map[group_name]
 		
-		-- Пробуем через mod:localize() (как в GlobalStat)
 		local success, result = pcall(function()
 			return mod:localize(loc_key)
 		end)
@@ -92,7 +83,6 @@ local function localize_group(group_name)
 			return result
 		end
 		
-		-- Пробуем с префиксом "loc_" через Localize()
 		local loc_key_with_prefix = "loc_" .. loc_key
 		success, result = pcall(function()
 			return Localize(loc_key_with_prefix)
@@ -101,7 +91,6 @@ local function localize_group(group_name)
 			return result
 		end
 		
-		-- Пробуем без префикса через Localize()
 		success, result = pcall(function()
 			return Localize(loc_key)
 		end)
@@ -113,7 +102,6 @@ local function localize_group(group_name)
 end
 
 local categories = {
-	-- Bosses
 	{"renegade_twin_captain_two", "loc_breed_display_name_renegade_twin_captain_two", "Bosses"},
 	{"renegade_twin_captain", "loc_breed_display_name_renegade_twin_captain", "Bosses"},
 	{"cultist_captain", "loc_breed_display_name_cultist_captain", "Bosses"},
@@ -124,7 +112,6 @@ local categories = {
 	{"chaos_daemonhost", "loc_breed_display_name_chaos_daemonhost", "Bosses"},
 	{"chaos_mutator_daemonhost", "loc_breed_display_name_chaos_daemonhost", "Bosses"},
 	{"chaos_beast_of_nurgle", "loc_breed_display_name_chaos_beast_of_nurgle", "Bosses"},
-	-- Ranged elites
 	{"chaos_ogryn_gunner", "loc_breed_display_name_chaos_ogryn_gunner", "Ranged Elites"},
 	{"renegade_shocktrooper", "loc_breed_display_name_renegade_shocktrooper", "Ranged Elites"},
 	{"cultist_shocktrooper", "loc_breed_display_name_cultist_shocktrooper", "Ranged Elites"},
@@ -132,13 +119,11 @@ local categories = {
 	{"renegade_plasma_gunner", "loc_breed_display_name_renegade_plasma_gunner", "Ranged Elites"},
 	{"renegade_gunner", "loc_breed_display_name_renegade_gunner", "Ranged Elites"},
 	{"cultist_gunner", "loc_breed_display_name_cultist_gunner", "Ranged Elites"},
-	-- Melee elites
 	{"chaos_ogryn_executor", "loc_breed_display_name_chaos_ogryn_executor", "Melee Elites"},
 	{"chaos_ogryn_bulwark", "loc_breed_display_name_chaos_ogryn_bulwark", "Melee Elites"},
 	{"renegade_executor", "loc_breed_display_name_renegade_executor", "Melee Elites"},
 	{"renegade_berzerker", "loc_breed_display_name_renegade_berzerker", "Melee Elites"},
 	{"cultist_berzerker", "loc_breed_display_name_cultist_berzerker", "Melee Elites"},
-	-- Specials
 	{"cultist_flamer", "loc_breed_display_name_cultist_flamer", "Specials"},
 	{"renegade_flamer", "loc_breed_display_name_renegade_flamer", "Specials"},
 	{"renegade_flamer_mutator", "loc_breed_display_name_renegade_flamer", "Specials"},
@@ -146,18 +131,15 @@ local categories = {
 	{"cultist_grenadier", "loc_breed_display_name_cultist_grenadier", "Specials"},
 	{"renegade_grenadier", "loc_breed_display_name_renegade_grenadier", "Specials"},
 	{"chaos_poxwalker_bomber", "loc_breed_display_name_chaos_poxwalker_bomber", "Specials"},
-	-- Disablers
 	{"renegade_netgunner", "loc_breed_display_name_renegade_netgunner", "Disablers"},
 	{"cultist_mutant", "loc_breed_display_name_cultist_mutant", "Disablers"},
 	{"cultist_mutant_mutator", "loc_breed_display_name_cultist_mutant", "Disablers"},
 	{"chaos_hound", "loc_breed_display_name_chaos_hound", "Disablers"},
 	{"chaos_hound_mutator", "loc_breed_display_name_chaos_hound", "Disablers"},
-	-- Ranged lessers
 	{"renegade_rifleman", "loc_breed_display_name_renegade_rifleman", "Ranged Lessers"},
 	{"renegade_assault", "loc_breed_display_name_renegade_assault", "Ranged Lessers"},
 	{"cultist_assault", "loc_breed_display_name_cultist_assault", "Ranged Lessers"},
 	{"chaos_lesser_mutated_poxwalker", "loc_breed_display_name_chaos_lesser_mutated_poxwalker", "Ranged Lessers"},
-	-- Melee lessers
 	{"renegade_melee", "loc_breed_display_name_renegade_melee", "Melee Lessers"},
 	{"cultist_ritualist", "loc_breed_display_name_cultist_ritualist", "Melee Lessers"},
 	{"chaos_mutator_ritualist", "loc_breed_display_name_cultist_ritualist", "Melee Lessers"},
@@ -172,7 +154,6 @@ local function get_players()
 	local players = {}
 	local local_account_id = nil
 	
-	-- Получаем локального игрока
 	if Managers and Managers.player then
 		local local_player = Managers.player:local_player(1)
 		if local_player then

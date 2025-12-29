@@ -1,6 +1,5 @@
 local mod = get_mod("TeamKills")
 
--- Общий массив опций цветов для переиспользования
 local color_options = {
 	{text = "i18n_color_white", value = "white"},
 	{text = "i18n_color_red", value = "red"},

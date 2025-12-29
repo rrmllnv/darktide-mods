@@ -265,8 +265,6 @@ TeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, in
 		widget.content.visible = true
 	end
 	
-    -- Сдвиг по стилю текста, если скрыты строки пользователей, но показывается строка Team Kills
-    -- Обновление текста
     local total_kills = 0
     local total_damage = 0
     local total_last_damage = 0
@@ -279,7 +277,6 @@ TeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, in
         end
     end
 	
-	-- Получаем список текущих игроков в команде
 	local current_players = {}
     if Managers.player then
         local players = Managers.player:players()
@@ -294,7 +291,6 @@ TeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, in
         end
     end
 	
-	-- Собираем убийства только текущих игроков с убийствами > 0
     for account_id, kills in pairs(mod.player_kills or {}) do
         local display_name = current_players[account_id]
         if kills > 0 and display_name then
@@ -307,7 +303,6 @@ TeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, in
         end
     end
 	
-	-- Сортируем по убийствам (больше сверху)
     table.sort(players_with_kills, function(a, b)
         if a.kills == b.kills then
             return (a.damage or 0) > (b.damage or 0)
@@ -315,7 +310,6 @@ TeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, in
         return a.kills > b.kills
     end)
 	
-    -- Формируем текст с учетом настроек
     local lines = {}
     local streak_lines = {}
     local show_kills = mod.show_kills ~= false
@@ -335,7 +329,6 @@ TeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, in
     local last_damage_color = mod.get_last_damage_color_string()
     local reset_color = "{#reset()}"
     
-    -- Функция для формирования строки с данными игрока/команды
     local function format_stats(kills, damage, last_damage, is_team)
         local parts = {}
         
@@ -404,7 +397,6 @@ TeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, in
         end
     end
 
-	-- Скрываем виджет если нет строк для отображения
 	if #lines == 0 then
 		widget.content.visible = false
 		widget.content.text = ""

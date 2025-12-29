@@ -2,8 +2,6 @@ local mod = get_mod("TeamKills")
 
 local Color = Color
 
--- Функция для создания определения scenegraph для основного контейнера доски
--- Используется в WidgetDefinitions.lua и TacticalOverlay.lua
 local function create_killsboard_scenegraph(settings, base_z)
 	base_z = base_z or settings.killsboard_base_z or 200
 	
@@ -16,13 +14,9 @@ local function create_killsboard_scenegraph(settings, base_z)
 	}
 end
 
--- Функция для создания определения scenegraph для строк таблицы
--- Используется в WidgetDefinitions.lua и TacticalOverlay.lua
 local function create_killsboard_rows_scenegraph(settings, base_z)
 	base_z = base_z or settings.killsboard_base_z or 200
 	
-	-- Используем минимальную высоту как начальный размер, чтобы избежать смещения при первом отображении
-	-- Размер будет обновлен через adjust_killsboard_size после создания строк
 	local initial_height = settings.killsboard_min_height or settings.killsboard_size[2]
 	local rows_height = initial_height - settings.killsboard_rows_top_offset - settings.killsboard_rows_bottom_offset
 	
@@ -31,15 +25,10 @@ local function create_killsboard_rows_scenegraph(settings, base_z)
 		parent = "killsboard",
 		horizontal_alignment = "center",
 		size = {settings.killsboard_size[1], rows_height},
-		-- position[3] = 10, так как parent "killsboard" уже имеет base_z, итоговая z будет base_z + 10
-		-- Это обеспечивает, что строки будут поверх всех элементов фона и других слоев
-		-- (фон: base_z+1, dividers: base_z+2, строки: base_z+10)
 		position = {0, settings.killsboard_rows_top_offset, 10}
 	}
 end
 
--- Функция для создания определения фона доски
--- Используется в WidgetDefinitions.lua и TacticalOverlay.lua
 local function create_killsboard_background_passes(settings, base_x, base_z)
 	base_x = base_x or 0
 	base_z = base_z or settings.killsboard_base_z or 200
@@ -57,8 +46,6 @@ local function create_killsboard_background_passes(settings, base_x, base_z)
 					30,
 					30,
 				},
-				-- offset[3] = 0, так как scenegraph "killsboard" уже имеет position[3] = base_z
-				-- Итоговая z = base_z + 0 = 200, что ниже строк (base_z + 10 + 11 = 221)
 				offset = {
 					base_x,
 					0,
@@ -72,8 +59,6 @@ local function create_killsboard_background_passes(settings, base_x, base_z)
 			style = {
 				color = Color.black(240, true)
 			},
-			-- offset[3] = -1, чтобы rect был ниже background texture
-			-- Итоговая z = base_z - 1 = 199
 			offset = {
 				base_x,
 				0,
@@ -97,8 +82,6 @@ local function create_killsboard_background_passes(settings, base_x, base_z)
 					nil,
 					36,
 				},
-				-- offset[3] = 1, чтобы divider был выше background texture (0), но ниже строк (10+)
-				-- Итоговая z = base_z + 1 = 201
 				offset = {
 					base_x,
 					-20,
@@ -133,8 +116,6 @@ local function create_killsboard_background_passes(settings, base_x, base_z)
 					nil,
 					36,
 				},
-				-- offset[3] = 1, чтобы divider был выше background texture (0), но ниже строк (10+)
-				-- Итоговая z = base_z + 1 = 201
 				offset = {
 					base_x,
 					20,

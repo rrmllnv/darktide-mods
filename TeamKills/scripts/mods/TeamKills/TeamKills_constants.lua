@@ -1,6 +1,5 @@
 local mod = get_mod("TeamKills")
 
--- Категории целей
 mod.melee_lessers = {
 	"chaos_newly_infected",
 	"chaos_poxwalker",
@@ -67,32 +66,29 @@ mod.bosses = {
 	"renegade_twin_captain_two",
 }
 
--- Предопределённые цвета
 mod.color_presets = {
 	white = {255, 255, 255},
-	red = {255, 54, 36},        -- ui_red_light
-	green = {61, 112, 55},      -- ui_green_medium
-	blue = {30, 144, 255},      -- dodger_blue
-	yellow = {226, 199, 126},   -- ui_terminal
-	orange = {255, 183, 44},    -- ui_orange_light
-	purple = {166, 93, 172},    -- ui_corruption_default
-	cyan = {107, 209, 241},     -- ui_blue_light
-	teal = {62, 143, 155},          -- ui_toughness_medium
-	gold = {196, 195, 108},         -- ui_toughness_buffed
-	purple_deep = {130, 66, 170},   -- ui_corruption_medium
-	magenta = {102, 38, 98},        -- ui_ability_purple
-	orange_dark = {148, 46, 14},    -- ui_orange_dark
-	orange_medium = {245, 121, 21}, -- ui_orange_medium
-	amber = {191, 151, 73},         -- ui_terminal_dark
-	grey = {102, 102, 102},         -- ui_grey_medium
+	red = {255, 54, 36},
+	green = {61, 112, 55},
+	blue = {30, 144, 255},
+	yellow = {226, 199, 126},
+	orange = {255, 183, 44},
+	purple = {166, 93, 172},
+	cyan = {107, 209, 241},
+	teal = {62, 143, 155},
+	gold = {196, 195, 108},
+	purple_deep = {130, 66, 170},
+	magenta = {102, 38, 98},
+	orange_dark = {148, 46, 14},
+	orange_medium = {245, 121, 21},
+	amber = {191, 151, 73},
+	grey = {102, 102, 102},
 }
 
--- Константы по умолчанию
 mod.DEFAULT_KILLSTREAK_DURATION = 2.5
 mod.DEFAULT_FONT_SIZE = 16
 mod.DEFAULT_OPACITY = 100
 
--- Константы для длительности killstreak по уровням сложности
 mod.KILLSTREAK_DURATION_EASY = 4
 mod.KILLSTREAK_DURATION_NORMAL = 2.5
 mod.KILLSTREAK_DURATION_HARD = 1

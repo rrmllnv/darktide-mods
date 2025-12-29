@@ -2,16 +2,10 @@ local mod = get_mod("TeamKills")
 
 local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetSettings")
 
--- base_z в pass_template offset[3] добавляется к позиции виджета из scenegraph
--- Scenegraph уже имеет z = base_z + 10 (210), поэтому здесь используем относительные значения
--- Для текста используем +11, чтобы быть выше фонов столбцов (+10)
 local base_z = 0
-local text_z_offset = 11  -- Текст должен быть выше фонов столбцов
-local bg_z_offset = 10    -- Фоны столбцов на том же уровне, что и scenegraph
+local text_z_offset = 11
+local bg_z_offset = 10
 local FONT_SIZE = KillstreakWidgetSettings.killsboard_font_size
--- Вычисляем центрирование фона относительно столбцов K и D
--- Для каждого игрока: центр столбцов K и D = killsboard_column_header_width + offset_player + (kills_width + damage_width) / 2
--- Начало фона = центр - bg_width / 2
 local function get_bg_offset(player_index)
     local total_column_width = KillstreakWidgetSettings.killsboard_column_kills_width + KillstreakWidgetSettings.killsboard_column_damage_width
     local k_start = KillstreakWidgetSettings.killsboard_column_header_width + (KillstreakWidgetSettings.killsboard_column_player_width * (player_index - 1))
@@ -27,7 +21,7 @@ local blueprints = {
             KillstreakWidgetSettings.killsboard_row_height,
         },
         pass_template = {
-            {value_id = "text", -- 1 = Row text (category name)
+            {value_id = "text",
                 value = "text",
                 pass_type = "text",
                 style = {
@@ -45,8 +39,7 @@ local blueprints = {
                 },
                 custom = true,
             },
-            -- Player 1: K and D
-            {value_id = "k1", -- 2 = Kills for player 1
+            {value_id = "k1",
                 value = "",
                 pass_type = "text",
                 style = {

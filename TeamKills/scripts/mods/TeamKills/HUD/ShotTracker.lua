@@ -8,7 +8,6 @@ local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local HudElementTeamPanelHandlerSettings = require("scripts/ui/hud/elements/team_panel_handler/hud_element_team_panel_handler_settings")
 local HudElementTeamPlayerPanelSettings = require("scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_settings")
 
--- Пути к иконкам материалов (используем те же, что в CombatStats для проверки)
 local icons = {
 	shots_fired = "content/ui/materials/icons/weapons/actions/special_bullet",
 	shots_missed = "content/ui/materials/icons/weapons/actions/smiter",
@@ -34,7 +33,6 @@ local function get_opacity_alpha()
 	return math.floor((opacity / 100) * 255)
 end
 
--- Функция для скрытия виджета и очистки содержимого
 local function hide_shot_tracker_widget(widget)
 	widget.content.visible = false
 	widget.content.text_shots_fired = ""
@@ -45,12 +43,9 @@ local function hide_shot_tracker_widget(widget)
 	widget.content.icon_head_shot_kill = nil
 end
 
--- Позиция под TeamKillsTracker, та же ширина
 local team_kills_width = panel_size[1]
 local shot_tracker_width = team_kills_width
--- TeamKillsTracker на {550, -200, 0}, размещаем под ним: -200 - примерная_высота_TeamKillsTracker - 10
--- Примерная высота TeamKillsTracker (с учетом нескольких строк): ~150 пикселей
-local panel_offset = {550, -160, 0} -- под TeamKillsTracker с отступом +10
+local panel_offset = {550, -160, 0}
 local background_color = UIHudSettings.color_tint_7
 local background_gradient = "content/ui/materials/hud/backgrounds/team_player_panel_background"
 local base_size = {shot_tracker_width, get_default_panel_height()}
@@ -94,7 +89,6 @@ local function apply_panel_height(self, panel_height)
 		text_style.size[2] = math.max(BORDER_PADDING * 2, panel_height - BORDER_PADDING * 2)
 	end
 	
-	-- Обновляем альфа-канал иконок
 	local alpha = get_opacity_alpha()
 	local icon_shots_fired_style = styles.icon_shots_fired
 	if icon_shots_fired_style and icon_shots_fired_style.color then
@@ -354,7 +348,6 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 		widget.content.visible = true
 	end
 	
-	-- Получаем статистики только для локального игрока
 	local local_player = Managers.player and Managers.player:local_player(1)
 	if not local_player then
 		hide_shot_tracker_widget(widget)
@@ -367,12 +360,10 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 		return
 	end
 	
-	-- Читаем статистики только из данных мода (обновляются в реальном времени через хуки)
 	local shots_fired = mod.player_shots_fired and mod.player_shots_fired[local_account_id] or 0
 	local shots_missed = mod.player_shots_missed and mod.player_shots_missed[local_account_id] or 0
 	local head_shot_kill = mod.player_head_shot_kill and mod.player_head_shot_kill[local_account_id] or 0
 	
-	-- Настройки отображения
 	local show_shots_fired = mod:get("opt_show_shots_fired") ~= false
 	local show_shots_missed = mod:get("opt_show_shots_missed") ~= false
 	local show_head_shot_kill = mod:get("opt_show_head_shot_kill") ~= false
@@ -381,14 +372,12 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 	local font_size = get_font_size()
 	local current_x = BORDER_PADDING
 	
-	-- shots_fired: иконка + текст
 	if show_shots_fired then
 		widget.content.icon_shots_fired = icons.shots_fired
 		widget.style.icon_shots_fired.color = UIHudSettings.color_tint_main_2
 		widget.content.text_shots_fired = tostring(shots_fired)
 		styles.icon_shots_fired.offset[1] = current_x
 		styles.text_shots_fired.offset[1] = current_x + ICON_SIZE + 4
-		-- Вычисляем ширину текста для следующего элемента
 		local text_width, _ = Text.text_size(ui_renderer, widget.content.text_shots_fired, styles.text_shots_fired)
 		current_x = current_x + ICON_SIZE + 4 + text_width + ICON_SPACING
 	else
@@ -396,14 +385,12 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 		widget.content.text_shots_fired = ""
 	end
 	
-	-- shots_missed: иконка + текст
 	if show_shots_missed then
 		widget.content.icon_shots_missed = icons.shots_missed
 		widget.style.icon_shots_missed.color = UIHudSettings.color_tint_main_2
 		widget.content.text_shots_missed = tostring(shots_missed)
 		styles.icon_shots_missed.offset[1] = current_x
 		styles.text_shots_missed.offset[1] = current_x + ICON_SIZE + 4
-		-- Вычисляем ширину текста для следующего элемента
 		local text_width, _ = Text.text_size(ui_renderer, widget.content.text_shots_missed, styles.text_shots_missed)
 		current_x = current_x + ICON_SIZE + 4 + text_width + ICON_SPACING
 	else
@@ -411,7 +398,6 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 		widget.content.text_shots_missed = ""
 	end
 	
-	-- head_shot_kill: иконка + текст
 	if show_head_shot_kill then
 		widget.content.icon_head_shot_kill = icons.head_shot_kill
 		widget.style.icon_head_shot_kill.color = UIHudSettings.color_tint_main_2
@@ -423,7 +409,6 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 		widget.content.text_head_shot_kill = ""
 	end
 	
-	-- Скрываем виджет если нет данных для отображения
 	if not show_shots_fired and not show_shots_missed and not show_head_shot_kill then
 		widget.content.visible = false
 		return

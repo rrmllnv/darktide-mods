@@ -1,10 +1,5 @@
 local mod = get_mod("TeamKills")
 
--- #####################################################################################################################
--- ##### API Functions for other mods #################################################################################
--- #####################################################################################################################
-
--- Вспомогательная функция для глубокого копирования таблиц
 local function deep_copy_table(t)
 	if type(t) ~= "table" then
 		return t
@@ -20,47 +15,38 @@ local function deep_copy_table(t)
 	return copy
 end
 
--- API: Получить убийства всех игроков
 mod.get_player_kills = function()
 	return deep_copy_table(mod.player_kills or {})
 end
 
--- API: Получить урон всех игроков
 mod.get_player_damage = function()
 	return deep_copy_table(mod.player_damage or {})
 end
 
--- API: Получить последний урон всех игроков
 mod.get_player_last_damage = function()
 	return deep_copy_table(mod.player_last_damage or {})
 end
 
--- API: Получить убийства по категориям для всех игроков
 mod.get_kills_by_category = function()
 	return deep_copy_table(mod.kills_by_category or {})
 end
 
--- API: Получить урон по категориям для всех игроков
 mod.get_damage_by_category = function()
 	return deep_copy_table(mod.damage_by_category or {})
 end
 
--- API: Получить серии убийств всех игроков
 mod.get_player_killstreak = function()
 	return deep_copy_table(mod.player_killstreak or {})
 end
 
--- API: Получить урон по боссам
 mod.get_boss_damage = function()
 	return deep_copy_table(mod.boss_damage or {})
 end
 
--- API: Получить последний урон по боссам
 mod.get_boss_last_damage = function()
 	return deep_copy_table(mod.boss_last_damage or {})
 end
 
--- API: Получить данные конкретного игрока
 mod.get_player_data = function(account_id)
 	if not account_id then
 		return nil
@@ -76,7 +62,6 @@ mod.get_player_data = function(account_id)
 	}
 end
 
--- API: Получить все данные мода
 mod.get_all_data = function()
 	return {
 		player_kills = mod.get_player_kills(),
@@ -90,7 +75,6 @@ mod.get_all_data = function()
 	}
 end
 
--- API: Получить версию мода
 mod.get_version = function()
 	return mod.version or "unknown"
 end

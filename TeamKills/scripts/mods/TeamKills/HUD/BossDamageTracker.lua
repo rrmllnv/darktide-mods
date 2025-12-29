@@ -16,14 +16,12 @@ local function get_opacity_alpha()
 	return math.floor((opacity / 100) * 255)
 end
 
--- Функция для формирования текста урона по боссу
 local function format_boss_damage_text(unit)
 	local boss_damage_data = mod.boss_damage and mod.boss_damage[unit]
 	if not boss_damage_data or not next(boss_damage_data) then
 		return nil
 	end
 	
-	-- Получаем список текущих игроков
 	local current_players = {}
 	if Managers.player then
 		local players = Managers.player:players()
@@ -38,10 +36,8 @@ local function format_boss_damage_text(unit)
 		end
 	end
 	
-	-- Получаем данные о последнем уроне по этому боссу
 	local boss_last_damage_data = mod.boss_last_damage and mod.boss_last_damage[unit]
 	
-	-- Формируем список игроков с уроном
 	local players_with_damage = {}
 	for account_id, damage in pairs(boss_damage_data) do
 		local display_name = current_players[account_id]
@@ -56,16 +52,13 @@ local function format_boss_damage_text(unit)
 		end
 	end
 	
-	-- Сортируем по урону (больше сверху)
 	table.sort(players_with_damage, function(a, b)
 		return a.damage > b.damage
 	end)
 	
-	-- Получаем настройки отображения
 	local show_total_damage = mod:get("opt_show_boss_total_damage") ~= false
 	local show_last_damage = mod:get("opt_show_boss_last_damage") == true
 	
-	-- Формируем текст
 	local lines = {}
 	local damage_color = mod.get_damage_color_string()
 	local last_damage_color = mod.get_last_damage_color_string()
@@ -98,15 +91,12 @@ local function format_boss_damage_text(unit)
 	end
 end
 
--- Добавляем виджеты для отображения списка игроков в каждую группу виджетов
--- Используем хук после того, как все виджеты созданы (включая RecolorBossHealthBars)
 mod:hook_safe(CLASS.HudElementBossHealth, "_setup_widget_groups", function(self)
 	local widget_groups = self._widget_groups
 	if not widget_groups then
 		return
 	end
 	
-	-- Создаем виджеты для всех групп виджетов (включая созданные RecolorBossHealthBars)
 	local font_size = get_font_size()
 	local health_bar_size_y = HudElementBossHealthSettings.size[2]
 	
@@ -114,14 +104,11 @@ mod:hook_safe(CLASS.HudElementBossHealth, "_setup_widget_groups", function(self)
 		if widget_group.health and not widget_group.boss_damage_list then
 			local health_widget = widget_group.health
 			
-			-- Получаем offset health виджета из style для правильного позиционирования
 			local health_bar_style = health_widget.style and health_widget.style.bar
 			local health_bar_offset = health_bar_style and health_bar_style.offset or {0, -13, 4}
 			
-			-- Определяем размер полоски жизни (большая для первого, маленькая для остальных)
 			local health_bar_size = widget_group_index == 1 and HudElementBossHealthSettings.size or HudElementBossHealthSettings.size_small
 			
-			-- Создаем виджет для отображения списка игроков и урона
 			local damage_list_widget_definition = UIWidget.create_definition({
 				{
 					pass_type = "text",
@@ -158,7 +145,6 @@ mod:hook_safe(CLASS.HudElementBossHealth, "_setup_widget_groups", function(self)
 			
 			widget_group.boss_damage_list = self:_create_widget("boss_damage_list_" .. widget_group_index, damage_list_widget_definition)
 			
-			-- Учитываем offset виджета health, если он установлен (для виджетов созданных RecolorBossHealthBars)
 			if health_widget.offset then
 				widget_group.boss_damage_list.offset[1] = health_widget.offset[1]
 				widget_group.boss_damage_list.offset[2] = health_widget.offset[2]
@@ -167,7 +153,6 @@ mod:hook_safe(CLASS.HudElementBossHealth, "_setup_widget_groups", function(self)
 	end
 end)
 
--- Обновляем виджеты со списком игроков и урона
 mod:hook_safe(CLASS.HudElementBossHealth, "update", function(self, dt, t, ui_renderer, render_settings, input_service)
 	local is_active = self._is_active
 	
@@ -180,8 +165,6 @@ mod:hook_safe(CLASS.HudElementBossHealth, "update", function(self, dt, t, ui_ren
 	local num_active_targets = #active_targets_array
 	local num_health_bars_to_update = math.min(num_active_targets, self._max_health_bars)
 	
-	-- Создаем виджеты для всех групп виджетов, которые еще не имеют нашего виджета
-	-- Это нужно на случай, если RecolorBossHealthBars добавил виджеты после нашего хука _setup_widget_groups
 	local font_size = get_font_size()
 	local health_bar_size_y = HudElementBossHealthSettings.size[2]
 	
@@ -189,14 +172,11 @@ mod:hook_safe(CLASS.HudElementBossHealth, "update", function(self, dt, t, ui_ren
 		if widget_group.health and not widget_group.boss_damage_list then
 			local health_widget = widget_group.health
 			
-			-- Получаем offset health виджета из style для правильного позиционирования
 			local health_bar_style = health_widget.style and health_widget.style.bar
 			local health_bar_offset = health_bar_style and health_bar_style.offset or {0, -13, 4}
 			
-			-- Определяем размер полоски жизни (большая для первого, маленькая для остальных)
 			local health_bar_size = widget_group_index == 1 and HudElementBossHealthSettings.size or HudElementBossHealthSettings.size_small
 			
-			-- Создаем виджет для отображения списка игроков и урона
 			local damage_list_widget_definition = UIWidget.create_definition({
 				{
 					pass_type = "text",
@@ -233,7 +213,6 @@ mod:hook_safe(CLASS.HudElementBossHealth, "update", function(self, dt, t, ui_ren
 			
 			widget_group.boss_damage_list = self:_create_widget("boss_damage_list_" .. widget_group_index, damage_list_widget_definition)
 			
-			-- Учитываем offset виджета health, если он установлен (для виджетов созданных RecolorBossHealthBars)
 			if health_widget.offset then
 				widget_group.boss_damage_list.offset[1] = health_widget.offset[1]
 				widget_group.boss_damage_list.offset[2] = health_widget.offset[2]
@@ -250,7 +229,6 @@ mod:hook_safe(CLASS.HudElementBossHealth, "update", function(self, dt, t, ui_ren
 		if ALIVE[unit] and widget_group.boss_damage_list then
 			local damage_widget = widget_group.boss_damage_list
 			
-			-- Проверка настройки "Показать Boss Damage Tracker"
 			local show_tracker = mod:get("opt_show_boss_damage_tracker")
 			if show_tracker == false then
 				damage_widget.content.text = ""
@@ -258,7 +236,6 @@ mod:hook_safe(CLASS.HudElementBossHealth, "update", function(self, dt, t, ui_ren
 				goto continue
 			end
 			
-			-- Проверка: если обе опции выключены, нечего показывать
 			local show_total_damage = mod:get("opt_show_boss_total_damage") ~= false
 			local show_last_damage = mod:get("opt_show_boss_last_damage") == true
 			if not show_total_damage and not show_last_damage then
@@ -267,21 +244,18 @@ mod:hook_safe(CLASS.HudElementBossHealth, "update", function(self, dt, t, ui_ren
 				goto continue
 			end
 			
-			-- Обновляем offset виджета, если health виджет имеет offset (для виджетов созданных RecolorBossHealthBars)
 			local health_widget = widget_group.health
 			if health_widget and health_widget.offset then
 				damage_widget.offset[1] = health_widget.offset[1]
 				damage_widget.offset[2] = health_widget.offset[2]
 			end
 			
-			-- Обновляем альфа-канал текста
 			local text_style = damage_widget.style and damage_widget.style.text
 			if text_style and text_style.text_color then
 				local alpha = get_opacity_alpha()
 				text_style.text_color[1] = alpha
 			end
 			
-			-- Получаем текст урона
 			local damage_lines = format_boss_damage_text(unit)
 			
 			if damage_lines and #damage_lines > 0 then

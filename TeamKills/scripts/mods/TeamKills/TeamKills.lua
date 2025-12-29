@@ -5,7 +5,6 @@ mod.version = "2.0.0"
 local Breed = mod:original_require("scripts/utilities/breed")
 local Text = mod:original_require("scripts/utilities/ui/text")
 
--- Загружаем модули
 mod:io_dofile("TeamKills/scripts/mods/TeamKills/TeamKills_constants")
 mod:io_dofile("TeamKills/scripts/mods/TeamKills/TeamKills_notifications")
 mod:io_dofile("TeamKills/scripts/mods/TeamKills/HUD/BossDamageTracker")
@@ -18,10 +17,10 @@ mod.killed_units = {}
 mod.player_killstreak = {}
 mod.player_killstreak_timer = {}
 mod.killstreak_duration_seconds = mod.DEFAULT_KILLSTREAK_DURATION
-mod.last_kill_time_by_category = {}  -- {account_id: {category_key: time}}
-mod.last_enemy_interaction = {} -- Отслеживание последнего взаимодействия с врагом
-mod.boss_damage = {} -- {[unit] = {[account_id] = damage}} - урон по боссам
-mod.boss_last_damage = {} -- {[unit] = {[account_id] = last_damage}} - последний урон по боссам
+mod.last_kill_time_by_category = {}
+mod.last_enemy_interaction = {}
+mod.boss_damage = {}
+mod.boss_last_damage = {}
 mod.kills_by_category = {}
 mod.damage_by_category = {}
 mod.saved_kills_by_category = {}
@@ -32,17 +31,14 @@ mod.display_mode = mod:get("opt_display_mode") or 1
 mod.show_background = mod:get("opt_show_background") ~= false
 mod.opacity = mod:get("opt_opacity") or 100
 
--- Статистики для ShotTracker (в реальном времени)
-mod.player_shots_fired = {} -- {account_id = count}
-mod.player_shots_missed = {} -- {account_id = count}
-mod.player_head_shot_kill = {} -- {account_id = count}
+mod.player_shots_fired = {}
+mod.player_shots_missed = {}
+mod.player_head_shot_kill = {}
 
--- Всегда добавляем require для HUD элементов, чтобы файлы были доступны
 mod:add_require_path("TeamKills/scripts/mods/TeamKills/HUD/TeamKillsTracker")
 mod:add_require_path("TeamKills/scripts/mods/TeamKills/HUD/ShotTracker")
 
 mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, params)
-	-- Пересобираем hud_elements каждый раз, чтобы учесть изменения настроек
 	local current_hud_elements = {
 		{
 			filename = "TeamKills/scripts/mods/TeamKills/HUD/TeamKillsTracker",
@@ -53,7 +49,6 @@ mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, para
 		},
 	}
 	
-	-- Добавляем ShotTracker только если настройка включена
 	if mod:get("opt_show_shot_tracker") ~= false then
 		table.insert(current_hud_elements, {
 			filename = "TeamKills/scripts/mods/TeamKills/HUD/ShotTracker",
@@ -88,7 +83,6 @@ mod._is_in_hub = function()
 	return false
 end
 
--- Форматирование числа с разделителем тысяч (запятая)
 mod.format_number = function(number)
 	local num = math.floor(number)
 	if num < 1000 then
@@ -106,14 +100,12 @@ mod.format_number = function(number)
 	return formatted
 end
 
--- Получить строку цвета для убийств
 mod.get_kills_color_string = function()
 	local color_name = mod.kills_color or "white"
 	local rgb = mod.color_presets[color_name] or mod.color_presets["white"]
 	return string.format("{#color(%d,%d,%d)}", rgb[1], rgb[2], rgb[3])
 end
 
--- Получить строку цвета для урона
 mod.get_damage_color_string = function()
 	local color_name = mod.damage_color or "orange"
 	local rgb = mod.color_presets[color_name] or mod.color_presets["orange"]
@@ -143,15 +135,14 @@ local function recreate_hud()
     mod.last_enemy_interaction = {}
     mod.kills_by_category = {}
     mod.damage_by_category = {}
-    mod.last_kill_time_by_category = {}  -- {account_id: {category_key: time}}
-    mod.highlighted_categories = {}  -- {account_id: {category_key: true}} - категории для подсветки
-    mod.killstreak_kills_by_category = {}  -- {account_id: {category_key: count}} - убийства в текущем killstreak (рабочий)
-    mod.killstreak_damage_by_category = {}  -- {account_id: {category_key: damage}} - урон в текущем killstreak (рабочий)
-    mod.display_killstreak_kills_by_category = {}  -- {account_id: {category_key: count}} - убийства для отображения
-    mod.display_killstreak_damage_by_category = {}  -- {account_id: {category_key: damage}} - урон для отображения
-    mod.boss_damage = {}  -- {[unit] = {[account_id] = damage}} - урон по боссам
-    mod.boss_last_damage = {}  -- {[unit] = {[account_id] = last_damage}} - последний урон по боссам
-    -- Очищаем статистики выстрелов
+    mod.last_kill_time_by_category = {}
+    mod.highlighted_categories = {}
+    mod.killstreak_kills_by_category = {}
+    mod.killstreak_damage_by_category = {}
+    mod.display_killstreak_kills_by_category = {}
+    mod.display_killstreak_damage_by_category = {}
+    mod.boss_damage = {}
+    mod.boss_last_damage = {}
     mod.player_shots_fired = {}
     mod.player_shots_missed = {}
     mod.player_head_shot_kill = {}
@@ -178,7 +169,6 @@ local function recreate_hud()
 end
 
 mod.on_all_mods_loaded = function()
-	-- Load packages for materials
 	local package_manager = Managers.package
 	if package_manager then
 		if not package_manager:is_loading("packages/ui/views/store_item_detail_view/store_item_detail_view") and not package_manager:has_loaded("packages/ui/views/store_item_detail_view/store_item_detail_view") then
@@ -187,7 +177,6 @@ mod.on_all_mods_loaded = function()
 		if not package_manager:is_loading("packages/ui/views/end_player_view/end_player_view") and not package_manager:has_loaded("packages/ui/views/end_player_view/end_player_view") then
 			package_manager:load("packages/ui/views/end_player_view/end_player_view", "TeamKills", nil, true)
 		end
-		-- Load packages for weapon action icons (для ShotTracker)
 		if not package_manager:is_loading("packages/ui/views/inventory_view/inventory_view") and not package_manager:has_loaded("packages/ui/views/inventory_view/inventory_view") then
 			package_manager:load("packages/ui/views/inventory_view/inventory_view", "TeamKills", nil, true)
 		end
@@ -228,7 +217,6 @@ mod.on_setting_changed = function()
     mod.opacity = mod:get("opt_opacity") or 100
     mod.show_killsboard = mod:get("opt_show_killsboard") ~= false
     local show_killsboard_end_view = mod:get("opt_show_killsboard_end_view") ~= false
-    -- Обновляем флаг, если мы уже в EndView
     if mod.killsboard_show_in_end_view then
         mod.killsboard_show_in_end_view = show_killsboard_end_view
     end
@@ -238,9 +226,7 @@ mod.on_setting_changed = function()
     end
 end
 
--- Функция для сохранения данных миссии (для показа в карусели)
 local function save_mission_data()
-	-- Сохраняем данные для использования в карусели EndView
 	if mod.kills_by_category and next(mod.kills_by_category) then
 		mod.saved_kills_by_category = {}
 		for account_id, categories in pairs(mod.kills_by_category) do
@@ -277,12 +263,10 @@ function mod.on_game_state_changed(status, state_name)
 	if status == "enter" then
 		local game_mode_name = Managers.state and Managers.state.game_mode and Managers.state.game_mode:game_mode_name()
 		if game_mode_name == "hub" then
-			-- При переходе в хаб - полностью очищаем ВСЕ данные (включая saved)
 			recreate_hud()
 			clear_saved_data()
 			mod.killsboard_show_in_end_view = false
 		elseif (state_name == 'GameplayStateRun' or state_name == "StateGameplay") and status == "enter" then
-			-- При входе в новую миссию очищаем данные
 			recreate_hud()
 			mod.killsboard_show_in_end_view = false
 		end
@@ -322,12 +306,9 @@ mod.add_to_killstreak_counter = function(account_id)
 	mod.player_killstreak[account_id] = killstreak_before + 1
 	mod.player_killstreak_timer[account_id] = 0
 	
-	-- Если killstreak начал собираться заново (был 0, стал 1), очищаем только display массивы для нового подсчета
-	-- Рабочие массивы НЕ очищаем - они продолжают накапливать урон
 	if killstreak_before == 0 then
 		mod.highlighted_categories = mod.highlighted_categories or {}
 		mod.highlighted_categories[account_id] = {}
-		-- Очищаем только display массивы при начале нового killstreak, чтобы начать новый подсчет для отображения
 		mod.display_killstreak_kills_by_category = mod.display_killstreak_kills_by_category or {}
 		mod.display_killstreak_kills_by_category[account_id] = {}
 		mod.display_killstreak_damage_by_category = mod.display_killstreak_damage_by_category or {}
@@ -346,18 +327,14 @@ mod.update_killstreak_timers = function(dt)
 		if timer > mod.killstreak_duration_seconds then
 			mod.player_killstreak[account_id] = 0
 			mod.player_killstreak_timer[account_id] = nil
-			-- Очищаем только рабочие массивы при окончании killstreak, display остаются для отображения
 			if mod.killstreak_damage_by_category and mod.killstreak_damage_by_category[account_id] then
 				mod.killstreak_damage_by_category[account_id] = nil
 			end
 			if mod.killstreak_kills_by_category and mod.killstreak_kills_by_category[account_id] then
 				mod.killstreak_kills_by_category[account_id] = nil
 			end
-			-- НЕ очищаем highlighted_categories - строки остаются подсвеченными
-			-- НЕ очищаем display массивы - они остаются для отображения
 		else
 			mod.player_killstreak_timer[account_id] = timer
-			-- Во время активного killstreak копируем данные из рабочих массивов в display
 			if mod.killstreak_kills_by_category and mod.killstreak_kills_by_category[account_id] then
 				mod.display_killstreak_kills_by_category = mod.display_killstreak_kills_by_category or {}
 				mod.display_killstreak_kills_by_category[account_id] = mod.display_killstreak_kills_by_category[account_id] or {}
@@ -388,7 +365,6 @@ mod.get_killstreak_label = function(account_id)
 		return nil
 	end
 
-	-- Просто возвращаем число серии
 	return tostring(count)
 end
 
@@ -423,7 +399,6 @@ local function is_valid_breed(breed_name)
 	return all_breeds[breed_name] == true
 end
 
--- Получаем игрока по юниту (проверяем всех игроков)
 mod.player_from_unit = function(unit)
 	if unit then
 		local player_manager = Managers.player
@@ -437,56 +412,40 @@ mod.player_from_unit = function(unit)
 	return nil
 end
 
--- Проверяем, нужно ли учитывать overkill (в локальных сессиях подсчет отличается)
 local function is_overkill_session()
     local game_mode_name = Managers.state.game_mode and Managers.state.game_mode:game_mode_name()
     return game_mode_name == "shooting_range" or game_mode_name == "hub"
 end
 
--- Хук для отслеживания статистик выстрелов в реальном времени
 mod:hook(CLASS.StatsManager, "record_private", function(func, self, stat_name, player, ...)
-	-- Вызываем оригинальную функцию
 	func(self, stat_name, player, ...)
 	
 	if not player then
 		return
 	end
 	
-	-- Получаем account_id только для локального игрока
-	-- Статистики с флагом no_sync не синхронизируются, поэтому доступны только для локального игрока
 	local account_id = player:account_id() or player:name()
 	if not account_id then
 		return
 	end
 	
-	-- Инициализируем счетчики если их нет
 	mod.player_shots_fired = mod.player_shots_fired or {}
 	mod.player_shots_missed = mod.player_shots_missed or {}
 	mod.player_head_shot_kill = mod.player_head_shot_kill or {}
 	
-	-- Отслеживаем hook_ranged_attack_concluded для shots_fired и shots_missed
-	-- Только для локального игрока (статистики с no_sync не синхронизируются)
 	if stat_name == "hook_ranged_attack_concluded" then
 		local hit_minion, hit_weakspot, killing_blow, last_round_in_clip = ...
 		
-		-- shots_fired: всегда увеличиваем при каждом выстреле
 		mod.player_shots_fired[account_id] = (mod.player_shots_fired[account_id] or 0) + 1
 		
-		-- shots_missed: увеличиваем если не попали в миньона
 		if not hit_minion then
 			mod.player_shots_missed[account_id] = (mod.player_shots_missed[account_id] or 0) + 1
 		end
 		
-		-- head_shot_kill: если это был killing blow и попадание в weakspot
-		-- Считаем только здесь для ranged kills, чтобы избежать двойного подсчета
 		if killing_blow and hit_weakspot then
 			mod.player_head_shot_kill[account_id] = (mod.player_head_shot_kill[account_id] or 0) + 1
 		end
 	end
-	
-	-- hook_kill не используем для head_shot_kill, так как для ranged kills
-	-- это уже учтено в hook_ranged_attack_concluded, а для melee kills
-	-- headshot не относится к статистике выстрелов
 end)
 
 mod:hook_safe(CLASS.AttackReportManager, "add_attack_result",
@@ -495,8 +454,6 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
 
     local player = mod.player_from_unit(attacking_unit)
     
-    -- Если attacking_unit не игрок (например, при взрыве Pox Burster), 
-    -- проверяем last_enemy_interaction для этого врага
     if not player and attacked_unit then
         if mod.last_enemy_interaction[attacked_unit] then
             local last_player_unit = mod.last_enemy_interaction[attacked_unit]
@@ -512,16 +469,13 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
         if target_is_minion then
             local account_id = player:account_id() or player:name() or "Player"
             
-            -- Сохраняем последнее взаимодействие с врагом
             mod.last_enemy_interaction[attacked_unit] = attacking_unit
             
             local unit_health_extension = ScriptUnit.has_extension(attacked_unit, "health_system")
             
-            -- Логика подсчёта урона
             local health_damage = 0
             
             if attack_result == "died" then
-                -- При смерти: вычисляем здоровье, которое осталось у цели перед ударом
                 local attacked_unit_damage_taken = unit_health_extension and unit_health_extension:damage_taken()
                 local defender_max_health = unit_health_extension and unit_health_extension:max_health()
                 local is_overkill = is_overkill_session()
@@ -534,12 +488,9 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                     health_damage = damage or 1
                 end
                 
-                -- Килл: считаем один раз на юнит
-                -- Используем комбинацию unit + breed_name для более надежного отслеживания
                 local breed_name = breed_or_nil and breed_or_nil.name
                 local unit_key = attacked_unit
                 
-                -- Дополнительная проверка: если unit уже был удален, используем breed_name как ключ
                 if not mod.killed_units[unit_key] then
                     mod.killed_units[unit_key] = true
                     mod.add_to_killcounter(account_id)
@@ -550,17 +501,14 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                         mod.kills_by_category[account_id] = mod.kills_by_category[account_id] or {}
                         mod.kills_by_category[account_id][breed_name] = (mod.kills_by_category[account_id][breed_name] or 0) + 1
                         
-                        -- Сохраняем время последнего убийства для этой категории
                         mod.last_kill_time_by_category = mod.last_kill_time_by_category or {}
                         mod.last_kill_time_by_category[account_id] = mod.last_kill_time_by_category[account_id] or {}
                         mod.last_kill_time_by_category[account_id][breed_name] = Managers.time:time("gameplay")
                         
-                        -- Всегда увеличиваем счетчик killstreak убийств в рабочем массиве
                         mod.killstreak_kills_by_category = mod.killstreak_kills_by_category or {}
                         mod.killstreak_kills_by_category[account_id] = mod.killstreak_kills_by_category[account_id] or {}
                         mod.killstreak_kills_by_category[account_id][breed_name] = (mod.killstreak_kills_by_category[account_id][breed_name] or 0) + 1
                         
-                        -- Если killstreak активен, добавляем категорию в массив для подсветки
                         local current_killstreak = mod.player_killstreak[account_id] or 0
                         if current_killstreak > 0 then
                             mod.highlighted_categories = mod.highlighted_categories or {}
@@ -571,7 +519,6 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                 end
                 
             elseif attack_result == "damaged" then
-                -- При обычном уроне просто берём значение damage
                 health_damage = damage or 0
             end
             
@@ -584,13 +531,11 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                     mod.damage_by_category[account_id] = mod.damage_by_category[account_id] or {}
                     mod.damage_by_category[account_id][breed_name] = (mod.damage_by_category[account_id][breed_name] or 0) + math.floor(health_damage)
                     
-                    -- Всегда увеличиваем счетчик killstreak урона в рабочем массиве (будет скопирован в display во время активного killstreak)
                     mod.killstreak_damage_by_category = mod.killstreak_damage_by_category or {}
                     mod.killstreak_damage_by_category[account_id] = mod.killstreak_damage_by_category[account_id] or {}
                     mod.killstreak_damage_by_category[account_id][breed_name] = (mod.killstreak_damage_by_category[account_id][breed_name] or 0) + math.floor(health_damage)
                 end
                 
-                -- Отслеживаем урон по боссам
                 if breed_name then
                     local breed = breed_or_nil
                     if breed and breed.is_boss then
@@ -599,7 +544,6 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                         mod.boss_damage[attacked_unit] = mod.boss_damage[attacked_unit] or {}
                         mod.boss_damage[attacked_unit][account_id] = (mod.boss_damage[attacked_unit][account_id] or 0) + clamped_amount
                         
-                        -- Отслеживаем последний урон по боссам
                         mod.boss_last_damage = mod.boss_last_damage or {}
                         mod.boss_last_damage[attacked_unit] = mod.boss_last_damage[attacked_unit] or {}
                         mod.boss_last_damage[attacked_unit][account_id] = math.ceil(clamped_amount)
@@ -610,7 +554,6 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
     end
 end)
 
--- Регистрация killstreak view
 mod.register_killstreak_view = function(self)
 	self:add_require_path("TeamKills/scripts/mods/TeamKills/KillStreakBoard/View")
 	self:add_require_path("TeamKills/scripts/mods/TeamKills/KillStreakBoard/WidgetDefinitions")
@@ -666,26 +609,20 @@ mod.killstreak_opened = function(self)
 end
 
 function mod.toggle_killsboard()
-	-- Проверяем, включена ли настройка opt_show_killsboard
 	local opt_show_killsboard = mod:get("opt_show_killsboard") ~= false
 	if not opt_show_killsboard then
-		-- Если настройка выключена, горячая клавиша не работает
 		return
 	end
 	
-	-- Переключаем видимость killsboard в HUD
 	local current_show_killsboard = mod.show_killsboard
 	if current_show_killsboard == nil then
 		current_show_killsboard = mod:get("opt_show_killsboard") ~= false
 	end
-	-- Переключаем: если true, то false, если false, то true
 	mod.show_killsboard = not current_show_killsboard
 end
 
--- Хук для отображения killstreak в конце миссии
 mod:hook(CLASS.EndView, "on_enter", function(func, self, ...)
 	func(self, ...)
-	-- Сохраняем данные миссии для показа в карусели (НЕ очищаем здесь!)
 	save_mission_data()
 	
 	local show_killsboard_end_view = mod:get("opt_show_killsboard_end_view") ~= false
@@ -694,13 +631,11 @@ mod:hook(CLASS.EndView, "on_enter", function(func, self, ...)
 	end
 end)
 
--- Хук для скрытия killstreak при выходе из экрана окончания миссии
 mod:hook(CLASS.EndView, "on_exit", function(func, self, ...)
 	func(self, ...)
 	mod:close_killstreak_view()
 end)
 
--- Добавляем scenegraph для killsboard в EndPlayerView
 mod:hook_require("scripts/ui/views/end_player_view/end_player_view_definitions", function(instance)
 	local card_carousel = instance.scenegraph_definition.card_carousel
 	if card_carousel then
