@@ -177,19 +177,6 @@ local function _create_box_widget(scenegraph_id)
 			style_id = "label",
 			style = label_style,
 		},
-		{
-			pass_type = "texture",
-			value_id = "icon",
-			value = "content/ui/materials/icons/generic/blank",
-			style_id = "icon",
-			style = {
-				vertical_alignment = "center",
-				horizontal_alignment = "center",
-				size = { 40, 40 },
-				color = UIHudSettings.color_tint_main_1,
-				offset = { 0, 0, 1 },
-			},
-		},
 	}, scenegraph_id)
 end
 
