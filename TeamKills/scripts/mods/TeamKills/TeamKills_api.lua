@@ -15,32 +15,64 @@ local function deep_copy_table(t)
 	return copy
 end
 
+mod.get_player_kills_readonly = function()
+	return mod.player_kills or {}
+end
+
 mod.get_player_kills = function()
 	return deep_copy_table(mod.player_kills or {})
+end
+
+mod.get_player_damage_readonly = function()
+	return mod.player_damage or {}
 end
 
 mod.get_player_damage = function()
 	return deep_copy_table(mod.player_damage or {})
 end
 
+mod.get_player_last_damage_readonly = function()
+	return mod.player_last_damage or {}
+end
+
 mod.get_player_last_damage = function()
 	return deep_copy_table(mod.player_last_damage or {})
+end
+
+mod.get_kills_by_category_readonly = function()
+	return mod.kills_by_category or {}
 end
 
 mod.get_kills_by_category = function()
 	return deep_copy_table(mod.kills_by_category or {})
 end
 
+mod.get_damage_by_category_readonly = function()
+	return mod.damage_by_category or {}
+end
+
 mod.get_damage_by_category = function()
 	return deep_copy_table(mod.damage_by_category or {})
+end
+
+mod.get_player_killstreak_readonly = function()
+	return mod.player_killstreak or {}
 end
 
 mod.get_player_killstreak = function()
 	return deep_copy_table(mod.player_killstreak or {})
 end
 
+mod.get_boss_damage_readonly = function()
+	return mod.boss_damage or {}
+end
+
 mod.get_boss_damage = function()
 	return deep_copy_table(mod.boss_damage or {})
+end
+
+mod.get_boss_last_damage_readonly = function()
+	return mod.boss_last_damage or {}
 end
 
 mod.get_boss_last_damage = function()
@@ -48,8 +80,15 @@ mod.get_boss_last_damage = function()
 end
 
 mod.get_player_data = function(account_id)
-	if not account_id then
-		return nil
+	if not account_id or type(account_id) ~= "string" then
+		return {
+			kills = 0,
+			damage = 0,
+			last_damage = 0,
+			killstreak = 0,
+			kills_by_category = {},
+			damage_by_category = {},
+		}
 	end
 	
 	return {

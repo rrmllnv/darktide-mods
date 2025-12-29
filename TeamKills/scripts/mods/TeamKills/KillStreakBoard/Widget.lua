@@ -9,29 +9,6 @@ local KillstreakWidgetSettings = mod:io_dofile("TeamKills/scripts/mods/TeamKills
 local base_z = KillstreakWidgetSettings.killsboard_base_z
 local base_x = 0
 
-local function get_player_color(account_id)
-	if not account_id or not Managers.player then
-		return nil
-	end
-	
-	local players = Managers.player:players()
-	for _, player in pairs(players) do
-		if player then
-			local player_account_id = player:account_id() or player:name()
-			if player_account_id == account_id then
-				local slot = player:slot()
-				if slot and UISettings.player_slot_colors[slot] then
-					local color = UISettings.player_slot_colors[slot]
-					return {color[2], color[3], color[4]}
-				end
-				break
-			end
-		end
-	end
-	
-	return nil
-end
-
 local mutator_localization_map = {
 	["chaos_mutator_daemonhost"] = "i18n_breed_chaos_mutator_daemonhost",
 	["renegade_flamer_mutator"] = "i18n_breed_renegade_flamer_mutator",
@@ -40,13 +17,21 @@ local mutator_localization_map = {
 	["chaos_mutator_ritualist"] = "i18n_breed_chaos_mutator_ritualist",
 }
 
+local localization_cache = {}
+
 local function localize_enemy(breed_name, key)
+	local cache_key = breed_name or key
+	if localization_cache[cache_key] then
+		return localization_cache[cache_key]
+	end
+	
 	if breed_name and mutator_localization_map[breed_name] then
 		local mod_loc_key = mutator_localization_map[breed_name]
 		local success, result = pcall(function()
 			return mod:localize(mod_loc_key)
 		end)
 		if success and result and result ~= "" then
+			localization_cache[cache_key] = result
 			return result
 		end
 	end
@@ -56,10 +41,14 @@ local function localize_enemy(breed_name, key)
 			return Localize(key)
 		end)
 		if success and result and result ~= "" and result ~= key then
+			localization_cache[cache_key] = result
 			return result
 		end
 	end
-	return key or breed_name or ""
+	
+	local fallback = key or breed_name or ""
+	localization_cache[cache_key] = fallback
+	return fallback
 end
 
 local group_localization_map = {
@@ -73,13 +62,23 @@ local group_localization_map = {
 }
 
 local function localize_group(group_name)
-	if group_name and group_localization_map[group_name] then
+	if not group_name then
+		return ""
+	end
+	
+	local cache_key = "group_" .. group_name
+	if localization_cache[cache_key] then
+		return localization_cache[cache_key]
+	end
+	
+	if group_localization_map[group_name] then
 		local loc_key = group_localization_map[group_name]
 		
 		local success, result = pcall(function()
 			return mod:localize(loc_key)
 		end)
 		if success and result and result ~= "" then
+			localization_cache[cache_key] = result
 			return result
 		end
 		
@@ -88,6 +87,7 @@ local function localize_group(group_name)
 			return Localize(loc_key_with_prefix)
 		end)
 		if success and result and result ~= "" and result ~= loc_key_with_prefix then
+			localization_cache[cache_key] = result
 			return result
 		end
 		
@@ -95,10 +95,13 @@ local function localize_group(group_name)
 			return Localize(loc_key)
 		end)
 		if success and result and result ~= "" and result ~= loc_key then
+			localization_cache[cache_key] = result
 			return result
 		end
 	end
-	return group_name or ""
+	
+	localization_cache[cache_key] = group_name
+	return group_name
 end
 
 local categories = {
@@ -183,7 +186,6 @@ local function get_players()
 								name = player:name() or name
 							end
 							
-							-- Получаем текстовый символ архетипа
 							local symbol = nil
 							if player.profile then
 								local profile = player:profile()
@@ -202,7 +204,6 @@ local function get_players()
 								player = player
 							}
 							
-							-- Если это локальный игрок, сохраняем отдельно
 							if local_account_id and account_id == local_account_id then
 								local_player_data = player_data
 							else
@@ -212,7 +213,6 @@ local function get_players()
 					end
 				end
 				
-				-- Вставляем локального игрока первым
 				if local_player_data then
 					table.insert(players, 1, local_player_data)
 				end
@@ -239,12 +239,9 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	local spacer = row_data.type == "spacer"
 	local no_data = row_data.type == "no_data"
 	
-	-- Вычисляем высоту строки: для последней пустой строки добавляем отступ снизу
 	local base_row_height = (header or group_header or no_data) and _settings.killsboard_row_header_height or _settings.killsboard_row_height
 	local bottom_offset = row_data.bottom_offset or 0
 	local row_height = base_row_height + bottom_offset
-	-- Используем размер шрифта из settings
-	-- Для заголовка с именами игроков используем отдельный размер шрифта
 	local font_size
 	if header then
 		font_size = _settings.killsboard_font_size_player_names
@@ -254,22 +251,16 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		font_size = _settings.killsboard_font_size
 	end
 	
-	-- Вычисляем отступ для центрирования контента
-	-- Ширина контента: column_header_width (300) + column_player_width * 4 (130 * 4 = 520) = 820
-	-- Ширина строки: killsboard_size[1] (900)
-	-- Отступ слева: (900 - 820) / 2 = 40
 	local content_width = _settings.killsboard_column_header_width + (_settings.killsboard_column_player_width * 4)
 	local row_width = _settings.killsboard_size[1]
 	local left_offset = (row_width - content_width) / 2
 	
-	-- Map для столбцов: k1, d1, k2, d2, k3, d3, k4, d4
-	local k_pass_map = {2, 5, 8, 11}  -- k1, k2, k3, k4
-	local d_pass_map = {3, 6, 9, 12}  -- d1, d2, d3, d4
-	local background_pass_map = {4, 7, 10, 13}  -- bg1 (темный), bg2 (светлый), bg3 (темный), bg4 (светлый)
+	local k_pass_map = {2, 5, 8, 11}
+	local d_pass_map = {3, 6, 9, 12}
+	local background_pass_map = {4, 7, 10, 13}
 	
 	local players = loaded_players or get_players()
 	
-	-- Set styles и применяем left_offset для центрирования
 	pass_template[1].style.font_size = font_size
 	pass_template[1].style.size[2] = row_height
 	pass_template[1].style.offset[1] = left_offset + _settings.killsboard_category_text_offset
@@ -278,43 +269,29 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		pass_template[i].style.font_size = font_size
 		pass_template[i].style.size[1] = _settings.killsboard_column_kills_width
 		pass_template[i].style.size[2] = row_height
-		-- offset будет установлен ниже для каждого столбца
 	end
 	for _, i in pairs(d_pass_map) do
 		pass_template[i].style.font_size = font_size
 		pass_template[i].style.size[1] = _settings.killsboard_column_damage_width
 		pass_template[i].style.size[2] = row_height
-		-- offset будет установлен ниже для каждого столбца
 	end
 	
-	-- Применяем left_offset ко всем столбцам
-	-- k1 (pass 2)
 	pass_template[2].style.offset[1] = left_offset + _settings.killsboard_column_header_width
-	-- d1 (pass 3)
 	pass_template[3].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_kills_width
-	-- k2 (pass 5)
 	pass_template[5].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width
-	-- d2 (pass 6)
 	pass_template[6].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width + _settings.killsboard_column_kills_width
-	-- k3 (pass 8)
 	pass_template[8].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 2
-	-- d3 (pass 9)
 	pass_template[9].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 2 + _settings.killsboard_column_kills_width
-	-- k4 (pass 11)
 	pass_template[11].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 3
-	-- d4 (pass 12)
 	pass_template[12].style.offset[1] = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 3 + _settings.killsboard_column_kills_width
 	
-	-- Header row
 	if header then
-		pass_template[1].value = "" -- KILLSTREAK BOARD
+		pass_template[1].value = ""
 		local num_players = 0
 		for i = 1, 4 do
 			pass_template[k_pass_map[i]].value = ""
 			pass_template[d_pass_map[i]].value = ""
-			-- Меняем выравнивание на center для заголовка
 			pass_template[k_pass_map[i]].style.text_horizontal_alignment = "center"
-			-- Увеличиваем размер столбца для имени, чтобы оно поместилось по центру
 			pass_template[k_pass_map[i]].style.size[1] = _settings.killsboard_column_player_bg_width
 		end
 		for _, player_data in pairs(players) do
@@ -322,38 +299,29 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 			if num_players <= 4 then
 				local name = player_data.name or "Unknown"
 				
-				-- Проверяем, есть ли символ архетипа в начале имени
-				-- Символ архетипа + пробел занимают примерно 2-3 визуальных символа
-				-- Оставляем место: 199px / ~12px per char ≈ 16 символов максимум
-				-- Но с учетом символа класса, ограничиваем имя до 14 символов
 				local max_name_length = 14
 				
-				-- Находим позицию первого пробела (после символа класса)
 				local space_pos = string.find(name, " ")
 				if space_pos then
-					-- Есть символ класса, обрезаем только часть после него
-					local symbol_part = string.sub(name, 1, space_pos) -- символ + пробел
-					local name_part = string.sub(name, space_pos + 1) -- само имя
+					local symbol_part = string.sub(name, 1, space_pos)
+					local name_part = string.sub(name, space_pos + 1)
 					
 					if string.len(name_part) > max_name_length then
 						name_part = string.sub(name_part, 1, max_name_length)
 					end
 					name = symbol_part .. name_part
 				else
-					-- Нет символа класса, обрезаем всё имя
 					if string.len(name) > max_name_length then
 						name = string.sub(name, 1, max_name_length)
 					end
 				end
 				
-				-- Применяем цвет игрока к имени
 				local account_id = player_data.account_id
-				local player_color = get_player_color(account_id)
+				local player_color = mod.get_player_color(account_id)
 				if player_color then
 					name = string.format("{#color(%d,%d,%d)}%s{#reset()}", player_color[1], player_color[2], player_color[3], name)
 				end
 				
-				-- В заголовке показываем имя в столбце K, по центру
 				pass_template[k_pass_map[num_players]].value = name
 				pass_template[d_pass_map[num_players]].value = ""
 			end
@@ -373,10 +341,8 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		local group_name = row_data.group_name or ""
 		local localized_group_name = localize_group(group_name)
 		pass_template[1].value = localized_group_name
-		-- Используем left выравнивание, как для обычных строк категорий, чтобы все тексты начинались с одной позиции
 		pass_template[1].style.text_horizontal_alignment = "left"
 		pass_template[1].style.offset[1] = left_offset + _settings.killsboard_category_text_offset + 30
-		-- Устанавливаем цвет для заголовков групп (более яркий цвет для выделения)
 		pass_template[1].style.text_color = Color.terminal_text_body_sub_header(255, true)
 		pass_template[1].style.color = Color.terminal_text_body_sub_header(255, true)
 		pass_template[1].style.default_color = Color.terminal_text_body_sub_header(255, true)
@@ -387,16 +353,13 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 			pass_template[d_pass_map[i]].value = ""
 		end
 	elseif total then
-		-- Используем локализацию для "TOTAL"
 		local total_text = mod:localize("i18n_killsboard_total")
 		pass_template[1].value = total_text
-		-- Устанавливаем цвет для строки TOTAL (такой же, как для заголовков групп)
 		pass_template[1].style.text_color = Color.terminal_text_body_sub_header(255, true)
 		pass_template[1].style.color = Color.terminal_text_body_sub_header(255, true)
 		pass_template[1].style.default_color = Color.terminal_text_body_sub_header(255, true)
 		pass_template[1].style.hover_color = Color.terminal_text_body_sub_header(255, true)
 		pass_template[1].style.disabled_color = Color.terminal_text_body_sub_header(255, true)
-		-- Устанавливаем offset такой же, как у заголовков групп
 		pass_template[1].style.offset[1] = left_offset + _settings.killsboard_category_text_offset + 30
 		local player_num = 1
 		for _, player_data in pairs(players) do
@@ -407,7 +370,6 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 				local total_killstreak_kills = 0
 				local total_killstreak_dmg = 0
 				
-				-- Используем текущие данные, если они есть, иначе используем сохраненные (для хаба)
 				if mod.player_kills and mod.player_kills[account_id] then
 					total_kills = mod.player_kills[account_id] or 0
 				elseif mod.saved_player_kills and mod.saved_player_kills[account_id] then
@@ -420,7 +382,6 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 					total_dmg = mod.saved_player_damage[account_id] or 0
 				end
 				
-				-- Суммируем все killstreak значения из display массивов
 				if mod.display_killstreak_kills_by_category and mod.display_killstreak_kills_by_category[account_id] then
 					for _, kills in pairs(mod.display_killstreak_kills_by_category[account_id]) do
 						total_killstreak_kills = total_killstreak_kills + (kills or 0)
@@ -433,7 +394,6 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 					end
 				end
 				
-			-- Формируем строку с killstreak значениями в скобках
 			local show_killstreak_progress = mod:get("opt_show_killstreak_progress_in_killsboard") ~= false
 			local orange_color = mod.get_damage_color_string and mod.get_damage_color_string() or "{#color(255,183,44)}"
 			local reset_color = "{#reset()}"
@@ -450,8 +410,6 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 				pass_template[k_pass_map[player_num]].value = kills_text
 				pass_template[d_pass_map[player_num]].value = dmg_text
 				
-				-- Столбцы всегда видны, если игрок присутствует в списке
-				-- Значения "0" будут отображаться, если данных нет
 				pass_template[k_pass_map[player_num]].style.visible = true
 				pass_template[d_pass_map[player_num]].style.visible = true
 				pass_template[background_pass_map[player_num]].style.visible = true
@@ -459,21 +417,17 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 			player_num = player_num + 1
 		end
 	elseif spacer then
-		-- Empty spacer row
 		pass_template[1].value = ""
 		for i = 1, 4 do
 			pass_template[k_pass_map[i]].value = ""
 			pass_template[d_pass_map[i]].value = ""
 		end
 	elseif no_data then
-		-- No data row - показываем текст "Данные отсутствуют" как заголовок
 		local no_data_text = mod:localize("i18n_killsboard_no_data")
 		pass_template[1].value = no_data_text
-		-- Используем настройки из WidgetSettings
 		pass_template[1].style.text_horizontal_alignment = _settings.killsboard_no_data_text_horizontal_alignment
 		pass_template[1].style.text_vertical_alignment = _settings.killsboard_no_data_text_vertical_alignment
 		pass_template[1].style.offset[1] = left_offset + _settings.killsboard_no_data_text_offset
-		-- Применяем цвет текста из настроек (используем функцию Color напрямую)
 		local no_data_text_color_func = _settings.killsboard_no_data_text_color_func or Color.terminal_text_body_sub_header
 		local no_data_text_color = no_data_text_color_func(_settings.killsboard_no_data_text_color_alpha, true)
 		pass_template[1].style.text_color = no_data_text_color
@@ -481,7 +435,6 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		pass_template[1].style.default_color = no_data_text_color
 		pass_template[1].style.hover_color = no_data_text_color
 		pass_template[1].style.disabled_color = no_data_text_color
-		-- Скрываем все столбцы игроков
 		for i = 1, 4 do
 			pass_template[k_pass_map[i]].value = ""
 			pass_template[d_pass_map[i]].value = ""
@@ -489,10 +442,8 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 			pass_template[d_pass_map[i]].style.visible = false
 			pass_template[background_pass_map[i]].style.visible = false
 		end
-		-- Скрываем фон категории
 		pass_template[14].style.visible = false
 	else
-		-- Data row
 		local category_key = row_data.key
 		local category_label = row_data.label
 		pass_template[1].value = category_label
@@ -506,7 +457,6 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 				local killstreak_kills = 0
 				local killstreak_dmg = 0
 				
-				-- Используем текущие данные, если они есть, иначе используем сохраненные (для хаба)
 				if mod.kills_by_category and mod.kills_by_category[account_id] and mod.kills_by_category[account_id][category_key] then
 					kills = mod.kills_by_category[account_id][category_key] or 0
 				elseif mod.saved_kills_by_category and mod.saved_kills_by_category[account_id] and mod.saved_kills_by_category[account_id][category_key] then
@@ -519,7 +469,6 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 					dmg = mod.saved_damage_by_category[account_id][category_key] or 0
 				end
 				
-				-- Получаем killstreak значения из display массивов
 				if mod.display_killstreak_kills_by_category and mod.display_killstreak_kills_by_category[account_id] and mod.display_killstreak_kills_by_category[account_id][category_key] then
 					killstreak_kills = mod.display_killstreak_kills_by_category[account_id][category_key] or 0
 				end
@@ -528,7 +477,6 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 					killstreak_dmg = mod.display_killstreak_damage_by_category[account_id][category_key] or 0
 				end
 				
-			-- Формируем строку с killstreak значениями в скобках
 			local show_killstreak_progress = mod:get("opt_show_killstreak_progress_in_killsboard") ~= false
 			local orange_color = mod.get_damage_color_string and mod.get_damage_color_string() or "{#color(255,183,44)}"
 			local reset_color = "{#reset()}"
@@ -545,8 +493,6 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 				pass_template[k_pass_map[player_num]].value = kills_text
 				pass_template[d_pass_map[player_num]].value = dmg_text
 				
-				-- Столбцы всегда видны, если игрок присутствует в списке
-				-- Значения "0" будут отображаться, если данных нет
 				pass_template[k_pass_map[player_num]].style.visible = true
 				pass_template[d_pass_map[player_num]].style.visible = true
 				pass_template[background_pass_map[player_num]].style.visible = true
@@ -555,67 +501,50 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		end
 	end
 	
-	-- Column backgrounds
 	local total_column_width = _settings.killsboard_column_kills_width + _settings.killsboard_column_damage_width
 	local row_color = nil
 	
 	if header then
-		-- Фон для заголовка
 		row_color = Color.black(_settings.killsboard_header_bg_alpha, true)
 	elseif subheader then
-		-- Фон для подзаголовка
 		row_color = Color.black(_settings.killsboard_subheader_bg_alpha, true)
 	elseif total then
-		-- Фон для строки TOTAL
 		row_color = Color.black(_settings.killsboard_total_bg_alpha, true)
 	elseif group_header then
-		-- Фон для заголовков групп
 		row_color = Color.black(_settings.killsboard_group_header_bg_alpha, true)
 	elseif spacer then
-		-- Фон для пустой строки (настраивается через killsboard_spacer_bg_alpha, по умолчанию 0 = прозрачный)
 		row_color = Color.black(_settings.killsboard_spacer_bg_alpha, true)
 	elseif no_data then
-		-- Для no_data не устанавливаем фон, чтобы не было видно столбцов
 		row_color = nil
 	else
-		-- Определяем четность строки (visible_rows уже учитывает header и subheader)
 		local is_even_row = visible_rows % 2 == 0
 		
-		-- Цвета для четных и нечетных строк
-		-- ВСЯ строка (все столбцы) должна иметь один цвет
-		-- Используем функции Color напрямую из настроек
 		local color_dark_func = _settings.killsboard_row_color_dark_func or Color.black
 		local color_light_func = _settings.killsboard_row_color_light_func or Color.black
 		local color_dark = color_dark_func(_settings.killsboard_row_color_dark_alpha, true)
 		local color_light = color_light_func(_settings.killsboard_row_color_light_alpha, true)
 		
-		-- Проверяем, нужно ли подсвечивать эту категорию (из массива highlighted_categories)
 		local has_recent_kill = false
 		if row_data.type == "data" and row_data.key then
 			local category_key = row_data.key
 			
-			-- Получаем настройки подсветки
 			local highlight_my_killstreaks = mod:get("opt_highlight_my_killstreaks") ~= false
 			local highlight_team_killstreaks = mod:get("opt_highlight_team_killstreaks") ~= false
 			
-			-- Получаем local_account_id для проверки
-			local local_account_id = nil
-			if Managers and Managers.player then
-				local local_player = Managers.player:local_player(1)
-				if local_player then
-					local_account_id = local_player:account_id() or local_player:name()
+			if (highlight_my_killstreaks or highlight_team_killstreaks) and mod.highlighted_categories_by_category and mod.highlighted_categories_by_category[category_key] then
+				local local_account_id = nil
+				if Managers and Managers.player then
+					local local_player = Managers.player:local_player(1)
+					if local_player then
+						local_account_id = local_player:account_id() or local_player:name()
+					end
 				end
-			end
-			
-			for _, player_data in pairs(players) do
-				if player_data and player_data.account_id then
-					local account_id = player_data.account_id
+				
+				for account_id, _ in pairs(mod.highlighted_categories_by_category[category_key]) do
 					local is_local_player = (local_account_id and account_id == local_account_id)
-					
-					-- Проверяем настройки: для локального игрока - highlight_my_killstreaks, для остальных - highlight_team_killstreaks
 					local should_check_highlight = (is_local_player and highlight_my_killstreaks) or (not is_local_player and highlight_team_killstreaks)
 					
-					if should_check_highlight and mod.highlighted_categories and mod.highlighted_categories[account_id] and mod.highlighted_categories[account_id][category_key] then
+					if should_check_highlight then
 						has_recent_kill = true
 						break
 					end
@@ -623,16 +552,11 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 			end
 		end
 		
-		-- Для четных строк: все столбцы - темный
-		-- Для нечетных строк: все столбцы - светлый
-		-- Если было недавнее убийство, используем более яркий цвет для подсветки
 		local base_row_color = is_even_row and color_dark or color_light
 		row_color = has_recent_kill and Color.terminal_frame(_settings.killsboard_row_color_highlight_alpha, true) or base_row_color
 	end
 	
-	-- Применяем фоны для всех типов строк (кроме no_data)
 	if row_color and not no_data then
-		-- bg_category (столбец категорий) - индекс 14
 		pass_template[14].style.size[2] = row_height
 		pass_template[14].style.visible = true
 		pass_template[14].style.color = row_color
@@ -641,13 +565,6 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		pass_template[14].style.hover_color = row_color
 		pass_template[14].style.offset[1] = left_offset
 
-		-- Вычисляем центрирование фона относительно столбцов K и D
-		-- K1 начинается: left_offset + killsboard_column_header_width
-		-- D1 заканчивается: left_offset + killsboard_column_header_width + killsboard_column_kills_width + killsboard_column_damage_width
-		-- Центр K1+D1: left_offset + killsboard_column_header_width + (kills_width + damage_width) / 2
-		-- Начало фона: центр - bg_width / 2
-		
-		-- bg1 (столбец 1) - индекс 4
 		local k1_start = left_offset + _settings.killsboard_column_header_width
 		local d1_end = k1_start + total_column_width
 		local center_k1_d1 = (k1_start + d1_end) / 2
@@ -659,7 +576,6 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		pass_template[4].style.hover_color = row_color
 		pass_template[4].style.offset[1] = center_k1_d1 - (_settings.killsboard_column_player_bg_width / 2)
 
-		-- bg2 (столбец 2) - индекс 7
 		local k2_start = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width
 		local d2_end = k2_start + total_column_width
 		local center_k2_d2 = (k2_start + d2_end) / 2
@@ -671,7 +587,6 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		pass_template[7].style.hover_color = row_color
 		pass_template[7].style.offset[1] = center_k2_d2 - (_settings.killsboard_column_player_bg_width / 2)
 
-		-- bg3 (столбец 3) - индекс 10
 		local k3_start = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 2
 		local d3_end = k3_start + total_column_width
 		local center_k3_d3 = (k3_start + d3_end) / 2
@@ -683,7 +598,6 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		pass_template[10].style.hover_color = row_color
 		pass_template[10].style.offset[1] = center_k3_d3 - (_settings.killsboard_column_player_bg_width / 2)
 
-		-- bg4 (столбец 4) - индекс 13
 		local k4_start = left_offset + _settings.killsboard_column_header_width + _settings.killsboard_column_player_width * 3
 		local d4_end = k4_start + total_column_width
 		local center_k4_d4 = (k4_start + d4_end) / 2
@@ -696,17 +610,13 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		pass_template[13].style.offset[1] = center_k4_d4 - (_settings.killsboard_column_player_bg_width / 2)
 	end
 	
-	-- Обновляем размер шаблона виджета с учетом новой высоты строки
 	size[2] = row_height
 	
-	-- Create widget
 	local widget_definition = UIWidget.create_definition(pass_template, "killsboard_rows", nil, size)
 	
 	if widget_definition then
 		widget = _obj[_create_widget_callback](_obj, name, widget_definition)
 		widget.alpha_multiplier = 0
-		-- offset[3] не задаем, z-координата берется из scenegraph "killsboard_rows" (base_z + 10)
-		-- offset используется только для вертикального позиционирования строк
 		widget.offset = {0, current_offset, 0}
 		return widget, row_height
 	end
@@ -720,7 +630,6 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 	
 	local players = loaded_players or get_players()
 	
-	-- Собираем категории с данными и добавляем заголовки групп
 	local categories_to_show = {}
 	local current_group = nil
 	for _, data in ipairs(categories) do
@@ -733,7 +642,6 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 				local kills = 0
 				local dmg = 0
 				
-				-- Используем текущие данные, если они есть, иначе используем сохраненные (для хаба)
 				if mod.kills_by_category and mod.kills_by_category[account_id] and mod.kills_by_category[account_id][key] then
 					kills = mod.kills_by_category[account_id][key] or 0
 				elseif mod.saved_kills_by_category and mod.saved_kills_by_category[account_id] and mod.saved_kills_by_category[account_id][key] then
@@ -746,13 +654,10 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 					dmg = mod.saved_damage_by_category[account_id][key] or 0
 				end
 				
-				-- Проверяем наличие данных в зависимости от настройки
 				if _settings.killsboard_show_empty_categories then
-					-- Показываем все категории
 					has_data = true
 					break
 				else
-					-- Показываем только категории с данными
 					if kills > 0 or dmg > 0 then
 						has_data = true
 						break
@@ -762,7 +667,6 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 		end
 		
 		if has_data then
-			-- Добавляем заголовок группы, если группа изменилась
 			if group_name and group_name ~= current_group then
 				table.insert(categories_to_show, {type = "group_header", name = "group_" .. group_name, group_name = group_name})
 				current_group = group_name
@@ -771,7 +675,6 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 		end
 	end
 	
-	-- Проверяем, есть ли реальные data строки (не только group_header)
 	local has_data_rows = false
 	for _, category_data in ipairs(categories_to_show) do
 		if category_data.type == "data" then
@@ -782,9 +685,7 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 	
 	local index = 1
 	
-	-- Если нет данных, показываем только текст "Данные отсутствуют"
 	if not has_data_rows then
-		-- Создаем виджет с текстом "Данные отсутствуют"
 		local no_data_row = {type = "no_data", name = "no_data"}
 		widget, row_height = self:create_killsboard_row_widget(index, current_offset + 80, visible_rows, no_data_row, widgets_by_name, players, _obj, _create_widget_callback, ui_renderer)
 		if widget then
@@ -797,7 +698,6 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 		return row_widgets, current_offset
 	end
 	
-	-- Header
 	local header_row = {type = "header", name = "header"}
 	widget, row_height = self:create_killsboard_row_widget(index, current_offset, visible_rows, header_row, widgets_by_name, players, _obj, _create_widget_callback, ui_renderer)
 	if widget then
@@ -810,7 +710,6 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 	end
 	index = index + 1
 	
-	-- Subheader
 	local subheader_row = {type = "subheader", name = "subheader"}
 	widget, row_height = self:create_killsboard_row_widget(index, current_offset, visible_rows, subheader_row, widgets_by_name, players, _obj, _create_widget_callback, ui_renderer)
 	if widget then
@@ -821,7 +720,6 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 	end
 	index = index + 1
 	
-	-- Data rows и заголовки групп
 	for _, category_data in ipairs(categories_to_show) do
 		local row_data = category_data
 		if not row_data.type then
@@ -835,7 +733,6 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 			row_widgets[#row_widgets + 1] = widget
 			widgets_by_name["killsboard_row_" .. row_data.name] = widget
 			current_offset = current_offset + row_height
-			-- Увеличиваем visible_rows только для data строк (для чередования цветов)
 			if row_data.type == "data" then
 				visible_rows = visible_rows + 1
 			end
@@ -843,7 +740,6 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 		index = index + 1
 	end
 	
-	-- Total row
 	local total_row = {type = "total", name = "total"}
 	widget, row_height = self:create_killsboard_row_widget(index, current_offset, visible_rows, total_row, widgets_by_name, players, _obj, _create_widget_callback, ui_renderer)
 	if widget then
@@ -853,7 +749,6 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 	end
 	index = index + 1
 	
-	-- Empty row after total (создает отступ снизу)
 	local empty_row = {type = "spacer", name = "empty_after_total", bottom_offset = _settings.killsboard_rows_bottom_offset or 0}
 	widget, row_height = self:create_killsboard_row_widget(index, current_offset, visible_rows, empty_row, widgets_by_name, players, _obj, _create_widget_callback, ui_renderer)
 	if widget then
@@ -867,29 +762,21 @@ end
 
 mod.adjust_killsboard_size = function(self, total_height, killsboard_widget, scenegraph, row_widgets)
 	local _settings = KillstreakWidgetSettings
-	-- total_height уже включает bottom_offset в последней пустой строке
-	-- Фон = total_height + top_offset + bottom_offset (чтобы создать отступ снизу)
 	local height = total_height + _settings.killsboard_rows_top_offset + _settings.killsboard_rows_bottom_offset
 	height = math.max(height, _settings.killsboard_min_height)
 	height = math.min(height, _settings.killsboard_max_height)
 	
-	-- Обновляем размер scenegraph фона
 	local killsboard_graph = scenegraph.killsboard
 	if killsboard_graph then
 		killsboard_graph.size[2] = height
 		killsboard_graph.dirty = true
 	end
 	
-	-- Обновляем размер scenegraph для строк таблицы
-	-- killsboard_rows должен иметь размер total_height (который уже включает bottom_offset в последней строке)
-	-- Это создаст отступ снизу = bottom_offset между последней строкой и низом фона
 	local killsboard_rows_graph = scenegraph.killsboard_rows
 	if killsboard_rows_graph then
 		killsboard_rows_graph.size[2] = total_height
-		-- Помечаем scenegraph как dirty для пересчета позиции
 		killsboard_rows_graph.dirty = true
 	end
 end
 
--- Экспортируем функцию get_players для использования в других модулях
 mod.get_players_for_killsboard = get_players

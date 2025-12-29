@@ -277,19 +277,7 @@ TeamKillsTracker.update = function(self, dt, t, ui_renderer, render_settings, in
         end
     end
 	
-	local current_players = {}
-    if Managers.player then
-        local players = Managers.player:players()
-        for _, player in pairs(players) do
-            if player then
-                local account_id = player:account_id() or player:name()
-				local character_name = player.character_name and player:character_name()
-                if account_id then
-                    current_players[account_id] = character_name or player:name() or account_id
-                end
-            end
-        end
-    end
+	local current_players = mod.get_current_players()
 	
     for account_id, kills in pairs(mod.player_kills or {}) do
         local display_name = current_players[account_id]

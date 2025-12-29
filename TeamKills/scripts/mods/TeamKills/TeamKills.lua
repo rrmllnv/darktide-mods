@@ -10,6 +10,29 @@ mod:io_dofile("TeamKills/scripts/mods/TeamKills/TeamKills_notifications")
 mod:io_dofile("TeamKills/scripts/mods/TeamKills/HUD/BossDamageTracker")
 mod:io_dofile("TeamKills/scripts/mods/TeamKills/TeamKills_api")
 
+mod.trackable_breeds = {}
+for _, breed in ipairs(mod.melee_lessers or {}) do
+	mod.trackable_breeds[breed] = true
+end
+for _, breed in ipairs(mod.ranged_lessers or {}) do
+	mod.trackable_breeds[breed] = true
+end
+for _, breed in ipairs(mod.melee_elites or {}) do
+	mod.trackable_breeds[breed] = true
+end
+for _, breed in ipairs(mod.ranged_elites or {}) do
+	mod.trackable_breeds[breed] = true
+end
+for _, breed in ipairs(mod.specials or {}) do
+	mod.trackable_breeds[breed] = true
+end
+for _, breed in ipairs(mod.disablers or {}) do
+	mod.trackable_breeds[breed] = true
+end
+for _, breed in ipairs(mod.bosses or {}) do
+	mod.trackable_breeds[breed] = true
+end
+
 mod.player_kills = {}
 mod.player_damage = {}
 mod.player_last_damage = {}
@@ -30,10 +53,16 @@ mod.saved_player_damage = {}
 mod.display_mode = mod:get("opt_display_mode") or 1
 mod.show_background = mod:get("opt_show_background") ~= false
 mod.opacity = mod:get("opt_opacity") or 100
+mod.highlighted_categories = {}
+mod.highlighted_categories_by_category = {}
 
 mod.player_shots_fired = {}
 mod.player_shots_missed = {}
 mod.player_head_shot_kill = {}
+
+mod._cached_players = nil
+mod._cached_players_time = 0
+mod._players_cache_duration = 0.1
 
 mod:add_require_path("TeamKills/scripts/mods/TeamKills/HUD/TeamKillsTracker")
 mod:add_require_path("TeamKills/scripts/mods/TeamKills/HUD/ShotTracker")
@@ -123,6 +152,8 @@ local function clear_saved_data()
 	mod.saved_damage_by_category = {}
 	mod.saved_player_kills = {}
 	mod.saved_player_damage = {}
+	mod._cached_players = nil
+	mod._cached_players_time = 0
 end
 
 local function recreate_hud()
@@ -137,6 +168,9 @@ local function recreate_hud()
     mod.damage_by_category = {}
     mod.last_kill_time_by_category = {}
     mod.highlighted_categories = {}
+    mod.highlighted_categories_by_category = {}
+    mod._cached_players = nil
+    mod._cached_players_time = 0
     mod.killstreak_kills_by_category = {}
     mod.killstreak_damage_by_category = {}
     mod.display_killstreak_kills_by_category = {}
@@ -369,34 +403,7 @@ mod.get_killstreak_label = function(account_id)
 end
 
 local function is_valid_breed(breed_name)
-	if not breed_name then
-		return false
-	end
-
-	local all_breeds = {}
-	for _, breed in ipairs(mod.melee_lessers or {}) do
-		all_breeds[breed] = true
-	end
-	for _, breed in ipairs(mod.ranged_lessers or {}) do
-		all_breeds[breed] = true
-	end
-	for _, breed in ipairs(mod.melee_elites or {}) do
-		all_breeds[breed] = true
-	end
-	for _, breed in ipairs(mod.ranged_elites or {}) do
-		all_breeds[breed] = true
-	end
-	for _, breed in ipairs(mod.specials or {}) do
-		all_breeds[breed] = true
-	end
-	for _, breed in ipairs(mod.disablers or {}) do
-		all_breeds[breed] = true
-	end
-	for _, breed in ipairs(mod.bosses or {}) do
-		all_breeds[breed] = true
-	end
-
-	return all_breeds[breed_name] == true
+	return breed_name and mod.trackable_breeds[breed_name] == true
 end
 
 mod.player_from_unit = function(unit)
@@ -410,6 +417,61 @@ mod.player_from_unit = function(unit)
 		end
 	end
 	return nil
+end
+
+mod.get_player_color = function(account_id)
+	if not account_id or not Managers.player then
+		return nil
+	end
+	
+	local UISettings = require("scripts/settings/ui/ui_settings")
+	local current_time = Managers.time and Managers.time:time("gameplay") or 0
+	
+	if not mod._cached_players or (current_time - mod._cached_players_time) > mod._players_cache_duration then
+		mod._cached_players = Managers.player:players()
+		mod._cached_players_time = current_time
+	end
+	
+	for _, player in pairs(mod._cached_players) do
+		if player then
+			local player_account_id = player:account_id() or player:name()
+			if player_account_id == account_id then
+				local slot = player:slot()
+				if slot and UISettings.player_slot_colors[slot] then
+					local color = UISettings.player_slot_colors[slot]
+					return {color[2], color[3], color[4]}
+				end
+				break
+			end
+		end
+	end
+	
+	return nil
+end
+
+mod.get_current_players = function()
+	local current_players = {}
+	if not Managers.player then
+		return current_players
+	end
+	
+	local current_time = Managers.time and Managers.time:time("gameplay") or 0
+	
+	if not mod._cached_players or (current_time - mod._cached_players_time) > mod._players_cache_duration then
+		mod._cached_players = Managers.player:players()
+		mod._cached_players_time = current_time
+	end
+	
+	for _, player in pairs(mod._cached_players) do
+		if player then
+			local account_id = player:account_id() or player:name()
+			local character_name = player.character_name and player:character_name()
+			if account_id then
+				current_players[account_id] = character_name or player:name() or account_id
+			end
+		end
+	end
+	return current_players
 end
 
 local function is_overkill_session()
@@ -514,6 +576,10 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                             mod.highlighted_categories = mod.highlighted_categories or {}
                             mod.highlighted_categories[account_id] = mod.highlighted_categories[account_id] or {}
                             mod.highlighted_categories[account_id][breed_name] = true
+                            
+                            mod.highlighted_categories_by_category = mod.highlighted_categories_by_category or {}
+                            mod.highlighted_categories_by_category[breed_name] = mod.highlighted_categories_by_category[breed_name] or {}
+                            mod.highlighted_categories_by_category[breed_name][account_id] = true
                         end
                     end
                 end

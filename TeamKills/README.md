@@ -11,11 +11,11 @@ This mod provides an API for other mods to access team statistics data.
 ```lua
 local teamkills_mod = get_mod("TeamKills")
 if teamkills_mod then
-    -- Get all player kills
-    local player_kills = teamkills_mod.get_player_kills()
+    -- For reading data (fast, no copying):
+    local player_kills_readonly = teamkills_mod.get_player_kills_readonly()
     
-    -- Get all player damage
-    local player_damage = teamkills_mod.get_player_damage()
+    -- For modifying data (safe, with deep copy):
+    local player_kills = teamkills_mod.get_player_kills()
     
     -- Get data for specific player
     local player_data = teamkills_mod.get_player_data(account_id)
@@ -27,49 +27,54 @@ end
 
 ### API Functions
 
-#### `get_player_kills()`
-Returns a copy of all player kills data.
+**Note:** All functions now have two versions:
+- **Standard version** (e.g., `get_player_kills()`) - Returns a deep copy of the data (safe for modification)
+- **Readonly version** (e.g., `get_player_kills_readonly()`) - Returns direct reference to data (faster, but read-only)
+
+#### `get_player_kills()` / `get_player_kills_readonly()`
+Returns all player kills data.
 - **Returns:** `table` - `{account_id = kills_count, ...}`
 
-#### `get_player_damage()`
-Returns a copy of all player damage data.
+#### `get_player_damage()` / `get_player_damage_readonly()`
+Returns all player damage data.
 - **Returns:** `table` - `{account_id = damage_amount, ...}`
 
-#### `get_player_last_damage()`
-Returns a copy of all player last damage data.
+#### `get_player_last_damage()` / `get_player_last_damage_readonly()`
+Returns all player last damage data.
 - **Returns:** `table` - `{account_id = last_damage_amount, ...}`
 
-#### `get_kills_by_category()`
-Returns a copy of kills by category for all players.
+#### `get_kills_by_category()` / `get_kills_by_category_readonly()`
+Returns kills by category for all players.
 - **Returns:** `table` - `{account_id = {breed_name = count, ...}, ...}`
 
-#### `get_damage_by_category()`
-Returns a copy of damage by category for all players.
+#### `get_damage_by_category()` / `get_damage_by_category_readonly()`
+Returns damage by category for all players.
 - **Returns:** `table` - `{account_id = {breed_name = damage, ...}, ...}`
 
-#### `get_player_killstreak()`
-Returns a copy of all player killstreak data.
+#### `get_player_killstreak()` / `get_player_killstreak_readonly()`
+Returns all player killstreak data.
 - **Returns:** `table` - `{account_id = killstreak_count, ...}`
 
-#### `get_boss_damage()`
-Returns a copy of boss damage data.
+#### `get_boss_damage()` / `get_boss_damage_readonly()`
+Returns boss damage data.
 - **Returns:** `table` - `{boss_unit = {account_id = damage, ...}, ...}`
 
-#### `get_boss_last_damage()`
-Returns a copy of last damage to bosses.
+#### `get_boss_last_damage()` / `get_boss_last_damage_readonly()`
+Returns last damage to bosses.
 - **Returns:** `table` - `{boss_unit = {account_id = last_damage, ...}, ...}`
 
 #### `get_player_data(account_id)`
 Returns all data for a specific player.
 - **Parameters:**
   - `account_id` (string) - Player account ID
-- **Returns:** `table` or `nil` - Player data object containing:
+- **Returns:** `table` - Player data object containing:
   - `kills` (number) - Total kills
   - `damage` (number) - Total damage
   - `last_damage` (number) - Last damage dealt
   - `killstreak` (number) - Current killstreak
   - `kills_by_category` (table) - Kills by breed category
   - `damage_by_category` (table) - Damage by breed category
+- **Note:** Returns empty structure if account_id is invalid
 
 #### `get_all_data()`
 Returns all mod data in a single table.
@@ -98,11 +103,11 @@ Returns the mod version.
 ```lua
 local teamkills_mod = get_mod("TeamKills")
 if teamkills_mod then
-    -- Получить все убийства игроков
-    local player_kills = teamkills_mod.get_player_kills()
+    -- Для чтения данных (быстро, без копирования):
+    local player_kills_readonly = teamkills_mod.get_player_kills_readonly()
     
-    -- Получить весь урон игроков
-    local player_damage = teamkills_mod.get_player_damage()
+    -- Для изменения данных (безопасно, с глубоким копированием):
+    local player_kills = teamkills_mod.get_player_kills()
     
     -- Получить данные конкретного игрока
     local player_data = teamkills_mod.get_player_data(account_id)
@@ -114,49 +119,54 @@ end
 
 ### API Функции
 
-#### `get_player_kills()`
-Возвращает копию данных об убийствах всех игроков.
+**Примечание:** Все функции теперь имеют две версии:
+- **Стандартная версия** (например, `get_player_kills()`) - Возвращает глубокую копию данных (безопасно для изменения)
+- **Readonly версия** (например, `get_player_kills_readonly()`) - Возвращает прямую ссылку на данные (быстрее, но только для чтения)
+
+#### `get_player_kills()` / `get_player_kills_readonly()`
+Возвращает данные об убийствах всех игроков.
 - **Возвращает:** `table` - `{account_id = количество_убийств, ...}`
 
-#### `get_player_damage()`
-Возвращает копию данных об уроне всех игроков.
+#### `get_player_damage()` / `get_player_damage_readonly()`
+Возвращает данные об уроне всех игроков.
 - **Возвращает:** `table` - `{account_id = количество_урона, ...}`
 
-#### `get_player_last_damage()`
-Возвращает копию данных о последнем уроне всех игроков.
+#### `get_player_last_damage()` / `get_player_last_damage_readonly()`
+Возвращает данные о последнем уроне всех игроков.
 - **Возвращает:** `table` - `{account_id = последний_урон, ...}`
 
-#### `get_kills_by_category()`
-Возвращает копию убийств по категориям для всех игроков.
+#### `get_kills_by_category()` / `get_kills_by_category_readonly()`
+Возвращает убийства по категориям для всех игроков.
 - **Возвращает:** `table` - `{account_id = {имя_породы = количество, ...}, ...}`
 
-#### `get_damage_by_category()`
-Возвращает копию урона по категориям для всех игроков.
+#### `get_damage_by_category()` / `get_damage_by_category_readonly()`
+Возвращает урон по категориям для всех игроков.
 - **Возвращает:** `table` - `{account_id = {имя_породы = урон, ...}, ...}`
 
-#### `get_player_killstreak()`
-Возвращает копию данных о сериях убийств всех игроков.
+#### `get_player_killstreak()` / `get_player_killstreak_readonly()`
+Возвращает данные о сериях убийств всех игроков.
 - **Возвращает:** `table` - `{account_id = количество_в_серии, ...}`
 
-#### `get_boss_damage()`
-Возвращает копию данных об уроне по боссам.
+#### `get_boss_damage()` / `get_boss_damage_readonly()`
+Возвращает данные об уроне по боссам.
 - **Возвращает:** `table` - `{юнит_босса = {account_id = урон, ...}, ...}`
 
-#### `get_boss_last_damage()`
-Возвращает копию последнего урона по боссам.
+#### `get_boss_last_damage()` / `get_boss_last_damage_readonly()`
+Возвращает последний урон по боссам.
 - **Возвращает:** `table` - `{юнит_босса = {account_id = последний_урон, ...}, ...}`
 
 #### `get_player_data(account_id)`
 Возвращает все данные для конкретного игрока.
 - **Параметры:**
   - `account_id` (string) - ID аккаунта игрока
-- **Возвращает:** `table` или `nil` - Объект с данными игрока, содержащий:
+- **Возвращает:** `table` - Объект с данными игрока, содержащий:
   - `kills` (number) - Всего убийств
   - `damage` (number) - Всего урона
   - `last_damage` (number) - Последний нанесенный урон
   - `killstreak` (number) - Текущая серия убийств
   - `kills_by_category` (table) - Убийства по категориям пород
   - `damage_by_category` (table) - Урон по категориям пород
+- **Примечание:** Возвращает пустую структуру если account_id неверный
 
 #### `get_all_data()`
 Возвращает все данные мода в одной таблице.
@@ -178,11 +188,17 @@ end
 
 ## Notes / Примечания
 
-- All API functions return **deep copies** of data to prevent modification of original data.
-- All functions are safe to call even if data doesn't exist yet (returns empty tables or nil).
+- All standard API functions return **deep copies** of data to prevent modification of original data.
+- All `_readonly` functions return **direct references** for better performance, but should not be modified.
+- All functions are safe to call even if data doesn't exist yet (returns empty tables or default structures).
 - The `account_id` parameter should be the player's account ID or name.
+- Use `_readonly` functions when you only need to read data for better performance.
+- Use standard functions when you need to modify returned data.
 
-- Все API функции возвращают **глубокие копии** данных, чтобы предотвратить изменение оригинальных данных.
-- Все функции безопасны для вызова, даже если данные еще не существуют (возвращают пустые таблицы или nil).
+- Все стандартные API функции возвращают **глубокие копии** данных, чтобы предотвратить изменение оригинальных данных.
+- Все `_readonly` функции возвращают **прямые ссылки** для лучшей производительности, но их не следует изменять.
+- Все функции безопасны для вызова, даже если данные еще не существуют (возвращают пустые таблицы или стандартные структуры).
 - Параметр `account_id` должен быть ID аккаунта или именем игрока.
+- Используйте `_readonly` функции когда вам нужно только читать данные для лучшей производительности.
+- Используйте стандартные функции когда вам нужно изменять возвращаемые данные.
 

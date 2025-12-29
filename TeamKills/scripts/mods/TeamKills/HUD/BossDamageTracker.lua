@@ -22,42 +22,39 @@ local function format_boss_damage_text(unit)
 		return nil
 	end
 	
-	local current_players = {}
-	if Managers.player then
-		local players = Managers.player:players()
-		for _, player in pairs(players) do
-			if player then
-				local account_id = player:account_id() or player:name()
-				local character_name = player.character_name and player:character_name()
-				if account_id then
-					current_players[account_id] = character_name or player:name() or account_id
-				end
-			end
-		end
+	local show_total_damage = mod:get("opt_show_boss_total_damage") ~= false
+	local show_last_damage = mod:get("opt_show_boss_last_damage") == true
+	
+	if not show_total_damage and not show_last_damage then
+		return nil
 	end
 	
+	local current_players = mod.get_current_players()
 	local boss_last_damage_data = mod.boss_last_damage and mod.boss_last_damage[unit]
 	
 	local players_with_damage = {}
 	for account_id, damage in pairs(boss_damage_data) do
-		local display_name = current_players[account_id]
-		if display_name and damage > 0 then
-			local last_damage = boss_last_damage_data and boss_last_damage_data[account_id] or 0
-			table.insert(players_with_damage, {
-				name = display_name,
-				damage = damage,
-				last_damage = last_damage,
-				account_id = account_id
-			})
+		if damage > 0 then
+			local display_name = current_players[account_id]
+			if display_name then
+				local last_damage = boss_last_damage_data and boss_last_damage_data[account_id] or 0
+				table.insert(players_with_damage, {
+					name = display_name,
+					damage = math.floor(damage),
+					last_damage = math.floor(last_damage),
+					account_id = account_id
+				})
+			end
 		end
+	end
+	
+	if #players_with_damage == 0 then
+		return nil
 	end
 	
 	table.sort(players_with_damage, function(a, b)
 		return a.damage > b.damage
 	end)
-	
-	local show_total_damage = mod:get("opt_show_boss_total_damage") ~= false
-	local show_last_damage = mod:get("opt_show_boss_last_damage") == true
 	
 	local lines = {}
 	local damage_color = mod.get_damage_color_string()
@@ -65,30 +62,29 @@ local function format_boss_damage_text(unit)
 	local reset_color = "{#reset()}"
 	
 	for _, player in ipairs(players_with_damage) do
-		local dmg = math.floor(player.damage or 0)
-		local last_dmg = math.floor(player.last_damage or 0)
-		
-		local parts = {}
-		table.insert(parts, player.name .. ":")
+		local parts = {player.name, ":"}
 		
 		if show_total_damage then
-			table.insert(parts, damage_color .. mod.format_number(dmg) .. reset_color)
+			parts[#parts + 1] = " "
+			parts[#parts + 1] = damage_color
+			parts[#parts + 1] = mod.format_number(player.damage)
+			parts[#parts + 1] = reset_color
 		end
 		
-		if show_last_damage and last_dmg > 0 then
-			table.insert(parts, "[" .. last_damage_color .. mod.format_number(last_dmg) .. reset_color .. "]")
+		if show_last_damage and player.last_damage > 0 then
+			parts[#parts + 1] = " ["
+			parts[#parts + 1] = last_damage_color
+			parts[#parts + 1] = mod.format_number(player.last_damage)
+			parts[#parts + 1] = reset_color
+			parts[#parts + 1] = "]"
 		end
 		
-		if #parts > 1 then
-			table.insert(lines, table.concat(parts, " "))
+		if #parts > 2 then
+			lines[#lines + 1] = table.concat(parts)
 		end
 	end
 	
-	if #lines > 0 then
-		return lines
-	else
-		return nil
-	end
+	return #lines > 0 and lines or nil
 end
 
 mod:hook_safe(CLASS.HudElementBossHealth, "_setup_widget_groups", function(self)
