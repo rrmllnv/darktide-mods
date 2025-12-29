@@ -367,6 +367,17 @@ mod.update_killstreak_timers = function(dt)
 			if mod.killstreak_kills_by_category and mod.killstreak_kills_by_category[account_id] then
 				mod.killstreak_kills_by_category[account_id] = nil
 			end
+			if mod.highlighted_categories and mod.highlighted_categories[account_id] then
+				for breed_name, _ in pairs(mod.highlighted_categories[account_id]) do
+					if mod.highlighted_categories_by_category and mod.highlighted_categories_by_category[breed_name] then
+						mod.highlighted_categories_by_category[breed_name][account_id] = nil
+						if not next(mod.highlighted_categories_by_category[breed_name]) then
+							mod.highlighted_categories_by_category[breed_name] = nil
+						end
+					end
+				end
+				mod.highlighted_categories[account_id] = nil
+			end
 		else
 			mod.player_killstreak_timer[account_id] = timer
 			if mod.killstreak_kills_by_category and mod.killstreak_kills_by_category[account_id] then
@@ -425,7 +436,17 @@ mod.get_player_color = function(account_id)
 	end
 	
 	local UISettings = require("scripts/settings/ui/ui_settings")
-	local current_time = Managers.time and Managers.time:time("gameplay") or 0
+	local current_time = 0
+	local success = false
+	
+	if Managers.time then
+		success, current_time = pcall(function()
+			return Managers.time:time("gameplay")
+		end)
+		if not success then
+			current_time = 0
+		end
+	end
 	
 	if not mod._cached_players or (current_time - mod._cached_players_time) > mod._players_cache_duration then
 		mod._cached_players = Managers.player:players()
@@ -455,7 +476,17 @@ mod.get_current_players = function()
 		return current_players
 	end
 	
-	local current_time = Managers.time and Managers.time:time("gameplay") or 0
+	local current_time = 0
+	local success = false
+	
+	if Managers.time then
+		success, current_time = pcall(function()
+			return Managers.time:time("gameplay")
+		end)
+		if not success then
+			current_time = 0
+		end
+	end
 	
 	if not mod._cached_players or (current_time - mod._cached_players_time) > mod._players_cache_duration then
 		mod._cached_players = Managers.player:players()
