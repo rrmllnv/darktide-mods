@@ -342,6 +342,16 @@ mod.add_to_killstreak_counter = function(account_id)
 	
 	if killstreak_before == 0 then
 		mod.highlighted_categories = mod.highlighted_categories or {}
+		if mod.highlighted_categories[account_id] then
+			for breed_name, _ in pairs(mod.highlighted_categories[account_id]) do
+				if mod.highlighted_categories_by_category and mod.highlighted_categories_by_category[breed_name] then
+					mod.highlighted_categories_by_category[breed_name][account_id] = nil
+					if not next(mod.highlighted_categories_by_category[breed_name]) then
+						mod.highlighted_categories_by_category[breed_name] = nil
+					end
+				end
+			end
+		end
 		mod.highlighted_categories[account_id] = {}
 		mod.display_killstreak_kills_by_category = mod.display_killstreak_kills_by_category or {}
 		mod.display_killstreak_kills_by_category[account_id] = {}
@@ -366,17 +376,6 @@ mod.update_killstreak_timers = function(dt)
 			end
 			if mod.killstreak_kills_by_category and mod.killstreak_kills_by_category[account_id] then
 				mod.killstreak_kills_by_category[account_id] = nil
-			end
-			if mod.highlighted_categories and mod.highlighted_categories[account_id] then
-				for breed_name, _ in pairs(mod.highlighted_categories[account_id]) do
-					if mod.highlighted_categories_by_category and mod.highlighted_categories_by_category[breed_name] then
-						mod.highlighted_categories_by_category[breed_name][account_id] = nil
-						if not next(mod.highlighted_categories_by_category[breed_name]) then
-							mod.highlighted_categories_by_category[breed_name] = nil
-						end
-					end
-				end
-				mod.highlighted_categories[account_id] = nil
 			end
 		else
 			mod.player_killstreak_timer[account_id] = timer
