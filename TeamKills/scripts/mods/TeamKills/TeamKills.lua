@@ -600,17 +600,6 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                         mod.killstreak_kills_by_category = mod.killstreak_kills_by_category or {}
                         mod.killstreak_kills_by_category[account_id] = mod.killstreak_kills_by_category[account_id] or {}
                         mod.killstreak_kills_by_category[account_id][breed_name] = (mod.killstreak_kills_by_category[account_id][breed_name] or 0) + 1
-                        
-                        local current_killstreak = mod.player_killstreak[account_id] or 0
-                        if current_killstreak > 0 then
-                            mod.highlighted_categories = mod.highlighted_categories or {}
-                            mod.highlighted_categories[account_id] = mod.highlighted_categories[account_id] or {}
-                            mod.highlighted_categories[account_id][breed_name] = true
-                            
-                            mod.highlighted_categories_by_category = mod.highlighted_categories_by_category or {}
-                            mod.highlighted_categories_by_category[breed_name] = mod.highlighted_categories_by_category[breed_name] or {}
-                            mod.highlighted_categories_by_category[breed_name][account_id] = true
-                        end
                     end
                 end
                 
@@ -630,6 +619,17 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                     mod.killstreak_damage_by_category = mod.killstreak_damage_by_category or {}
                     mod.killstreak_damage_by_category[account_id] = mod.killstreak_damage_by_category[account_id] or {}
                     mod.killstreak_damage_by_category[account_id][breed_name] = (mod.killstreak_damage_by_category[account_id][breed_name] or 0) + math.floor(health_damage)
+                    
+                    local current_killstreak = mod.player_killstreak[account_id] or 0
+                    if current_killstreak > 0 then
+                        mod.highlighted_categories = mod.highlighted_categories or {}
+                        mod.highlighted_categories[account_id] = mod.highlighted_categories[account_id] or {}
+                        mod.highlighted_categories[account_id][breed_name] = true
+                        
+                        mod.highlighted_categories_by_category = mod.highlighted_categories_by_category or {}
+                        mod.highlighted_categories_by_category[breed_name] = mod.highlighted_categories_by_category[breed_name] or {}
+                        mod.highlighted_categories_by_category[breed_name][account_id] = true
+                    end
                 end
                 
                 if breed_name then
