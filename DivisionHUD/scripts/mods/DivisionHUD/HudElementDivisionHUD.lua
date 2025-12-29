@@ -12,7 +12,7 @@ local HudElementDivisionHUD = class("HudElementDivisionHUD", "HudElementBase")
 local BAR_WIDTH = 330
 local BAR_HEIGHT = 8
 local BOX_SIZE = 120
-local BOX_SPACING = 8
+local BOX_SPACING = 4
 local BUFF_SIZE = 32
 
 local COMBAT_ABILITY_TYPE = "combat_ability"
@@ -27,10 +27,10 @@ local function _create_scenegraph()
 		},
 		root = {
 			parent = "screen",
-			horizontal_alignment = "left",
-			vertical_alignment = "top",
+			horizontal_alignment = "center",
+			vertical_alignment = "center",
 			size = { BAR_WIDTH, 200 },
-			position = { 20, 50, 100 },
+			position = { 300, 200, 100 },
 		},
 		stamina_bar = {
 			parent = "root",
@@ -381,7 +381,7 @@ HudElementDivisionHUD._update_ammo_box = function(self, player_unit, widget, opa
 	local max_reserve = slot_component.max_ammunition_reserve
 
 	if max_reserve <= 0 then
-		widget.content.visible = false
+		-- widget.content.visible = false
 		return
 	end
 
