@@ -13,14 +13,22 @@ local icons = {
 	shots_missed = "content/ui/materials/icons/weapons/actions/smiter",
 	head_shot_kill = "content/ui/materials/icons/weapons/actions/ads",
 }
-local ICON_SIZE = 20
-local ICON_SPACING = 5
 
 local hud_body_font_settings = UIFontSettings.hud_body or {}
 local panel_size = HudElementTeamPanelHandlerSettings.panel_size
 local BORDER_PADDING = 5
 local function get_font_size()
-	return mod.shot_tracker_font_size or mod:get("opt_shot_tracker_font_size") or 16
+	return mod.font_size or mod:get("opt_font_size") or 16
+end
+
+local function get_icon_size()
+	local font_size = get_font_size()
+	return math.floor(font_size * 1.25)
+end
+
+local function get_icon_spacing()
+	local font_size = get_font_size()
+	return math.floor(font_size * 0.3)
 end
 
 local function get_default_panel_height()
@@ -29,7 +37,7 @@ local function get_default_panel_height()
 end
 
 local function get_opacity_alpha()
-	local opacity = mod.shot_tracker_opacity or mod:get("opt_shot_tracker_opacity") or 100
+	local opacity = mod.opacity or mod:get("opt_opacity") or 100
 	return math.floor((opacity / 100) * 255)
 end
 
@@ -72,24 +80,33 @@ local function apply_panel_height(self, panel_height)
 		panel_background.size[2] = panel_height
 	end
 
-	local text_style = styles.text
-
-	if text_style then
-		local font_size = get_font_size()
-		local alpha = get_opacity_alpha()
-		text_style.font_size = font_size
-		if text_style.text_color then
-			text_style.text_color[1] = alpha
+	local font_size = get_font_size()
+	local alpha = get_opacity_alpha()
+	
+	local text_shots_fired_style = styles.text_shots_fired
+	if text_shots_fired_style then
+		text_shots_fired_style.font_size = font_size
+		if text_shots_fired_style.text_color then
+			text_shots_fired_style.text_color[1] = alpha
 		end
-		text_style.size = text_style.size or {
-			width - BORDER_PADDING * 2,
-			panel_height - BORDER_PADDING * 2,
-		}
-		text_style.size[1] = width - BORDER_PADDING * 2
-		text_style.size[2] = math.max(BORDER_PADDING * 2, panel_height - BORDER_PADDING * 2)
 	end
 	
-	local alpha = get_opacity_alpha()
+	local text_shots_missed_style = styles.text_shots_missed
+	if text_shots_missed_style then
+		text_shots_missed_style.font_size = font_size
+		if text_shots_missed_style.text_color then
+			text_shots_missed_style.text_color[1] = alpha
+		end
+	end
+	
+	local text_head_shot_kill_style = styles.text_head_shot_kill
+	if text_head_shot_kill_style then
+		text_head_shot_kill_style.font_size = font_size
+		if text_head_shot_kill_style.text_color then
+			text_head_shot_kill_style.text_color[1] = alpha
+		end
+	end
+	
 	local icon_shots_fired_style = styles.icon_shots_fired
 	if icon_shots_fired_style and icon_shots_fired_style.color then
 		icon_shots_fired_style.color[1] = alpha
@@ -177,8 +194,8 @@ local widget_definitions = {
 				value_id = "icon_shots_fired",
 				style = {
 					size = {
-						ICON_SIZE,
-						ICON_SIZE,
+						get_icon_size(),
+						get_icon_size(),
 					},
 					offset = {
 						BORDER_PADDING,
@@ -207,7 +224,7 @@ local widget_definitions = {
 					font_type = hud_body_font_settings.font_type or "machine_medium",
 					text_color = Color.white(255, true),
 					offset = {
-						BORDER_PADDING + ICON_SIZE + 4,
+						BORDER_PADDING + get_icon_size() + 4,
 						BORDER_PADDING + 2,
 						2,
 					},
@@ -227,8 +244,8 @@ local widget_definitions = {
 				value_id = "icon_shots_missed",
 				style = {
 					size = {
-						ICON_SIZE,
-						ICON_SIZE,
+						get_icon_size(),
+						get_icon_size(),
 					},
 					offset = {
 						BORDER_PADDING,
@@ -257,7 +274,7 @@ local widget_definitions = {
 					font_type = hud_body_font_settings.font_type or "machine_medium",
 					text_color = Color.white(255, true),
 					offset = {
-						BORDER_PADDING + ICON_SIZE + 4,
+						BORDER_PADDING + get_icon_size() + 4,
 						BORDER_PADDING + 2,
 						2,
 					},
@@ -277,8 +294,8 @@ local widget_definitions = {
 				value_id = "icon_head_shot_kill",
 				style = {
 					size = {
-						ICON_SIZE,
-						ICON_SIZE,
+						get_icon_size(),
+						get_icon_size(),
 					},
 					offset = {
 						BORDER_PADDING,
@@ -307,7 +324,7 @@ local widget_definitions = {
 					font_type = hud_body_font_settings.font_type or "machine_medium",
 					text_color = Color.white(255, true),
 					offset = {
-						BORDER_PADDING + ICON_SIZE + 4,
+						BORDER_PADDING + get_icon_size() + 4,
 						BORDER_PADDING + 2,
 						2,
 					},
@@ -370,16 +387,20 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 	
 	local styles = widget.style
 	local font_size = get_font_size()
+	local icon_size = get_icon_size()
+	local icon_spacing = get_icon_spacing()
 	local current_x = BORDER_PADDING
 	
 	if show_shots_fired then
 		widget.content.icon_shots_fired = icons.shots_fired
 		widget.style.icon_shots_fired.color = UIHudSettings.color_tint_main_2
 		widget.content.text_shots_fired = tostring(shots_fired)
+		styles.icon_shots_fired.size[1] = icon_size
+		styles.icon_shots_fired.size[2] = icon_size
 		styles.icon_shots_fired.offset[1] = current_x
-		styles.text_shots_fired.offset[1] = current_x + ICON_SIZE + 4
+		styles.text_shots_fired.offset[1] = current_x + icon_size + 4
 		local text_width, _ = Text.text_size(ui_renderer, widget.content.text_shots_fired, styles.text_shots_fired)
-		current_x = current_x + ICON_SIZE + 4 + text_width + ICON_SPACING
+		current_x = current_x + icon_size + 4 + text_width + icon_spacing
 	else
 		widget.content.icon_shots_fired = nil
 		widget.content.text_shots_fired = ""
@@ -389,10 +410,12 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 		widget.content.icon_shots_missed = icons.shots_missed
 		widget.style.icon_shots_missed.color = UIHudSettings.color_tint_main_2
 		widget.content.text_shots_missed = tostring(shots_missed)
+		styles.icon_shots_missed.size[1] = icon_size
+		styles.icon_shots_missed.size[2] = icon_size
 		styles.icon_shots_missed.offset[1] = current_x
-		styles.text_shots_missed.offset[1] = current_x + ICON_SIZE + 4
+		styles.text_shots_missed.offset[1] = current_x + icon_size + 4
 		local text_width, _ = Text.text_size(ui_renderer, widget.content.text_shots_missed, styles.text_shots_missed)
-		current_x = current_x + ICON_SIZE + 4 + text_width + ICON_SPACING
+		current_x = current_x + icon_size + 4 + text_width + icon_spacing
 	else
 		widget.content.icon_shots_missed = nil
 		widget.content.text_shots_missed = ""
@@ -402,8 +425,10 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 		widget.content.icon_head_shot_kill = icons.head_shot_kill
 		widget.style.icon_head_shot_kill.color = UIHudSettings.color_tint_main_2
 		widget.content.text_head_shot_kill = tostring(head_shot_kill)
+		styles.icon_head_shot_kill.size[1] = icon_size
+		styles.icon_head_shot_kill.size[2] = icon_size
 		styles.icon_head_shot_kill.offset[1] = current_x
-		styles.text_head_shot_kill.offset[1] = current_x + ICON_SIZE + 4
+		styles.text_head_shot_kill.offset[1] = current_x + icon_size + 4
 	else
 		widget.content.icon_head_shot_kill = nil
 		widget.content.text_head_shot_kill = ""
