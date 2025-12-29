@@ -92,6 +92,15 @@ Returns all mod data in a single table.
 Returns the mod version.
 - **Returns:** `string` - Mod version (e.g., "2.0.0")
 
+### Notes
+
+- All standard API functions return **deep copies** of data to prevent modification of original data.
+- All `_readonly` functions return **direct references** for better performance, but should not be modified.
+- All functions are safe to call even if data doesn't exist yet (returns empty tables or default structures).
+- The `account_id` parameter should be the player's account ID or name.
+- Use `_readonly` functions when you only need to read data for better performance.
+- Use standard functions when you need to modify returned data.
+
 ---
 
 ## Документация API
@@ -184,16 +193,7 @@ end
 Возвращает версию мода.
 - **Возвращает:** `string` - Версия мода (например, "2.0.0")
 
----
-
-## Notes / Примечания
-
-- All standard API functions return **deep copies** of data to prevent modification of original data.
-- All `_readonly` functions return **direct references** for better performance, but should not be modified.
-- All functions are safe to call even if data doesn't exist yet (returns empty tables or default structures).
-- The `account_id` parameter should be the player's account ID or name.
-- Use `_readonly` functions when you only need to read data for better performance.
-- Use standard functions when you need to modify returned data.
+### Примечания
 
 - Все стандартные API функции возвращают **глубокие копии** данных, чтобы предотвратить изменение оригинальных данных.
 - Все `_readonly` функции возвращают **прямые ссылки** для лучшей производительности, но их не следует изменять.
