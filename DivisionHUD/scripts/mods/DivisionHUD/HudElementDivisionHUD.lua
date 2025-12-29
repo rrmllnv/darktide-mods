@@ -224,17 +224,12 @@ end
 local function _create_ultimate_box_widget(scenegraph_id)
 	local text_style = table.clone(UIFontSettings.hud_body)
 	text_style.font_type = "machine_medium"
-	text_style.font_size = 18
+	text_style.font_size = 30
 	text_style.drop_shadow = true
 	text_style.text_horizontal_alignment = "center"
 	text_style.text_vertical_alignment = "center"
 	text_style.text_color = UIHudSettings.color_tint_main_1
 	text_style.offset = { 0, 0, 2 }
-
-	local label_style = table.clone(text_style)
-	label_style.font_size = 12
-	label_style.text_vertical_alignment = "top"
-	label_style.offset = { 0, 2, 2 }
 
 	return UIWidget.create_definition({
 		{
@@ -242,8 +237,25 @@ local function _create_ultimate_box_widget(scenegraph_id)
 			style_id = "background",
 			value_id = "background",
 			style = {
-				color = { 200, 0, 0, 0 },
+				color = { 10, 255, 255, 255 },
 				offset = { 0, 0, 0 },
+			},
+		},
+		{
+			pass_type = "texture",
+			style_id = "icon",
+			value_id = "icon",
+			value = "content/ui/materials/icons/talents/hud/combat_container",
+			style = {
+				horizontal_alignment = "center",
+				vertical_alignment = "center",
+				size = { 60, 60 },
+				offset = { 0, 0, 1 },
+				color = { 255, 255, 255, 255 },
+				material_values = {
+					progress = 1,
+					talent_icon = nil,
+				},
 			},
 		},
 		{
@@ -252,13 +264,6 @@ local function _create_ultimate_box_widget(scenegraph_id)
 			value = "",
 			style_id = "text",
 			style = text_style,
-		},
-		{
-			pass_type = "text",
-			value_id = "label",
-			value = "",
-			style_id = "label",
-			style = label_style,
 		},
 	}, scenegraph_id)
 end
@@ -532,20 +537,27 @@ HudElementDivisionHUD._update_ultimate_box = function(self, player_unit, widget,
 		return
 	end
 
+	local equipped_abilities = ability_extension:equipped_abilities()
+	local combat_ability = equipped_abilities and equipped_abilities[COMBAT_ABILITY_TYPE]
+	local ability_icon = combat_ability and combat_ability.hud_icon or "content/ui/materials/icons/abilities/default"
+	
 	local remaining_cooldown = ability_extension:remaining_ability_cooldown(COMBAT_ABILITY_TYPE)
 	
 	widget.content.visible = true
+	if widget.style.icon.material_values then
+		widget.style.icon.material_values.talent_icon = ability_icon
+	end
 	
 	if remaining_cooldown and remaining_cooldown > 0 then
 		widget.content.text = string.format("%.0f", remaining_cooldown)
 	else
-		widget.content.text = "RDY"
+		widget.content.text = ""
 	end
 	
-	widget.content.label = "УЛЬТА"
-	widget.style.background.color[1] = 200 * opacity
+	-- widget.style.background.color[1] = 200 * opacity
+	widget.style.background.color[1] = 50
+	widget.style.icon.color[1] = 255 * opacity
 	widget.style.text.text_color[1] = 255 * opacity
-	widget.style.label.text_color[1] = 200 * opacity
 	widget.dirty = true
 end
 
