@@ -1,0 +1,33 @@
+local mod = get_mod("DivisionHUD")
+
+local hud_elements = {
+	{
+		filename = "DivisionHUD/scripts/mods/DivisionHUD/HudElementDivisionHUD",
+		class_name = "HudElementDivisionHUD",
+		visibility_groups = {
+			"alive",
+		},
+	},
+}
+
+for _, hud_element in ipairs(hud_elements) do
+	mod:add_require_path(hud_element.filename)
+end
+
+mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, params)
+	for _, hud_element in ipairs(hud_elements) do
+		if not table.find_by_key(elements, "class_name", hud_element.class_name) then
+			table.insert(elements, {
+				class_name = hud_element.class_name,
+				filename = hud_element.filename,
+				use_hud_scale = true,
+				visibility_groups = hud_element.visibility_groups or {
+					"alive",
+				},
+			})
+		end
+	end
+
+	return func(self, elements, visibility_groups, params)
+end)
+
