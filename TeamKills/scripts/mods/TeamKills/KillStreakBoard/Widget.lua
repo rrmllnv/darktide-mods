@@ -15,6 +15,7 @@ local mutator_localization_map = {
 	["cultist_mutant_mutator"] = "i18n_breed_cultist_mutant_mutator",
 	["chaos_hound_mutator"] = "i18n_breed_chaos_hound_mutator",
 	["chaos_mutator_ritualist"] = "i18n_breed_chaos_mutator_ritualist",
+	["chaos_plague_ogryn_sprayer"] = "i18n_breed_chaos_plague_ogryn_sprayer",
 }
 
 local localization_cache = {}

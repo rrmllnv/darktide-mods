@@ -59,4 +59,8 @@ return {
 		en = "Dreg Ritualist Mutator",
 		ru = "Отброс-культист Мутатор",
 	},
+	i18n_breed_chaos_plague_ogryn_sprayer = {
+		en = "Plague Ogryn Sprayer",
+		ru = "Чумной Огрин Sprayer",
+	},
 }
