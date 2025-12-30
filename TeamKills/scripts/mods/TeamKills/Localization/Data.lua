@@ -284,4 +284,12 @@ return {
 		en = "Show Headshots",
 		ru = "Показывать Headshots",
 	},
+	i18n_show_category_totals_in_group_header = {
+		en = "Show category totals in group headers",
+		ru = "Показывать общее количество в заголовках категорий",
+	},
+	i18n_show_category_totals_in_group_header_tooltip = {
+		en = "Display total kills and damage for each category group (e.g. Melee Lessers, Ranged Elites) in group header rows",
+		ru = "Отображать общее количество убийств и урона для каждой группы категорий (например, Младшие ближнего боя, Элиты дальнего боя) в строках заголовков групп",
+	},
 }

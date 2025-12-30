@@ -386,24 +386,31 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 				end
 				
 				local show_killstreak_progress = mod:get("opt_show_killstreak_progress_in_killsboard") ~= false
+				local show_category_totals = mod:get("opt_show_category_totals_in_group_header") ~= false
 				local orange_color = mod.get_damage_color_string and mod.get_damage_color_string() or "{#color(255,183,44)}"
 				local reset_color = "{#reset()}"
-				local kills_text = tostring(total_kills)
-				if show_killstreak_progress and total_killstreak_kills > 0 then
-					kills_text = kills_text .. " (" .. orange_color .. "+" .. tostring(total_killstreak_kills) .. reset_color .. ")"
+				local kills_text = ""
+				if show_category_totals then
+					kills_text = tostring(total_kills)
+					if show_killstreak_progress and total_killstreak_kills > 0 then
+						kills_text = kills_text .. " (" .. orange_color .. "+" .. tostring(total_killstreak_kills) .. reset_color .. ")"
+					end
 				end
 				
-				local dmg_text = mod.format_number and mod.format_number(total_dmg) or tostring(total_dmg)
-				if show_killstreak_progress and total_killstreak_dmg > 0 then
-					dmg_text = dmg_text .. " (" .. orange_color .. "+" .. (mod.format_number and mod.format_number(total_killstreak_dmg) or tostring(total_killstreak_dmg)) .. reset_color .. ")"
+				local dmg_text = ""
+				if show_category_totals then
+					dmg_text = mod.format_number and mod.format_number(total_dmg) or tostring(total_dmg)
+					if show_killstreak_progress and total_killstreak_dmg > 0 then
+						dmg_text = dmg_text .. " (" .. orange_color .. "+" .. (mod.format_number and mod.format_number(total_killstreak_dmg) or tostring(total_killstreak_dmg)) .. reset_color .. ")"
+					end
 				end
 				
 				pass_template[k_pass_map[player_num]].value = kills_text
 				pass_template[d_pass_map[player_num]].value = dmg_text
 				
-				pass_template[k_pass_map[player_num]].style.visible = true
-				pass_template[d_pass_map[player_num]].style.visible = true
-				pass_template[background_pass_map[player_num]].style.visible = true
+				pass_template[k_pass_map[player_num]].style.visible = show_category_totals
+				pass_template[d_pass_map[player_num]].style.visible = show_category_totals
+				pass_template[background_pass_map[player_num]].style.visible = show_category_totals
 			end
 			player_num = player_num + 1
 		end

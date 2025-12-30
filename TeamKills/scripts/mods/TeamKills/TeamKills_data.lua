@@ -298,6 +298,13 @@ return {
 						tooltip_text = "i18n_show_killstreak_progress_in_killsboard_tooltip",
 						default_value = true,
 					},
+					{
+						setting_id = "opt_show_category_totals_in_group_header",
+						type = "checkbox",
+						title = "i18n_show_category_totals_in_group_header",
+						tooltip_text = "i18n_show_category_totals_in_group_header_tooltip",
+						default_value = true,
+					},
 				},
 			},
         },
