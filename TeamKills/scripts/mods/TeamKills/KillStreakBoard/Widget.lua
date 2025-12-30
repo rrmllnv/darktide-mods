@@ -348,9 +348,64 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		pass_template[1].style.default_color = Color.terminal_text_body_sub_header(255, true)
 		pass_template[1].style.hover_color = Color.terminal_text_body_sub_header(255, true)
 		pass_template[1].style.disabled_color = Color.terminal_text_body_sub_header(255, true)
-		for i = 1, 4 do
-			pass_template[k_pass_map[i]].value = ""
-			pass_template[d_pass_map[i]].value = ""
+		
+		local player_num = 1
+		for _, player_data in pairs(players) do
+			if player_num <= 4 then
+				local account_id = player_data.account_id
+				local total_kills = 0
+				local total_dmg = 0
+				local total_killstreak_kills = 0
+				local total_killstreak_dmg = 0
+				
+				for _, category_data in ipairs(categories) do
+					local category_key = category_data[1]
+					local category_group = category_data[3]
+					
+					if category_group == group_name then
+						if mod.kills_by_category and mod.kills_by_category[account_id] and mod.kills_by_category[account_id][category_key] then
+							total_kills = total_kills + (mod.kills_by_category[account_id][category_key] or 0)
+						elseif mod.saved_kills_by_category and mod.saved_kills_by_category[account_id] and mod.saved_kills_by_category[account_id][category_key] then
+							total_kills = total_kills + (mod.saved_kills_by_category[account_id][category_key] or 0)
+						end
+						
+						if mod.damage_by_category and mod.damage_by_category[account_id] and mod.damage_by_category[account_id][category_key] then
+							total_dmg = total_dmg + (mod.damage_by_category[account_id][category_key] or 0)
+						elseif mod.saved_damage_by_category and mod.saved_damage_by_category[account_id] and mod.saved_damage_by_category[account_id][category_key] then
+							total_dmg = total_dmg + (mod.saved_damage_by_category[account_id][category_key] or 0)
+						end
+						
+						if mod.display_killstreak_kills_by_category and mod.display_killstreak_kills_by_category[account_id] and mod.display_killstreak_kills_by_category[account_id][category_key] then
+							total_killstreak_kills = total_killstreak_kills + (mod.display_killstreak_kills_by_category[account_id][category_key] or 0)
+						end
+						
+						if mod.display_killstreak_damage_by_category and mod.display_killstreak_damage_by_category[account_id] and mod.display_killstreak_damage_by_category[account_id][category_key] then
+							total_killstreak_dmg = total_killstreak_dmg + (mod.display_killstreak_damage_by_category[account_id][category_key] or 0)
+						end
+					end
+				end
+				
+				local show_killstreak_progress = mod:get("opt_show_killstreak_progress_in_killsboard") ~= false
+				local orange_color = mod.get_damage_color_string and mod.get_damage_color_string() or "{#color(255,183,44)}"
+				local reset_color = "{#reset()}"
+				local kills_text = tostring(total_kills)
+				if show_killstreak_progress and total_killstreak_kills > 0 then
+					kills_text = kills_text .. " (" .. orange_color .. "+" .. tostring(total_killstreak_kills) .. reset_color .. ")"
+				end
+				
+				local dmg_text = mod.format_number and mod.format_number(total_dmg) or tostring(total_dmg)
+				if show_killstreak_progress and total_killstreak_dmg > 0 then
+					dmg_text = dmg_text .. " (" .. orange_color .. "+" .. (mod.format_number and mod.format_number(total_killstreak_dmg) or tostring(total_killstreak_dmg)) .. reset_color .. ")"
+				end
+				
+				pass_template[k_pass_map[player_num]].value = kills_text
+				pass_template[d_pass_map[player_num]].value = dmg_text
+				
+				pass_template[k_pass_map[player_num]].style.visible = true
+				pass_template[d_pass_map[player_num]].style.visible = true
+				pass_template[background_pass_map[player_num]].style.visible = true
+			end
+			player_num = player_num + 1
 		end
 	elseif total then
 		local total_text = mod:localize("i18n_killsboard_total")
