@@ -245,7 +245,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	local font_size
 	if header then
 		font_size = _settings.killsboard_font_size_player_names
-	elseif group_header or no_data then
+	elseif group_header or no_data or total then
 		font_size = _settings.killsboard_font_size_header
 	else
 		font_size = _settings.killsboard_font_size
@@ -263,7 +263,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	
 	pass_template[1].style.font_size = font_size
 	pass_template[1].style.size[2] = row_height
-	pass_template[1].style.offset[1] = left_offset + _settings.killsboard_category_text_offset
+	pass_template[1].style.offset[1] = left_offset + _settings.killsboard_category_text_offset + 10
 	
 	for _, i in pairs(k_pass_map) do
 		pass_template[i].style.font_size = font_size
@@ -342,7 +342,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		local localized_group_name = localize_group(group_name)
 		pass_template[1].value = localized_group_name
 		pass_template[1].style.text_horizontal_alignment = "left"
-		pass_template[1].style.offset[1] = left_offset + _settings.killsboard_category_text_offset + 10
+		pass_template[1].style.offset[1] = left_offset + _settings.killsboard_category_text_offset -- + 10
 		pass_template[1].style.text_color = Color.terminal_text_body_sub_header(255, true)
 		pass_template[1].style.color = Color.terminal_text_body_sub_header(255, true)
 		pass_template[1].style.default_color = Color.terminal_text_body_sub_header(255, true)
@@ -415,7 +415,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 		pass_template[1].style.default_color = Color.terminal_text_body_sub_header(255, true)
 		pass_template[1].style.hover_color = Color.terminal_text_body_sub_header(255, true)
 		pass_template[1].style.disabled_color = Color.terminal_text_body_sub_header(255, true)
-		pass_template[1].style.offset[1] = left_offset + _settings.killsboard_category_text_offset + 30
+		pass_template[1].style.offset[1] = left_offset + _settings.killsboard_category_text_offset -- + 30
 		local player_num = 1
 		for _, player_data in pairs(players) do
 			if player_num <= 4 then
