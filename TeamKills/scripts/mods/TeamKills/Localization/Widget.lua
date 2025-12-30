@@ -5,11 +5,11 @@ return {
 	},
 	i18n_stats_melee_lessers = {
 		en = "MELEE LESSERS",
-		ru = "МЛАДШИЕ БОЙЦЫ БЛИЖНЕГО БОЯ",
+		ru = "МЛАДШИЕ БЛИЖНЕГО БОЯ",
 	},
 	i18n_stats_ranged_lessers = {
 		en = "RANGED LESSERS",
-		ru = "МЛАДШИЕ БОЙЦЫ ДАЛЬНЕГО БОЯ",
+		ru = "МЛАДШИЕ ДАЛЬНЕГО БОЯ",
 	},
 	i18n_stats_melee_elites = {
 		en = "MELEE ELITES",
