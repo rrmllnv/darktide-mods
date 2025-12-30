@@ -240,7 +240,7 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 	local spacer = row_data.type == "spacer"
 	local no_data = row_data.type == "no_data"
 	
-	local base_row_height = (header or group_header or no_data) and _settings.killsboard_row_header_height or _settings.killsboard_row_height
+	local base_row_height = (header or group_header or no_data or total) and _settings.killsboard_row_header_height or _settings.killsboard_row_height
 	local bottom_offset = row_data.bottom_offset or 0
 	local row_height = base_row_height + bottom_offset
 	local font_size
