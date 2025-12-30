@@ -335,7 +335,7 @@ return {
 						type = "checkbox",
 						title = "i18n_show_category_totals_in_group_header",
 						tooltip_text = "i18n_show_category_totals_in_group_header_tooltip",
-						default_value = true,
+						default_value = false,
 					},
 				},
 			},
