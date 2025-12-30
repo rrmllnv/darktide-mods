@@ -540,18 +540,18 @@ mod.create_killsboard_row_widget = function(self, index, current_offset, visible
 					killstreak_dmg = mod.display_killstreak_damage_by_category[account_id][category_key] or 0
 				end
 				
-			local show_killstreak_progress = mod:get("opt_show_killstreak_progress_in_killsboard") ~= false
-			local orange_color = mod.get_damage_color_string and mod.get_damage_color_string() or "{#color(255,183,44)}"
-			local reset_color = "{#reset()}"
-			local kills_text = tostring(kills)
-			if show_killstreak_progress and killstreak_kills > 0 then
-				kills_text = kills_text .. " (" .. orange_color .. "+" .. tostring(killstreak_kills) .. reset_color .. ")"
-			end
-			
-			local dmg_text = mod.format_number and mod.format_number(dmg) or tostring(dmg)
-			if show_killstreak_progress and killstreak_dmg > 0 then
-				dmg_text = dmg_text .. " (" .. orange_color .. "+" .. (mod.format_number and mod.format_number(killstreak_dmg) or tostring(killstreak_dmg)) .. reset_color .. ")"
-			end
+				local show_killstreak_progress = mod:get("opt_show_killstreak_progress_in_killsboard") ~= false
+				local orange_color = mod.get_damage_color_string and mod.get_damage_color_string() or "{#color(255,183,44)}"
+				local reset_color = "{#reset()}"
+				local kills_text = tostring(kills)
+				if show_killstreak_progress and killstreak_kills > 0 then
+					kills_text = kills_text .. " (" .. orange_color .. "+" .. tostring(killstreak_kills) .. reset_color .. ")"
+				end
+				
+				local dmg_text = mod.format_number and mod.format_number(dmg) or tostring(dmg)
+				if show_killstreak_progress and killstreak_dmg > 0 then
+					dmg_text = dmg_text .. " (" .. orange_color .. "+" .. (mod.format_number and mod.format_number(killstreak_dmg) or tostring(killstreak_dmg)) .. reset_color .. ")"
+				end
 				
 				pass_template[k_pass_map[player_num]].value = kills_text
 				pass_template[d_pass_map[player_num]].value = dmg_text
@@ -695,6 +695,8 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 	
 	local categories_to_show = {}
 	local current_group = nil
+	local show_enemy_list = mod:get("opt_show_enemy_list_in_groups") ~= false
+
 	for _, data in ipairs(categories) do
 		local key, label, group_name = data[1], data[2], data[3]
 		local has_data = false
@@ -734,13 +736,15 @@ mod.setup_killsboard_row_widgets = function(self, row_widgets, widgets_by_name, 
 				table.insert(categories_to_show, {type = "group_header", name = "group_" .. group_name, group_name = group_name})
 				current_group = group_name
 			end
-			table.insert(categories_to_show, {type = "data", key = key, label = localize_enemy(key, label)})
+			if show_enemy_list then
+				table.insert(categories_to_show, {type = "data", key = key, label = localize_enemy(key, label)})
+			end
 		end
 	end
 	
 	local has_data_rows = false
 	for _, category_data in ipairs(categories_to_show) do
-		if category_data.type == "data" then
+		if category_data.type == "data" or category_data.type == "group_header" then
 			has_data_rows = true
 			break
 		end

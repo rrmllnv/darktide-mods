@@ -337,6 +337,13 @@ return {
 						tooltip_text = "i18n_show_category_totals_in_group_header_tooltip",
 						default_value = false,
 					},
+					{
+						setting_id = "opt_show_enemy_list_in_groups",
+						type = "checkbox",
+						title = "i18n_show_enemy_list_in_groups",
+						tooltip_text = "i18n_show_enemy_list_in_groups_tooltip",
+						default_value = true,
+					},
 				},
 			},
         },

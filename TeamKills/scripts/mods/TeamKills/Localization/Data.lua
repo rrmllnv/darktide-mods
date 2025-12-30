@@ -292,4 +292,12 @@ return {
 		en = "Display total kills and damage for each category group (e.g. Melee Lessers, Ranged Elites) in group header rows",
 		ru = "Отображать общее количество убийств и урона для каждой группы категорий (например, Младшие ближнего боя, Элиты дальнего боя) в строках заголовков групп",
 	},
+	i18n_show_enemy_list_in_groups = {
+		en = "Show enemy list in groups",
+		ru = "Показывать список врагов в группах",
+	},
+	i18n_show_enemy_list_in_groups_tooltip = {
+		en = "Display individual enemy rows in the killsboard. Statistics are still tracked even when disabled.",
+		ru = "Отображать отдельные строки врагов в доске убийств. Статистика все равно отслеживается, даже когда отключено.",
+	},
 }
