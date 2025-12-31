@@ -14,6 +14,36 @@ local teammate_abilities_data = {}
 
 -- Функция для получения данных об экипированной способности по типу
 local function get_player_ability_by_type(player, extensions, slot_type)
+	-- Для ауры (coherency) получаем данные через CharacterSheet (аура это талант, а не ability)
+	if slot_type == "slot_coherency_ability" then
+		local success, result = pcall(function()
+			local profile = player:profile()
+			if profile then
+				local loadout = CharacterSheet.loadout(profile)
+				if loadout and loadout.aura then
+					-- CharacterSheet.loadout заполняет aura.icon напрямую из talent.icon (строка 246 character_sheet.lua)
+					local icon = loadout.aura.icon
+					
+					if icon then
+						return {
+							ability_id = "aura",
+							ability_type = "coherency_ability",
+							icon = icon,
+							name = loadout.aura.talent and loadout.aura.talent.display_name or "Aura",
+						}
+					end
+				end
+			end
+			return nil
+		end)
+		
+		if success and result then
+			return result
+		end
+		return nil
+	end
+	
+	-- Для combat_ability и grenade_ability получаем через ability_extension
 	if not extensions or not extensions.ability then
 		return nil
 	end
@@ -36,8 +66,6 @@ local function get_player_ability_by_type(player, extensions, slot_type)
 				ability_type = "combat_ability"
 			elseif slot_type == "slot_grenade_ability" then
 				ability_type = "grenade_ability"
-			elseif slot_type == "slot_coherency_ability" then
-				ability_type = "coherency_ability"
 			else
 				ability_type = nil
 			end
@@ -45,8 +73,7 @@ local function get_player_ability_by_type(player, extensions, slot_type)
 			if ability_type then
 				local icon = ability_settings.hud_icon
 				
-				-- Для grenade_ability (blitz) у тимейтов получаем иконку из visual_loadout_extension (как в _get_grenade_ability_status)
-				-- Используем _has_item_in_slot логику ТОЧНО как в исходниках (строка 699-710, 857-862)
+				-- Для grenade_ability (blitz) у тимейтов получаем иконку из visual_loadout_extension
 				if slot_type == "slot_grenade_ability" and extensions.visual_loadout and extensions.unit_data then
 					local inventory_component = extensions.unit_data:read_component("inventory")
 					if inventory_component then
@@ -79,14 +106,19 @@ end
 
 -- Функция для получения состояния кулдауна/зарядов
 local function get_ability_state(player, extensions, ability_type)
+	-- Аура (coherency_ability) всегда активна, это пассивный баф
+	if ability_type == "coherency_ability" then
+		return 1, false, 1, true, 1
+	end
+	
 	if not extensions or not extensions.ability then
-		return 1, false, 1, true
+		return 1, false, 1, true, 1
 	end
 	
 	local ability_extension = extensions.ability
 	
 	if not ability_extension:ability_is_equipped(ability_type) then
-		return 1, false, 1, true
+		return 1, false, 1, true, 1
 	end
 	
 	local remaining_cooldown = ability_extension:remaining_ability_cooldown(ability_type)
@@ -146,7 +178,7 @@ local function load_settings()
 		icon_position_offset = 12,
 		icon_position_left_shift = 20,
 		icon_position_vertical_offset = 0,
-		ability_icon_size = 128,
+		ability_icon_size = 160,  -- Размер иконок (по умолчанию 128, можно увеличить до 160-200)
 		cooldown_font_size = 18,
 	}
 	
@@ -182,59 +214,39 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	
 	-- Создаем виджеты для каждой способности (ability, blitz, aura)
 	local ability_types = {
-		{id = "ability", slot = "slot_combat_ability", name = "talent_ui_all_ability"},
-		{id = "blitz", slot = "slot_grenade_ability", name = "talent_ui_all_blitz"},
-		{id = "aura", slot = "slot_coherency_ability", name = "talent_ui_all_aura"},
+		{id = "ability", slot = "slot_combat_ability", name = "talent_ui_all_ability", frame = "hex_frame", mask = "hex_frame_mask"},
+		{id = "blitz", slot = "slot_grenade_ability", name = "talent_ui_all_blitz", frame = "square_frame", mask = "square_frame_mask"},
+		{id = "aura", slot = "slot_coherency_ability", name = "talent_ui_all_aura", frame = "circular_frame", mask = "circular_frame_mask"},
 	}
 	
 	for i = 1, #ability_types do
 		local ability_type = ability_types[i]
 		local offset_x = base_offset - left_shift - (i - 1) * ability_spacing
 		
-		-- Виджет иконки способности
+		-- Виджет иконки способности с контейнером как в дереве талантов (без дополнительных рамок)
 		instance.widget_definitions[ability_type.name .. "_icon"] = UIWidget.create_definition({
 			{
 				pass_type = "texture",
 				style_id = "icon",
-				value = "content/ui/materials/icons/talents/hud/combat_container",
+				value = "content/ui/materials/frames/talents/talent_icon_container",
 				style = {
 					horizontal_alignment = "right",
 					vertical_alignment = "center",
 					material_values = {
-						progress = 1,
-						talent_icon = nil,
+						frame = "content/ui/textures/frames/talents/" .. ability_type.frame,
+						icon_mask = "content/ui/textures/frames/talents/" .. ability_type.mask,
+						icon = nil,
+						intensity = -0.25,
+						saturation = 1,
 					},
 					offset = {
-						offset_x - (frame_size - icon_size_value) / 2,
+						offset_x,
 						vertical_offset,
 						1,
 					},
 					size = {
 						icon_size_value,
 						icon_size_value,
-					},
-					color = UIHudSettings.color_tint_main_2,
-				},
-				change_function = function(content, style)
-					local duration_progress = content.duration_progress or 1
-					style.material_values.progress = duration_progress
-				end,
-			},
-			{
-				pass_type = "texture",
-				style_id = "frame",
-				value = "content/ui/materials/icons/talents/hud/combat_frame_inner",
-				style = {
-					horizontal_alignment = "right",
-					vertical_alignment = "center",
-					offset = {
-						offset_x,
-						vertical_offset,
-						2,
-					},
-					size = {
-						frame_size,
-						frame_size,
 					},
 					color = UIHudSettings.color_tint_main_2,
 				},
@@ -258,7 +270,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					text_color = UIHudSettings.color_tint_main_1,
 					drop_shadow = true,
 					offset = {
-						offset_x - (frame_size - icon_size_value) / 2,
+						offset_x,
 						vertical_offset,
 						3,
 					},
@@ -341,12 +353,6 @@ local function update_teammate_all_abilities(self, player, dt)
 				local cooldown_progress, on_cooldown, remaining_charges, has_charges_left, max_charges = get_ability_state(player, extensions, ability_type)
 				local uses_charges = max_charges > 1
 				
-				-- Обновляем прогресс
-				if icon_widget.content.duration_progress ~= cooldown_progress then
-					icon_widget.content.duration_progress = cooldown_progress
-					icon_widget.dirty = true
-				end
-				
 				-- Обновляем цвета
 				local source_colors = get_ability_state_colors(on_cooldown, uses_charges, has_charges_left)
 				
@@ -355,14 +361,9 @@ local function update_teammate_all_abilities(self, player, dt)
 					icon_widget.dirty = true
 				end
 				
-				if source_colors.frame then
-					icon_widget.style.frame.color = table.clone(source_colors.frame)
-					icon_widget.dirty = true
-				end
-				
-				-- Устанавливаем иконку
-				if icon_widget.style.icon.material_values.talent_icon ~= icon then
-					icon_widget.style.icon.material_values.talent_icon = icon
+				-- Устанавливаем иконку в правильное поле material_values
+				if icon_widget.style.icon.material_values.icon ~= icon then
+					icon_widget.style.icon.material_values.icon = icon
 					icon_widget.dirty = true
 				end
 				
