@@ -3,9 +3,41 @@ local mod = get_mod("TalentUI")
 local TEAM_HUD_DEF_PATH = "scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_definitions"
 local PLAYER_ABILITY_DEF_PATH = "scripts/ui/hud/elements/player_ability/hud_element_player_ability_vertical_definitions"
 
+-- Значения по умолчанию для настроек
+local DEFAULT_SETTINGS = {
+	icon_position_offset = 12,
+	icon_position_left_shift = 20,
+	icon_position_vertical_offset = 0,
+	ability_icon_size = 128,
+	cooldown_font_size = 18,
+}
+
 -- Функция для загрузки настроек из файла (для возможности изменения в реальном времени)
 local function load_settings()
-	return mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_settings")
+	local success, result = pcall(function()
+		return mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_settings")
+	end)
+	
+	if success and result and type(result) == "table" then
+		-- Проверяем, что все необходимые поля присутствуют
+		if result.icon_position_offset and result.icon_position_left_shift then
+			-- vertical_offset опционален, используем 0 по умолчанию
+			if not result.icon_position_vertical_offset then
+				result.icon_position_vertical_offset = 0
+			end
+			return result
+		else
+			mod:warning("TalentUI: Settings file loaded but missing required fields, using defaults")
+			return DEFAULT_SETTINGS
+		end
+	else
+		if not success then
+			mod:warning("TalentUI: Error loading settings file: " .. tostring(result) .. ", using defaults")
+		else
+			mod:warning("TalentUI: Settings file returned nil or invalid type, using defaults")
+		end
+		return DEFAULT_SETTINGS
+	end
 end
 
 -- Загружаем файл настроек при старте
@@ -156,6 +188,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	-- Позиционирование из файла настроек
 	local base_offset = TalentUISettings.icon_position_offset
 	local left_shift = TalentUISettings.icon_position_left_shift
+	local vertical_offset = TalentUISettings.icon_position_vertical_offset or 0
 	
 	-- Виджет иконки способности (справа от рамки, как цифры в NumericUI)
 	instance.widget_definitions.talent_ui_ability_icon = UIWidget.create_definition({
@@ -176,7 +209,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 				-- минус дополнительный сдвиг влево
 				offset = {
 					base_offset - (frame_size - icon_size_value) / 2 - left_shift, -- Центрируем внутри рамки + сдвиг влево
-					0,
+					vertical_offset,
 					1,
 				},
 				size = {
@@ -202,7 +235,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 				-- Базовое позиционирование рамки: справа от scenegraph (как цифры в NumericUI)
 				offset = {
 					base_offset - left_shift, -- Базовое смещение минус сдвиг влево
-					0,
+					vertical_offset,
 					2,
 				},
 				size = {
@@ -235,7 +268,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 				-- Позиционируем текст кулдауна поверх иконки (центрируем относительно рамки)
 				offset = {
 					base_offset - (frame_size - icon_size_value) / 2 - left_shift,
-					0,
+					vertical_offset,
 					3,
 				},
 				size = {
@@ -381,8 +414,12 @@ local function update_teammate_ability_icon(self, player, dt)
 	
 	-- Позиционирование из файла настроек (перезагружаем каждый кадр для возможности изменения в реальном времени)
 	local settings = load_settings()
-	local base_offset = settings.icon_position_offset
-	local left_shift = settings.icon_position_left_shift
+	if not settings then
+		settings = DEFAULT_SETTINGS
+	end
+	local base_offset = settings.icon_position_offset or DEFAULT_SETTINGS.icon_position_offset
+	local left_shift = settings.icon_position_left_shift or DEFAULT_SETTINGS.icon_position_left_shift
+	local vertical_offset = settings.icon_position_vertical_offset or DEFAULT_SETTINGS.icon_position_vertical_offset
 	
 	-- Проверяем, нужно ли обновить размер или позицию
 	local needs_offset_update = false
@@ -395,14 +432,17 @@ local function update_teammate_ability_icon(self, player, dt)
 	
 	-- Обновляем offset каждый кадр (для возможности изменения в реальном времени через файл настроек)
 	local current_frame_offset = ability_icon_widget.style.frame.offset[1]
+	local current_frame_vertical = ability_icon_widget.style.frame.offset[2]
 	local new_frame_offset = base_offset - left_shift
 	local offset_adjustment = (frame_size - icon_size_value) / 2
 	local new_icon_offset = base_offset - offset_adjustment - left_shift
 	
 	-- Обновляем только если позиция изменилась
-	if needs_offset_update or current_frame_offset ~= new_frame_offset or ability_icon_widget.style.icon.offset[1] ~= new_icon_offset then
+	if needs_offset_update or current_frame_offset ~= new_frame_offset or ability_icon_widget.style.icon.offset[1] ~= new_icon_offset or current_frame_vertical ~= vertical_offset then
 		ability_icon_widget.style.frame.offset[1] = new_frame_offset
+		ability_icon_widget.style.frame.offset[2] = vertical_offset
 		ability_icon_widget.style.icon.offset[1] = new_icon_offset
+		ability_icon_widget.style.icon.offset[2] = vertical_offset
 		ability_icon_widget.dirty = true
 	end
 	
@@ -418,8 +458,10 @@ local function update_teammate_ability_icon(self, player, dt)
 		local offset_adjustment = (frame_size - icon_size_value) / 2
 		local new_text_offset = base_offset - offset_adjustment - left_shift
 		local current_text_offset = ability_cooldown_widget.style.text.offset[1]
-		if current_text_offset ~= new_text_offset then
+		local current_text_vertical = ability_cooldown_widget.style.text.offset[2]
+		if current_text_offset ~= new_text_offset or current_text_vertical ~= vertical_offset then
 			ability_cooldown_widget.style.text.offset[1] = new_text_offset
+			ability_cooldown_widget.style.text.offset[2] = vertical_offset
 			ability_cooldown_widget.dirty = true
 		end
 	end
