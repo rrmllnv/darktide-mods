@@ -40,6 +40,37 @@ local function get_talent_from_character_sheet(player, ability_key)
 	return nil
 end
 
+local TALENT_ABILITY_METADATA = {
+	
+	
+	
+	
+	{
+		id = "aura",
+		slot = "slot_coherency_ability",
+		type = "coherency_ability",
+		name = "talent_ui_all_aura",
+		frame = "circular_frame",
+		mask = "circular_frame_mask",
+	},
+	{
+		id = "blitz",
+		slot = "slot_grenade_ability",
+		type = "grenade_ability",
+		name = "talent_ui_all_blitz",
+		frame = "square_frame",
+		mask = "square_frame_mask",
+	},
+	{
+		id = "ability",
+		slot = "slot_combat_ability",
+		type = "combat_ability",
+		name = "talent_ui_all_ability",
+		frame = "hex_frame",
+		mask = "hex_frame_mask",
+	},
+}
+
 -- Функция для получения данных об экипированной способности по типу
 local function get_player_ability_by_type(player, extensions, slot_type)
 	-- Для ауры (coherency) получаем данные через CharacterSheet (аура это талант, а не ability)
@@ -258,16 +289,9 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	
 	-- Расстояние между иконками способностей
 	local ability_spacing = 50
-	
-	-- Создаем виджеты для каждой способности (ability, blitz, aura)
-	local ability_types = {
-		{id = "ability", slot = "slot_combat_ability", name = "talent_ui_all_ability", frame = "hex_frame", mask = "hex_frame_mask"},
-		{id = "blitz", slot = "slot_grenade_ability", name = "talent_ui_all_blitz", frame = "square_frame", mask = "square_frame_mask"},
-		{id = "aura", slot = "slot_coherency_ability", name = "talent_ui_all_aura", frame = "circular_frame", mask = "circular_frame_mask"},
-	}
-	
-	for i = 1, #ability_types do
-		local ability_type = ability_types[i]
+
+	for i = 1, #TALENT_ABILITY_METADATA do
+		local ability_type = TALENT_ABILITY_METADATA[i]
 		local offset_x = base_offset - left_shift - (i - 1) * ability_spacing
 		
 		-- Виджет иконки способности с контейнером как в дереве талантов (без дополнительных рамок)
@@ -343,9 +367,9 @@ local function update_teammate_all_abilities(self, player, dt)
 	
 	-- Скрываем виджеты если игрок мертв
 	if self._show_as_dead or self._dead or self._hogtied then
-		for _, ability_type in ipairs({"ability", "blitz", "aura"}) do
-			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type .. "_icon"]
-			local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type .. "_text"]
+		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
+			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
+			local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
 			if icon_widget then
 				icon_widget.visible = false
 			end
@@ -357,14 +381,8 @@ local function update_teammate_all_abilities(self, player, dt)
 	end
 	
 	-- Обновляем данные для каждой способности
-	local ability_types = {
-		{id = "ability", slot = "slot_combat_ability", type = "combat_ability"},
-		{id = "blitz", slot = "slot_grenade_ability", type = "grenade_ability"},
-		{id = "aura", slot = "slot_coherency_ability", type = "coherency_ability"},
-	}
-	
-	for i = 1, #ability_types do
-		local ability_info = ability_types[i]
+	for i = 1, #TALENT_ABILITY_METADATA do
+		local ability_info = TALENT_ABILITY_METADATA[i]
 		local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_icon"]
 		local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_text"]
 		
