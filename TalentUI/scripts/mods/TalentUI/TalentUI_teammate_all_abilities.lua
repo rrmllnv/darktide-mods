@@ -41,10 +41,6 @@ local function get_talent_from_character_sheet(player, ability_key)
 end
 
 local TALENT_ABILITY_METADATA = {
-	
-	
-	
-	
 	{
 		id = "aura",
 		slot = "slot_coherency_ability",
@@ -303,7 +299,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 				style = {
 					horizontal_alignment = "right",
 					vertical_alignment = "center",
-					material_values = {
+					material_values = {ёёёёёёёё
 						frame = "content/ui/textures/frames/talents/" .. ability_type.frame,
 						icon_mask = "content/ui/textures/frames/talents/" .. ability_type.mask,
 						icon = nil,
