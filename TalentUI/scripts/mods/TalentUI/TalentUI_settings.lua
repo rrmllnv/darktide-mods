@@ -16,5 +16,7 @@ return {
 	
 	-- Размер шрифта кулдауна
 	cooldown_font_size = 18,
+	-- Размер шрифта кулдауна локального игрока
+	local_cooldown_font_size = 30,
 }
 

@@ -44,6 +44,13 @@ return {
 				range = { 10, 30 },
 				decimals_number = 0,
 			},
+			{
+				setting_id = "local_cooldown_font_size",
+				type = "numeric",
+				default_value = 30,
+				range = { 20, 50 },
+				decimals_number = 0,
+			},
 		},
 	},
 }

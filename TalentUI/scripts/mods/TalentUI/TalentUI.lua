@@ -10,6 +10,7 @@ local DEFAULT_SETTINGS = {
 	icon_position_vertical_offset = 0,
 	ability_icon_size = 128,
 	cooldown_font_size = 18,
+	local_cooldown_font_size = 18,
 }
 
 -- Функция для загрузки настроек из файла (для возможности изменения в реальном времени)
@@ -270,7 +271,7 @@ mod:hook(_G, "dofile", function(func, path)
 		local style = table.clone(UIFontSettings.hud_body)
 		style.text_horizontal_alignment = "center"
 		style.text_vertical_alignment = "center"
-		style.font_size = mod:get("cooldown_font_size") or TalentUISettings.cooldown_font_size
+		style.font_size = mod:get("local_cooldown_font_size") or TalentUISettings.local_cooldown_font_size or TalentUISettings.cooldown_font_size
 		style.font_type = "machine_medium"
 		style.drop_shadow = true
 		

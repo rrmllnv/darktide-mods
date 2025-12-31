@@ -39,6 +39,10 @@ return {
 		en = "Cooldown Text Font Size",
 		ru = "Размер шрифта кулдауна",
 	},
+	local_cooldown_font_size = {
+		en = "Local Player Cooldown Font Size",
+		ru = "Размер шрифта кулдауна локального игрока",
+	},
 	icon_position_offset = {
 		en = "Icon Position Offset",
 		ru = "Смещение позиции иконки",
