@@ -1,5 +1,15 @@
 local mod = get_mod("TalentUI")
-local CharacterSheet = require("scripts/utilities/character_sheet")
+
+local CharacterSheet
+local success_require = pcall(function()
+	CharacterSheet = require("scripts/utilities/character_sheet")
+end)
+
+if not success_require or not CharacterSheet then
+	mod:error("Failed to load CharacterSheet module")
+	CharacterSheet = {}
+	CharacterSheet.class_loadout = function() end
+end
 
 local TEAM_HUD_DEF_PATH = "scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_definitions"
 
@@ -85,16 +95,23 @@ local function get_player_ability_by_type(player, extensions, slot_type)
 		local success, result = pcall(function()
 			local profile = player:profile()
 			if profile then
-				local loadout = CharacterSheet.loadout(profile)
-				if loadout and loadout.aura then
-					local icon = loadout.aura.icon
+				local loadout_data = {
+					ability = {},
+					blitz = {},
+					aura = {},
+				}
+				local loadout_success = pcall(function()
+					CharacterSheet.class_loadout(profile, loadout_data, false, profile.talents or {})
+				end)
+				if loadout_success and loadout_data and loadout_data.aura then
+					local icon = loadout_data.aura.icon
 					
 					if icon then
 						return {
 							ability_id = "aura",
 							ability_type = "coherency_ability",
 							icon = icon,
-							name = loadout.aura.talent and loadout.aura.talent.display_name or "Aura",
+							name = loadout_data.aura.talent and loadout_data.aura.talent.display_name or "Aura",
 						}
 					end
 				end
@@ -299,11 +316,11 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 				style = {
 					horizontal_alignment = "right",
 					vertical_alignment = "center",
-					material_values = {ёёёёёёёё
+					material_values = {
 						frame = "content/ui/textures/frames/talents/" .. ability_type.frame,
 						icon_mask = "content/ui/textures/frames/talents/" .. ability_type.mask,
 						icon = nil,
-						intensity = -0.25,
+						intensity = 0, -- -0.25,
 						saturation = 1,
 					},
 					offset = {
