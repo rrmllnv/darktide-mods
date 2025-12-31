@@ -1,4 +1,5 @@
 local mod = get_mod("TalentUI")
+local CharacterSheet = require("scripts/utilities/character_sheet")
 
 local TEAM_HUD_DEF_PATH = "scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_definitions"
 
@@ -42,10 +43,31 @@ local function get_player_ability_by_type(player, extensions, slot_type)
 			end
 			
 			if ability_type then
+				local icon = ability_settings.hud_icon
+				
+				-- Для grenade_ability (blitz) у тимейтов получаем иконку из visual_loadout_extension (как в _get_grenade_ability_status)
+				-- Используем _has_item_in_slot логику ТОЧНО как в исходниках (строка 699-710, 857-862)
+				if slot_type == "slot_grenade_ability" and extensions.visual_loadout and extensions.unit_data then
+					local inventory_component = extensions.unit_data:read_component("inventory")
+					if inventory_component then
+						local visual_loadout_extension = extensions.visual_loadout
+						local slot_name = "slot_grenade_ability"
+						local item_name = inventory_component[slot_name]
+						local weapon_template = item_name and visual_loadout_extension:weapon_template_from_slot(slot_name)
+						local equipped = weapon_template ~= nil
+						
+						if equipped and weapon_template.hud_icon_small then
+							icon = weapon_template.hud_icon_small
+						elseif equipped and weapon_template.hud_icon then
+							icon = weapon_template.hud_icon
+						end
+					end
+				end
+				
 				return {
 					ability_id = ability_id,
 					ability_type = ability_type,
-					icon = ability_settings.hud_icon,
+					icon = icon,
 					name = ability_settings.name,
 				}
 			end
