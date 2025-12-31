@@ -12,6 +12,30 @@ local HudElementPlayerAbilitySettings = require("scripts/ui/hud/elements/player_
 -- Кэш: player_name + "_" + ability_id -> {ability_id, ability_type, icon}
 local teammate_abilities_data = {}
 
+local function get_grenade_ability_icon_from_talents(player)
+	local profile = player and player:profile()
+
+	if not profile then
+		return nil
+	end
+
+	local loadout_data = {
+		blitz = {},
+	}
+
+	local success, icon = pcall(function()
+		CharacterSheet.class_loadout(profile, loadout_data, false, profile.talents or {})
+
+		return loadout_data.blitz and loadout_data.blitz.icon
+	end)
+
+	if success then
+		return icon
+	end
+
+	return nil
+end
+
 -- Функция для получения данных об экипированной способности по типу
 local function get_player_ability_by_type(player, extensions, slot_type)
 	-- Для ауры (coherency) получаем данные через CharacterSheet (аура это талант, а не ability)
@@ -71,26 +95,34 @@ local function get_player_ability_by_type(player, extensions, slot_type)
 			end
 			
 			if ability_type then
-				local icon = ability_settings.hud_icon
-				
-				-- Для grenade_ability (blitz) у тимейтов получаем иконку из visual_loadout_extension
-				if slot_type == "slot_grenade_ability" and extensions.visual_loadout and extensions.unit_data then
-					local inventory_component = extensions.unit_data:read_component("inventory")
-					if inventory_component then
-						local visual_loadout_extension = extensions.visual_loadout
-						local slot_name = "slot_grenade_ability"
-						local item_name = inventory_component[slot_name]
-						local weapon_template = item_name and visual_loadout_extension:weapon_template_from_slot(slot_name)
-						local equipped = weapon_template ~= nil
-						
-						if equipped and weapon_template.hud_icon_small then
-							icon = weapon_template.hud_icon_small
-						elseif equipped and weapon_template.hud_icon then
-							icon = weapon_template.hud_icon
+				local icon = nil
+
+				if slot_type == "slot_grenade_ability" then
+					-- Иконка блитца может быть взята из дерева талантов, если там задана
+					icon = get_grenade_ability_icon_from_talents(player)
+
+					if not icon and extensions.visual_loadout and extensions.unit_data then
+						local inventory_component = extensions.unit_data:read_component("inventory")
+						if inventory_component then
+							local visual_loadout_extension = extensions.visual_loadout
+							local slot_name = "slot_grenade_ability"
+							local item_name = inventory_component[slot_name]
+							local weapon_template = item_name and visual_loadout_extension:weapon_template_from_slot(slot_name)
+
+							if weapon_template and weapon_template.hud_icon_small then
+								icon = weapon_template.hud_icon_small
+							end
 						end
 					end
+
+					if not icon then
+						icon = ability_settings.hud_icon
+					end
+				else
+					icon = ability_settings.hud_icon
 				end
 				
+				-- Возвращаем данные даже если иконка nil (способность может загрузиться позже)
 				return {
 					ability_id = ability_id,
 					ability_type = ability_type,
@@ -178,7 +210,7 @@ local function load_settings()
 		icon_position_offset = 12,
 		icon_position_left_shift = 20,
 		icon_position_vertical_offset = 0,
-		ability_icon_size = 160,  -- Размер иконок (по умолчанию 128, можно увеличить до 160-200)
+		ability_icon_size = 200,  -- Размер иконок
 		cooldown_font_size = 18,
 	}
 	
@@ -202,9 +234,8 @@ local TalentUISettings = load_settings()
 -- Создание виджетов для всех 3 способностей
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	local bar_size = HudElementTeamPlayerPanelSettings.size
-	local icon_size = mod:get("ability_icon_size") or TalentUISettings.ability_icon_size
-	local frame_size = icon_size
-	local icon_size_value = math.floor(icon_size * 0.625)
+	local icon_size = TalentUISettings.ability_icon_size
+	local icon_size_value = icon_size
 	local base_offset = TalentUISettings.icon_position_offset
 	local left_shift = TalentUISettings.icon_position_left_shift
 	local vertical_offset = TalentUISettings.icon_position_vertical_offset or 0
@@ -457,4 +488,5 @@ mod:hook_safe("HudElementTeamPlayerPanel", "destroy", function(self)
 		end
 	end
 end)
+
 
