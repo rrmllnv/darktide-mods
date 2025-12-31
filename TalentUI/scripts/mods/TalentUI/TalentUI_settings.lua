@@ -3,7 +3,7 @@ local mod = get_mod("TalentUI")
 -- Настройки позиционирования иконок способностей
 return {
 	-- Базовое смещение позиции иконки
-	icon_position_offset = 90,
+	icon_position_offset = 200,
 	
 	-- Дополнительный сдвиг влево/вправо
 	icon_position_left_shift = 0,
