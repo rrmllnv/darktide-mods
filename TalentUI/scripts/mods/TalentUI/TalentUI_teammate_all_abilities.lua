@@ -260,6 +260,26 @@ local function get_ability_state_colors(on_cooldown, uses_charges, has_charges_l
 	return source_colors
 end
 
+-- Функция для получения цвета иконки способности в зависимости от типа
+local function get_ability_icon_color(ability_id)
+	-- Цвета из UIHudSettings, используемые в исходниках для разных типов способностей
+	if ability_id == "ability" then
+		-- Combat ability - красный (используется color_tint_alert_2 из исходников)
+		return UIHudSettings.color_tint_main_2
+	elseif ability_id == "blitz" then
+		-- Grenade ability - зеленоватый (используется цвет из player_status_colors)
+		-- В исходниках для grenade используется зеленоватый оттенок
+		-- Используем цвет из UIHudSettings.player_status_colors.dead, который использует Color.ui_hud_green_super_light
+		return UIHudSettings.player_status_colors and UIHudSettings.player_status_colors.dead or UIHudSettings.color_tint_secondary_2
+	elseif ability_id == "aura" then
+		-- Coherency ability - желтоватый (используется color_tint_secondary_2 из исходников)
+		return UIHudSettings.color_tint_secondary_2
+	end
+	
+	-- По умолчанию используем основной цвет
+	return UIHudSettings.color_tint_main_2
+end
+
 -- Функция для получения настроек материала (intensity, saturation) в зависимости от состояния
 local function get_ability_material_settings(ability_id, on_cooldown, uses_charges, has_charges_left)
 	if not TalentUISettings then
@@ -320,6 +340,8 @@ local function get_ability_material_settings(ability_id, on_cooldown, uses_charg
 		}
 	end
 	
+	-- Если состояние не найдено, логируем для отладки
+	mod:warning("State '" .. tostring(state_key) .. "' not found for ability '" .. tostring(ability_id) .. "'")
 	return {intensity = 0, saturation = 1}
 end
 
@@ -391,10 +413,14 @@ local function load_settings()
 		local merged_settings = deep_copy(DEFAULT_SETTINGS)
 		-- Мержим настройки из файла с дефолтными
 		deep_merge(merged_settings, result)
-		mod:info("Settings loaded successfully, icon_material_settings for ability active: intensity=" .. tostring(merged_settings.icon_material_settings.ability.active.intensity) .. ", saturation=" .. tostring(merged_settings.icon_material_settings.ability.active.saturation))
+		mod:info("Settings loaded successfully")
+		mod:info("Ability active: intensity=" .. tostring(merged_settings.icon_material_settings.ability.active.intensity) .. ", saturation=" .. tostring(merged_settings.icon_material_settings.ability.active.saturation))
+		mod:info("Ability on_cooldown: intensity=" .. tostring(merged_settings.icon_material_settings.ability.on_cooldown.intensity) .. ", saturation=" .. tostring(merged_settings.icon_material_settings.ability.on_cooldown.saturation))
+		mod:info("Blitz active: intensity=" .. tostring(merged_settings.icon_material_settings.blitz.active.intensity) .. ", saturation=" .. tostring(merged_settings.icon_material_settings.blitz.active.saturation))
+		mod:info("Aura active: intensity=" .. tostring(merged_settings.icon_material_settings.aura.active.intensity) .. ", saturation=" .. tostring(merged_settings.icon_material_settings.aura.active.saturation))
 		return merged_settings
 	else
-		mod:warning("Failed to load settings, using defaults")
+		mod:warning("Failed to load settings, using defaults. Success: " .. tostring(success) .. ", Result type: " .. type(result))
 		return DEFAULT_SETTINGS
 	end
 end
@@ -576,11 +602,10 @@ local function update_teammate_all_abilities(self, player, dt)
 				local cooldown_progress, on_cooldown, remaining_charges, has_charges_left, max_charges = get_ability_state(player, extensions, ability_type)
 				local uses_charges = max_charges > 1
 				
-				-- Обновляем цвета
-				local source_colors = get_ability_state_colors(on_cooldown, uses_charges, has_charges_left)
-				
-				if source_colors.icon then
-					icon_widget.style.icon.color = table.clone(source_colors.icon)
+				-- Получаем цвет иконки в зависимости от типа способности
+				local ability_color = get_ability_icon_color(ability_info.id)
+				if ability_color then
+					icon_widget.style.icon.color = table.clone(ability_color)
 					icon_widget.dirty = true
 				end
 				
@@ -588,9 +613,11 @@ local function update_teammate_all_abilities(self, player, dt)
 				local material_settings = get_ability_material_settings(ability_info.id, on_cooldown, uses_charges, has_charges_left)
 				
 				-- Обновляем intensity и saturation (принудительно обновляем каждый кадр)
-				icon_widget.style.icon.material_values.intensity = material_settings.intensity
-				icon_widget.style.icon.material_values.saturation = material_settings.saturation
-				icon_widget.dirty = true
+				if icon_widget.style.icon.material_values.intensity ~= material_settings.intensity or icon_widget.style.icon.material_values.saturation ~= material_settings.saturation then
+					icon_widget.style.icon.material_values.intensity = material_settings.intensity
+					icon_widget.style.icon.material_values.saturation = material_settings.saturation
+					icon_widget.dirty = true
+				end
 				
 				-- Устанавливаем иконку в правильное поле material_values
 				if icon_widget.style.icon.material_values.icon ~= icon then
