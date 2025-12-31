@@ -17,6 +17,16 @@ return {
 				default_value = true,
 			},
 			{
+				setting_id = "show_teammate_blitz_icon",
+				type = "checkbox",
+				default_value = true,
+			},
+			{
+				setting_id = "show_teammate_blitz_charges",
+				type = "checkbox",
+				default_value = true,
+			},
+			{
 				setting_id = "show_local_ability_cooldown",
 				type = "checkbox",
 				default_value = true,

@@ -15,6 +15,14 @@ return {
 		en = "Show Teammate Ability Cooldown",
 		ru = "Показывать кулдаун способностей тимейтов",
 	},
+	show_teammate_blitz_icon = {
+		en = "Show Teammate Blitz Icons",
+		ru = "Показывать иконки blitz тимейтов",
+	},
+	show_teammate_blitz_charges = {
+		en = "Show Teammate Blitz Charges",
+		ru = "Показывать заряды blitz тимейтов",
+	},
 	show_local_ability_cooldown = {
 		en = "Show Local Player Ability Cooldown",
 		ru = "Показывать кулдаун способности локального игрока",

@@ -8,12 +8,12 @@ local HudElementTeamPlayerPanelSettings = require("scripts/ui/hud/elements/team_
 local HudElementPlayerAbilitySettings = require("scripts/ui/hud/elements/player_ability/hud_element_player_ability_settings")
 local FixedFrame = require("scripts/utilities/fixed_frame")
 
--- Хранение данных о кулдаунах тимейтов
-local ability_data = {} -- player_name -> {cooldown_timer, max_cooldown, ability_id, icon}
+-- Хранение данных о кулдаунах blitz тимейтов
+local blitz_data = {} -- player_name -> {cooldown_timer, max_cooldown, ability_id, icon}
 
--- Функция для получения данных об экипированной способности игрока
+-- Функция для получения данных об экипированной blitz способности игрока
 -- Использует API из HudElementPlayerAbilityHandler
-local function get_player_ability_data(player, extensions)
+local function get_player_blitz_data(player, extensions)
 	if not extensions or not extensions.ability then
 		return nil
 	end
@@ -28,14 +28,14 @@ local function get_player_ability_data(player, extensions)
 	local PlayerCharacterConstants = require("scripts/settings/player_character/player_character_constants")
 	local ability_configuration = PlayerCharacterConstants.ability_configuration
 	
-	-- Ищем combat_ability как в оригинальном HUD
-	-- slot_id это "slot_combat_ability", а не "combat_ability"!
+	-- Ищем grenade_ability как в оригинальном HUD
+	-- slot_id это "slot_grenade_ability", а не "grenade_ability"!
 	for ability_id, ability_settings in pairs(equipped_abilities) do
 		local slot_id = ability_configuration[ability_id]
-		if slot_id == "slot_combat_ability" then
+		if slot_id == "slot_grenade_ability" then
 			return {
 				ability_id = ability_id,
-				ability_type = "combat_ability", -- Используем "combat_ability" для компонента
+				ability_type = "grenade_ability", -- Используем "grenade_ability" для компонента
 				icon = ability_settings.hud_icon,
 				name = ability_settings.name,
 			}
@@ -45,9 +45,9 @@ local function get_player_ability_data(player, extensions)
 	return nil
 end
 
--- Функция для получения прогресса и состояния кулдауна
+-- Функция для получения прогресса и состояния кулдауна blitz
 -- Использует методы PlayerHuskAbilityExtension из исходников
-local function get_ability_cooldown_state(player, extensions, ability_type)
+local function get_blitz_cooldown_state(player, extensions, ability_type)
 	if not extensions or not extensions.ability then
 		return 1, false, 1, true -- полный прогресс, не на кулдауне, 1 заряд, есть заряды
 	end
@@ -85,8 +85,8 @@ local function get_ability_cooldown_state(player, extensions, ability_type)
 	return cooldown_progress, on_cooldown, remaining_ability_charges or 1, has_charges_left
 end
 
--- Функция для получения цветов состояния способности
-local function get_ability_state_colors(on_cooldown, uses_charges, has_charges_left)
+-- Функция для получения цветов состояния blitz способности
+local function get_blitz_state_colors(on_cooldown, uses_charges, has_charges_left)
 	local source_colors
 	
 	if on_cooldown then
@@ -127,6 +127,16 @@ local function load_settings()
 			if not result.icon_position_vertical_offset then
 				result.icon_position_vertical_offset = 0
 			end
+			-- Настройки для blitz, если не заданы, используем общие
+			if not result.blitz_icon_position_offset then
+				result.blitz_icon_position_offset = result.icon_position_offset
+			end
+			if not result.blitz_icon_position_left_shift then
+				result.blitz_icon_position_left_shift = result.icon_position_left_shift
+			end
+			if not result.blitz_icon_position_vertical_offset then
+				result.blitz_icon_position_vertical_offset = result.icon_position_vertical_offset
+			end
 			return result
 		else
 			return DEFAULT_SETTINGS
@@ -139,7 +149,7 @@ end
 -- Загружаем файл настроек при старте
 local TalentUISettings = load_settings()
 
--- Добавление виджетов иконок способностей в team HUD
+-- Добавление виджетов иконок blitz способностей в team HUD
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	-- Всегда добавляем виджеты, контролируем видимость через visible
 	local bar_size = HudElementTeamPlayerPanelSettings.size
@@ -149,13 +159,13 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	-- Используем разные размеры: иконка меньше рамки
 	local frame_size = icon_size -- Рамка использует размер из настройки
 	local icon_size_value = math.floor(icon_size * 0.625) -- 80/128 = 0.625 (как в исходниках)
-	-- Позиционирование из файла настроек
-	local base_offset = TalentUISettings.icon_position_offset
-	local left_shift = TalentUISettings.icon_position_left_shift
-	local vertical_offset = TalentUISettings.icon_position_vertical_offset or 0
+	-- Позиционирование из файла настроек для blitz
+	local base_offset = TalentUISettings.blitz_icon_position_offset or TalentUISettings.icon_position_offset
+	local left_shift = TalentUISettings.blitz_icon_position_left_shift or TalentUISettings.icon_position_left_shift
+	local vertical_offset = TalentUISettings.blitz_icon_position_vertical_offset or TalentUISettings.icon_position_vertical_offset or 0
 	
-	-- Виджет иконки способности (справа от рамки, как цифры в NumericUI)
-	instance.widget_definitions.talent_ui_ability_icon = UIWidget.create_definition({
+	-- Виджет иконки blitz способности (справа от рамки, как цифры в NumericUI)
+	instance.widget_definitions.talent_ui_blitz_icon = UIWidget.create_definition({
 		{
 			pass_type = "texture",
 			style_id = "icon",
@@ -211,8 +221,8 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 		},
 	}, "bar")
 	
-	-- Виджет текста кулдауна (справа от иконки, поверх иконки)
-	instance.widget_definitions.talent_ui_ability_cooldown = UIWidget.create_definition({
+	-- Виджет текста зарядов blitz (справа от иконки, поверх иконки)
+	instance.widget_definitions.talent_ui_blitz_charges = UIWidget.create_definition({
 		{
 			pass_type = "text",
 			style_id = "text",
@@ -242,24 +252,24 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	}, "bar")
 end)
 
--- Обновление иконки способности для тимейта
-local function update_teammate_ability_icon(self, player, dt)
+-- Обновление иконки blitz способности для тимейта
+local function update_teammate_blitz_icon(self, player, dt)
 	local player_name = player:name()
 	
-	local ability_icon_widget = self._widgets_by_name.talent_ui_ability_icon
-	local ability_cooldown_widget = self._widgets_by_name.talent_ui_ability_cooldown
+	local blitz_icon_widget = self._widgets_by_name.talent_ui_blitz_icon
+	local blitz_charges_widget = self._widgets_by_name.talent_ui_blitz_charges
 	
-	if not ability_icon_widget then
+	if not blitz_icon_widget then
 		return
 	end
 	
 	-- Проверяем настройку
-	local show_setting = mod:get("show_teammate_ability_icon")
+	local show_setting = mod:get("show_teammate_blitz_icon")
 	
 	if not show_setting then
-		ability_icon_widget.visible = false
-		if ability_cooldown_widget then
-			ability_cooldown_widget.visible = false
+		blitz_icon_widget.visible = false
+		if blitz_charges_widget then
+			blitz_charges_widget.visible = false
 		end
 		return
 	end
@@ -272,34 +282,34 @@ local function update_teammate_ability_icon(self, player, dt)
 	
 	-- Скрываем виджеты если игрок мертв
 	if self._show_as_dead or self._dead or self._hogtied then
-		ability_icon_widget.visible = false
-		if ability_cooldown_widget then
-			ability_cooldown_widget.visible = false
+		blitz_icon_widget.visible = false
+		if blitz_charges_widget then
+			blitz_charges_widget.visible = false
 		end
 		return
 	end
 	
-	-- Получаем данные о способности (проверяем каждый раз, т.к. способность может загрузиться позже)
-	if not ability_data[player_name] or not ability_data[player_name].ability_type then
-		local ability_info = get_player_ability_data(player, extensions)
-		if ability_info then
-			ability_data[player_name] = {
-				ability_id = ability_info.ability_id,
-				ability_type = ability_info.ability_type,
-				icon = ability_info.icon,
+	-- Получаем данные о blitz способности (проверяем каждый раз, т.к. способность может загрузиться позже)
+	if not blitz_data[player_name] or not blitz_data[player_name].ability_type then
+		local blitz_info = get_player_blitz_data(player, extensions)
+		if blitz_info then
+			blitz_data[player_name] = {
+				ability_id = blitz_info.ability_id,
+				ability_type = blitz_info.ability_type,
+				icon = blitz_info.icon,
 			}
 		else
-			-- Способность еще не загружена, скрываем виджеты
-			ability_icon_widget.visible = false
-			if ability_cooldown_widget then
-				ability_cooldown_widget.visible = false
+			-- Blitz способность еще не загружена, скрываем виджеты
+			blitz_icon_widget.visible = false
+			if blitz_charges_widget then
+				blitz_charges_widget.visible = false
 			end
 			return
 		end
 	end
 	
-	local ability_type = ability_data[player_name].ability_type
-	local icon = ability_data[player_name].icon
+	local ability_type = blitz_data[player_name].ability_type
+	local icon = blitz_data[player_name].icon
 	
 	-- Обновляем размер иконки и рамки из настроек
 	-- В исходниках frame = 128x128, icon_size = 80x80 (соотношение 0.625)
@@ -307,180 +317,130 @@ local function update_teammate_ability_icon(self, player, dt)
 	local icon_size_value = math.floor(frame_size * 0.625) -- 80/128 = 0.625
 	
 	-- Обновляем размеры только если они изменились
-	if ability_icon_widget.style.icon.size[1] ~= icon_size_value then
-		ability_icon_widget.style.icon.size[1] = icon_size_value
-		ability_icon_widget.style.icon.size[2] = icon_size_value
-		ability_icon_widget.dirty = true
+	if blitz_icon_widget.style.icon.size[1] ~= icon_size_value then
+		blitz_icon_widget.style.icon.size[1] = icon_size_value
+		blitz_icon_widget.style.icon.size[2] = icon_size_value
+		blitz_icon_widget.dirty = true
 	end
 	
 	-- Позиционирование из файла настроек (перезагружаем каждый кадр для возможности изменения в реальном времени)
 	local settings = load_settings()
-	local DEFAULT_SETTINGS = {
-		icon_position_offset = 12,
-		icon_position_left_shift = 20,
-		icon_position_vertical_offset = 0,
-		ability_icon_size = 128,
-		cooldown_font_size = 18,
-	}
-	if not settings then
-		settings = DEFAULT_SETTINGS
-	end
-	local base_offset = settings.icon_position_offset or DEFAULT_SETTINGS.icon_position_offset
-	local left_shift = settings.icon_position_left_shift or DEFAULT_SETTINGS.icon_position_left_shift
-	local vertical_offset = settings.icon_position_vertical_offset or DEFAULT_SETTINGS.icon_position_vertical_offset
+	local base_offset = settings.blitz_icon_position_offset or settings.icon_position_offset
+	local left_shift = settings.blitz_icon_position_left_shift or settings.icon_position_left_shift
+	local vertical_offset = settings.blitz_icon_position_vertical_offset or settings.icon_position_vertical_offset
 	
 	-- Проверяем, нужно ли обновить размер или позицию
 	local needs_offset_update = false
-	if ability_icon_widget.style.frame.size[1] ~= frame_size then
-		ability_icon_widget.style.frame.size[1] = frame_size
-		ability_icon_widget.style.frame.size[2] = frame_size
-		ability_icon_widget.dirty = true
+	if blitz_icon_widget.style.frame.size[1] ~= frame_size then
+		blitz_icon_widget.style.frame.size[1] = frame_size
+		blitz_icon_widget.style.frame.size[2] = frame_size
+		blitz_icon_widget.dirty = true
 		needs_offset_update = true
 	end
 	
 	-- Обновляем offset каждый кадр (для возможности изменения в реальном времени через файл настроек)
-	local current_frame_offset = ability_icon_widget.style.frame.offset[1]
-	local current_frame_vertical = ability_icon_widget.style.frame.offset[2]
+	local current_frame_offset = blitz_icon_widget.style.frame.offset[1]
+	local current_frame_vertical = blitz_icon_widget.style.frame.offset[2]
 	local new_frame_offset = base_offset - left_shift
 	local offset_adjustment = (frame_size - icon_size_value) / 2
 	local new_icon_offset = base_offset - offset_adjustment - left_shift
 	
 	-- Обновляем только если позиция изменилась
-	if needs_offset_update or current_frame_offset ~= new_frame_offset or ability_icon_widget.style.icon.offset[1] ~= new_icon_offset or current_frame_vertical ~= vertical_offset then
-		ability_icon_widget.style.frame.offset[1] = new_frame_offset
-		ability_icon_widget.style.frame.offset[2] = vertical_offset
-		ability_icon_widget.style.icon.offset[1] = new_icon_offset
-		ability_icon_widget.style.icon.offset[2] = vertical_offset
-		ability_icon_widget.dirty = true
+	if needs_offset_update or current_frame_offset ~= new_frame_offset or blitz_icon_widget.style.icon.offset[1] ~= new_icon_offset or current_frame_vertical ~= vertical_offset then
+		blitz_icon_widget.style.frame.offset[1] = new_frame_offset
+		blitz_icon_widget.style.frame.offset[2] = vertical_offset
+		blitz_icon_widget.style.icon.offset[1] = new_icon_offset
+		blitz_icon_widget.style.icon.offset[2] = vertical_offset
+		blitz_icon_widget.dirty = true
 	end
 	
-	if ability_cooldown_widget then
-		-- Обновляем размер текста кулдауна только если изменился
-		if ability_cooldown_widget.style.text.size[1] ~= icon_size_value then
-			ability_cooldown_widget.style.text.size[1] = icon_size_value
-			ability_cooldown_widget.style.text.size[2] = icon_size_value
-			ability_cooldown_widget.dirty = true
+	if blitz_charges_widget then
+		-- Обновляем размер текста зарядов только если изменился
+		if blitz_charges_widget.style.text.size[1] ~= icon_size_value then
+			blitz_charges_widget.style.text.size[1] = icon_size_value
+			blitz_charges_widget.style.text.size[2] = icon_size_value
+			blitz_charges_widget.dirty = true
 		end
 		
-		-- Обновляем offset текста кулдауна каждый кадр (для возможности изменения в реальном времени)
+		-- Обновляем offset текста зарядов каждый кадр (для возможности изменения в реальном времени)
 		local offset_adjustment = (frame_size - icon_size_value) / 2
 		local new_text_offset = base_offset - offset_adjustment - left_shift
-		local current_text_offset = ability_cooldown_widget.style.text.offset[1]
-		local current_text_vertical = ability_cooldown_widget.style.text.offset[2]
+		local current_text_offset = blitz_charges_widget.style.text.offset[1]
+		local current_text_vertical = blitz_charges_widget.style.text.offset[2]
 		if current_text_offset ~= new_text_offset or current_text_vertical ~= vertical_offset then
-			ability_cooldown_widget.style.text.offset[1] = new_text_offset
-			ability_cooldown_widget.style.text.offset[2] = vertical_offset
-			ability_cooldown_widget.dirty = true
+			blitz_charges_widget.style.text.offset[1] = new_text_offset
+			blitz_charges_widget.style.text.offset[2] = vertical_offset
+			blitz_charges_widget.dirty = true
 		end
 	end
 	
 	-- Устанавливаем иконку
-	if ability_icon_widget.style.icon.material_values.talent_icon ~= icon then
-		ability_icon_widget.style.icon.material_values.talent_icon = icon
-		ability_icon_widget.dirty = true
+	if blitz_icon_widget.style.icon.material_values.talent_icon ~= icon then
+		blitz_icon_widget.style.icon.material_values.talent_icon = icon
+		blitz_icon_widget.dirty = true
 	end
 	
-	-- Получаем состояние кулдауна
-	local cooldown_progress, on_cooldown, remaining_charges, has_charges_left = get_ability_cooldown_state(player, extensions, ability_type)
+	-- Получаем состояние кулдауна blitz
+	local cooldown_progress, on_cooldown, remaining_charges, has_charges_left = get_blitz_cooldown_state(player, extensions, ability_type)
 	local uses_charges = remaining_charges > 1
 	
 	-- Обновляем прогресс
-	if ability_icon_widget.content.duration_progress ~= cooldown_progress then
-		ability_icon_widget.content.duration_progress = cooldown_progress
-		ability_icon_widget.dirty = true
+	if blitz_icon_widget.content.duration_progress ~= cooldown_progress then
+		blitz_icon_widget.content.duration_progress = cooldown_progress
+		blitz_icon_widget.dirty = true
 	end
 	
 	-- Обновляем цвета
-	local source_colors = get_ability_state_colors(on_cooldown, uses_charges, has_charges_left)
+	local source_colors = get_blitz_state_colors(on_cooldown, uses_charges, has_charges_left)
 	
 	if source_colors.icon then
-		ability_icon_widget.style.icon.color = table.clone(source_colors.icon)
-		ability_icon_widget.dirty = true
+		blitz_icon_widget.style.icon.color = table.clone(source_colors.icon)
+		blitz_icon_widget.dirty = true
 	end
 	
 	if source_colors.frame then
-		ability_icon_widget.style.frame.color = table.clone(source_colors.frame)
-		ability_icon_widget.dirty = true
+		blitz_icon_widget.style.frame.color = table.clone(source_colors.frame)
+		blitz_icon_widget.dirty = true
 	end
 	
-	ability_icon_widget.visible = true
+	blitz_icon_widget.visible = true
 	
-	-- Обновляем текст кулдауна
-	if ability_cooldown_widget and mod:get("show_teammate_ability_cooldown") then
-		if on_cooldown and extensions and extensions.unit_data then
+	-- Обновляем текст зарядов blitz (blitz работает на зарядах, а не на кулдауне)
+	if blitz_charges_widget and mod:get("show_teammate_blitz_charges") then
+		if extensions and extensions.unit_data and extensions.ability then
 			local unit_data_extension = extensions.unit_data
-			local ability_component = unit_data_extension:read_component("combat_ability")
+			local ability_extension = extensions.ability
+			local blitz_component = unit_data_extension:read_component("grenade_ability")
 			
-			if ability_component then
-				local format_type = mod:get("cooldown_format")
-				local cooldown_text = ""
+			if blitz_component then
+				local num_charges = blitz_component.num_charges or 0
+				local max_charges = ability_extension:max_ability_charges(ability_type) or 1
 				
-				if format_type == "time" then
-					local fixed_frame_t = FixedFrame.get_latest_fixed_time()
-					local time_remaining = math.max(ability_component.cooldown - fixed_frame_t, 0)
-					
-					if time_remaining <= 1 then
-						cooldown_text = string.format("%.1f", time_remaining)
-					else
-						cooldown_text = string.format("%d", math.ceil(time_remaining))
-					end
-				elseif format_type == "percent" then
-					local percent = cooldown_progress * 100
-					cooldown_text = string.format("%d%%", math.floor(percent))
+				-- Показываем количество зарядов, если их больше 1 или если зарядов нет
+				if max_charges > 1 or num_charges == 0 then
+					blitz_charges_widget.content.text = tostring(num_charges)
+					blitz_charges_widget.visible = true
+					blitz_charges_widget.dirty = true
+				else
+					-- Если 1 заряд и он есть, не показываем текст
+					blitz_charges_widget.visible = false
+					blitz_charges_widget.dirty = true
 				end
-				
-				ability_cooldown_widget.content.text = cooldown_text
-				ability_cooldown_widget.visible = true
-				ability_cooldown_widget.dirty = true
 			else
-				ability_cooldown_widget.visible = false
+				blitz_charges_widget.visible = false
 			end
 		else
-			ability_cooldown_widget.visible = false
-			ability_cooldown_widget.dirty = true
+			blitz_charges_widget.visible = false
+			blitz_charges_widget.dirty = true
 		end
 	end
 end
 
--- Хук для обновления тимейтов
-local function update_player_features_hook(func, self, dt, t, player, ui_renderer)
-	func(self, dt, t, player, ui_renderer)
-	
-	-- Обновляем иконку способности для тимейта
-	update_teammate_ability_icon(self, player, dt)
-	
-	-- Обновляем иконку blitz способности для тимейта (если модуль загружен)
-	if mod.update_teammate_blitz_icon then
-		mod.update_teammate_blitz_icon(self, player, dt)
-	end
-	
-	-- Обновляем все 3 способности для тимейта (если модуль загружен)
-	if mod.update_teammate_all_abilities then
-		mod.update_teammate_all_abilities(self, player, dt)
-	end
+-- Экспортируем функцию обновления для вызова из основного хука
+mod.update_teammate_blitz_icon = update_teammate_blitz_icon
+
+-- Очистка данных при уничтожении панели (blitz) - будет вызвана из основного хука
+mod.clear_blitz_data = function(player_name)
+	blitz_data[player_name] = nil
 end
-
-mod:hook("HudElementTeamPlayerPanel", "_update_player_features", update_player_features_hook)
-
--- Инициализация данных при создании панели тимейта
-mod:hook("HudElementTeamPlayerPanel", "init", function(func, self, _parent, _draw_layer, _start_scale, data)
-	func(self, _parent, _draw_layer, _start_scale, data)
-end)
-
--- Очистка данных при уничтожении панели
-mod:hook_safe("HudElementTeamPlayerPanel", "destroy", function(self)
-	local player = self._data.player
-	if player then
-		local player_name = player:name()
-		ability_data[player_name] = nil
-		-- Очищаем данные blitz (если модуль загружен)
-		if mod.clear_blitz_data then
-			mod.clear_blitz_data(player_name)
-		end
-		-- Очищаем данные всех способностей (если модуль загружен)
-		if mod.clear_teammate_all_abilities_data then
-			mod.clear_teammate_all_abilities_data(player_name)
-		end
-	end
-end)
 
