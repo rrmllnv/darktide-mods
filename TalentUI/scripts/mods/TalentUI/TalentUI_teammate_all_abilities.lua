@@ -12,7 +12,7 @@ local HudElementPlayerAbilitySettings = require("scripts/ui/hud/elements/player_
 -- Кэш: player_name + "_" + ability_id -> {ability_id, ability_type, icon}
 local teammate_abilities_data = {}
 
-local function get_grenade_ability_icon_from_talents(player)
+local function get_talent_from_character_sheet(player, ability_key)
 	local profile = player and player:profile()
 
 	if not profile then
@@ -20,17 +20,21 @@ local function get_grenade_ability_icon_from_talents(player)
 	end
 
 	local loadout_data = {
+		ability = {},
 		blitz = {},
+		aura = {},
 	}
 
-	local success, icon = pcall(function()
+	local success, entry = pcall(function()
 		CharacterSheet.class_loadout(profile, loadout_data, false, profile.talents or {})
 
-		return loadout_data.blitz and loadout_data.blitz.icon
+		local entry = loadout_data[ability_key]
+
+		return entry
 	end)
 
 	if success then
-		return icon
+		return entry
 	end
 
 	return nil
@@ -40,12 +44,22 @@ end
 local function get_player_ability_by_type(player, extensions, slot_type)
 	-- Для ауры (coherency) получаем данные через CharacterSheet (аура это талант, а не ability)
 	if slot_type == "slot_coherency_ability" then
+		local aura_entry = get_talent_from_character_sheet(player, "aura")
+
+		if aura_entry and aura_entry.icon then
+			return {
+				ability_id = "aura",
+				ability_type = "coherency_ability",
+				icon = aura_entry.icon,
+				name = aura_entry.talent and aura_entry.talent.display_name or "Aura",
+			}
+		end
+
 		local success, result = pcall(function()
 			local profile = player:profile()
 			if profile then
 				local loadout = CharacterSheet.loadout(profile)
 				if loadout and loadout.aura then
-					-- CharacterSheet.loadout заполняет aura.icon напрямую из talent.icon (строка 246 character_sheet.lua)
 					local icon = loadout.aura.icon
 					
 					if icon then
@@ -64,6 +78,7 @@ local function get_player_ability_by_type(player, extensions, slot_type)
 		if success and result then
 			return result
 		end
+
 		return nil
 	end
 	
@@ -99,7 +114,8 @@ local function get_player_ability_by_type(player, extensions, slot_type)
 
 				if slot_type == "slot_grenade_ability" then
 					-- Иконка блитца может быть взята из дерева талантов, если там задана
-					icon = get_grenade_ability_icon_from_talents(player)
+					local blitz_entry = get_talent_from_character_sheet(player, "blitz")
+					icon = blitz_entry and blitz_entry.icon
 
 					if not icon and extensions.visual_loadout and extensions.unit_data then
 						local inventory_component = extensions.unit_data:read_component("inventory")
