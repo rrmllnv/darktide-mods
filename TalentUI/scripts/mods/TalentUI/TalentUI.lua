@@ -9,6 +9,7 @@ local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local HudElementPlayerAbilitySettings = require("scripts/ui/hud/elements/player_ability/hud_element_player_ability_settings")
+local HudElementTeamPlayerPanelSettings = require("scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_settings")
 local PlayerCharacterConstants = require("scripts/settings/player_character/player_character_constants")
 local FixedFrame = require("scripts/utilities/fixed_frame")
 
@@ -137,23 +138,25 @@ backups.team_hud_definitions = backups.team_hud_definitions or mod:original_requ
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	mod:echo("TalentUI: Creating widgets in hook_require")
 	-- Всегда добавляем виджеты, контролируем видимость через visible
-	local icon_size = ABILITY_ICON_SIZE
+	local bar_size = HudElementTeamPlayerPanelSettings.size
+	-- Используем размер иконки из настроек мода
+	local icon_size = mod:get("ability_icon_size") or 128
 	
-	-- Виджет иконки способности
+	-- Виджет иконки способности (справа от рамки, как цифры в NumericUI)
 	instance.widget_definitions.talent_ui_ability_icon = UIWidget.create_definition({
 		{
 			pass_type = "texture",
 			style_id = "icon",
 			value = "content/ui/materials/icons/talents/hud/combat_container",
 			style = {
-				horizontal_alignment = "left",
+				horizontal_alignment = "right",
 				vertical_alignment = "center",
 				material_values = {
 					progress = 1,
 					talent_icon = nil,
 				},
 				offset = {
-					-icon_size - 10,
+					bar_size[1] + 10,
 					0,
 					1,
 				},
@@ -173,10 +176,10 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 			style_id = "frame",
 			value = "content/ui/materials/icons/talents/hud/combat_frame_inner",
 			style = {
-				horizontal_alignment = "left",
+				horizontal_alignment = "right",
 				vertical_alignment = "center",
 				offset = {
-					-icon_size - 10,
+					bar_size[1] + 10,
 					0,
 					2,
 				},
@@ -191,7 +194,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	
 	mod:echo("TalentUI: Created talent_ui_ability_icon widget")
 	
-	-- Виджет текста кулдауна
+	-- Виджет текста кулдауна (справа от иконки, поверх иконки)
 	instance.widget_definitions.talent_ui_ability_cooldown = UIWidget.create_definition({
 		{
 			pass_type = "text",
@@ -199,7 +202,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 			value_id = "text",
 			value = "",
 			style = {
-				horizontal_alignment = "left",
+				horizontal_alignment = "right",
 				vertical_alignment = "center",
 				text_horizontal_alignment = "center",
 				text_vertical_alignment = "center",
@@ -208,7 +211,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 				text_color = UIHudSettings.color_tint_main_1,
 				drop_shadow = true,
 				offset = {
-					-icon_size - 10,
+					bar_size[1] + 10,
 					0,
 					3,
 				},
@@ -340,6 +343,17 @@ local function update_teammate_ability_icon(self, player, dt)
 	
 	local ability_type = ability_data[player_name].ability_type
 	local icon = ability_data[player_name].icon
+	
+	-- Обновляем размер иконки и рамки из настроек
+	local icon_size = mod:get("ability_icon_size") or 128
+	ability_icon_widget.style.icon.size[1] = icon_size
+	ability_icon_widget.style.icon.size[2] = icon_size
+	ability_icon_widget.style.frame.size[1] = icon_size
+	ability_icon_widget.style.frame.size[2] = icon_size
+	if ability_cooldown_widget then
+		ability_cooldown_widget.style.text.size[1] = icon_size
+		ability_cooldown_widget.style.text.size[2] = icon_size
+	end
 	
 	-- Устанавливаем иконку
 	if ability_icon_widget.style.icon.material_values.talent_icon ~= icon then

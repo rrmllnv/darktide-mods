@@ -33,8 +33,8 @@ return {
 			{
 				setting_id = "ability_icon_size",
 				type = "numeric",
-				default_value = 60,
-				range = { 30, 100 },
+				default_value = 128,
+				range = { 60, 200 },
 				decimals_number = 0,
 			},
 			{
