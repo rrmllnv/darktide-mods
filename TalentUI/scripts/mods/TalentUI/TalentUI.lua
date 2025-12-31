@@ -66,7 +66,6 @@ local COOLDOWN_FONT_SIZE = TalentUISettings.cooldown_font_size
 -- Использует API из HudElementPlayerAbilityHandler
 local function get_player_ability_data(player, extensions)
 	if not extensions or not extensions.ability then
-		mod:echo("TalentUI: get_player_ability_data - no extensions or ability extension")
 		return nil
 	end
 	
@@ -74,27 +73,14 @@ local function get_player_ability_data(player, extensions)
 	local equipped_abilities = ability_extension:equipped_abilities()
 	
 	if not equipped_abilities then
-		mod:echo("TalentUI: get_player_ability_data - equipped_abilities() returned nil")
 		return nil
 	end
-	
-	-- Отладка: выводим все способности
-	local ability_count = 0
-	local abilities_list = {}
-	for ability_id, ability_settings in pairs(equipped_abilities) do
-		ability_count = ability_count + 1
-		local slot_id = ability_configuration[ability_id]
-		table.insert(abilities_list, ability_id .. " -> " .. tostring(slot_id))
-	end
-	mod:echo("TalentUI: Found " .. ability_count .. " abilities: " .. table.concat(abilities_list, ", "))
 	
 	-- Ищем combat_ability как в оригинальном HUD
 	-- slot_id это "slot_combat_ability", а не "combat_ability"!
 	for ability_id, ability_settings in pairs(equipped_abilities) do
 		local slot_id = ability_configuration[ability_id]
-		mod:echo("TalentUI: Checking ability " .. ability_id .. " -> slot_id: " .. tostring(slot_id))
 		if slot_id == "slot_combat_ability" then
-			mod:echo("TalentUI: Found combat_ability: " .. ability_id .. " icon: " .. tostring(ability_settings.hud_icon))
 			return {
 				ability_id = ability_id,
 				ability_type = "combat_ability", -- Используем "combat_ability" для компонента
@@ -104,7 +90,6 @@ local function get_player_ability_data(player, extensions)
 		end
 	end
 	
-	mod:echo("TalentUI: No combat_ability found in equipped_abilities")
 	return nil
 end
 
@@ -176,7 +161,6 @@ backups.team_hud_definitions = backups.team_hud_definitions or mod:original_requ
 
 -- Добавление виджетов иконок способностей в team HUD
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
-	mod:echo("TalentUI: Creating widgets in hook_require")
 	-- Всегда добавляем виджеты, контролируем видимость через visible
 	local bar_size = HudElementTeamPlayerPanelSettings.size
 	-- Используем размер иконки из файла настроек или из настроек мода
@@ -247,8 +231,6 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 		},
 	}, "bar")
 	
-	mod:echo("TalentUI: Created talent_ui_ability_icon widget")
-	
 	-- Виджет текста кулдауна (справа от иконки, поверх иконки)
 	instance.widget_definitions.talent_ui_ability_cooldown = UIWidget.create_definition({
 		{
@@ -278,8 +260,6 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 			},
 		},
 	}, "bar")
-	
-	mod:echo("TalentUI: Created talent_ui_ability_cooldown widget")
 end)
 
 -- Добавление кулдауна для локального игрока (как в NumericUI)
@@ -323,32 +303,18 @@ end)
 -- Обновление иконки способности для тимейта
 local function update_teammate_ability_icon(self, player, dt)
 	local player_name = player:name()
-	mod:echo("TalentUI: update_teammate_ability_icon called for " .. player_name)
 	
 	local ability_icon_widget = self._widgets_by_name.talent_ui_ability_icon
 	local ability_cooldown_widget = self._widgets_by_name.talent_ui_ability_cooldown
 	
 	if not ability_icon_widget then
-		mod:echo("TalentUI: Widget talent_ui_ability_icon NOT FOUND for " .. player_name)
-		-- Выводим список всех виджетов
-		if self._widgets_by_name then
-			local widget_names = {}
-			for name, _ in pairs(self._widgets_by_name) do
-				table.insert(widget_names, name)
-			end
-			mod:echo("TalentUI: Available widgets: " .. table.concat(widget_names, ", "))
-		end
 		return
 	end
 	
-	mod:echo("TalentUI: Widget found for " .. player_name)
-	
 	-- Проверяем настройку
 	local show_setting = mod:get("show_teammate_ability_icon")
-	mod:echo("TalentUI: show_teammate_ability_icon setting = " .. tostring(show_setting))
 	
 	if not show_setting then
-		mod:echo("TalentUI: Setting disabled for " .. player_name)
 		ability_icon_widget.visible = false
 		if ability_cooldown_widget then
 			ability_cooldown_widget.visible = false
@@ -359,15 +325,11 @@ local function update_teammate_ability_icon(self, player, dt)
 	local extensions = self:_player_extensions(player)
 	
 	if not extensions then
-		mod:echo("TalentUI: No extensions for " .. player_name)
 		return
 	end
 	
-	mod:echo("TalentUI: Extensions found for " .. player_name .. ", ability extension: " .. tostring(extensions.ability))
-	
 	-- Скрываем виджеты если игрок мертв
 	if self._show_as_dead or self._dead or self._hogtied then
-		mod:echo("TalentUI: Player dead/hogtied for " .. player_name)
 		ability_icon_widget.visible = false
 		if ability_cooldown_widget then
 			ability_cooldown_widget.visible = false
@@ -377,7 +339,6 @@ local function update_teammate_ability_icon(self, player, dt)
 	
 	-- Получаем данные о способности (проверяем каждый раз, т.к. способность может загрузиться позже)
 	if not ability_data[player_name] or not ability_data[player_name].ability_type then
-		mod:echo("TalentUI: Getting ability data for " .. player_name)
 		local ability_info = get_player_ability_data(player, extensions)
 		if ability_info then
 			ability_data[player_name] = {
@@ -385,9 +346,7 @@ local function update_teammate_ability_icon(self, player, dt)
 				ability_type = ability_info.ability_type,
 				icon = ability_info.icon,
 			}
-			mod:echo("TalentUI: Found ability for " .. player_name .. ": " .. ability_info.name .. " icon: " .. tostring(ability_info.icon))
 		else
-			mod:echo("TalentUI: No ability found for " .. player_name)
 			-- Способность еще не загружена, скрываем виджеты
 			ability_icon_widget.visible = false
 			if ability_cooldown_widget then
@@ -496,7 +455,6 @@ local function update_teammate_ability_icon(self, player, dt)
 	end
 	
 	ability_icon_widget.visible = true
-	mod:echo("TalentUI: Setting visible=true for " .. player_name .. " icon: " .. tostring(icon))
 	
 	-- Обновляем текст кулдауна
 	if ability_cooldown_widget and mod:get("show_teammate_ability_cooldown") then
@@ -587,7 +545,6 @@ local function update_player_features_hook(func, self, dt, t, player, ui_rendere
 	func(self, dt, t, player, ui_renderer)
 	
 	-- Обновляем иконку способности для тимейта
-	mod:echo("TalentUI: update_player_features_hook called for " .. player:name())
 	update_teammate_ability_icon(self, player, dt)
 end
 
@@ -596,21 +553,6 @@ mod:hook("HudElementTeamPlayerPanel", "_update_player_features", update_player_f
 -- Инициализация данных при создании панели тимейта
 mod:hook("HudElementTeamPlayerPanel", "init", function(func, self, _parent, _draw_layer, _start_scale, data)
 	func(self, _parent, _draw_layer, _start_scale, data)
-	
-	-- Проверяем наличие виджетов после инициализации
-	if self._widgets_by_name then
-		if self._widgets_by_name.talent_ui_ability_icon then
-			mod:echo("TalentUI: Widget found in init for " .. data.player:name())
-		else
-			mod:echo("TalentUI: Widget NOT found in init for " .. data.player:name())
-			-- Выводим список всех виджетов для отладки
-			local widget_names = {}
-			for name, _ in pairs(self._widgets_by_name) do
-				table.insert(widget_names, name)
-			end
-			mod:echo("TalentUI: Available widgets: " .. table.concat(widget_names, ", "))
-		end
-	end
 end)
 
 -- Очистка данных при уничтожении панели
