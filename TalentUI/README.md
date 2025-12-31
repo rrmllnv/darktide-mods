@@ -22,7 +22,7 @@
 - **Show Teammate Ability Icons** - показывать иконки способностей тимейтов
 - **Show Teammate Ability Cooldown** - показывать текст кулдауна для тимейтов
 - **Show Local Player Ability Cooldown** - показывать кулдаун для локального игрока
-- **Cooldown Display Format** - формат отображения (время/процент)
+- **Cooldown Display Format** - формат отображения (вAW ремя/процент)
 - **Ability Icon Size** - размер иконки способности (30-100)
 - **Cooldown Text Font Size** - размер шрифта текста кулдауна (10-30)
 

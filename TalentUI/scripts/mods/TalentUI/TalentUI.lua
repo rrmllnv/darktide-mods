@@ -3,6 +3,8 @@ local mod = get_mod("TalentUI")
 local TEAM_HUD_DEF_PATH = "scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_definitions"
 local PLAYER_ABILITY_DEF_PATH = "scripts/ui/hud/elements/player_ability/hud_element_player_ability_vertical_definitions"
 
+local backups = mod:persistent_table("talent_ui_backups")
+
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
@@ -15,12 +17,12 @@ local ability_configuration = PlayerCharacterConstants.ability_configuration
 -- Хранение данных о кулдаунах
 local ability_data = {} -- player_name -> {cooldown_timer, max_cooldown, ability_id, icon}
 
--- Функция для получения размера иконки
-local function get_ability_icon_size()
-	return mod:get("ability_icon_size") or 60
-end
+-- Константы
+local ABILITY_ICON_SIZE = 60
+local COOLDOWN_FONT_SIZE = 18
 
 -- Функция для получения данных об экипированной способности игрока
+-- Использует API из HudElementPlayerAbilityHandler
 local function get_player_ability_data(player, extensions)
 	if not extensions or not extensions.ability then
 		return nil
@@ -29,12 +31,17 @@ local function get_player_ability_data(player, extensions)
 	local ability_extension = extensions.ability
 	local equipped_abilities = ability_extension:equipped_abilities()
 	
-	-- Ищем основную боевую способность (combat_ability)
+	if not equipped_abilities then
+		return nil
+	end
+	
+	-- Ищем combat_ability как в оригинальном HUD
 	for ability_id, ability_settings in pairs(equipped_abilities) do
 		local slot_id = ability_configuration[ability_id]
 		if slot_id == "combat_ability" then
 			return {
 				ability_id = ability_id,
+				ability_type = slot_id,
 				icon = ability_settings.hud_icon,
 				name = ability_settings.name,
 			}
@@ -45,31 +52,32 @@ local function get_player_ability_data(player, extensions)
 end
 
 -- Функция для получения прогресса и состояния кулдауна
-local function get_ability_cooldown_state(player, extensions, ability_id)
+-- Использует методы PlayerHuskAbilityExtension из исходников
+local function get_ability_cooldown_state(player, extensions, ability_type)
 	if not extensions or not extensions.ability then
 		return 1, false, 1, true -- полный прогресс, не на кулдауне, 1 заряд, есть заряды
 	end
 	
 	local ability_extension = extensions.ability
 	
-	if not ability_extension:ability_is_equipped(ability_id) then
+	-- Используем методы extension как в HudElementPlayerAbility
+	if not ability_extension:ability_is_equipped(ability_type) then
 		return 1, false, 1, true
 	end
 	
-	local remaining_ability_cooldown = ability_extension:remaining_ability_cooldown(ability_id)
-	local max_ability_cooldown = ability_extension:max_ability_cooldown(ability_id)
-	local is_paused = ability_extension:is_cooldown_paused(ability_id)
-	local remaining_ability_charges = ability_extension:remaining_ability_charges(ability_id)
-	local max_ability_charges = ability_extension:max_ability_charges(ability_id)
+	-- Безопасные методы из PlayerHuskAbilityExtension
+	local remaining_ability_cooldown = ability_extension:remaining_ability_cooldown(ability_type)
+	local max_ability_cooldown = ability_extension:max_ability_cooldown(ability_type)
+	local remaining_ability_charges = ability_extension:remaining_ability_charges(ability_type)
+	local max_ability_charges = ability_extension:max_ability_charges(ability_type)
 	
 	local uses_charges = max_ability_charges and max_ability_charges > 1
 	local has_charges_left = remaining_ability_charges > 0
 	
 	local cooldown_progress = 1
 	
-	if is_paused then
-		cooldown_progress = 0
-	elseif max_ability_cooldown and max_ability_cooldown > 0 then
+	-- Логика из HudElementPlayerAbility.update
+	if max_ability_cooldown and max_ability_cooldown > 0 then
 		cooldown_progress = 1 - math.lerp(0, 1, remaining_ability_cooldown / max_ability_cooldown)
 		if cooldown_progress == 0 then
 			cooldown_progress = 1
@@ -106,13 +114,13 @@ local function get_ability_state_colors(on_cooldown, uses_charges, has_charges_l
 	return source_colors
 end
 
+-- Сохраняем оригинальные определения
+backups.team_hud_definitions = backups.team_hud_definitions or mod:original_require(TEAM_HUD_DEF_PATH)
+
 -- Добавление виджетов иконок способностей в team HUD
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
-	if not mod:get("show_teammate_ability_icon") then
-		return
-	end
-	
-	local icon_size = get_ability_icon_size()
+	-- Всегда добавляем виджеты, контролируем видимость через visible
+	local icon_size = ABILITY_ICON_SIZE
 	
 	-- Виджет иконки способности
 	instance.widget_definitions.talent_ui_ability_icon = UIWidget.create_definition({
@@ -165,49 +173,44 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	}, "bar")
 	
 	-- Виджет текста кулдауна
-	if mod:get("show_teammate_ability_cooldown") then
-		local cooldown_font_size = mod:get("cooldown_font_size") or 18
-		
-		instance.widget_definitions.talent_ui_ability_cooldown = UIWidget.create_definition({
-			{
-				pass_type = "text",
-				style_id = "text",
-				value_id = "text",
-				value = "",
-				style = {
-					horizontal_alignment = "left",
-					vertical_alignment = "center",
-					text_horizontal_alignment = "center",
-					text_vertical_alignment = "center",
-					font_type = "machine_medium",
-					font_size = cooldown_font_size,
-					text_color = UIHudSettings.color_tint_main_1,
-					drop_shadow = true,
-					offset = {
-						-icon_size - 10,
-						0,
-						3,
-					},
-					size = {
-						icon_size,
-						icon_size,
-					},
+	instance.widget_definitions.talent_ui_ability_cooldown = UIWidget.create_definition({
+		{
+			pass_type = "text",
+			style_id = "text",
+			value_id = "text",
+			value = "",
+			style = {
+				horizontal_alignment = "left",
+				vertical_alignment = "center",
+				text_horizontal_alignment = "center",
+				text_vertical_alignment = "center",
+				font_type = "machine_medium",
+				font_size = COOLDOWN_FONT_SIZE,
+				text_color = UIHudSettings.color_tint_main_1,
+				drop_shadow = true,
+				offset = {
+					-icon_size - 10,
+					0,
+					3,
+				},
+				size = {
+					icon_size,
+					icon_size,
 				},
 			},
-		}, "bar")
-	end
+		},
+	}, "bar")
 end)
 
 -- Добавление кулдауна для локального игрока (как в NumericUI)
 mod:hook(_G, "dofile", function(func, path)
 	local instance = func(path)
 	
-	if path == PLAYER_ABILITY_DEF_PATH and mod:get("show_local_ability_cooldown") then
-		local cooldown_font_size = mod:get("cooldown_font_size") or 18
+	if path == PLAYER_ABILITY_DEF_PATH then
 		local style = table.clone(UIFontSettings.hud_body)
 		style.text_horizontal_alignment = "center"
 		style.text_vertical_alignment = "center"
-		style.font_size = cooldown_font_size
+		style.font_size = COOLDOWN_FONT_SIZE
 		style.font_type = "machine_medium"
 		style.drop_shadow = true
 		
@@ -239,14 +242,19 @@ end)
 
 -- Обновление иконки способности для тимейта
 local function update_teammate_ability_icon(self, player, dt)
-	if not mod:get("show_teammate_ability_icon") then
-		return
-	end
-	
 	local ability_icon_widget = self._widgets_by_name.talent_ui_ability_icon
 	local ability_cooldown_widget = self._widgets_by_name.talent_ui_ability_cooldown
 	
 	if not ability_icon_widget then
+		return
+	end
+	
+	-- Проверяем настройку
+	if not mod:get("show_teammate_ability_icon") then
+		ability_icon_widget.visible = false
+		if ability_cooldown_widget then
+			ability_cooldown_widget.visible = false
+		end
 		return
 	end
 	
@@ -262,15 +270,17 @@ local function update_teammate_ability_icon(self, player, dt)
 		return
 	end
 	
-	-- Получаем данные о способности
-	if not ability_data[player_name] or not ability_data[player_name].ability_id then
+	-- Получаем данные о способности (проверяем каждый раз, т.к. способность может загрузиться позже)
+	if not ability_data[player_name] or not ability_data[player_name].ability_type then
 		local ability_info = get_player_ability_data(player, extensions)
 		if ability_info then
 			ability_data[player_name] = {
 				ability_id = ability_info.ability_id,
+				ability_type = ability_info.ability_type,
 				icon = ability_info.icon,
 			}
 		else
+			-- Способность еще не загружена, скрываем виджеты
 			ability_icon_widget.visible = false
 			if ability_cooldown_widget then
 				ability_cooldown_widget.visible = false
@@ -279,7 +289,7 @@ local function update_teammate_ability_icon(self, player, dt)
 		end
 	end
 	
-	local ability_id = ability_data[player_name].ability_id
+	local ability_type = ability_data[player_name].ability_type
 	local icon = ability_data[player_name].icon
 	
 	-- Устанавливаем иконку
@@ -289,7 +299,7 @@ local function update_teammate_ability_icon(self, player, dt)
 	end
 	
 	-- Получаем состояние кулдауна
-	local cooldown_progress, on_cooldown, remaining_charges, has_charges_left = get_ability_cooldown_state(player, extensions, ability_id)
+	local cooldown_progress, on_cooldown, remaining_charges, has_charges_left = get_ability_cooldown_state(player, extensions, ability_type)
 	local uses_charges = remaining_charges > 1
 	
 	-- Обновляем прогресс
@@ -410,21 +420,7 @@ mod:hook("HudElementTeamPlayerPanel", "_update_player_features", update_player_f
 -- Инициализация данных при создании панели тимейта
 mod:hook("HudElementTeamPlayerPanel", "init", function(func, self, _parent, _draw_layer, _start_scale, data)
 	func(self, _parent, _draw_layer, _start_scale, data)
-	
-	local player = data.player
-	local player_name = player:name()
-	local extensions = self:_player_extensions(player)
-	
-	-- Инициализируем данные о способности
-	if extensions then
-		local ability_info = get_player_ability_data(player, extensions)
-		if ability_info then
-			ability_data[player_name] = {
-				ability_id = ability_info.ability_id,
-				icon = ability_info.icon,
-			}
-		end
-	end
+	-- Способности загрузятся позже в update
 end)
 
 -- Очистка данных при уничтожении панели
