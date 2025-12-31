@@ -47,8 +47,8 @@ return {
 			{
 				setting_id = "local_cooldown_font_size",
 				type = "numeric",
-				default_value = 30,
-				range = { 20, 50 },
+				default_value = 40,
+				range = { 30, 50 },
 				decimals_number = 0,
 			},
 		},
