@@ -379,6 +379,8 @@ local function load_settings()
 		icon_position_vertical_offset = 0,
 		ability_icon_size = 200,  -- Размер иконок
 		cooldown_font_size = 18,
+		show_abilities_for_bots = true,
+		ability_spacing = 50,
 		icon_material_settings = {
 			ability = {
 				active = {intensity = 1, saturation = 1},
@@ -436,6 +438,8 @@ if not TalentUISettings then
 		icon_position_vertical_offset = 0,
 		ability_icon_size = 200,
 		cooldown_font_size = 18,
+		show_abilities_for_bots = true,
+		ability_spacing = 50,
 		icon_material_settings = {
 			ability = {
 				active = {intensity = 1, saturation = 1},
@@ -470,9 +474,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	local base_offset = TalentUISettings.icon_position_offset
 	local left_shift = TalentUISettings.icon_position_left_shift
 	local vertical_offset = TalentUISettings.icon_position_vertical_offset or 0
-	
-	-- Расстояние между иконками способностей
-	local ability_spacing = 50
+	local ability_spacing = TalentUISettings.ability_spacing or 50
 
 	for i = 1, #TALENT_ABILITY_METADATA do
 		local ability_type = TALENT_ABILITY_METADATA[i]
@@ -551,6 +553,22 @@ local function update_teammate_all_abilities(self, player, dt)
 	
 	-- Скрываем виджеты если игрок мертв
 	if self._show_as_dead or self._dead or self._hogtied then
+		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
+			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
+			local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
+			if icon_widget then
+				icon_widget.visible = false
+			end
+			if text_widget then
+				text_widget.visible = false
+			end
+		end
+		return
+	end
+	
+	-- Скрываем виджеты если игрок бот и настройка выключена
+	local show_for_bots = TalentUISettings and TalentUISettings.show_abilities_for_bots ~= false
+	if not show_for_bots and not player:is_human_controlled() then
 		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
 			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
 			local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
@@ -666,7 +684,7 @@ local function update_teammate_all_abilities(self, player, dt)
 								display_text = tostring(remaining_charges)
 							end
 						elseif remaining_charges == 0 then
-							display_text = "0"
+							display_text = " "
 						end
 					end
 					-- Для aura ничего не показываем (обычно пассивная)

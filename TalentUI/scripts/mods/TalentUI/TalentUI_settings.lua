@@ -3,7 +3,7 @@ local mod = get_mod("TalentUI")
 -- Настройки позиционирования иконок способностей
 return {
 	-- Базовое смещение позиции иконки
-	icon_position_offset = 200,
+	icon_position_offset = 220,
 	
 	-- Дополнительный сдвиг влево/вправо
 	icon_position_left_shift = 0,
@@ -13,6 +13,9 @@ return {
 	
 	-- Размер иконки (можно переопределить из настроек мода)
 	ability_icon_size = 60,
+
+	-- Расстояние между иконками способностей
+	ability_spacing = 60,
 	
 	-- Размер шрифта кулдауна
 	cooldown_font_size = 18,
@@ -23,6 +26,11 @@ return {
 	blitz_icon_position_offset = 40,
 	blitz_icon_position_left_shift = 60,
 	blitz_icon_position_vertical_offset = 0,
+	
+	-- Показывать способности у ботов
+	show_abilities_for_bots = true,
+	
+
 	
 	-- Настройки intensity и saturation для иконок способностей в зависимости от состояния
 	-- Формат: ability_id -> state -> {intensity, saturation}
