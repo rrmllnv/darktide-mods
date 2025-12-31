@@ -39,5 +39,21 @@ return {
 		en = "Cooldown Text Font Size",
 		ru = "Размер шрифта кулдауна",
 	},
+	icon_position_offset = {
+		en = "Icon Position Offset",
+		ru = "Смещение позиции иконки",
+	},
+	icon_position_offset_tooltip = {
+		en = "Base horizontal offset for ability icons (default: 12, same as NumericUI health numbers)",
+		ru = "Базовое горизонтальное смещение для иконок способностей (по умолчанию: 12, как у цифр здоровья в NumericUI)",
+	},
+	icon_position_left_shift = {
+		en = "Icon Position Left Shift",
+		ru = "Сдвиг иконки влево",
+	},
+	icon_position_left_shift_tooltip = {
+		en = "Additional shift to the left for ability icons (default: 20)",
+		ru = "Дополнительный сдвиг влево для иконок способностей (по умолчанию: 20)",
+	},
 }
 

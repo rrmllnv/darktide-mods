@@ -3,6 +3,14 @@ local mod = get_mod("TalentUI")
 local TEAM_HUD_DEF_PATH = "scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_definitions"
 local PLAYER_ABILITY_DEF_PATH = "scripts/ui/hud/elements/player_ability/hud_element_player_ability_vertical_definitions"
 
+-- Функция для загрузки настроек из файла (для возможности изменения в реальном времени)
+local function load_settings()
+	return mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_settings")
+end
+
+-- Загружаем файл настроек при старте
+local TalentUISettings = load_settings()
+
 local backups = mod:persistent_table("talent_ui_backups")
 
 local UIWidget = require("scripts/managers/ui/ui_widget")
@@ -20,7 +28,7 @@ local ability_data = {} -- player_name -> {cooldown_timer, max_cooldown, ability
 
 -- Константы
 local ABILITY_ICON_SIZE = 60
-local COOLDOWN_FONT_SIZE = 18
+local COOLDOWN_FONT_SIZE = TalentUISettings.cooldown_font_size
 
 -- Функция для получения данных об экипированной способности игрока
 -- Использует API из HudElementPlayerAbilityHandler
@@ -139,12 +147,15 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	mod:echo("TalentUI: Creating widgets in hook_require")
 	-- Всегда добавляем виджеты, контролируем видимость через visible
 	local bar_size = HudElementTeamPlayerPanelSettings.size
-	-- Используем размер иконки из настроек мода
-	local icon_size = mod:get("ability_icon_size") or 128
+	-- Используем размер иконки из файла настроек или из настроек мода
+	local icon_size = mod:get("ability_icon_size") or TalentUISettings.ability_icon_size
 	-- В исходниках frame имеет размер 128x128, а icon_size = 80x80
 	-- Используем разные размеры: иконка меньше рамки
 	local frame_size = icon_size -- Рамка использует размер из настройки
 	local icon_size_value = math.floor(icon_size * 0.625) -- 80/128 = 0.625 (как в исходниках)
+	-- Позиционирование из файла настроек
+	local base_offset = TalentUISettings.icon_position_offset
+	local left_shift = TalentUISettings.icon_position_left_shift
 	
 	-- Виджет иконки способности (справа от рамки, как цифры в NumericUI)
 	instance.widget_definitions.talent_ui_ability_icon = UIWidget.create_definition({
@@ -153,17 +164,18 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 			style_id = "icon",
 			value = "content/ui/materials/icons/talents/hud/combat_container",
 			style = {
+				-- В исходниках иконка не имеет явного размера и заполняет scenegraph
+				-- У нас иконка центрируется внутри рамки через offset
 				horizontal_alignment = "right",
 				vertical_alignment = "center",
 				material_values = {
 					progress = 1,
 					talent_icon = nil,
 				},
-				-- Позиционируем иконку рядом с цифрами (как в NumericUI: offset = { 12, 20, 28 })
-				-- Используем offset = { 12 } для выравнивания с первой цифрой здоровья
-				-- Чтобы сдвинуть влево, уменьшаем первое значение offset
+				-- Позиционируем иконку: базовое смещение рамки минус половина разницы размеров для центрирования
+				-- минус дополнительный сдвиг влево
 				offset = {
-					12 - (frame_size - icon_size_value) / 2 - 20, -- -20 для сдвига влево
+					base_offset - (frame_size - icon_size_value) / 2 - left_shift, -- Центрируем внутри рамки + сдвиг влево
 					0,
 					1,
 				},
@@ -183,12 +195,13 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 			style_id = "frame",
 			value = "content/ui/materials/icons/talents/hud/combat_frame_inner",
 			style = {
+				-- В исходниках рамка использует horizontal_alignment = "center" для центрирования
+				-- У нас используем "right" для выравнивания с цифрами, поэтому offset задаем явно
 				horizontal_alignment = "right",
 				vertical_alignment = "center",
-				-- Позиционируем рамку рядом с цифрами (как в NumericUI: offset = { 12, 20, 28 })
-				-- Используем offset = { 12 } для выравнивания с первой цифрой здоровья
+				-- Базовое позиционирование рамки: справа от scenegraph (как цифры в NumericUI)
 				offset = {
-					12,
+					base_offset - left_shift, -- Базовое смещение минус сдвиг влево
 					0,
 					2,
 				},
@@ -216,12 +229,12 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 				text_horizontal_alignment = "center",
 				text_vertical_alignment = "center",
 				font_type = "machine_medium",
-				font_size = COOLDOWN_FONT_SIZE,
+				font_size = mod:get("cooldown_font_size") or TalentUISettings.cooldown_font_size,
 				text_color = UIHudSettings.color_tint_main_1,
 				drop_shadow = true,
 				-- Позиционируем текст кулдауна поверх иконки (центрируем относительно рамки)
 				offset = {
-					12 - (frame_size - icon_size_value) / 2,
+					base_offset - (frame_size - icon_size_value) / 2 - left_shift,
 					0,
 					3,
 				},
@@ -244,7 +257,7 @@ mod:hook(_G, "dofile", function(func, path)
 		local style = table.clone(UIFontSettings.hud_body)
 		style.text_horizontal_alignment = "center"
 		style.text_vertical_alignment = "center"
-		style.font_size = COOLDOWN_FONT_SIZE
+		style.font_size = mod:get("cooldown_font_size") or TalentUISettings.cooldown_font_size
 		style.font_type = "machine_medium"
 		style.drop_shadow = true
 		
@@ -358,20 +371,57 @@ local function update_teammate_ability_icon(self, player, dt)
 	-- В исходниках frame = 128x128, icon_size = 80x80 (соотношение 0.625)
 	local frame_size = mod:get("ability_icon_size") or 128
 	local icon_size_value = math.floor(frame_size * 0.625) -- 80/128 = 0.625
-	ability_icon_widget.style.icon.size[1] = icon_size_value
-	ability_icon_widget.style.icon.size[2] = icon_size_value
-	ability_icon_widget.style.frame.size[1] = frame_size
-	ability_icon_widget.style.frame.size[2] = frame_size
-	-- Центрируем иконку относительно рамки и выравниваем с цифрами
+	
+	-- Обновляем размеры только если они изменились
+	if ability_icon_widget.style.icon.size[1] ~= icon_size_value then
+		ability_icon_widget.style.icon.size[1] = icon_size_value
+		ability_icon_widget.style.icon.size[2] = icon_size_value
+		ability_icon_widget.dirty = true
+	end
+	
+	-- Позиционирование из файла настроек (перезагружаем каждый кадр для возможности изменения в реальном времени)
+	local settings = load_settings()
+	local base_offset = settings.icon_position_offset
+	local left_shift = settings.icon_position_left_shift
+	
+	-- Проверяем, нужно ли обновить размер или позицию
+	local needs_offset_update = false
+	if ability_icon_widget.style.frame.size[1] ~= frame_size then
+		ability_icon_widget.style.frame.size[1] = frame_size
+		ability_icon_widget.style.frame.size[2] = frame_size
+		ability_icon_widget.dirty = true
+		needs_offset_update = true
+	end
+	
+	-- Обновляем offset каждый кадр (для возможности изменения в реальном времени через файл настроек)
+	local current_frame_offset = ability_icon_widget.style.frame.offset[1]
+	local new_frame_offset = base_offset - left_shift
 	local offset_adjustment = (frame_size - icon_size_value) / 2
-	ability_icon_widget.style.icon.offset[1] = 12 - offset_adjustment
-	ability_icon_widget.style.frame.offset[1] = 12
+	local new_icon_offset = base_offset - offset_adjustment - left_shift
+	
+	-- Обновляем только если позиция изменилась
+	if needs_offset_update or current_frame_offset ~= new_frame_offset or ability_icon_widget.style.icon.offset[1] ~= new_icon_offset then
+		ability_icon_widget.style.frame.offset[1] = new_frame_offset
+		ability_icon_widget.style.icon.offset[1] = new_icon_offset
+		ability_icon_widget.dirty = true
+	end
+	
 	if ability_cooldown_widget then
-		-- Обновляем размер и позицию текста кулдауна (центрируем относительно рамки)
-		local left_offset = 20 -- Сдвиг влево (можно изменить значение)
-		ability_cooldown_widget.style.text.size[1] = icon_size_value
-		ability_cooldown_widget.style.text.size[2] = icon_size_value
-		ability_cooldown_widget.style.text.offset[1] = 12 - offset_adjustment - left_offset
+		-- Обновляем размер текста кулдауна только если изменился
+		if ability_cooldown_widget.style.text.size[1] ~= icon_size_value then
+			ability_cooldown_widget.style.text.size[1] = icon_size_value
+			ability_cooldown_widget.style.text.size[2] = icon_size_value
+			ability_cooldown_widget.dirty = true
+		end
+		
+		-- Обновляем offset текста кулдауна каждый кадр (для возможности изменения в реальном времени)
+		local offset_adjustment = (frame_size - icon_size_value) / 2
+		local new_text_offset = base_offset - offset_adjustment - left_shift
+		local current_text_offset = ability_cooldown_widget.style.text.offset[1]
+		if current_text_offset ~= new_text_offset then
+			ability_cooldown_widget.style.text.offset[1] = new_text_offset
+			ability_cooldown_widget.dirty = true
+		end
 	end
 	
 	-- Устанавливаем иконку
