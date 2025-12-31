@@ -274,20 +274,40 @@ local function get_ability_material_settings(ability_id, on_cooldown, uses_charg
 	local ability_settings = icon_settings[ability_id]
 	local state_key
 	
-	if on_cooldown then
-		if uses_charges then
-			if has_charges_left then
-				state_key = "has_charges_cooldown"
-			else
-				state_key = "out_of_charges_cooldown"
-			end
-		else
-			state_key = "on_cooldown"
-		end
-	elseif not uses_charges or (uses_charges and has_charges_left) then
+	-- Аура всегда активна (пассивный баф, нет кулдауна и зарядов)
+	if ability_id == "aura" then
 		state_key = "active"
+	-- Для blitz (grenade): есть заряды = active, нет зарядов = out_of_charges_cooldown
+	elseif ability_id == "blitz" then
+		if has_charges_left then
+			state_key = "active"
+		else
+			state_key = "out_of_charges_cooldown"
+		end
+	-- Для ability (combat ability): готов = active, на кулдауне = on_cooldown
+	elseif ability_id == "ability" then
+		if on_cooldown then
+			state_key = "on_cooldown"
+		else
+			state_key = "active"
+		end
+	-- Для остальных используем общую логику
 	else
-		state_key = "inactive"
+		if on_cooldown then
+			if uses_charges then
+				if has_charges_left then
+					state_key = "has_charges_cooldown"
+				else
+					state_key = "out_of_charges_cooldown"
+				end
+			else
+				state_key = "on_cooldown"
+			end
+		elseif not uses_charges or (uses_charges and has_charges_left) then
+			state_key = "active"
+		else
+			state_key = "inactive"
+		end
 	end
 	
 	local state_settings = ability_settings[state_key]
