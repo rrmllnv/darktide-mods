@@ -681,7 +681,7 @@ local function update_teammate_all_abilities(self, player, dt)
 					elseif ability_info.id == "blitz" then
 						-- Для blitz показываем заряды
 						if uses_charges then
-							if remaining_charges > 1 or remaining_charges == 0 then
+							if remaining_charges >= 1 then
 								display_text = tostring(remaining_charges)
 							end
 						elseif remaining_charges == 0 then
