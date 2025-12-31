@@ -40,7 +40,7 @@ return {
 		-- ability (combat ability) - боевая способность
 		-- Использует 2 состояния: active (готов) и on_cooldown (на кулдауне)
 		ability = {
-			active = {intensity = 1, saturation = 1}, -- Готов к использованию - яркая и цветная
+			active = {intensity = 0, saturation = 1}, -- Готов к использованию - яркая и цветная
 			on_cooldown = {intensity = -0.5, saturation = 0.5}, -- На кулдауне - темная и менее цветная
 			-- Остальные состояния не используются для ability, но оставлены для совместимости
 			has_charges_cooldown = {intensity = 0.5, saturation = 1},
@@ -50,7 +50,7 @@ return {
 		-- blitz (grenade ability) - гранаты
 		-- Использует 2 состояния: active (есть заряды) и out_of_charges_cooldown (нет зарядов)
 		blitz = {
-			active = {intensity = 1, saturation = 1}, -- Есть заряды - яркая и цветная
+			active = {intensity = 0, saturation = 1}, -- Есть заряды - яркая и цветная
 			out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5}, -- Нет зарядов - темная и менее цветная
 			-- Остальные состояния не используются для blitz, но оставлены для совместимости
 			on_cooldown = {intensity = -0.25, saturation = 1},
@@ -60,7 +60,7 @@ return {
 		-- aura (coherency ability) - аура
 		-- Всегда использует только active (пассивный баф, нет кулдауна и зарядов)
 		aura = {
-			active = {intensity = 1, saturation = 1}, -- Всегда активна - яркая и цветная
+			active = {intensity = 0, saturation = 1}, -- Всегда активна - яркая и цветная
 			-- Остальные состояния не используются для aura, но оставлены для совместимости
 			on_cooldown = {intensity = -0.25, saturation = 1},
 			has_charges_cooldown = {intensity = 0.5, saturation = 1},

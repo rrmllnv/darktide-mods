@@ -18,6 +18,131 @@ local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local HudElementTeamPlayerPanelSettings = require("scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_settings")
 local HudElementPlayerAbilitySettings = require("scripts/ui/hud/elements/player_ability/hud_element_player_ability_settings")
 
+-- Функция для глубокого копирования таблицы
+local function deep_copy(original)
+	local copy
+	if type(original) == "table" then
+		copy = {}
+		for key, value in pairs(original) do
+			copy[key] = deep_copy(value)
+		end
+	else
+		copy = original
+	end
+	return copy
+end
+
+-- Функция для глубокого мержа таблиц
+local function deep_merge(target, source)
+	for key, value in pairs(source) do
+		if type(value) == "table" and type(target[key]) == "table" then
+			deep_merge(target[key], value)
+		else
+			target[key] = deep_copy(value)
+		end
+	end
+	return target
+end
+
+-- Функция для загрузки настроек
+local function load_settings()
+	local DEFAULT_SETTINGS = {
+		icon_position_offset = 12,
+		icon_position_left_shift = 20,
+		icon_position_vertical_offset = 0,
+		ability_icon_size = 200,  -- Размер иконок
+		cooldown_font_size = 18,
+		show_abilities_for_bots = true,
+		ability_spacing = 50,
+		icon_material_settings = {
+			ability = {
+				active = {intensity = 1, saturation = 1},
+				on_cooldown = {intensity = -0.25, saturation = 1},
+				has_charges_cooldown = {intensity = 0.5, saturation = 1},
+				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
+				inactive = {intensity = -0.75, saturation = 0.3},
+			},
+			blitz = {
+				active = {intensity = 1, saturation = 1},
+				on_cooldown = {intensity = -0.25, saturation = 1},
+				has_charges_cooldown = {intensity = 0.5, saturation = 1},
+				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
+				inactive = {intensity = -0.75, saturation = 0.3},
+			},
+			aura = {
+				active = {intensity = 1, saturation = 1},
+				on_cooldown = {intensity = -0.25, saturation = 1},
+				has_charges_cooldown = {intensity = 0.5, saturation = 1},
+				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
+				inactive = {intensity = -0.75, saturation = 0.3},
+			},
+		},
+	}
+	
+	local success, result = pcall(function()
+		return mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_settings")
+	end)
+	
+	if success and result and type(result) == "table" then
+		-- Создаем копию дефолтных настроек
+		local merged_settings = deep_copy(DEFAULT_SETTINGS)
+		-- Мержим настройки из файла с дефолтными
+		deep_merge(merged_settings, result)
+		
+		-- Если в файле есть icon_material_settings, используем их напрямую (полная замена)
+		-- Это гарантирует, что настройки из файла применяются полностью
+		if result.icon_material_settings and type(result.icon_material_settings) == "table" then
+			merged_settings.icon_material_settings = deep_copy(result.icon_material_settings)
+		elseif not merged_settings.icon_material_settings then
+			-- Если в файле нет icon_material_settings, используем дефолтные
+			merged_settings.icon_material_settings = deep_copy(DEFAULT_SETTINGS.icon_material_settings)
+		end
+		
+		return merged_settings
+	else
+		return DEFAULT_SETTINGS
+	end
+end
+
+-- Загружаем файл настроек сразу после require'ов
+local TalentUISettings = load_settings()
+
+-- Убеждаемся, что настройки всегда инициализированы
+if not TalentUISettings then
+	TalentUISettings = {
+		icon_position_offset = 12,
+		icon_position_left_shift = 20,
+		icon_position_vertical_offset = 0,
+		ability_icon_size = 200,
+		cooldown_font_size = 18,
+		show_abilities_for_bots = true,
+		ability_spacing = 50,
+		icon_material_settings = {
+			ability = {
+				active = {intensity = 1, saturation = 1},
+				on_cooldown = {intensity = -0.25, saturation = 1},
+				has_charges_cooldown = {intensity = 0.5, saturation = 1},
+				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
+				inactive = {intensity = -0.75, saturation = 0.3},
+			},
+			blitz = {
+				active = {intensity = 1, saturation = 1},
+				on_cooldown = {intensity = -0.25, saturation = 1},
+				has_charges_cooldown = {intensity = 0.5, saturation = 1},
+				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
+				inactive = {intensity = -0.75, saturation = 0.3},
+			},
+			aura = {
+				active = {intensity = 1, saturation = 1},
+				on_cooldown = {intensity = -0.25, saturation = 1},
+				has_charges_cooldown = {intensity = 0.5, saturation = 1},
+				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
+				inactive = {intensity = -0.75, saturation = 0.3},
+			},
+		},
+	}
+end
+
 -- Хранение данных о способностях тимейтов
 -- Кэш: player_name + "_" + ability_id -> {ability_id, ability_type, icon}
 local teammate_abilities_data = {}
@@ -261,33 +386,33 @@ local function get_ability_state_colors(on_cooldown, uses_charges, has_charges_l
 end
 
 -- Функция для получения цвета иконки способности в зависимости от типа
-local function get_ability_icon_color(ability_id)
-	-- Цвета из UIHudSettings, используемые в исходниках для разных типов способностей
+-- Функция для получения gradient_map для иконки способности
+-- Использует те же gradient_map, что и в лобби (talent_builder_view_settings)
+local function get_ability_gradient_map(ability_id)
+	-- Gradient maps из TalentBuilderViewSettings, используемые в исходниках для разных типов способностей
 	if ability_id == "ability" then
-		-- Combat ability - красный (используется color_tint_alert_2 из исходников)
-		return UIHudSettings.color_tint_main_2
+		-- Combat ability - использует gradient_map для ability
+		return "content/ui/textures/color_ramps/talent_ability"
 	elseif ability_id == "blitz" then
-		-- Grenade ability - зеленоватый (используется цвет из player_status_colors)
-		-- В исходниках для grenade используется зеленоватый оттенок
-		-- Используем цвет из UIHudSettings.player_status_colors.dead, который использует Color.ui_hud_green_super_light
-		return UIHudSettings.player_status_colors and UIHudSettings.player_status_colors.dead or UIHudSettings.color_tint_secondary_2
+		-- Grenade ability (tactical) - использует gradient_map для blitz
+		return "content/ui/textures/color_ramps/talent_blitz"
 	elseif ability_id == "aura" then
-		-- Coherency ability - желтоватый (используется color_tint_secondary_2 из исходников)
-		return UIHudSettings.color_tint_secondary_2
+		-- Coherency ability - использует gradient_map для aura
+		return "content/ui/textures/color_ramps/talent_aura"
 	end
 	
-	-- По умолчанию используем основной цвет
-	return UIHudSettings.color_tint_main_2
+	-- По умолчанию возвращаем nil (gradient_map не будет применен)
+	return nil
 end
 
 -- Функция для получения настроек материала (intensity, saturation) в зависимости от состояния
 local function get_ability_material_settings(ability_id, on_cooldown, uses_charges, has_charges_left)
-	if not TalentUISettings then
+	if not TalentUISettings or not TalentUISettings.icon_material_settings then
 		return {intensity = 0, saturation = 1}
 	end
 	
 	local icon_settings = TalentUISettings.icon_material_settings
-	if not icon_settings or not icon_settings[ability_id] then
+	if not icon_settings[ability_id] then
 		return {intensity = 0, saturation = 1}
 	end
 	
@@ -340,130 +465,7 @@ local function get_ability_material_settings(ability_id, on_cooldown, uses_charg
 		}
 	end
 	
-	-- Если состояние не найдено, логируем для отладки
-	mod:warning("State '" .. tostring(state_key) .. "' not found for ability '" .. tostring(ability_id) .. "'")
 	return {intensity = 0, saturation = 1}
-end
-
--- Функция для глубокого копирования таблицы
-local function deep_copy(original)
-	local copy
-	if type(original) == "table" then
-		copy = {}
-		for key, value in pairs(original) do
-			copy[key] = deep_copy(value)
-		end
-	else
-		copy = original
-	end
-	return copy
-end
-
--- Функция для глубокого мержа таблиц
-local function deep_merge(target, source)
-	for key, value in pairs(source) do
-		if type(value) == "table" and type(target[key]) == "table" then
-			deep_merge(target[key], value)
-		else
-			target[key] = deep_copy(value)
-		end
-	end
-	return target
-end
-
--- Функция для загрузки настроек
-local function load_settings()
-	local DEFAULT_SETTINGS = {
-		icon_position_offset = 12,
-		icon_position_left_shift = 20,
-		icon_position_vertical_offset = 0,
-		ability_icon_size = 200,  -- Размер иконок
-		cooldown_font_size = 18,
-		show_abilities_for_bots = true,
-		ability_spacing = 50,
-		icon_material_settings = {
-			ability = {
-				active = {intensity = 1, saturation = 1},
-				on_cooldown = {intensity = -0.25, saturation = 1},
-				has_charges_cooldown = {intensity = 0.5, saturation = 1},
-				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
-				inactive = {intensity = -0.75, saturation = 0.3},
-			},
-			blitz = {
-				active = {intensity = 1, saturation = 1},
-				on_cooldown = {intensity = -0.25, saturation = 1},
-				has_charges_cooldown = {intensity = 0.5, saturation = 1},
-				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
-				inactive = {intensity = -0.75, saturation = 0.3},
-			},
-			aura = {
-				active = {intensity = 1, saturation = 1},
-				on_cooldown = {intensity = -0.25, saturation = 1},
-				has_charges_cooldown = {intensity = 0.5, saturation = 1},
-				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
-				inactive = {intensity = -0.75, saturation = 0.3},
-			},
-		},
-	}
-	
-	local success, result = pcall(function()
-		return mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_settings")
-	end)
-	
-	if success and result and type(result) == "table" then
-		-- Создаем копию дефолтных настроек
-		local merged_settings = deep_copy(DEFAULT_SETTINGS)
-		-- Мержим настройки из файла с дефолтными
-		deep_merge(merged_settings, result)
-		mod:info("Settings loaded successfully")
-		mod:info("Ability active: intensity=" .. tostring(merged_settings.icon_material_settings.ability.active.intensity) .. ", saturation=" .. tostring(merged_settings.icon_material_settings.ability.active.saturation))
-		mod:info("Ability on_cooldown: intensity=" .. tostring(merged_settings.icon_material_settings.ability.on_cooldown.intensity) .. ", saturation=" .. tostring(merged_settings.icon_material_settings.ability.on_cooldown.saturation))
-		mod:info("Blitz active: intensity=" .. tostring(merged_settings.icon_material_settings.blitz.active.intensity) .. ", saturation=" .. tostring(merged_settings.icon_material_settings.blitz.active.saturation))
-		mod:info("Aura active: intensity=" .. tostring(merged_settings.icon_material_settings.aura.active.intensity) .. ", saturation=" .. tostring(merged_settings.icon_material_settings.aura.active.saturation))
-		return merged_settings
-	else
-		mod:warning("Failed to load settings, using defaults. Success: " .. tostring(success) .. ", Result type: " .. type(result))
-		return DEFAULT_SETTINGS
-	end
-end
-
--- Загружаем файл настроек при старте
-local TalentUISettings = load_settings()
-
--- Убеждаемся, что настройки всегда инициализированы
-if not TalentUISettings then
-	TalentUISettings = {
-		icon_position_offset = 12,
-		icon_position_left_shift = 20,
-		icon_position_vertical_offset = 0,
-		ability_icon_size = 200,
-		cooldown_font_size = 18,
-		show_abilities_for_bots = true,
-		ability_spacing = 50,
-		icon_material_settings = {
-			ability = {
-				active = {intensity = 1, saturation = 1},
-				on_cooldown = {intensity = -0.25, saturation = 1},
-				has_charges_cooldown = {intensity = 0.5, saturation = 1},
-				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
-				inactive = {intensity = -0.75, saturation = 0.3},
-			},
-			blitz = {
-				active = {intensity = 1, saturation = 1},
-				on_cooldown = {intensity = -0.25, saturation = 1},
-				has_charges_cooldown = {intensity = 0.5, saturation = 1},
-				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
-				inactive = {intensity = -0.75, saturation = 0.3},
-			},
-			aura = {
-				active = {intensity = 1, saturation = 1},
-				on_cooldown = {intensity = -0.25, saturation = 1},
-				has_charges_cooldown = {intensity = 0.5, saturation = 1},
-				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
-				inactive = {intensity = -0.75, saturation = 0.3},
-			},
-		},
-	}
 end
 
 -- Создание виджетов для всех 3 способностей
@@ -493,6 +495,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 						frame = "content/ui/textures/frames/talents/" .. ability_type.frame,
 						icon_mask = "content/ui/textures/frames/talents/" .. ability_type.mask,
 						icon = nil,
+						gradient_map = nil,
 						intensity = 0,
 						saturation = 1,
 					},
@@ -620,10 +623,10 @@ local function update_teammate_all_abilities(self, player, dt)
 				local cooldown_progress, on_cooldown, remaining_charges, has_charges_left, max_charges = get_ability_state(player, extensions, ability_type)
 				local uses_charges = max_charges > 1
 				
-				-- Получаем цвет иконки в зависимости от типа способности
-				local ability_color = get_ability_icon_color(ability_info.id)
-				if ability_color then
-					icon_widget.style.icon.color = table.clone(ability_color)
+				-- Получаем gradient_map для иконки в зависимости от типа способности
+				local gradient_map = get_ability_gradient_map(ability_info.id)
+				if gradient_map and icon_widget.style.icon.material_values.gradient_map ~= gradient_map then
+					icon_widget.style.icon.material_values.gradient_map = gradient_map
 					icon_widget.dirty = true
 				end
 				
@@ -631,11 +634,9 @@ local function update_teammate_all_abilities(self, player, dt)
 				local material_settings = get_ability_material_settings(ability_info.id, on_cooldown, uses_charges, has_charges_left)
 				
 				-- Обновляем intensity и saturation (принудительно обновляем каждый кадр)
-				if icon_widget.style.icon.material_values.intensity ~= material_settings.intensity or icon_widget.style.icon.material_values.saturation ~= material_settings.saturation then
-					icon_widget.style.icon.material_values.intensity = material_settings.intensity
-					icon_widget.style.icon.material_values.saturation = material_settings.saturation
-					icon_widget.dirty = true
-				end
+				icon_widget.style.icon.material_values.intensity = material_settings.intensity
+				icon_widget.style.icon.material_values.saturation = material_settings.saturation
+				icon_widget.dirty = true
 				
 				-- Устанавливаем иконку в правильное поле material_values
 				if icon_widget.style.icon.material_values.icon ~= icon then
@@ -684,7 +685,7 @@ local function update_teammate_all_abilities(self, player, dt)
 								display_text = tostring(remaining_charges)
 							end
 						elseif remaining_charges == 0 then
-							display_text = " "
+							display_text = ""
 						end
 					end
 					-- Для aura ничего не показываем (обычно пассивная)
