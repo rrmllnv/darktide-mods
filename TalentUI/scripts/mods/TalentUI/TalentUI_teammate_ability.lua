@@ -259,8 +259,8 @@ local function get_player_ability_by_type(player, extensions, slot_type)
 	-- Если это талант, получаем через CharacterSheet, иначе через ability_extension
 	if slot_type == "slot_grenade_ability" then
 		local blitz_entry = get_talent_from_character_sheet(player, "blitz")
-		
-		-- Если blitz это талант (как у псайкера молнии), получаем данные через CharacterSheet
+
+		-- Если blitz это талант (как у псайкера молнии или огрина "большая граната"), получаем данные через CharacterSheet
 		-- По исходникам: _fill_combat_ability_or_grenade_ability_or_coherency заполняет blitz.talent и blitz.icon
 		if blitz_entry and blitz_entry.talent then
 			return {
@@ -269,6 +269,10 @@ local function get_player_ability_by_type(player, extensions, slot_type)
 				icon = blitz_entry.icon,
 				name = blitz_entry.talent.display_name or "Blitz",
 			}
+		else
+			-- Если нет таланта blitz - не показываем иконку вообще
+			-- (в отличие от базовых способностей, blitz должен быть только талантом)
+			return nil
 		end
 	end
 	
@@ -443,22 +447,12 @@ local function get_ability_material_settings(ability_id, on_cooldown, uses_charg
 	-- Аура всегда активна (пассивный баф, нет кулдауна и зарядов)
 	if ability_id == "aura" then
 		state_key = "active"
-	-- Для blitz (grenade): если есть заряды - проверяем заряды, если нет зарядов (как молнии псайкера) - проверяем кулдаун
+	-- Для blitz (grenade): проверяем заряды, если нет зарядов - неактивная
 	elseif ability_id == "blitz" then
-		if uses_charges then
-			-- Есть заряды - проверяем наличие зарядов
-			if has_charges_left then
-				state_key = "active"
-			else
-				state_key = "out_of_charges_cooldown"
-			end
+		if has_charges_left then
+			state_key = "active"
 		else
-			-- Нет зарядов (как молнии псайкера) - проверяем кулдаун
-			if on_cooldown then
-				state_key = "on_cooldown"
-			else
-				state_key = "active"
-			end
+			state_key = "inactive"
 		end
 	-- Для ability (combat ability): готов = active, на кулдауне = on_cooldown
 	elseif ability_id == "ability" then
