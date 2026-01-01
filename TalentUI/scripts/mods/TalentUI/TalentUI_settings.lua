@@ -2,9 +2,6 @@ local mod = get_mod("TalentUI")
 
 -- Настройки позиционирования иконок способностей
 return {
-	-- Базовое смещение позиции иконки
-	icon_position_offset = 200,
-	
 	-- Дополнительный сдвиг влево/вправо
 	icon_position_left_shift = 0,
 	
@@ -28,7 +25,7 @@ return {
 	blitz_icon_position_vertical_offset = 0,
 	
 	-- Показывать способности у ботов
-	show_abilities_for_bots = true,
+	show_abilities_for_bots = false,
 	
 
 	

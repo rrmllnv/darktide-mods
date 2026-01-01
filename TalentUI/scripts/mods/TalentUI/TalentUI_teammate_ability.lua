@@ -625,7 +625,7 @@ local function update_teammate_all_abilities(self, player, dt)
 	local coherency_icon_size = 24
 	
 	if coherency_widget and coherency_widget.style and coherency_widget.style.texture and coherency_widget.style.texture.offset then
-		coherency_icon_offset_x = coherency_widget.style.texture.offset[1] - 10
+		coherency_icon_offset_x = coherency_widget.style.texture.offset[1] - 15
 		if coherency_widget.style.texture.size then
 			coherency_icon_size = coherency_widget.style.texture.size[1]
 		end
