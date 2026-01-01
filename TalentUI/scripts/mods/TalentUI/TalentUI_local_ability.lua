@@ -6,7 +6,6 @@ local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local HudElementPlayerAbilitySettings = require("scripts/ui/hud/elements/player_ability/hud_element_player_ability_settings")
 
--- Функция для загрузки настроек
 local function load_settings()
 	local success, result = pcall(function()
 		return mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_settings")
@@ -35,10 +34,8 @@ local function load_settings()
 	end
 end
 
--- Загружаем файл настроек при старте
 local TalentUISettings = load_settings()
 
--- Добавление кулдауна для локального игрока
 mod:hook(_G, "dofile", function(func, path)
 	local instance = func(path)
 	
@@ -76,7 +73,6 @@ mod:hook(_G, "dofile", function(func, path)
 	return instance
 end)
 
--- Обновление кулдауна для локального игрока
 mod:hook_safe("HudElementPlayerAbility", "update", function(self)
 	if not mod:get("show_local_ability_cooldown") then
 		return
