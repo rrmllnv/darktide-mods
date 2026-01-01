@@ -56,7 +56,7 @@ return {
 					{
 						setting_id = "show_local_ability_cooldown",
 						type = "checkbox",
-						default_value = true,
+						default_value = false,
 					},
 					{
 						setting_id = "cooldown_format",
