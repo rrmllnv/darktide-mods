@@ -177,12 +177,12 @@ end
 
 local TALENT_ABILITY_METADATA = {
 	{
-		id = "aura",
-		slot = "slot_coherency_ability",
-		type = "coherency_ability",
-		name = "talent_ui_all_aura",
-		frame = "circular_frame",
-		mask = "circular_frame_mask",
+		id = "ability",
+		slot = "slot_combat_ability",
+		type = "combat_ability",
+		name = "talent_ui_all_ability",
+		frame = "hex_frame",
+		mask = "hex_frame_mask",
 	},
 	{
 		id = "blitz",
@@ -193,12 +193,12 @@ local TALENT_ABILITY_METADATA = {
 		mask = "square_frame_mask",
 	},
 	{
-		id = "ability",
-		slot = "slot_combat_ability",
-		type = "combat_ability",
-		name = "talent_ui_all_ability",
-		frame = "hex_frame",
-		mask = "hex_frame_mask",
+		id = "aura",
+		slot = "slot_coherency_ability",
+		type = "coherency_ability",
+		name = "talent_ui_all_aura",
+		frame = "circular_frame",
+		mask = "circular_frame_mask",
 	},
 }
 
@@ -472,14 +472,19 @@ end
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	local bar_size = HudElementTeamPlayerPanelSettings.size
 	local icon_size = TalentUISettings.ability_icon_size
-	local base_offset = TalentUISettings.icon_position_offset
-	local left_shift = TalentUISettings.icon_position_left_shift
-	local vertical_offset = TalentUISettings.icon_position_vertical_offset or 0
+	-- Позиция иконки сплоченности будет получена динамически из виджета
+	-- Временные значения для создания виджета (будут обновляться динамически)
+	local coherency_icon_offset_x = 34 -- Значение по умолчанию
+	local coherency_icon_size = 24
 	local ability_spacing = TalentUISettings.ability_spacing or 50
+	local vertical_offset = TalentUISettings.icon_position_vertical_offset or 0
 
 	for i = 1, #TALENT_ABILITY_METADATA do
 		local ability_type = TALENT_ABILITY_METADATA[i]
-		local offset_x = base_offset - left_shift - (i - 1) * ability_spacing
+		-- Позиционируем слева от иконки сплоченности
+		-- Первая способность (ability) - самая левая, последняя (aura) - ближе к иконке сплоченности
+		-- Временный offset для создания виджета (будет обновляться динамически)
+		local offset_x = coherency_icon_offset_x + coherency_icon_size + ability_spacing + (i - 1) * ability_spacing
 		
 		-- Виджет иконки способности с контейнером как в дереве талантов (без дополнительных рамок)
 		instance.widget_definitions[ability_type.name .. "_icon"] = UIWidget.create_definition({
@@ -585,15 +590,30 @@ local function update_teammate_all_abilities(self, player, dt)
 		return
 	end
 	
-	-- Обновляем данные для каждой способности
+	-- Определяем, какие иконки включены, и вычисляем их позиции
+	-- Получаем позицию иконки сплоченности динамически из виджета
+	local coherency_widget = self._widgets_by_name.coherency_indicator
+	local coherency_icon_offset_x = 34 -- Значение по умолчанию, если виджет не найден
+	local coherency_icon_size = 24
+	
+	if coherency_widget and coherency_widget.style and coherency_widget.style.texture and coherency_widget.style.texture.offset then
+		coherency_icon_offset_x = coherency_widget.style.texture.offset[1] - 10
+		if coherency_widget.style.texture.size then
+			coherency_icon_size = coherency_widget.style.texture.size[1]
+		end
+	end
+	
+	local ability_spacing = TalentUISettings.ability_spacing or 50
+	local vertical_offset = TalentUISettings.icon_position_vertical_offset or 0
+	
+	-- Сначала получаем данные о всех способностях и определяем, какие должны быть видны
+	local abilities_to_show = {}
+	
 	for i = 1, #TALENT_ABILITY_METADATA do
 		local ability_info = TALENT_ABILITY_METADATA[i]
 		local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_icon"]
-		local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_text"]
 		
-		if not icon_widget then
-			-- Пропускаем если виджет не создан
-		else
+		if icon_widget then
 			-- Ключ для кэширования: player_name + "_" + ability_id
 			local data_key = player_name .. "_" .. ability_info.id
 			
@@ -606,14 +626,61 @@ local function update_teammate_all_abilities(self, player, dt)
 						ability_type = ability_data.ability_type,
 						icon = ability_data.icon,
 					}
-				else
-					-- Способность еще не загружена, скрываем виджеты
-					icon_widget.visible = false
-					if text_widget then
-						text_widget.visible = false
-					end
 				end
 			end
+			
+			-- Проверяем, есть ли способность у игрока и включена ли она в настройках
+			local has_ability = teammate_abilities_data[data_key] and teammate_abilities_data[data_key].ability_type ~= nil
+			local show_icon = true
+			if ability_info.id == "ability" then
+				show_icon = mod:get("show_teammate_ability_icon")
+			elseif ability_info.id == "blitz" then
+				show_icon = mod:get("show_teammate_blitz_icon")
+			elseif ability_info.id == "aura" then
+				show_icon = mod:get("show_teammate_aura_icon")
+			end
+			
+			-- Если способность есть и включена в настройках - добавляем в список для отображения
+			if has_ability and show_icon then
+				table.insert(abilities_to_show, {
+					ability_info = ability_info,
+					data_key = data_key,
+				})
+			end
+		end
+	end
+	
+	-- Вычисляем позиции для способностей, которые будут показаны
+	-- При horizontal_alignment = "right": offset считается от правого края
+	-- Иконка сплоченности на offset = 34, размер 24
+	-- Иконки способностей должны быть слева от иконки сплоченности
+	-- Формула: coherency_icon_offset_x + coherency_icon_size + spacing + (position_index - 1) * ability_spacing
+	-- Первая способность (ability) - самая левая, последняя (aura) - ближе к иконке сплоченности
+	local enabled_abilities = {}
+	local total_abilities = #abilities_to_show
+	for position_index = 1, total_abilities do
+		local ability_data = abilities_to_show[position_index]
+		-- Первая позиция (position_index = 1) - самая левая (больший offset)
+		-- Последняя позиция (position_index = total_abilities) - ближе к иконке сплоченности (меньший offset)
+		local offset_x = coherency_icon_offset_x + coherency_icon_size + ability_spacing + (total_abilities - position_index) * ability_spacing
+		enabled_abilities[ability_data.ability_info.id] = {
+			ability_info = ability_data.ability_info,
+			position = position_index,
+			offset_x = offset_x,
+		}
+	end
+	
+	-- Обновляем данные для каждой способности
+	for i = 1, #TALENT_ABILITY_METADATA do
+		local ability_info = TALENT_ABILITY_METADATA[i]
+		local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_icon"]
+		local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_text"]
+		
+		if not icon_widget then
+			-- Пропускаем если виджет не создан
+		else
+			-- Ключ для кэширования: player_name + "_" + ability_id
+			local data_key = player_name .. "_" .. ability_info.id
 			
 			if icon_widget and teammate_abilities_data[data_key] and teammate_abilities_data[data_key].ability_type then
 				local ability_type = teammate_abilities_data[data_key].ability_type
@@ -629,13 +696,27 @@ local function update_teammate_all_abilities(self, player, dt)
 					show_icon = mod:get("show_teammate_aura_icon")
 				end
 				
-				if not show_icon then
-					-- Скрываем иконку и текст, если настройка выключена
+				-- Получаем позицию для этой иконки (если она включена и есть у игрока)
+				local ability_position = enabled_abilities[ability_info.id]
+				
+				if not show_icon or not ability_position then
+					-- Скрываем иконку и текст, если настройка выключена или позиция не определена
 					icon_widget.visible = false
 					if text_widget then
 						text_widget.visible = false
 					end
 				else
+					-- Обновляем позицию X динамически
+					local new_offset_x = ability_position.offset_x
+					if icon_widget.style.icon.offset[1] ~= new_offset_x then
+						icon_widget.style.icon.offset[1] = new_offset_x
+						icon_widget.dirty = true
+					end
+					if text_widget and text_widget.style.text.offset[1] ~= new_offset_x then
+						text_widget.style.text.offset[1] = new_offset_x
+						text_widget.dirty = true
+					end
+					
 					-- Получаем состояние способности
 					local cooldown_progress, on_cooldown, remaining_charges, has_charges_left, max_charges = get_ability_state(player, extensions, ability_type)
 					local uses_charges = max_charges > 1
