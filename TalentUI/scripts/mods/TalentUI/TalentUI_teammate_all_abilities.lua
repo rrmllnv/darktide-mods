@@ -514,8 +514,6 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 		}, "bar")
 		
 		-- Виджет текста кулдауна/зарядов
-		-- Текст размещается выше иконки (vertical_offset уменьшен на половину размера иконки)
-		local text_offset_y = vertical_offset - icon_size_value * 0.5 - 5
 		instance.widget_definitions[ability_type.name .. "_text"] = UIWidget.create_definition({
 			{
 				pass_type = "text",
@@ -533,7 +531,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					drop_shadow = true,
 					offset = {
 						offset_x,
-						text_offset_y,
+						vertical_offset,
 						3,
 					},
 					size = {
@@ -693,7 +691,7 @@ local function update_teammate_all_abilities(self, player, dt)
 						-- Формируем итоговый текст: заряды и кулдаун вместе
 						if charges_text ~= "" and cooldown_text ~= "" then
 							-- Если есть и заряды, и кулдаун - показываем оба
-							display_text = string.format("%s (%s)", charges_text, cooldown_text)
+							display_text = string.format("%s(%s)", charges_text, cooldown_text)
 						elseif charges_text ~= "" then
 							-- Только заряды
 							display_text = charges_text
