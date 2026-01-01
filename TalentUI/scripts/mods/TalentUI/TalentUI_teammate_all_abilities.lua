@@ -472,7 +472,6 @@ end
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	local bar_size = HudElementTeamPlayerPanelSettings.size
 	local icon_size = TalentUISettings.ability_icon_size
-	local icon_size_value = icon_size
 	local base_offset = TalentUISettings.icon_position_offset
 	local left_shift = TalentUISettings.icon_position_left_shift
 	local vertical_offset = TalentUISettings.icon_position_vertical_offset or 0
@@ -505,8 +504,8 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 						1,
 					},
 					size = {
-						icon_size_value,
-						icon_size_value,
+						icon_size,
+						icon_size,
 					},
 					color = UIHudSettings.color_tint_main_2,
 				},
@@ -535,8 +534,8 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 						3,
 					},
 					size = {
-						icon_size_value,
-						icon_size_value,
+						icon_size,
+						icon_size,
 					},
 				},
 			},
