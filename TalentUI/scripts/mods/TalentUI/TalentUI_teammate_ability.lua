@@ -17,6 +17,7 @@ local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local HudElementTeamPlayerPanelSettings = require("scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_settings")
 local HudElementPlayerAbilitySettings = require("scripts/ui/hud/elements/player_ability/hud_element_player_ability_settings")
+local FixedFrame = require("scripts/utilities/fixed_frame")
 
 -- Функция для глубокого копирования таблицы
 local function deep_copy(original)
@@ -251,7 +252,24 @@ local function get_player_ability_by_type(player, extensions, slot_type)
 		return nil
 	end
 	
-	-- Для combat_ability и grenade_ability получаем через ability_extension
+	-- Для grenade_ability (blitz) проверяем, является ли это талантом (как у псайкера молнии)
+	-- Если это талант, получаем через CharacterSheet, иначе через ability_extension
+	if slot_type == "slot_grenade_ability" then
+		local blitz_entry = get_talent_from_character_sheet(player, "blitz")
+		
+		-- Если blitz это талант (как у псайкера молнии), получаем данные через CharacterSheet
+		-- По исходникам: _fill_combat_ability_or_grenade_ability_or_coherency заполняет blitz.talent и blitz.icon
+		if blitz_entry and blitz_entry.talent then
+			return {
+				ability_id = "blitz",
+				ability_type = "grenade_ability",
+				icon = blitz_entry.icon,
+				name = blitz_entry.talent.display_name or "Blitz",
+			}
+		end
+	end
+	
+	-- Для combat_ability и grenade_ability (если не талант) получаем через ability_extension
 	if not extensions or not extensions.ability then
 		return nil
 	end
@@ -422,12 +440,22 @@ local function get_ability_material_settings(ability_id, on_cooldown, uses_charg
 	-- Аура всегда активна (пассивный баф, нет кулдауна и зарядов)
 	if ability_id == "aura" then
 		state_key = "active"
-	-- Для blitz (grenade): есть заряды = active, нет зарядов = out_of_charges_cooldown
+	-- Для blitz (grenade): если есть заряды - проверяем заряды, если нет зарядов (как молнии псайкера) - проверяем кулдаун
 	elseif ability_id == "blitz" then
-		if has_charges_left then
-			state_key = "active"
+		if uses_charges then
+			-- Есть заряды - проверяем наличие зарядов
+			if has_charges_left then
+				state_key = "active"
+			else
+				state_key = "out_of_charges_cooldown"
+			end
 		else
-			state_key = "out_of_charges_cooldown"
+			-- Нет зарядов (как молнии псайкера) - проверяем кулдаун
+			if on_cooldown then
+				state_key = "on_cooldown"
+			else
+				state_key = "active"
+			end
 		end
 	-- Для ability (combat ability): готов = active, на кулдауне = on_cooldown
 	elseif ability_id == "ability" then
@@ -737,7 +765,8 @@ local function update_teammate_all_abilities(self, player, dt)
 					icon_widget.dirty = true
 					
 					-- Устанавливаем иконку в правильное поле material_values
-					if icon_widget.style.icon.material_values.icon ~= icon then
+					-- Принудительно обновляем каждый кадр, чтобы иконка точно установилась
+					if icon then
 						icon_widget.style.icon.material_values.icon = icon
 						icon_widget.dirty = true
 					end
@@ -767,13 +796,13 @@ local function update_teammate_all_abilities(self, player, dt)
 							if on_cooldown then
 								local format_type = mod:get("cooldown_format")
 								if format_type == "time" then
-									-- Нужно получить время из компонента
+									-- Получаем время из компонента, используя FixedFrame как в NumericUI
 									local unit_data_extension = extensions.unit_data
 									if unit_data_extension then
 										local ability_component = unit_data_extension:read_component("combat_ability")
-										if ability_component then
-											local time = Managers.time:time("gameplay")
-											local time_remaining = ability_component.cooldown - time
+										if ability_component and ability_component.cooldown then
+											local fixed_frame_t = FixedFrame.get_latest_fixed_time()
+											local time_remaining = math.max(ability_component.cooldown - fixed_frame_t, 0)
 											if time_remaining > 0 then
 												if time_remaining <= 1 then
 													cooldown_text = string.format("%.1f", time_remaining)
@@ -808,13 +837,40 @@ local function update_teammate_all_abilities(self, player, dt)
 						show_text = mod:get("show_teammate_blitz_charges")
 						
 						if show_text then
-							-- Для blitz показываем заряды
+							-- Для blitz: если есть заряды - показываем заряды, если нет зарядов - показываем кулдаун
 							if uses_charges then
+								-- Есть заряды - показываем количество зарядов
 								if remaining_charges >= 1 then
 									display_text = tostring(remaining_charges)
 								end
-							elseif remaining_charges == 0 then
-								display_text = ""
+							else
+								-- Нет зарядов (как у молний псайкера) - показываем кулдаун
+								if on_cooldown then
+									local format_type = mod:get("cooldown_format")
+									if format_type == "time" then
+										-- Получаем время из компонента, используя FixedFrame как в NumericUI
+										local unit_data_extension = extensions.unit_data
+										if unit_data_extension then
+											local grenade_ability_component = unit_data_extension:read_component("grenade_ability")
+											if grenade_ability_component and grenade_ability_component.cooldown then
+												local fixed_frame_t = FixedFrame.get_latest_fixed_time()
+												local time_remaining = math.max(grenade_ability_component.cooldown - fixed_frame_t, 0)
+												if time_remaining > 0 then
+													if time_remaining <= 1 then
+														display_text = string.format("%.1f", time_remaining)
+													else
+														display_text = string.format("%d", math.ceil(time_remaining))
+													end
+												end
+											end
+										end
+									elseif format_type == "percent" then
+										local percent = (1 - cooldown_progress) * 100
+										if percent < 99 then
+											display_text = string.format("%d%%", math.floor(percent))
+										end
+									end
+								end
 							end
 						end
 					end
