@@ -22,120 +22,7 @@ local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 
 local hud_body_font_settings = UIFontSettings.hud_body
 
-local function deep_copy(original)
-	local copy
-	if type(original) == "table" then
-		copy = {}
-		for key, value in pairs(original) do
-			copy[key] = deep_copy(value)
-		end
-	else
-		copy = original
-	end
-	return copy
-end
-
-local function deep_merge(target, source)
-	for key, value in pairs(source) do
-		if type(value) == "table" and type(target[key]) == "table" then
-			deep_merge(target[key], value)
-		else
-			target[key] = deep_copy(value)
-		end
-	end
-	return target
-end
-
-local function load_settings()
-	local DEFAULT_SETTINGS = {
-		icon_position_offset = 12,
-		icon_position_left_shift = 20,
-		icon_position_vertical_offset = 0,
-		ability_icon_size = 200,
-		cooldown_font_size = 18,
-		show_abilities_for_bots = true,
-		ability_spacing = 50,
-		icon_material_settings = {
-			ability = {
-				active = {intensity = 1, saturation = 1},
-				on_cooldown = {intensity = -0.25, saturation = 1},
-				has_charges_cooldown = {intensity = 0.5, saturation = 1},
-				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
-				inactive = {intensity = -0.75, saturation = 0.3},
-			},
-			blitz = {
-				active = {intensity = 1, saturation = 1},
-				on_cooldown = {intensity = -0.25, saturation = 1},
-				has_charges_cooldown = {intensity = 0.5, saturation = 1},
-				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
-				inactive = {intensity = -0.75, saturation = 0.3},
-			},
-			aura = {
-				active = {intensity = 1, saturation = 1},
-				on_cooldown = {intensity = -0.25, saturation = 1},
-				has_charges_cooldown = {intensity = 0.5, saturation = 1},
-				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
-				inactive = {intensity = -0.75, saturation = 0.3},
-			},
-		},
-	}
-	
-	local success, result = pcall(function()
-		return mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_settings")
-	end)
-	
-	if success and result and type(result) == "table" then
-		local merged_settings = deep_copy(DEFAULT_SETTINGS)
-		deep_merge(merged_settings, result)
-		
-		if result.icon_material_settings and type(result.icon_material_settings) == "table" then
-			merged_settings.icon_material_settings = deep_copy(result.icon_material_settings)
-		elseif not merged_settings.icon_material_settings then
-			merged_settings.icon_material_settings = deep_copy(DEFAULT_SETTINGS.icon_material_settings)
-		end
-		
-		return merged_settings
-	else
-		return DEFAULT_SETTINGS
-	end
-end
-
-local TalentUISettings = load_settings()
-
-if not TalentUISettings then
-	TalentUISettings = {
-		icon_position_offset = 12,
-		icon_position_left_shift = 20,
-		icon_position_vertical_offset = 0,
-		ability_icon_size = 200,
-		cooldown_font_size = 18,
-		show_abilities_for_bots = true,
-		ability_spacing = 50,
-		icon_material_settings = {
-			ability = {
-				active = {intensity = 1, saturation = 1},
-				on_cooldown = {intensity = -0.25, saturation = 1},
-				has_charges_cooldown = {intensity = 0.5, saturation = 1},
-				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
-				inactive = {intensity = -0.75, saturation = 0.3},
-			},
-			blitz = {
-				active = {intensity = 1, saturation = 1},
-				on_cooldown = {intensity = -0.25, saturation = 1},
-				has_charges_cooldown = {intensity = 0.5, saturation = 1},
-				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
-				inactive = {intensity = -0.75, saturation = 0.3},
-			},
-			aura = {
-				active = {intensity = 1, saturation = 1},
-				on_cooldown = {intensity = -0.25, saturation = 1},
-				has_charges_cooldown = {intensity = 0.5, saturation = 1},
-				out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5},
-				inactive = {intensity = -0.75, saturation = 0.3},
-			},
-		},
-	}
-end
+local TalentUISettings = mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_settings")
 
 local teammate_abilities_data = {}
 
@@ -680,8 +567,7 @@ local function update_teammate_all_abilities(self, player, dt)
 		local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_icon"]
 		local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_text"]
 		
-		if not icon_widget then
-		else
+		if icon_widget then
 			local data_key = player_name .. "_" .. ability_info.id
 			
 			if icon_widget and teammate_abilities_data[data_key] and teammate_abilities_data[data_key].ability_type then
@@ -706,11 +592,11 @@ local function update_teammate_all_abilities(self, player, dt)
 					end
 				else
 					local new_offset_x = ability_position.offset_x
-					if icon_widget.style.icon.offset[1] ~= new_offset_x then
+					if icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.offset and icon_widget.style.icon.offset[1] ~= new_offset_x then
 						icon_widget.style.icon.offset[1] = new_offset_x
 						icon_widget.dirty = true
 					end
-					if text_widget and text_widget.style.text.offset[1] ~= new_offset_x then
+					if text_widget and text_widget.style and text_widget.style.text and text_widget.style.text.offset and text_widget.style.text.offset[1] ~= new_offset_x then
 						text_widget.style.text.offset[1] = new_offset_x
 						text_widget.dirty = true
 					end
@@ -719,18 +605,20 @@ local function update_teammate_all_abilities(self, player, dt)
 					local uses_charges = max_charges > 1
 					
 					local gradient_map = get_ability_gradient_map(ability_info.id)
-					if gradient_map and icon_widget.style.icon.material_values.gradient_map ~= gradient_map then
+					if gradient_map and icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.material_values and icon_widget.style.icon.material_values.gradient_map ~= gradient_map then
 						icon_widget.style.icon.material_values.gradient_map = gradient_map
 						icon_widget.dirty = true
 					end
 					
 					local material_settings = get_ability_material_settings(ability_info.id, on_cooldown, uses_charges, has_charges_left, max_charges)
 					
-					icon_widget.style.icon.material_values.intensity = material_settings.intensity
-					icon_widget.style.icon.material_values.saturation = material_settings.saturation
-					icon_widget.dirty = true
+					if icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.material_values then
+						icon_widget.style.icon.material_values.intensity = material_settings.intensity
+						icon_widget.style.icon.material_values.saturation = material_settings.saturation
+						icon_widget.dirty = true
+					end
 					
-					if icon then
+					if icon and icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.material_values then
 						icon_widget.style.icon.material_values.icon = icon
 						icon_widget.dirty = true
 					end
@@ -821,6 +709,11 @@ local function update_teammate_all_abilities(self, player, dt)
 						text_widget.dirty = true
 					end
 				end
+			else
+				icon_widget.visible = false
+				if text_widget then
+					text_widget.visible = false
+				end
 			end
 		end
 	end
@@ -829,11 +722,18 @@ end
 mod.update_teammate_all_abilities = update_teammate_all_abilities
 
 mod.clear_teammate_all_abilities_data = function(player_name)
+	local keys_to_remove = {}
+	
 	for key, _ in pairs(teammate_abilities_data) do
 		if string.find(key, player_name .. "_", 1, true) == 1 then
-			teammate_abilities_data[key] = nil
+			table.insert(keys_to_remove, key)
 		end
 	end
+	
+	for _, key in ipairs(keys_to_remove) do
+		teammate_abilities_data[key] = nil
+	end
+	
 	player_previous_human_state[player_name] = nil
 end
 

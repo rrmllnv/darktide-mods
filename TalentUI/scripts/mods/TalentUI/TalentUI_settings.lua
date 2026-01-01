@@ -1,6 +1,6 @@
 local mod = get_mod("TalentUI")
 
-return {
+local SETTINGS = {
 	icon_position_left_shift = 0,
 	icon_position_vertical_offset = -20,
 	ability_icon_size = 60,
@@ -36,3 +36,4 @@ return {
 	},
 }
 
+return SETTINGS

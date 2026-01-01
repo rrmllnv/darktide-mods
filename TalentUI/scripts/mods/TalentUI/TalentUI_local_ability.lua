@@ -5,36 +5,9 @@ local PLAYER_ABILITY_DEF_PATH = "scripts/ui/hud/elements/player_ability/hud_elem
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local HudElementPlayerAbilitySettings = require("scripts/ui/hud/elements/player_ability/hud_element_player_ability_settings")
+local FixedFrame = require("scripts/utilities/fixed_frame")
 
-local function load_settings()
-	local success, result = pcall(function()
-		return mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_settings")
-	end)
-	
-	local DEFAULT_SETTINGS = {
-		icon_position_offset = 12,
-		icon_position_left_shift = 20,
-		icon_position_vertical_offset = 0,
-		ability_icon_size = 128,
-		cooldown_font_size = 18,
-		local_cooldown_font_size = 18,
-	}
-	
-	if success and result and type(result) == "table" then
-		if result.icon_position_offset and result.icon_position_left_shift then
-			if not result.icon_position_vertical_offset then
-				result.icon_position_vertical_offset = 0
-			end
-			return result
-		else
-			return DEFAULT_SETTINGS
-		end
-	else
-		return DEFAULT_SETTINGS
-	end
-end
-
-local TalentUISettings = load_settings()
+local TalentUISettings = mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_settings")
 
 mod:hook(_G, "dofile", function(func, path)
 	local instance = func(path)
@@ -98,15 +71,23 @@ mod:hook_safe("HudElementPlayerAbility", "update", function(self)
 			local player = self._data.player
 			local player_unit = player.player_unit
 			
-			if ALIVE[player_unit] then
-				local unit_data_extension = ScriptUnit.extension(player_unit, "unit_data_system")
-				local ability_component = unit_data_extension:read_component("combat_ability")
-				if ability_component and ability_component.cooldown then
-					local time = Managers.time:time("gameplay")
-					local time_remaining = math.max(ability_component.cooldown - time, 0)
-					
-					if time_remaining > 0 then
-						display_text = string.format("%d", math.ceil(time_remaining))
+			if rawget(_G, "ALIVE") and ALIVE[player_unit] then
+				if rawget(_G, "ScriptUnit") then
+					local unit_data_extension = ScriptUnit.extension(player_unit, "unit_data_system")
+					if unit_data_extension then
+						local ability_component = unit_data_extension:read_component("combat_ability")
+						if ability_component and ability_component.cooldown then
+							local fixed_frame_t = FixedFrame.get_latest_fixed_time()
+							local time_remaining = math.max(ability_component.cooldown - fixed_frame_t, 0)
+							
+							if time_remaining > 0 then
+								display_text = string.format("%d", math.ceil(time_remaining))
+							else
+								display_text = ""
+							end
+						else
+							display_text = ""
+						end
 					else
 						display_text = ""
 					end
