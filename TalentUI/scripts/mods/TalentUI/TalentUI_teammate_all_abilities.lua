@@ -471,6 +471,7 @@ end
 -- Создание виджетов для всех 3 способностей
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	local bar_size = HudElementTeamPlayerPanelSettings.size
+	-- Используем стандартный размер из лобби (64x64) для правильного масштабирования иконки внутри material
 	local icon_size = TalentUISettings.ability_icon_size
 	local base_offset = TalentUISettings.icon_position_offset
 	local left_shift = TalentUISettings.icon_position_left_shift
@@ -490,6 +491,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 				style = {
 					horizontal_alignment = "right",
 					vertical_alignment = "center",
+					scale_to_material = true,
 					material_values = {
 						frame = "content/ui/textures/frames/talents/" .. ability_type.frame,
 						icon_mask = "content/ui/textures/frames/talents/" .. ability_type.mask,
