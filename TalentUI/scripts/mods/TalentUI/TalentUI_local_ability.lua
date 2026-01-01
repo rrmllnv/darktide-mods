@@ -93,8 +93,10 @@ mod:hook_safe("HudElementPlayerAbility", "update", function(self)
 	local on_cooldown = self._on_cooldown
 	local format_type = mod:get("cooldown_format")
 	
+	local display_text = ""
+	
 	if not on_cooldown or progress >= 1 then
-		text_widget.content.text = ""
+		display_text = ""
 	else
 		if format_type == "time" then
 			local player = self._data.player
@@ -103,31 +105,39 @@ mod:hook_safe("HudElementPlayerAbility", "update", function(self)
 			if ALIVE[player_unit] then
 				local unit_data_extension = ScriptUnit.extension(player_unit, "unit_data_system")
 				local ability_component = unit_data_extension:read_component("combat_ability")
-				local time = Managers.time:time("gameplay")
-				local time_remaining = ability_component.cooldown - time
-				
-				if time_remaining <= 0 then
-					text_widget.content.text = ""
-				elseif time_remaining <= 1 then
-					text_widget.content.text = string.format("%.1f", time_remaining)
+				if ability_component and ability_component.cooldown then
+					local time = Managers.time:time("gameplay")
+					local time_remaining = math.max(ability_component.cooldown - time, 0)
+					
+					if time_remaining > 0 then
+						if time_remaining <= 1 then
+							display_text = string.format("%.1f", time_remaining)
+						else
+							display_text = string.format("%d", math.ceil(time_remaining))
+						end
+					else
+						display_text = ""
+					end
 				else
-					text_widget.content.text = string.format("%d", math.ceil(time_remaining))
+					display_text = ""
 				end
 			else
-				text_widget.content.text = ""
+				display_text = ""
 			end
 		elseif format_type == "percent" then
 			local percent = progress * 100
-			if percent >= 99 then
-				text_widget.content.text = ""
+			if percent >= 100 or progress >= 1 then
+				display_text = ""
 			else
-				text_widget.content.text = string.format("%d%%", math.floor(percent))
+				display_text = string.format("%d%%", math.floor(percent))
 			end
 		else
-			text_widget.content.text = ""
+			display_text = ""
 		end
 	end
 	
+	text_widget.content.text = display_text
+	text_widget.visible = display_text ~= ""
 	text_widget.dirty = true
 end)
 
