@@ -18,6 +18,9 @@ local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local HudElementTeamPlayerPanelSettings = require("scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_settings")
 local HudElementPlayerAbilitySettings = require("scripts/ui/hud/elements/player_ability/hud_element_player_ability_settings")
 local FixedFrame = require("scripts/utilities/fixed_frame")
+local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
+
+local hud_body_font_settings = UIFontSettings.hud_body
 
 -- Функция для глубокого копирования таблицы
 local function deep_copy(original)
@@ -566,8 +569,9 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					vertical_alignment = "center",
 					text_horizontal_alignment = "center",
 					text_vertical_alignment = "center",
-					font_type = "machine_medium",
+					font_type = hud_body_font_settings.font_type or "machine_medium",
 					font_size = TalentUISettings.cooldown_font_size,
+					line_spacing = 1.2,
 					text_color = UIHudSettings.color_tint_main_1,
 					drop_shadow = true,
 					offset = {
