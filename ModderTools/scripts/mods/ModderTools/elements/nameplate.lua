@@ -24,15 +24,16 @@ mod:hook_safe(CLASS.HudElementWorldMarkers, "update", function(self, dt, t, ui_r
             local player = marker_data.player
 
             if player and not player.__deleted and player:is_human_controlled() then
-                local account_id = player:account_id()
+                local account_id = player:account_id() or player:name() or player:peer_id()
                 local content = widget.content
 
                 if content and account_id then
                     local current_text = content.header or content.text
+                    local player_name = player:name() or player:character_name()
 
-                    if current_text then
+                    if current_text and player_name and account_id then
                         -- Заменяем имя на случайное
-                        local new_text = mod.replace_name_in_text(current_text, account_id)
+                        local new_text = mod.replace_name_in_text(current_text, account_id, player_name)
 
                         if new_text ~= current_text then
                             if content.header then

@@ -8,35 +8,135 @@ mod._info = {
 }
 mod:info("Version " .. mod._info.version)
 
--- Список случайных имен для замены
+-- Список случайных имен для замены (из исходников Darktide)
 local RANDOM_NAMES = {
-    "PlayerOne", "ShadowHunter", "VoidWalker", "StormBringer", "BloodReaper",
-    "IronFist", "SoulKeeper", "DeathDealer", "FlameBearer", "IceGuardian",
-    "ThunderLord", "WindMaster", "EarthShaker", "WaterSpirit", "FireDemon",
-    "DarkKnight", "LightBringer", "ChaosAgent", "OrderKeeper", "VoidSeeker",
-    "StarGazer", "MoonHunter", "SunWarrior", "CometRider", "NebulaDrifter",
-    "GalaxyGuard", "CosmicTraveler", "AetherWielder", "MysticSage", "ArcaneLord",
-    "RuneMaster", "SpellWeaver", "PotionBrewer", "HerbGatherer", "CrystalMiner",
-    "GemCutter", "MetalSmith", "LeatherWorker", "WoodCrafter", "StoneMason",
-    "BoneCollector", "FleshRender", "SoulHarvester", "MindReader", "HeartSeeker",
-    "SpiritCaller", "DemonBinder", "AngelSlayer", "GodKiller", "DevilHunter",
-    "BeastMaster", "DragonRider", "PhoenixTamer", "GriffinLord", "UnicornKeeper",
-    "WolfPack", "BearClan", "LionPride", "EagleFlight", "SharkSwarm",
-    "TigerStrike", "PantherProwl", "FalconDive", "OwlWisdom", "RavenMystery",
-    "CrowProphet", "HawkVision", "VultureScavenger", "CondorMajesty", "AlbatrossFreedom",
-    "PenguinGuard", "SealHunter", "WalrusWarrior", "PolarBear", "ArcticFox",
-    "SnowLeopard", "MountainGoat", "DesertScorpion", "JunglePython", "SavannaLion",
-    "ForestDruid", "SwampWitch", "MountainDwarf", "CaveTroll", "UnderworldDemon",
-    "SkySeraph", "SeaNymph", "RiverSpirit", "LakeGuardian", "OceanLord",
-    "VolcanoForge", "CanyonEcho", "ValleyWhisper", "PeakSummit", "CliffDiver",
-    "AbyssStalker", "DepthDiver", "SurfaceSurfer", "WaveRider", "TideTurner",
-    "StormChaser", "LightningRod", "ThunderClap", "RainMaker", "CloudShaper",
-    "WindWhisperer", "GustCaller", "BreezeDancer", "GaleForce", "HurricaneMaker",
-    "EarthMender", "StoneHealer", "CrystalSinger", "GemWhisperer", "OreSeeker",
-    "MetalMelter", "ForgeMaster", "AnvilLord", "HammerFall", "SwordSmith",
-    "ShieldBearer", "ArmorWeaver", "HelmetMaker", "GauntletLord", "BootStomper",
-    "CloakShadow", "RobeMystic", "TunicWarrior", "PantsNomad", "ShirtSailor",
-    "HatWizard", "CrownKing", "MaskMystic", "VeilMystery", "CapeHero"
+    "Ackor",
+    "Barbor",
+    "Baudlarn",
+    "Brack",
+    "Candorick",
+    "Claren",
+    "Cockerill",
+    "Corot",
+    "Derlin",
+    "Dickot",
+    "Doran",
+    "Dorfan",
+    "Dorsworth",
+    "Farridge",
+    "Fascal",
+    "Foronat",
+    "Fusell",
+    "Goyan",
+    "Harken",
+    "Haveloch",
+    "Henam",
+    "Hugot",
+    "Jerican",
+    "Keating",
+    "Kradd",
+    "Lamark",
+    "Lukas",
+    "Martack",
+    "Mikel",
+    "Montov",
+    "Mussat",
+    "Narvast",
+    "Nura",
+    "Nzoni",
+    "Onceda",
+    "Rossel",
+    "Rudge",
+    "Salcan",
+    "Saldar",
+    "Scottor",
+    "Shaygor",
+    "Shiller",
+    "Skyv",
+    "Smither",
+    "Tademar",
+    "Taur",
+    "Tecker",
+    "Tuttor",
+    "Verbal",
+    "Victor",
+    "Villan",
+    "Xavier",
+    "Zapard",
+    "Zek",
+    "Erith",
+    "Agda",
+    "Ambre",
+    "Amelia",
+    "Avrilia",
+    "Axella",
+    "Beretille",
+    "Blonthe",
+    "Clea",
+    "Coletta",
+    "Constanze",
+    "Dalilla",
+    "Diana",
+    "Doriana",
+    "Edithia",
+    "Eglantia",
+    "Elodine",
+    "Ephrael",
+    "Felicia",
+    "Genevieve",
+    "Greyla",
+    "Guendolys",
+    "Guenhvya",
+    "Guenievre",
+    "Heinrike",
+    "Helene",
+    "Helmia",
+    "Honorine",
+    "Ines",
+    "Iris",
+    "Isaure",
+    "Jacinta",
+    "Josea",
+    "Justine",
+    "Kelvi",
+    "Kerstin",
+    "Kinnia",
+    "Kline",
+    "Lassana",
+    "Leana",
+    "Leatha",
+    "Liari",
+    "Lorette",
+    "Lyta",
+    "Maia",
+    "Mallava",
+    "Marakanthe",
+    "Maylin",
+    "Mejara",
+    "Meliota",
+    "Melisande",
+    "Mira",
+    "Mylene",
+    "Nadia",
+    "Nalana",
+    "Natacha",
+    "Ophelia",
+    "Prothei",
+    "Rosemonde",
+    "Rosine",
+    "Ruby",
+    "Sanei",
+    "Sarine",
+    "Severa",
+    "Silvana",
+    "Undine",
+    "Unkara",
+    "Valleni",
+    "Vissia",
+    "Waynoka",
+    "Yvette",
+    "Zelie",
+    "Zellith"
 }
 
 -- Кэш замененных имен: account_id -> random_name
@@ -47,8 +147,9 @@ local function generate_random_name(account_id)
     -- Используем account_id как seed для детерминированной генерации
     -- Это гарантирует, что один и тот же игрок всегда получает одно и то же случайное имя
     local seed = 0
-    for i = 1, #account_id do
-        seed = seed + string.byte(account_id, i)
+    local account_id_str = tostring(account_id)
+    for i = 1, #account_id_str do
+        seed = seed + string.byte(account_id_str, i)
     end
 
     math.randomseed(seed)
@@ -77,18 +178,24 @@ mod.clear_name_cache = function()
 end
 
 -- Функция замены имени в тексте
-mod.replace_name_in_text = function(text, account_id)
+mod.replace_name_in_text = function(text, account_id, original_player_name)
     if not text or not account_id then
         return text
     end
 
-    -- Ищем паттерн "Имя игрока" в тексте и заменяем
-    -- Это простой подход - заменяем первое слово или всю строку если это имя
-    local original_name = text:match("^([^\n]+)")
-    if original_name then
-        local random_name = mod.get_player_name(account_id, original_name)
-        if random_name ~= original_name then
-            return text:gsub(original_name, random_name, 1)
+    -- Если передано реальное имя игрока, используем его для замены
+    if original_player_name and original_player_name ~= "" then
+        local random_name = mod.get_player_name(account_id, original_player_name)
+        if random_name ~= original_player_name then
+            -- Заменяем имя игрока в тексте (с учетом возможного форматирования)
+            local escaped_name = original_player_name:gsub("([%%%+%-%*%?%[%^%$%(%)])", "%%%1")
+            return text:gsub(escaped_name, random_name)
+        end
+    else
+        -- Если имя не передано, пытаемся заменить весь текст
+        local random_name = mod.get_player_name(account_id, text)
+        if random_name ~= text then
+            return random_name
         end
     end
 
