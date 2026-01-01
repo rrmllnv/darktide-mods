@@ -19,6 +19,10 @@ return {
 		en = "Teammate Aura",
 		ru = "Аура тимейтов",
 	},
+	group_local_player = {
+		en = "Local Player",
+		ru = "Локальный игрок",
+	},
 	show_teammate_ability_icon = {
 		en = "Show Ability Icons",
 		ru = "Показывать иконки способностей",
@@ -40,12 +44,12 @@ return {
 		ru = "Показывать иконки ауры",
 	},
 	show_local_ability_cooldown = {
-		en = "Show Local Player Ability Cooldown",
-		ru = "Показывать кулдаун способности локального игрока",
+		en = "Show Cooldown",
+		ru = "Показывать кулдаун",
 	},
 	cooldown_format = {
-		en = "Cooldown Display Format",
-		ru = "Формат отображения кулдауна",
+		en = "Display Format",
+		ru = "Формат отображения",
 	},
 	cooldown_format_time = {
 		en = "Time (seconds)",
@@ -56,8 +60,8 @@ return {
 		ru = "Процент",
 	},
 	local_cooldown_font_size = {
-		en = "Local Player Cooldown Font Size",
-		ru = "Размер шрифта кулдауна локального игрока",
+		en = "Font Size",
+		ru = "Размер шрифта",
 	},
 	icon_position_offset = {
 		en = "Icon Position Offset",

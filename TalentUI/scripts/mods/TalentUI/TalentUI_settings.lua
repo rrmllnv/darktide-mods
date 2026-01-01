@@ -18,7 +18,7 @@ return {
 	ability_spacing = 50,
 	
 	-- Размер шрифта кулдауна
-	cooldown_font_size = 18,
+	cooldown_font_size = 20,
 	-- Размер шрифта кулдауна локального игрока
 	local_cooldown_font_size = 40,
 	

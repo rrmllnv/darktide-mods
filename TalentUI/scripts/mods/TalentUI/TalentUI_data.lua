@@ -50,25 +50,31 @@ return {
 				},
 			},
 			{
-				setting_id = "show_local_ability_cooldown",
-				type = "checkbox",
-				default_value = true,
-			},
-			{
-				setting_id = "cooldown_format",
-				type = "dropdown",
-				default_value = "time",
-				options = {
-					{ text = "cooldown_format_time", value = "time" },
-					{ text = "cooldown_format_percent", value = "percent" },
+				setting_id = "group_local_player",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "show_local_ability_cooldown",
+						type = "checkbox",
+						default_value = true,
+					},
+					{
+						setting_id = "cooldown_format",
+						type = "dropdown",
+						default_value = "time",
+						options = {
+							{ text = "cooldown_format_time", value = "time" },
+							{ text = "cooldown_format_percent", value = "percent" },
+						},
+					},
+					{
+						setting_id = "local_cooldown_font_size",
+						type = "numeric",
+						default_value = 40,
+						range = { 30, 50 },
+						decimals_number = 0,
+					},
 				},
-			},
-			{
-				setting_id = "local_cooldown_font_size",
-				type = "numeric",
-				default_value = 40,
-				range = { 30, 50 },
-				decimals_number = 0,
 			},
 		},
 	},
