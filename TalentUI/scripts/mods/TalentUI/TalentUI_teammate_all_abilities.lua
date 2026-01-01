@@ -514,6 +514,8 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 		}, "bar")
 		
 		-- Виджет текста кулдауна/зарядов
+		-- Текст размещается выше иконки (vertical_offset уменьшен на половину размера иконки)
+		local text_offset_y = vertical_offset - icon_size_value * 0.5 - 5
 		instance.widget_definitions[ability_type.name .. "_text"] = UIWidget.create_definition({
 			{
 				pass_type = "text",
@@ -531,7 +533,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					drop_shadow = true,
 					offset = {
 						offset_x,
-						vertical_offset,
+						text_offset_y,
 						3,
 					},
 					size = {
@@ -651,7 +653,16 @@ local function update_teammate_all_abilities(self, player, dt)
 					local display_text = ""
 					
 					if ability_info.id == "ability" then
-						-- Для ability показываем кулдаун
+						-- Для ability: показываем заряды (если есть) и кулдаун (если активен)
+						local charges_text = ""
+						local cooldown_text = ""
+						
+						-- Получаем текст зарядов
+						if uses_charges and remaining_charges >= 1 then
+							charges_text = tostring(remaining_charges)
+						end
+						
+						-- Получаем текст кулдауна
 						if on_cooldown then
 							local format_type = mod:get("cooldown_format")
 							if format_type == "time" then
@@ -664,9 +675,9 @@ local function update_teammate_all_abilities(self, player, dt)
 										local time_remaining = ability_component.cooldown - time
 										if time_remaining > 0 then
 											if time_remaining <= 1 then
-												display_text = string.format("%.1f", time_remaining)
+												cooldown_text = string.format("%.1f", time_remaining)
 											else
-												display_text = string.format("%d", math.ceil(time_remaining))
+												cooldown_text = string.format("%d", math.ceil(time_remaining))
 											end
 										end
 									end
@@ -674,9 +685,21 @@ local function update_teammate_all_abilities(self, player, dt)
 							elseif format_type == "percent" then
 								local percent = (1 - cooldown_progress) * 100
 								if percent < 99 then
-									display_text = string.format("%d%%", math.floor(percent))
+									cooldown_text = string.format("%d%%", math.floor(percent))
 								end
 							end
+						end
+						
+						-- Формируем итоговый текст: заряды и кулдаун вместе
+						if charges_text ~= "" and cooldown_text ~= "" then
+							-- Если есть и заряды, и кулдаун - показываем оба
+							display_text = string.format("%s (%s)", charges_text, cooldown_text)
+						elseif charges_text ~= "" then
+							-- Только заряды
+							display_text = charges_text
+						elseif cooldown_text ~= "" then
+							-- Только кулдаун
+							display_text = cooldown_text
 						end
 					elseif ability_info.id == "blitz" then
 						-- Для blitz показываем заряды
