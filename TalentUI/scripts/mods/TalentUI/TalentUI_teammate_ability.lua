@@ -631,7 +631,7 @@ local function update_teammate_all_abilities(self, player, dt)
 		end
 	end
 	
-	local ability_spacing = TalentUISettings.ability_spacing or 50
+	local ability_spacing = TalentUISettings.ability_spacing or 60
 	local vertical_offset = TalentUISettings.icon_position_vertical_offset or 0
 	
 	-- Сначала получаем данные о всех способностях и определяем, какие должны быть видны
