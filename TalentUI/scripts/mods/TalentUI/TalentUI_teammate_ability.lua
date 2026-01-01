@@ -431,7 +431,7 @@ local function get_ability_gradient_map(ability_id)
 end
 
 -- Функция для получения настроек материала (intensity, saturation) в зависимости от состояния
-local function get_ability_material_settings(ability_id, on_cooldown, uses_charges, has_charges_left)
+local function get_ability_material_settings(ability_id, on_cooldown, uses_charges, has_charges_left, max_charges)
 	if not TalentUISettings or not TalentUISettings.icon_material_settings then
 		return {intensity = 0, saturation = 1}
 	end
@@ -448,11 +448,22 @@ local function get_ability_material_settings(ability_id, on_cooldown, uses_charg
 	if ability_id == "aura" then
 		state_key = "active"
 	-- Для blitz (grenade): проверяем заряды, если нет зарядов - неактивная
+	-- Но если max_charges = 0 (как у Сокрушения), то проверяем кулдаун
 	elseif ability_id == "blitz" then
-		if has_charges_left then
-			state_key = "active"
+		if max_charges == 0 then
+			-- Способности без системы зарядов (как Сокрушение) - проверяем кулдаун
+			if on_cooldown then
+				state_key = "on_cooldown"
+			else
+				state_key = "active"
+			end
 		else
-			state_key = "inactive"
+			-- Способности с зарядами
+			if has_charges_left then
+				state_key = "active"
+			else
+				state_key = "inactive"
+			end
 		end
 	-- Для ability (combat ability): готов = active, на кулдауне = on_cooldown
 	elseif ability_id == "ability" then
@@ -766,7 +777,7 @@ local function update_teammate_all_abilities(self, player, dt)
 					end
 					
 					-- Получаем настройки материала в зависимости от состояния
-					local material_settings = get_ability_material_settings(ability_info.id, on_cooldown, uses_charges, has_charges_left)
+					local material_settings = get_ability_material_settings(ability_info.id, on_cooldown, uses_charges, has_charges_left, max_charges)
 					
 					-- Обновляем intensity и saturation (принудительно обновляем каждый кадр)
 					icon_widget.style.icon.material_values.intensity = material_settings.intensity
