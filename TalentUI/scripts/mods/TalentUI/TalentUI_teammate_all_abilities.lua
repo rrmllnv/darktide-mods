@@ -471,7 +471,6 @@ end
 -- Создание виджетов для всех 3 способностей
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	local bar_size = HudElementTeamPlayerPanelSettings.size
-	-- Используем стандартный размер из лобби (64x64) для правильного масштабирования иконки внутри material
 	local icon_size = TalentUISettings.ability_icon_size
 	local base_offset = TalentUISettings.icon_position_offset
 	local left_shift = TalentUISettings.icon_position_left_shift
@@ -527,7 +526,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					text_horizontal_alignment = "center",
 					text_vertical_alignment = "center",
 					font_type = "machine_medium",
-					font_size = mod:get("cooldown_font_size") or TalentUISettings.cooldown_font_size,
+					font_size = TalentUISettings.cooldown_font_size,
 					text_color = UIHudSettings.color_tint_main_1,
 					drop_shadow = true,
 					offset = {
@@ -620,101 +619,130 @@ local function update_teammate_all_abilities(self, player, dt)
 				local ability_type = teammate_abilities_data[data_key].ability_type
 				local icon = teammate_abilities_data[data_key].icon
 				
-				-- Получаем состояние способности
-				local cooldown_progress, on_cooldown, remaining_charges, has_charges_left, max_charges = get_ability_state(player, extensions, ability_type)
-				local uses_charges = max_charges > 1
-				
-				-- Получаем gradient_map для иконки в зависимости от типа способности
-				local gradient_map = get_ability_gradient_map(ability_info.id)
-				if gradient_map and icon_widget.style.icon.material_values.gradient_map ~= gradient_map then
-					icon_widget.style.icon.material_values.gradient_map = gradient_map
-					icon_widget.dirty = true
+				-- Проверяем настройки видимости для каждого типа способности
+				local show_icon = true
+				if ability_info.id == "ability" then
+					show_icon = mod:get("show_teammate_ability_icon")
+				elseif ability_info.id == "blitz" then
+					show_icon = mod:get("show_teammate_blitz_icon")
+				elseif ability_info.id == "aura" then
+					show_icon = mod:get("show_teammate_aura_icon")
 				end
 				
-				-- Получаем настройки материала в зависимости от состояния
-				local material_settings = get_ability_material_settings(ability_info.id, on_cooldown, uses_charges, has_charges_left)
-				
-				-- Обновляем intensity и saturation (принудительно обновляем каждый кадр)
-				icon_widget.style.icon.material_values.intensity = material_settings.intensity
-				icon_widget.style.icon.material_values.saturation = material_settings.saturation
-				icon_widget.dirty = true
-				
-				-- Устанавливаем иконку в правильное поле material_values
-				if icon_widget.style.icon.material_values.icon ~= icon then
-					icon_widget.style.icon.material_values.icon = icon
+				if not show_icon then
+					-- Скрываем иконку и текст, если настройка выключена
+					icon_widget.visible = false
+					if text_widget then
+						text_widget.visible = false
+					end
+				else
+					-- Получаем состояние способности
+					local cooldown_progress, on_cooldown, remaining_charges, has_charges_left, max_charges = get_ability_state(player, extensions, ability_type)
+					local uses_charges = max_charges > 1
+					
+					-- Получаем gradient_map для иконки в зависимости от типа способности
+					local gradient_map = get_ability_gradient_map(ability_info.id)
+					if gradient_map and icon_widget.style.icon.material_values.gradient_map ~= gradient_map then
+						icon_widget.style.icon.material_values.gradient_map = gradient_map
+						icon_widget.dirty = true
+					end
+					
+					-- Получаем настройки материала в зависимости от состояния
+					local material_settings = get_ability_material_settings(ability_info.id, on_cooldown, uses_charges, has_charges_left)
+					
+					-- Обновляем intensity и saturation (принудительно обновляем каждый кадр)
+					icon_widget.style.icon.material_values.intensity = material_settings.intensity
+					icon_widget.style.icon.material_values.saturation = material_settings.saturation
 					icon_widget.dirty = true
-				end
-				
-				icon_widget.visible = true
-				
-				-- Обновляем текст кулдауна/зарядов
-				if text_widget then
+					
+					-- Устанавливаем иконку в правильное поле material_values
+					if icon_widget.style.icon.material_values.icon ~= icon then
+						icon_widget.style.icon.material_values.icon = icon
+						icon_widget.dirty = true
+					end
+					
+					icon_widget.visible = true
+					
+					-- Обновляем текст кулдауна/зарядов
+					if text_widget then
 					local display_text = ""
+					local show_text = true
 					
 					if ability_info.id == "ability" then
-						-- Для ability: показываем заряды (если есть) и кулдаун (если активен)
-						local charges_text = ""
-						local cooldown_text = ""
+						-- Проверяем настройку показа кулдауна для ability
+						show_text = mod:get("show_teammate_ability_cooldown")
 						
-						-- Получаем текст зарядов
-						if uses_charges and remaining_charges >= 1 then
-							charges_text = tostring(remaining_charges)
-						end
-						
-						-- Получаем текст кулдауна
-						if on_cooldown then
-							local format_type = mod:get("cooldown_format")
-							if format_type == "time" then
-								-- Нужно получить время из компонента
-								local unit_data_extension = extensions.unit_data
-								if unit_data_extension then
-									local ability_component = unit_data_extension:read_component("combat_ability")
-									if ability_component then
-										local time = Managers.time:time("gameplay")
-										local time_remaining = ability_component.cooldown - time
-										if time_remaining > 0 then
-											if time_remaining <= 1 then
-												cooldown_text = string.format("%.1f", time_remaining)
-											else
-												cooldown_text = string.format("%d", math.ceil(time_remaining))
+						if show_text then
+							-- Для ability: показываем заряды (если есть) и кулдаун (если активен)
+							local charges_text = ""
+							local cooldown_text = ""
+							
+							-- Получаем текст зарядов
+							if uses_charges and remaining_charges >= 1 then
+								charges_text = tostring(remaining_charges)
+							end
+							
+							-- Получаем текст кулдауна
+							if on_cooldown then
+								local format_type = mod:get("cooldown_format")
+								if format_type == "time" then
+									-- Нужно получить время из компонента
+									local unit_data_extension = extensions.unit_data
+									if unit_data_extension then
+										local ability_component = unit_data_extension:read_component("combat_ability")
+										if ability_component then
+											local time = Managers.time:time("gameplay")
+											local time_remaining = ability_component.cooldown - time
+											if time_remaining > 0 then
+												if time_remaining <= 1 then
+													cooldown_text = string.format("%.1f", time_remaining)
+												else
+													cooldown_text = string.format("%d", math.ceil(time_remaining))
+												end
 											end
 										end
 									end
-								end
-							elseif format_type == "percent" then
-								local percent = (1 - cooldown_progress) * 100
-								if percent < 99 then
-									cooldown_text = string.format("%d%%", math.floor(percent))
+								elseif format_type == "percent" then
+									local percent = (1 - cooldown_progress) * 100
+									if percent < 99 then
+										cooldown_text = string.format("%d%%", math.floor(percent))
+									end
 								end
 							end
-						end
-						
-						-- Формируем итоговый текст: заряды и кулдаун вместе
-						if charges_text ~= "" and cooldown_text ~= "" then
-							-- Если есть и заряды, и кулдаун - показываем оба
-							display_text = string.format("%s(%s)", charges_text, cooldown_text)
-						elseif charges_text ~= "" then
-							-- Только заряды
-							display_text = charges_text
-						elseif cooldown_text ~= "" then
-							-- Только кулдаун
-							display_text = cooldown_text
+							
+							-- Формируем итоговый текст: заряды и кулдаун вместе
+							if charges_text ~= "" and cooldown_text ~= "" then
+								-- Если есть и заряды, и кулдаун - показываем оба
+								display_text = string.format("%s (%s)", charges_text, cooldown_text)
+							elseif charges_text ~= "" then
+								-- Только заряды
+								display_text = charges_text
+							elseif cooldown_text ~= "" then
+								-- Только кулдаун
+								display_text = cooldown_text
+							end
 						end
 					elseif ability_info.id == "blitz" then
-						-- Для blitz показываем заряды
-						if uses_charges then
-							if remaining_charges >= 1 then
-								display_text = tostring(remaining_charges)
+						-- Проверяем настройку показа зарядов для blitz
+						show_text = mod:get("show_teammate_blitz_charges")
+						
+						if show_text then
+							-- Для blitz показываем заряды
+							if uses_charges then
+								if remaining_charges >= 1 then
+									display_text = tostring(remaining_charges)
+								end
+							elseif remaining_charges == 0 then
+								display_text = ""
 							end
-						elseif remaining_charges == 0 then
-							display_text = ""
 						end
 					end
 					-- Для aura ничего не показываем (обычно пассивная)
 					
-					text_widget.content.text = display_text
-					text_widget.visible = display_text ~= ""
-					text_widget.dirty = true
+						text_widget.content.text = display_text
+						text_widget.visible = show_text and display_text ~= ""
+						text_widget.dirty = true
+					end
 				end
 			end
 		end

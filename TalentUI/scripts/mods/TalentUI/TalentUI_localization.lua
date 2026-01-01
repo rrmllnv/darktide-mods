@@ -7,21 +7,37 @@ return {
 		en = "Shows ability icons with cooldown timers for teammates and local player in the team HUD",
 		ru = "Показывает иконки способностей с таймерами кулдауна для тимейтов и локального игрока в team HUD",
 	},
+	group_teammate_ability = {
+		en = "Teammate Ability",
+		ru = "Способность тимейтов",
+	},
+	group_teammate_blitz = {
+		en = "Teammate Blitz",
+		ru = "Blitz тимейтов",
+	},
+	group_teammate_aura = {
+		en = "Teammate Aura",
+		ru = "Аура тимейтов",
+	},
 	show_teammate_ability_icon = {
-		en = "Show Teammate Ability Icons",
-		ru = "Показывать иконки способностей тимейтов",
+		en = "Show Ability Icons",
+		ru = "Показывать иконки способностей",
 	},
 	show_teammate_ability_cooldown = {
-		en = "Show Teammate Ability Cooldown",
-		ru = "Показывать кулдаун способностей тимейтов",
+		en = "Show Cooldown",
+		ru = "Показывать кулдаун",
 	},
 	show_teammate_blitz_icon = {
-		en = "Show Teammate Blitz Icons",
-		ru = "Показывать иконки blitz тимейтов",
+		en = "Show Blitz Icons",
+		ru = "Показывать иконки blitz",
 	},
 	show_teammate_blitz_charges = {
-		en = "Show Teammate Blitz Charges",
-		ru = "Показывать заряды blitz тимейтов",
+		en = "Show Charges",
+		ru = "Показывать заряды",
+	},
+	show_teammate_aura_icon = {
+		en = "Show Aura Icons",
+		ru = "Показывать иконки ауры",
 	},
 	show_local_ability_cooldown = {
 		en = "Show Local Player Ability Cooldown",
@@ -38,14 +54,6 @@ return {
 	cooldown_format_percent = {
 		en = "Percent",
 		ru = "Процент",
-	},
-	ability_icon_size = {
-		en = "Ability Icon Size",
-		ru = "Размер иконки способности",
-	},
-	cooldown_font_size = {
-		en = "Cooldown Text Font Size",
-		ru = "Размер шрифта кулдауна",
 	},
 	local_cooldown_font_size = {
 		en = "Local Player Cooldown Font Size",

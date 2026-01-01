@@ -7,24 +7,47 @@ return {
 	options = {
 		widgets = {
 			{
-				setting_id = "show_teammate_ability_icon",
-				type = "checkbox",
-				default_value = true,
+				setting_id = "group_teammate_ability",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "show_teammate_ability_icon",
+						type = "checkbox",
+						default_value = true,
+					},
+					{
+						setting_id = "show_teammate_ability_cooldown",
+						type = "checkbox",
+						default_value = true,
+					},
+				},
 			},
 			{
-				setting_id = "show_teammate_ability_cooldown",
-				type = "checkbox",
-				default_value = true,
+				setting_id = "group_teammate_blitz",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "show_teammate_blitz_icon",
+						type = "checkbox",
+						default_value = true,
+					},
+					{
+						setting_id = "show_teammate_blitz_charges",
+						type = "checkbox",
+						default_value = true,
+					},
+				},
 			},
 			{
-				setting_id = "show_teammate_blitz_icon",
-				type = "checkbox",
-				default_value = true,
-			},
-			{
-				setting_id = "show_teammate_blitz_charges",
-				type = "checkbox",
-				default_value = true,
+				setting_id = "group_teammate_aura",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "show_teammate_aura_icon",
+						type = "checkbox",
+						default_value = true,
+					},
+				},
 			},
 			{
 				setting_id = "show_local_ability_cooldown",
@@ -39,20 +62,6 @@ return {
 					{ text = "cooldown_format_time", value = "time" },
 					{ text = "cooldown_format_percent", value = "percent" },
 				},
-			},
-			{
-				setting_id = "ability_icon_size",
-				type = "numeric",
-				default_value = 128,
-				range = { 60, 200 },
-				decimals_number = 0,
-			},
-			{
-				setting_id = "cooldown_font_size",
-				type = "numeric",
-				default_value = 18,
-				range = { 10, 30 },
-				decimals_number = 0,
 			},
 			{
 				setting_id = "local_cooldown_font_size",
