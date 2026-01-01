@@ -107,22 +107,24 @@ mod:hook_safe("HudElementPlayerAbility", "update", function(self)
 				local time_remaining = ability_component.cooldown - time
 				
 				if time_remaining <= 0 then
-					text_widget.content.text = " "
+					text_widget.content.text = ""
 				elseif time_remaining <= 1 then
 					text_widget.content.text = string.format("%.1f", time_remaining)
 				else
 					text_widget.content.text = string.format("%d", math.ceil(time_remaining))
 				end
+			else
+				text_widget.content.text = ""
 			end
 		elseif format_type == "percent" then
 			local percent = progress * 100
 			if percent >= 99 then
-				text_widget.content.text = " "
+				text_widget.content.text = ""
 			else
 				text_widget.content.text = string.format("%d%%", math.floor(percent))
 			end
 		else
-			text_widget.content.text = " "
+			text_widget.content.text = ""
 		end
 	end
 	
