@@ -762,11 +762,7 @@ local function update_teammate_all_abilities(self, player, dt)
 											local fixed_frame_t = FixedFrame.get_latest_fixed_time()
 											local time_remaining = math.max(ability_component.cooldown - fixed_frame_t, 0)
 											if time_remaining > 0 then
-												if time_remaining <= 1 then
-													cooldown_text = string.format("%.1f", time_remaining)
-												else
-													cooldown_text = string.format("%d", math.ceil(time_remaining))
-												end
+												cooldown_text = string.format("%d", math.ceil(time_remaining))
 											end
 										end
 									end
@@ -805,11 +801,7 @@ local function update_teammate_all_abilities(self, player, dt)
 												local fixed_frame_t = FixedFrame.get_latest_fixed_time()
 												local time_remaining = math.max(grenade_ability_component.cooldown - fixed_frame_t, 0)
 												if time_remaining > 0 then
-													if time_remaining <= 1 then
-														display_text = string.format("%.1f", time_remaining)
-													else
-														display_text = string.format("%d", math.ceil(time_remaining))
-													end
+													display_text = string.format("%d", math.ceil(time_remaining))
 												end
 											end
 										end

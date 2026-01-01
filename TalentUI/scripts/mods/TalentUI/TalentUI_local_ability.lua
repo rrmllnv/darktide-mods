@@ -106,11 +106,7 @@ mod:hook_safe("HudElementPlayerAbility", "update", function(self)
 					local time_remaining = math.max(ability_component.cooldown - time, 0)
 					
 					if time_remaining > 0 then
-						if time_remaining <= 1 then
-							display_text = string.format("%.1f", time_remaining)
-						else
-							display_text = string.format("%d", math.ceil(time_remaining))
-						end
+						display_text = string.format("%d", math.ceil(time_remaining))
 					else
 						display_text = ""
 					end
