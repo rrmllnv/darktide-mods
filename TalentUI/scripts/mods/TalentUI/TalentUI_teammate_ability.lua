@@ -148,6 +148,9 @@ end
 -- Кэш: player_name + "_" + ability_id -> {ability_id, ability_type, icon}
 local teammate_abilities_data = {}
 
+-- Отслеживание предыдущего состояния игроков (был ли игрок человеком)
+local player_previous_human_state = {}
+
 local function get_talent_from_character_sheet(player, ability_key)
 	local profile = player and player:profile()
 
@@ -580,12 +583,24 @@ end)
 -- Обновление всех способностей для тимейта
 local function update_teammate_all_abilities(self, player, dt)
 	local player_name = player:name()
-	
+
 	local extensions = self:_player_extensions(player)
-	
+
 	if not extensions then
 		return
 	end
+
+	-- Проверяем, изменилось ли состояние игрока с человека на бота
+	local is_human_controlled = player:is_human_controlled()
+	local was_human_controlled = player_previous_human_state[player_name]
+
+	-- Если игрок был человеком, но теперь стал ботом - очищаем его кэш данных о способностях
+	if was_human_controlled and not is_human_controlled then
+		mod.clear_teammate_all_abilities_data(player_name)
+	end
+
+	-- Обновляем предыдущее состояние
+	player_previous_human_state[player_name] = is_human_controlled
 	
 	-- Скрываем виджеты если игрок мертв
 	if self._show_as_dead or self._dead or self._hogtied then
@@ -897,6 +912,8 @@ mod.clear_teammate_all_abilities_data = function(player_name)
 			teammate_abilities_data[key] = nil
 		end
 	end
+	-- Очищаем данные о предыдущем состоянии игрока
+	player_previous_human_state[player_name] = nil
 end
 
 -- Хук для обновления тимейтов
