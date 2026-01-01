@@ -589,9 +589,37 @@ end)
 local function update_teammate_all_abilities(self, player, dt)
 	local player_name = player:name()
 
+	-- Проверяем, что игрок все еще подключен (имеет peer_id)
+	local player_peer_id = player:peer_id()
+	if not player_peer_id then
+		-- Игрок отключился, скрываем все иконки
+		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
+			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
+			local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
+			if icon_widget then
+				icon_widget.visible = false
+			end
+			if text_widget then
+				text_widget.visible = false
+			end
+		end
+		return
+	end
+
 	local extensions = self:_player_extensions(player)
 
 	if not extensions then
+		-- Если нет extensions, скрываем все иконки для этого игрока
+		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
+			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
+			local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
+			if icon_widget then
+				icon_widget.visible = false
+			end
+			if text_widget then
+				text_widget.visible = false
+			end
+		end
 		return
 	end
 
@@ -606,8 +634,8 @@ local function update_teammate_all_abilities(self, player, dt)
 
 	-- Обновляем предыдущее состояние
 	player_previous_human_state[player_name] = is_human_controlled
-	
-	-- Скрываем виджеты если игрок мертв
+
+	-- Скрываем виджеты если игрок мертв или оглушен
 	if self._show_as_dead or self._dead or self._hogtied then
 		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
 			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
@@ -621,7 +649,7 @@ local function update_teammate_all_abilities(self, player, dt)
 		end
 		return
 	end
-	
+
 	-- Скрываем виджеты если игрок бот и настройка выключена
 	local show_for_bots = TalentUISettings and TalentUISettings.show_abilities_for_bots ~= false
 	if not show_for_bots and not player:is_human_controlled() then

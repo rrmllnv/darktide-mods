@@ -50,7 +50,7 @@ return {
 			active = {intensity = 0, saturation = 1}, -- Есть заряды - яркая и цветная
 			out_of_charges_cooldown = {intensity = -0.5, saturation = 0.5}, -- Нет зарядов - темная и менее цветная
 			-- Остальные состояния не используются для blitz, но оставлены для совместимости
-			on_cooldown = {intensity = -0.5, saturation = 0.5}, -- На кулдауне (не используется)
+			on_cooldown = {intensity = 0, saturation = 1}, -- На кулдауне (не используется)
 			has_charges_cooldown = {intensity = 0, saturation = 1}, -- На кулдауне с зарядами (не используется)
 			inactive = {intensity = -0.5, saturation = 0.5},
 		},
