@@ -155,21 +155,30 @@ mod.copy_last_message = function()
 	
 	local collected_messages = {}
 	local actual_count = 0
+	local used_indices = {}
+	
+	-- Ограничиваем количество итераций реальным количеством доступных сообщений
+	local max_iterations = math.min(messages_count, #message_widgets)
 	
 	-- Собираем последние N сообщений (от последнего к предыдущим)
-	for i = 0, messages_count - 1 do
+	for i = 0, max_iterations - 1 do
 		local index = math.index_wrapper(last_index - i, #message_widgets)
-		local widget = message_widgets[index]
 		
-		if widget and widget.content then
-			local original_text = widget.content._clipit_original_message
-			if not original_text then
-				original_text = scrub_chat_text(widget.content.message)
-			end
+		-- Пропускаем уже использованные индексы, чтобы избежать дубликатов
+		if not used_indices[index] then
+			used_indices[index] = true
+			local widget = message_widgets[index]
 			
-			if original_text and original_text ~= "" then
-				table.insert(collected_messages, original_text)
-				actual_count = actual_count + 1
+			if widget and widget.content then
+				local original_text = widget.content._clipit_original_message
+				if not original_text then
+					original_text = scrub_chat_text(widget.content.message)
+				end
+				
+				if original_text and original_text ~= "" then
+					table.insert(collected_messages, original_text)
+					actual_count = actual_count + 1
+				end
 			end
 		end
 	end
