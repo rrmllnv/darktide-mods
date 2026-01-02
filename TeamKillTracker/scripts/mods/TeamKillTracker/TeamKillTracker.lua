@@ -12,6 +12,10 @@ local hud_elements = {
 	},
 }
 
+for _, hud_element in ipairs(hud_elements) do
+	mod:add_require_path(hud_element.filename)
+end
+
 mod.player_kills = {}
 mod.player_damage = {}
 mod.player_last_damage = {}
@@ -19,10 +23,6 @@ mod.killed_units = {}
 mod.display_mode = mod:get("display_mode") or 1
 mod.show_background = mod:get("show_background") or 1
 mod.opacity = mod:get("opacity") or 100
-
-for _, hud_element in ipairs(hud_elements) do
-	mod:add_require_path(hud_element.filename)
-end
 
 mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, params)
 	for _, hud_element in ipairs(hud_elements) do
