@@ -280,6 +280,7 @@ end
 local _current_session_active = false
 local _current_mission_name = nil
 local _current_location_type = nil
+local _ending_mission_through_endview = false
 
 -- Хук для отслеживания входа в игровое состояние (присоединение к strike team)
 mod:hook(CLASS.StateGameplay, "on_enter", function(func, self, parent, params, ...)
@@ -324,14 +325,32 @@ end)
 -- Хук для отслеживания выхода из игрового состояния
 mod:hook(CLASS.StateGameplay, "on_exit", function(func, self, ...)
 	func(self, ...)
-	-- Не сохраняем здесь - сессия продолжается через EndView и карусель
-	-- Сохранение будет только при возвращении в Mourningstar
+	
+	update_settings_cache()
+	
+	if not _cached_settings.save_chat_history then
+		return
+	end
+	
+	-- Если сессия активна и мы не завершаем миссию через EndView, сохраняем
+	-- (выход из миссии, выход из группы и т.д.)
+	if _current_session_active and not _ending_mission_through_endview then
+		-- Сохраняем сессию при выходе из миссии
+		-- Если мы возвращаемся в Mourningstar, сохранение произойдет и в StateLoading тоже
+		-- но это не критично - save_current_session проверяет наличие сообщений
+		mod.history:save_current_session()
+	end
+	
+	-- Сбрасываем флаг
+	_ending_mission_through_endview = false
 end)
 
 -- Хук для отслеживания завершения миссии (EndView - экран результатов)
 mod:hook(CLASS.EndView, "on_enter", function(func, self, ...)
 	func(self, ...)
-	-- Сессия продолжается - ничего не делаем
+	-- Устанавливаем флаг, что миссия завершается через EndView
+	-- Это предотвратит сохранение в StateGameplay.on_exit
+	_ending_mission_through_endview = true
 end)
 
 -- Хук для выхода из EndView (перед каруселью)
@@ -359,6 +378,7 @@ mod:hook(CLASS.StateLoading, "on_enter", function(func, self, parent, params, ..
 		_current_session_active = false
 		_current_mission_name = nil
 		_current_location_type = nil
+		_ending_mission_through_endview = false
 	end
 end)
 
