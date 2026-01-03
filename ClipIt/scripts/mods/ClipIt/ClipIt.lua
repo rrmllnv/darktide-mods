@@ -323,70 +323,47 @@ end)
 
 -- Хук для отслеживания выхода из игрового состояния
 mod:hook(CLASS.StateGameplay, "on_exit", function(func, self, ...)
-	-- Не сохраняем здесь - сохранение будет при EndView или возвращении в Mourningstar
 	func(self, ...)
+	-- Не сохраняем здесь - сессия продолжается через EndView и карусель
+	-- Сохранение будет только при возвращении в Mourningstar
 end)
 
--- Хук для отслеживания завершения миссии (EndView)
+-- Хук для отслеживания завершения миссии (EndView - экран результатов)
 mod:hook(CLASS.EndView, "on_enter", function(func, self, ...)
 	func(self, ...)
-	-- Сессия продолжается через EndView - ничего не делаем
+	-- Сессия продолжается - ничего не делаем
+	mod:echo("[ClipIt] Entered EndView - session continues")
 end)
 
--- Хук для сохранения после выхода из EndView (возвращение в Mourningstar или новая миссия)
+-- Хук для выхода из EndView (перед каруселью)
 mod:hook(CLASS.EndView, "on_exit", function(func, self, ...)
 	func(self, ...)
-	-- Сессия продолжается через карусель достижений - сохранение будет позже
+	-- Сессия продолжается через карусель - ничего не делаем
+	mod:echo("[ClipIt] Exited EndView - session continues through carousel")
 end)
 
--- Сохранение сессии при возвращении в Mourningstar (завершение Strike Team)
-local _previous_mission = nil
-mod.on_game_state_changed = function(status, state_name)
+-- Хук для отслеживания загрузки (возвращение в Mourningstar = конец ударной группы)
+mod:hook(CLASS.StateLoading, "on_enter", function(func, self, parent, params, ...)
+	func(self, parent, params, ...)
+	
 	update_settings_cache()
 	
 	if not _cached_settings.save_chat_history then
 		return
 	end
 	
-	if state_name == "StateGameplay" then
-		if status == "enter" then
-			-- Отслеживаем переход между миссиями
-			if _current_session_active and _current_mission_name then
-				_previous_mission = _current_mission_name
-			end
-		elseif status == "exit" then
-			-- Проверяем, возвращаемся ли мы в Mourningstar
-			-- Если да, то сохраняем сессию
-			local going_to_hub = false
-			if Managers.state and Managers.state.game_mode then
-				local next_state = Managers.game_state_machine and Managers.game_state_machine._requested_transitions
-				if next_state and next_state[1] then
-					local next_state_name = next_state[1]
-					if next_state_name == "StateLoading" then
-						going_to_hub = true
-					end
-				end
-			end
-			
-			-- Сохраняем сессию если возвращаемся в hub или выходим из игры
-			if _current_session_active and going_to_hub then
-				mod.history:save_current_session()
-				_current_session_active = false
-				_current_mission_name = nil
-				_current_location_type = nil
-			end
-		end
-	elseif state_name == "StateLoading" and status == "enter" then
-		-- Проверяем, начинается ли загрузка Mourningstar
-		if _current_session_active then
-			-- Сохраняем при переходе в loading (возврат в hub)
-			mod.history:save_current_session()
-			_current_session_active = false
-			_current_mission_name = nil
-			_current_location_type = nil
-		end
+	-- Проверяем, загружаем ли мы Mourningstar (hub_ship)
+	local mission_name = params and params.mission_name
+	
+	if mission_name == "hub_ship" and _current_session_active then
+		-- Возвращаемся в Mourningstar - сохраняем сессию и завершаем её
+		mod:echo("[ClipIt] Returning to Mourningstar - saving and ending session")
+		mod.history:save_current_session()
+		_current_session_active = false
+		_current_mission_name = nil
+		_current_location_type = nil
 	end
-end
+end)
 
 -- Обновление состояния (вызывается каждый кадр)
 mod.update = function(dt)
@@ -517,37 +494,7 @@ mod:hook("ConstantElementChat", "_add_message_widget_to_message_list", function(
 	
 	-- Сохраняем в историю чата если включено и сессия активна
 	update_settings_cache()
-	if _cached_settings.save_chat_history and new_message.message_text and new_message.message_text ~= "" then
-		-- Если сессия не активна, начинаем новую
-		if not _current_session_active then
-			-- Автоматически определяем локацию
-			local mission_name = nil
-			if Managers.state and Managers.state.mission then
-				mission_name = Managers.state.mission:mission_name()
-			end
-			
-			if not mission_name or mission_name == "" then
-				if Managers.state and Managers.state.game_mode then
-					local game_mode_name = Managers.state.game_mode:game_mode_name()
-					if game_mode_name == "shooting_range" then
-						mission_name = "tg_shooting_range"
-					elseif game_mode_name == "hub" or game_mode_name == "prologue_hub" then
-						mission_name = "hub_ship"
-					end
-				end
-			end
-			
-			if not mission_name or mission_name == "" then
-				mission_name = "hub_ship"
-			end
-			
-			local location_type, location_name = get_location_info(mission_name)
-			mod.history:start_session(location_type, location_name)
-			_current_session_active = true
-			_current_mission_name = mission_name
-			_current_location_type = location_type
-		end
-		
+	if _cached_settings.save_chat_history and _current_session_active and new_message.message_text and new_message.message_text ~= "" then
 		local sender = new_message.author_name or ""
 		local message = new_message.message_text
 		local channel = new_message.channel_tag or "Strike Team"

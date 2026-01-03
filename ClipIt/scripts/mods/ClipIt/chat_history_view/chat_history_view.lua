@@ -95,7 +95,7 @@ function ChatHistoryView:_update_title()
 	if success and title_text and title_text ~= "" then
 		title_widget.content.text = title_text
 	else
-		title_widget.content.text = "CHAT HISTORY"
+		title_widget.content.text = "ИСТОРИЯ ЧАТА"
 	end
 	
 	title_widget.dirty = true
@@ -111,8 +111,8 @@ function ChatHistoryView:_load_sessions()
 	end
 	self._session_button_widgets = {}
 	
-	-- Получаем список сессий
-	self._session_entries = mod.history:get_history_entries(true)
+	-- Получаем список сессий (используем кеш, не сканируем каждый раз)
+	self._session_entries = mod.history:get_history_entries(false)
 	
 	if #self._session_entries == 0 then
 		if self._messages_grid then
@@ -124,7 +124,7 @@ function ChatHistoryView:_load_sessions()
 	-- Создаём кнопки для каждой сессии
 	self:_create_session_buttons()
 	
-	-- Выбираем первую сессию
+	-- Выбираем первую сессию и загружаем её сообщения
 	self._selected_session_index = 1
 	self:_update_session_selection()
 	self:_load_session_messages()
@@ -136,8 +136,11 @@ function ChatHistoryView:_create_session_buttons()
 	
 	for index, entry in ipairs(self._session_entries) do
 		-- Получаем информацию для отображения
-		local display_name = Layout.get_session_display_name(entry, mod)
-		local date_str = entry.date or ""
+		local mission_name = Layout.get_session_display_name(entry, mod)
+		local time_str = entry.date or ""
+		
+		-- Формат: время - название миссии
+		local display_text = time_str .. " - " .. mission_name
 		
 		-- Создаём widget definition
 		local widget_definition = UIWidget.create_definition(
@@ -151,34 +154,32 @@ function ChatHistoryView:_create_session_buttons()
 		local widget = self:_create_widget(widget_name, widget_definition)
 		
 		-- Инициализируем widget
-		local element = {
-			text = display_name,
-			subtext = date_str,
-			entry_data = entry,
-			pressed_callback = callback(self, "_on_session_button_pressed", index),
-		}
+		widget.content.text = display_text
+		widget.content.sub_text = ""
+		widget.content.entry_data = entry
+		widget.file = entry.file
 		
-		if blueprints.session_button.init then
-			blueprints.session_button.init(self, widget, element, nil)
+		-- Устанавливаем callback
+		local hotspot = widget.content.hotspot
+		if hotspot then
+			hotspot.pressed_callback = callback(self, "_on_session_button_pressed", index)
 		end
-		
-		widget.content.hotspot.pressed_callback = element.pressed_callback
 		
 		widgets[index] = widget
 		alignment_list[index] = widget
 	end
 	
-	-- Создаём grid для кнопок сессий
+	-- Создаём UIWidgetGrid для кнопок
 	local ui_scenegraph = self._ui_scenegraph
 	local direction = "down"
 	local grid_spacing = {0, button_spacing}
 	
 	self._session_buttons_grid = UIWidgetGrid:new(
-		widgets, 
-		alignment_list, 
-		ui_scenegraph, 
-		"sessions_list_pivot", 
-		direction, 
+		widgets,
+		alignment_list,
+		ui_scenegraph,
+		"sessions_list_pivot",
+		direction,
 		grid_spacing
 	)
 	
@@ -189,6 +190,17 @@ function ChatHistoryView:_create_session_buttons()
 end
 
 function ChatHistoryView:_on_session_button_pressed(index)
+	mod:echo("[ChatHistoryView] _on_session_button_pressed called with index: " .. tostring(index))
+	mod:echo("[ChatHistoryView] Total session entries: " .. tostring(#self._session_entries))
+	
+	if not self._session_entries or not self._session_entries[index] then
+		mod:echo("[ChatHistoryView] ERROR: Invalid index or no entry at index " .. tostring(index))
+		return
+	end
+	
+	local entry = self._session_entries[index]
+	mod:echo("[ChatHistoryView] Entry file: " .. tostring(entry.file))
+	
 	self._selected_session_index = index
 	self:_update_session_selection()
 	self:_load_session_messages()
@@ -205,47 +217,51 @@ end
 
 function ChatHistoryView:_load_session_messages()
 	if not self._messages_grid then
+		mod:echo("No messages grid")
 		return
 	end
 	
 	local selected_index = self._selected_session_index
 	if not selected_index or selected_index < 1 or selected_index > #self._session_entries then
+		mod:echo("Invalid selected index: " .. tostring(selected_index))
 		self._messages_grid:present_grid_layout({}, blueprints)
 		return
 	end
 	
 	local entry = self._session_entries[selected_index]
-	if not entry or not entry.file then
+	if not entry then
+		mod:echo("No entry for index: " .. tostring(selected_index))
 		self._messages_grid:present_grid_layout({}, blueprints)
 		return
 	end
 	
-	-- Обновляем заголовок с информацией о выбранной сессии
-	self:_update_title_with_session(entry)
+	if not entry.file then
+		mod:echo("No file in entry")
+		self._messages_grid:present_grid_layout({}, blueprints)
+		return
+	end
+	
+	mod:echo("Loading file: " .. tostring(entry.file))
 	
 	-- Загружаем данные сессии
 	local history_data = mod.history:load_history_entry(entry.file)
-	if not history_data or not history_data.messages then
+	if not history_data then
+		mod:echo("Failed to load history data")
 		self._messages_grid:present_grid_layout({}, blueprints)
 		return
 	end
+	
+	if not history_data.messages then
+		mod:echo("No messages in history data")
+		self._messages_grid:present_grid_layout({}, blueprints)
+		return
+	end
+	
+	mod:echo("Loaded " .. tostring(#history_data.messages) .. " messages")
 	
 	-- Создаём layout для сообщений
 	local layout = Layout.create_messages_layout(history_data.messages)
 	self._messages_grid:present_grid_layout(layout, blueprints)
-end
-
-function ChatHistoryView:_update_title_with_session(entry)
-	local title_widget = self._widgets_by_name.title_text
-	if not title_widget then
-		return
-	end
-	
-	local base_title = mod:localize("chat_history_view_title") or "CHAT HISTORY"
-	local session_info = Layout.get_session_display_name(entry, mod)
-	
-	title_widget.content.text = base_title .. " - " .. session_info
-	title_widget.dirty = true
 end
 
 function ChatHistoryView:cb_on_back_pressed()
@@ -255,12 +271,12 @@ function ChatHistoryView:cb_on_back_pressed()
 end
 
 function ChatHistoryView:update(dt, t, input_service)
-	ChatHistoryView.super.update(self, dt, t, input_service)
-	
 	-- Обновляем grid кнопок сессий
 	if self._session_buttons_grid then
 		self._session_buttons_grid:update(dt, t, input_service)
 	end
+	
+	ChatHistoryView.super.update(self, dt, t, input_service)
 	
 	if input_service and input_service:get("back_released") then
 		if Managers and Managers.ui then
@@ -270,17 +286,17 @@ function ChatHistoryView:update(dt, t, input_service)
 end
 
 function ChatHistoryView:draw(dt, t, input_service, layer)
-	local ui_renderer = self._ui_renderer
-	local ui_scenegraph = self._ui_scenegraph
-	local render_settings = self._render_settings
-	
 	-- Рисуем кнопки сессий через grid
-	if self._session_buttons_grid and ui_renderer then
+	if self._session_buttons_grid and self._session_button_widgets and self._ui_renderer then
+		local ui_renderer = self._ui_renderer
+		local ui_scenegraph = self._ui_scenegraph
+		local render_settings = self._render_settings
+		
 		UIRenderer.begin_pass(ui_renderer, ui_scenegraph, input_service, dt, render_settings)
 		
 		for i = 1, #self._session_button_widgets do
 			local widget = self._session_button_widgets[i]
-			if widget then
+			if widget and self._session_buttons_grid:is_widget_visible(widget) then
 				UIWidget.draw(widget, ui_renderer)
 			end
 		end

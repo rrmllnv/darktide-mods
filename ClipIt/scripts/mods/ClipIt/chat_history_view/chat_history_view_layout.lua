@@ -30,13 +30,13 @@ Layout.get_session_display_name = function(entry, mod)
 	
 	if entry.session_type == "mission" then
 		local mission_display = get_mission_display_name(location_name, mod)
-		display_name = (mod:localize("chat_history_session_mission") or "Mission") .. ": " .. mission_display
+		display_name = mission_display
 	elseif entry.session_type == "mourningstar" then
-		display_name = (mod:localize("chat_history_session_mourningstar") or "Mourningstar") .. ": " .. (location_name == "hub_ship" and "The Mourningstar" or location_name)
+		display_name = "The Mourningstar"
 	elseif entry.session_type == "psykhanium" then
-		display_name = (mod:localize("chat_history_session_psykhanium") or "Psykhanium") .. ": " .. (location_name == "tg_shooting_range" and "Psykhanium" or location_name)
+		display_name = "Psykhanium"
 	else
-		display_name = (mod:localize("chat_history_session_unknown") or "Unknown") .. ": " .. location_name
+		display_name = location_name
 	end
 	
 	return display_name

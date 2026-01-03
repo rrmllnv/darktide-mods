@@ -71,11 +71,21 @@ function ChatHistory:init()
 	self._current_session_type = nil -- "mission", "mourningstar" или "psykhanium"
 	self._current_session_name = nil
 	self._last_save_time = 0
+	self._cache_initialized = false
+	self._loaded_files_cache = {} -- Кеш загруженных файлов
 end
 
 -- Получение пути к папке с историей чата
 function ChatHistory:get_path()
 	return string.format("%s/Fatshark/Darktide/clipit_history/", _os.getenv("APPDATA"))
+end
+
+-- Предварительная инициализация кеша (вызывается при первом сообщении)
+function ChatHistory:init_cache_async()
+	if not self._cache_initialized then
+		self._history_entries_cache = scandir(self:get_path())
+		self._cache_initialized = true
+	end
 end
 
 -- Парсинг имени файла истории
@@ -123,6 +133,11 @@ end
 function ChatHistory:add_message(sender, message, channel)
 	if not message or message == "" then
 		return
+	end
+	
+	-- Инициализируем кеш при первом сообщении (чтобы потом открытие view было быстрым)
+	if not self._cache_initialized then
+		self:init_cache_async()
 	end
 	
 	local timestamp = _os.time()
@@ -191,6 +206,9 @@ function ChatHistory:save_current_session()
 		self._history_entries_cache[#self._history_entries_cache + 1] = file_name
 	end
 	
+	-- Очищаем кеш загруженных файлов чтобы новый файл загрузился свежим
+	self._loaded_files_cache = {}
+	
 	self._last_save_time = _os.time()
 	
 	return file_name
@@ -198,6 +216,11 @@ end
 
 -- Загрузка записи истории
 function ChatHistory:load_history_entry(file_name)
+	-- Проверяем кеш загруженных файлов
+	if self._loaded_files_cache[file_name] then
+		return self._loaded_files_cache[file_name]
+	end
+	
 	local path = self:get_path() .. file_name
 	local file, err = _io.open(path, "r")
 	if not file then
@@ -223,12 +246,21 @@ function ChatHistory:load_history_entry(file_name)
 		data.location_name = file_info.location_name
 	end
 	
+	-- Сохраняем в кеш
+	self._loaded_files_cache[file_name] = data
+	
 	return data
 end
 
 -- Получение списка записей истории
 function ChatHistory:get_history_entries(scan_dir)
-	if scan_dir or self._history_entries_cache == nil then
+	-- Если кеш не инициализирован, инициализируем его один раз
+	if self._history_entries_cache == nil then
+		self._history_entries_cache = scandir(self:get_path())
+	end
+	
+	-- Принудительное сканирование только если явно запрошено
+	if scan_dir then
 		self._history_entries_cache = scandir(self:get_path())
 	end
 	
