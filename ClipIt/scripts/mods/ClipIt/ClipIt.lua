@@ -66,26 +66,21 @@ local function should_auto_block()
 end
 
 local function handle_input_service(func, self, action_name)
-	-- Обрабатываем только игровой ввод, исключая голосовой чат
 	if self.type ~= "Ingame" or action_name == "voip_push_to_talk" then
 		return func(self, action_name)
 	end
 	
-	-- Обновляем кеш настроек
 	update_settings_cache()
 	
-	-- Обрабатываем удержание блока
 	if action_name == "action_two_hold" and should_auto_block() then
 		return true
 	end
 	
-	-- Блокируем другие действия при открытом интерфейсе
 	local ui_manager = Managers.ui
 	if ui_manager and ui_manager:using_input() then
 		local original_result = func(self, action_name)
 		local result_type = type(original_result)
 		
-		-- Возвращаем "пустое" значение соответствующего типа
 		if result_type == "boolean" then
 			return false
 		elseif result_type == "number" then
