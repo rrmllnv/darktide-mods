@@ -22,7 +22,7 @@ return {
 				title = "messages_count_title",
 				tooltip_text = "messages_count_tooltip",
 				default_value = 1,
-				range = {1, 20},
+				range = {1, 40},
 			},
 			{
 				setting_id = "copy_sender_names",

@@ -213,37 +213,6 @@ local function extract_sender_name(widget_content)
 	return widget_content._clipit_original_sender or ""
 end
 
--- Проверка, является ли сообщение системным
-local function is_system_message(text, sender_name)
-	if not text or text == "" then
-		return false
-	end
-	
-	-- Если нет отправителя, это системное сообщение
-	if not sender_name or sender_name == "" then
-		return true
-	end
-	
-	-- Проверяем паттерны системных сообщений
-	local lower_text = string.lower(text)
-	
-	-- Паттерны системных сообщений
-	local system_patterns = {
-		"joined",
-		"left channel",
-		"joined channel",
-		"left",
-	}
-	
-	for _, pattern in ipairs(system_patterns) do
-		if string.find(lower_text, pattern, 1, true) then
-			return true
-		end
-	end
-	
-	return false
-end
-
 -- Форматирование сообщения с именем отправителя или без
 local function format_message(text, sender_name, include_sender)
 	if not text or text == "" then
@@ -282,9 +251,9 @@ mod:hook("ConstantElementChat", "_add_message_widget_to_message_list", function(
 	
 	local widget_content = new_message_widget.content
 	
-	-- Сохраняем текст сообщения (очищенный от форматирования)
+	-- Сохраняем текст сообщения БЕЗ очистки (сохраняем оригинал)
 	if new_message.message_text and new_message.message_text ~= "" then
-		widget_content._clipit_original_message = clean_formatting_tags(new_message.message_text)
+		widget_content._clipit_original_message = new_message.message_text
 	end
 	
 	-- Сохраняем имя отправителя
@@ -321,12 +290,8 @@ mod.copy_last_message = function()
 	
 	-- Собираем сообщения
 	local messages_buffer = {}
-	local offset = 0
-	local collected_count = 0
-	local max_iterations = max_available * 2 -- Ограничение на количество попыток
 	
-	-- Собираем сообщения, пропуская системные
-	while collected_count < messages_to_copy and offset < max_iterations do
+	for offset = 0, messages_to_copy - 1 do
 		local widget_index = math.index_wrapper(last_message_index - offset, max_available)
 		local widget = message_widgets[widget_index]
 		
@@ -335,21 +300,14 @@ mod.copy_last_message = function()
 			
 			if message_text then
 				local sender_name = extract_sender_name(widget.content)
+				local formatted = format_message(message_text, sender_name, include_sender_names)
 				
-				-- Пропускаем системные сообщения
-				if not is_system_message(message_text, sender_name) then
-					local formatted = format_message(message_text, sender_name, include_sender_names)
-					
-					if formatted then
-						-- Добавляем в начало массива для сохранения хронологического порядка
-						table.insert(messages_buffer, 1, formatted)
-						collected_count = collected_count + 1
-					end
+				if formatted then
+					-- Добавляем в начало массива для сохранения хронологического порядка
+					table.insert(messages_buffer, 1, formatted)
 				end
 			end
 		end
-		
-		offset = offset + 1
 	end
 	
 	-- Копируем в буфер обмена
