@@ -124,5 +124,25 @@ return {
 		ru = "Горячая клавиша для открытия просмотра истории чата",
 		["zh-cn"] = "打开聊天记录查看器的快捷键",
 	},
+	chat_history_view_title = {
+		en = "Chat History",
+		ru = "История чата",
+		["zh-cn"] = "聊天记录",
+	},
+	chat_history_session_mission = {
+		en = "Mission",
+		ru = "Миссия",
+		["zh-cn"] = "任务",
+	},
+	chat_history_session_mourningstar = {
+		en = "Mourningstar",
+		ru = "Моурнингстар",
+		["zh-cn"] = "Mourningstar",
+	},
+	chat_history_session_unknown = {
+		en = "Unknown",
+		ru = "Неизвестно",
+		["zh-cn"] = "未知",
+	},
 }
 

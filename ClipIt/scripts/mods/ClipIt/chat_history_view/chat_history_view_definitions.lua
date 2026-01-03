@@ -2,88 +2,102 @@ local mod = get_mod("ClipIt")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local UIWorkspaceSettings = mod:original_require("scripts/settings/ui/ui_workspace_settings")
 
+local constants = mod:io_dofile("ClipIt/scripts/mods/ClipIt/chat_history_view/chat_history_view_constants")
+
+local sessions_panel_size = constants.sessions_panel_size
+local messages_panel_size = constants.messages_panel_size
+
 local scenegraph_definition = {
 	screen = UIWorkspaceSettings.screen,
-	canvas = {
+	dim_background = {
 		parent = "screen",
-		vertical_alignment = "center",
 		horizontal_alignment = "center",
+		vertical_alignment = "center",
 		size = {1920, 1080},
-		position = {0, 0, 0},
-	},
-	corner_top_left = {
-		parent = "screen",
-		vertical_alignment = "top",
-		horizontal_alignment = "left",
-		size = {0, 0},
-		position = {0, 0, 0},
-	},
-	corner_top_right = {
-		parent = "screen",
-		vertical_alignment = "top",
-		horizontal_alignment = "right",
-		size = {0, 0},
-		position = {0, 0, 0},
-	},
-	corner_bottom_left = {
-		parent = "screen",
-		vertical_alignment = "bottom",
-		horizontal_alignment = "left",
-		size = {0, 0},
-		position = {0, 0, 0},
-	},
-	corner_bottom_right = {
-		parent = "screen",
-		vertical_alignment = "bottom",
-		horizontal_alignment = "right",
-		size = {0, 0},
-		position = {0, 0, 0},
+		position = {0, 0, -5},
 	},
 	background = {
-		parent = "canvas",
+		parent = "screen",
 		vertical_alignment = "center",
 		horizontal_alignment = "center",
-		size = {1000, 800},
+		size = {1250, 800},
 		position = {0, 0, 0},
 	},
 	title_bar = {
 		parent = "background",
 		vertical_alignment = "top",
 		horizontal_alignment = "center",
-		size = {1000, 60},
+		size = {1250, 60},
 		position = {0, 0, 10},
 	},
-	grid_background = {
+	sessions_panel = {
 		parent = "background",
+		vertical_alignment = "top",
+		horizontal_alignment = "left",
+		size = sessions_panel_size,
+		position = {20, 80, 0},
+	},
+	sessions_panel_background = {
+		parent = "sessions_panel",
 		vertical_alignment = "center",
 		horizontal_alignment = "center",
-		size = {900, 680},
-		position = {0, -40, 1},
+		size = sessions_panel_size,
+		position = {0, 0, -1},
 	},
-	grid = {
-		parent = "grid_background",
+	sessions_grid_pivot = {
+		parent = "sessions_panel",
 		vertical_alignment = "top",
 		horizontal_alignment = "left",
-		size = {880, 660},
-		position = {10, 10, 1},
+		size = {0, 0},
+		position = {20, 20, 3},
 	},
-	grid_content = {
-		parent = "grid",
+	sessions_grid_background = {
+		parent = "sessions_panel",
 		vertical_alignment = "top",
 		horizontal_alignment = "left",
-		size = {880, 0},
-		position = {0, 0, 1},
+		size = sessions_panel_size,
+		position = {0, 0, 0},
 	},
-	scrollbar = {
-		parent = "grid",
-		vertical_alignment = "center",
+	messages_panel = {
+		parent = "background",
+		vertical_alignment = "top",
 		horizontal_alignment = "right",
-		size = {20, 660},
-		position = {20, 0, 10},
+		size = messages_panel_size,
+		position = {-20, 80, 0},
+	},
+	messages_panel_background = {
+		parent = "messages_panel",
+		vertical_alignment = "center",
+		horizontal_alignment = "center",
+		size = messages_panel_size,
+		position = {0, 0, -1},
+	},
+	messages_grid_pivot = {
+		parent = "messages_panel",
+		vertical_alignment = "top",
+		horizontal_alignment = "left",
+		size = {0, 0},
+		position = {20, 20, 3},
+	},
+	messages_grid_background = {
+		parent = "messages_panel",
+		vertical_alignment = "top",
+		horizontal_alignment = "left",
+		size = messages_panel_size,
+		position = {0, 0, 0},
 	},
 }
 
 local widget_definitions = {
+	dim_background = UIWidget.create_definition({
+		{
+			pass_type = "rect",
+			style = {
+				color = {180, 0, 0, 0},
+			},
+		},
+	}, "dim_background"),
+	
 	background = UIWidget.create_definition({
 		{
 			pass_type = "texture",
@@ -110,25 +124,26 @@ local widget_definitions = {
 		},
 	}, "title_bar"),
 	
-	grid_background = UIWidget.create_definition({
+	sessions_panel_background = UIWidget.create_definition({
 		{
-			pass_type = "texture",
-			value = "content/ui/materials/backgrounds/default_square",
+			pass_type = "rect",
 			style = {
-				color = {180, 10, 10, 10},
+				color = {180, 0, 0, 0},
 			},
 		},
-	}, "grid_background"),
+	}, "sessions_panel_background"),
+	
+	messages_panel_background = UIWidget.create_definition({
+		{
+			pass_type = "rect",
+			style = {
+				color = {180, 0, 0, 0},
+			},
+		},
+	}, "messages_panel_background"),
 }
 
-local legend_inputs = {
-	{
-		input_action = "back",
-		on_pressed_callback = "_on_back_pressed",
-		display_name = "loc_class_selection_button_back",
-		alignment = "left_alignment",
-	},
-}
+local legend_inputs = constants.legend_inputs
 
 return {
 	scenegraph_definition = scenegraph_definition,
