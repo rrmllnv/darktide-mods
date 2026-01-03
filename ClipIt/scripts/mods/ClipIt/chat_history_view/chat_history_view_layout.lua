@@ -1,7 +1,7 @@
 local Layout = {}
 
 -- Локализация названия миссии
-local function get_mission_display_name(mission_name)
+local function get_mission_display_name(mission_name, mod)
 	if not mission_name or mission_name == "" or mission_name == "unknown" then
 		return "Unknown"
 	end
@@ -19,27 +19,39 @@ local function get_mission_display_name(mission_name)
 	return mission_name
 end
 
+-- Получение отображаемого имени сессии
+Layout.get_session_display_name = function(entry, mod)
+	if not entry then
+		return "Unknown Session"
+	end
+	
+	local location_name = entry.location_name or "Unknown Location"
+	local display_name = ""
+	
+	if entry.session_type == "mission" then
+		local mission_display = get_mission_display_name(location_name, mod)
+		display_name = (mod:localize("chat_history_session_mission") or "Mission") .. ": " .. mission_display
+	elseif entry.session_type == "mourningstar" then
+		display_name = (mod:localize("chat_history_session_mourningstar") or "Mourningstar") .. ": " .. (location_name == "hub_ship" and "The Mourningstar" or location_name)
+	elseif entry.session_type == "psykhanium" then
+		display_name = (mod:localize("chat_history_session_psykhanium") or "Psykhanium") .. ": " .. (location_name == "tg_shooting_range" and "Psykhanium" or location_name)
+	else
+		display_name = (mod:localize("chat_history_session_unknown") or "Unknown") .. ": " .. location_name
+	end
+	
+	return display_name
+end
+
+-- Создание layout для списка сессий (не используется, т.к. кнопки создаются вручную)
 Layout.create_sessions_layout = function(entries, mod)
 	local layout = {}
 	
 	for i, entry in ipairs(entries) do
-		local location_name = entry.location_name or "Unknown Location"
-		local display_name = ""
-		
-		if entry.session_type == "mission" then
-			local mission_display = get_mission_display_name(location_name)
-			display_name = (mod:localize("chat_history_session_mission") or "Mission") .. ": " .. mission_display
-		elseif entry.session_type == "mourningstar" then
-			display_name = (mod:localize("chat_history_session_mourningstar") or "Mourningstar") .. ": " .. (location_name == "hub_ship" and "The Mourningstar" or location_name)
-		elseif entry.session_type == "psykhanium" then
-			display_name = (mod:localize("chat_history_session_psykhanium") or "Psykhanium") .. ": " .. (location_name == "tg_shooting_range" and "Psykhanium" or location_name)
-		else
-			display_name = (mod:localize("chat_history_session_unknown") or "Unknown") .. ": " .. location_name
-		end
+		local display_name = Layout.get_session_display_name(entry, mod)
 		
 		table.insert(layout, {
 			entry_id = "session_" .. (entry.file or tostring(i)),
-			widget_type = "session_entry",
+			widget_type = "session_button",
 			text = display_name,
 			subtext = entry.date or "",
 			entry_data = entry,
@@ -49,6 +61,7 @@ Layout.create_sessions_layout = function(entries, mod)
 	return layout
 end
 
+-- Создание layout для списка сообщений
 Layout.create_messages_layout = function(messages)
 	local layout = {}
 	
@@ -69,4 +82,3 @@ Layout.create_messages_layout = function(messages)
 end
 
 return Layout
-

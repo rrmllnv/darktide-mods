@@ -1,11 +1,18 @@
 local mod = get_mod("ClipIt")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local UIWorkspaceSettings = mod:original_require("scripts/settings/ui/ui_workspace_settings")
+local UIFontSettings = mod:original_require("scripts/managers/ui/ui_font_settings")
+local ScrollbarPassTemplates = mod:original_require("scripts/ui/pass_templates/scrollbar_pass_templates")
+local ButtonPassTemplates = mod:original_require("scripts/ui/pass_templates/button_pass_templates")
+local Color = Color
 
 local constants = mod:io_dofile("ClipIt/scripts/mods/ClipIt/chat_history_view/chat_history_view_constants")
 
-local sessions_panel_size = constants.sessions_panel_size
+local category_panel_size = constants.category_panel_size
 local messages_panel_size = constants.messages_panel_size
+local scrollbar_width = constants.scrollbar_width
+local grid_size = constants.grid_size
+local mask_size = constants.mask_size
 
 local scenegraph_definition = {
 	screen = UIWorkspaceSettings.screen,
@@ -16,77 +23,76 @@ local scenegraph_definition = {
 		size = {1920, 1080},
 		position = {0, 0, -5},
 	},
-	background = {
+	background_icon = {
+		vertical_alignment = "center",
 		parent = "screen",
-		vertical_alignment = "center",
 		horizontal_alignment = "center",
-		size = {1250, 800},
-		position = {0, 0, 0},
+		size = {1250, 1250},
+		position = {0, 0, -4},
 	},
-	title_bar = {
-		parent = "background",
+	title_divider = {
 		vertical_alignment = "top",
-		horizontal_alignment = "center",
-		size = {1250, 60},
-		position = {0, 0, 10},
-	},
-	sessions_panel = {
-		parent = "background",
-		vertical_alignment = "top",
+		parent = "screen",
 		horizontal_alignment = "left",
-		size = sessions_panel_size,
-		position = {20, 80, 0},
+		size = {335, 18},
+		position = {180, 145, 1},
 	},
-	sessions_panel_background = {
-		parent = "sessions_panel",
-		vertical_alignment = "center",
-		horizontal_alignment = "center",
-		size = sessions_panel_size,
-		position = {0, 0, -1},
-	},
-	sessions_grid_pivot = {
-		parent = "sessions_panel",
-		vertical_alignment = "top",
+	title_text = {
+		vertical_alignment = "bottom",
+		parent = "title_divider",
 		horizontal_alignment = "left",
-		size = {0, 0},
-		position = {20, 20, 3},
+		size = {500, 50},
+		position = {0, -35, 1},
 	},
-	sessions_grid_background = {
-		parent = "sessions_panel",
+	category_panel = {
 		vertical_alignment = "top",
+		parent = "screen",
 		horizontal_alignment = "left",
-		size = sessions_panel_size,
-		position = {0, 0, 0},
+		size = category_panel_size,
+		position = {140, 190, 0},
 	},
 	messages_panel = {
-		parent = "background",
 		vertical_alignment = "top",
+		parent = "screen",
 		horizontal_alignment = "right",
 		size = messages_panel_size,
-		position = {-20, 80, 0},
+		position = {-180, 130, 0},
 	},
 	messages_panel_background = {
+		vertical_alignment = "top",
 		parent = "messages_panel",
-		vertical_alignment = "center",
 		horizontal_alignment = "center",
-		size = messages_panel_size,
+		size = {messages_panel_size[1], messages_panel_size[2]},
 		position = {0, 0, -1},
 	},
-	messages_grid_pivot = {
-		parent = "messages_panel",
+	grid_pivot = {
 		vertical_alignment = "top",
+		parent = "messages_panel",
 		horizontal_alignment = "left",
 		size = {0, 0},
 		position = {20, 20, 3},
 	},
-	messages_grid_background = {
-		parent = "messages_panel",
+	grid_scrollbar = {
 		vertical_alignment = "top",
+		parent = "messages_panel",
+		horizontal_alignment = "right",
+		size = {scrollbar_width, messages_panel_size[2] - 60},
+		position = {30, 30, 2},
+	},
+	sessions_list_pivot = {
+		vertical_alignment = "top",
+		parent = "category_panel",
 		horizontal_alignment = "left",
-		size = messages_panel_size,
-		position = {0, 0, 0},
+		size = {0, 0},
+		position = {0, 0, 2},
 	},
 }
+
+-- Генерируем scenegraph для кнопок сессий динамически (будет создано в runtime)
+
+local title_style = table.clone(UIFontSettings.header_1 or {})
+title_style.text_horizontal_alignment = "left"
+title_style.text_vertical_alignment = "bottom"
 
 local widget_definitions = {
 	dim_background = UIWidget.create_definition({
@@ -97,50 +103,41 @@ local widget_definitions = {
 			},
 		},
 	}, "dim_background"),
-	
-	background = UIWidget.create_definition({
+	background_icon = UIWidget.create_definition({
+		{
+			value = "content/ui/vector_textures/symbols/cog_skull_01",
+			pass_type = "slug_icon",
+			style = {
+				color = {80, 0, 0, 0},
+			},
+		},
+	}, "background_icon"),
+	title_divider = UIWidget.create_definition({
 		{
 			pass_type = "texture",
-			value = "content/ui/materials/backgrounds/default_square",
-			style = {
-				color = {220, 0, 0, 0},
-			},
+			value = "content/ui/materials/dividers/skull_rendered_left_01",
 		},
-	}, "background"),
-	
-	title = UIWidget.create_definition({
+	}, "title_divider"),
+	title_text = UIWidget.create_definition({
 		{
-			pass_type = "text",
-			value = "Chat History",
 			value_id = "text",
-			style = {
-				font_type = "proxima_nova_bold",
-				font_size = 32,
-				text_horizontal_alignment = "center",
-				text_vertical_alignment = "center",
-				text_color = {255, 255, 255, 255},
-				offset = {0, 0, 2},
-			},
+			pass_type = "text",
+			style = title_style,
+			value = "",
 		},
-	}, "title_bar"),
-	
-	sessions_panel_background = UIWidget.create_definition({
+	}, "title_text"),
+	messages_panel = UIWidget.create_definition({
 		{
 			pass_type = "rect",
 			style = {
-				color = {180, 0, 0, 0},
-			},
-		},
-	}, "sessions_panel_background"),
-	
-	messages_panel_background = UIWidget.create_definition({
-		{
-			pass_type = "rect",
-			style = {
-				color = {180, 0, 0, 0},
+				color = Color.black(0, true),
 			},
 		},
 	}, "messages_panel_background"),
+	grid_scrollbar = UIWidget.create_definition(ScrollbarPassTemplates.default_scrollbar, "grid_scrollbar", {
+		scroll_speed = 10,
+		scroll_amount = 0.1,
+	}),
 }
 
 local legend_inputs = constants.legend_inputs
@@ -149,5 +146,7 @@ return {
 	scenegraph_definition = scenegraph_definition,
 	widget_definitions = widget_definitions,
 	legend_inputs = legend_inputs,
+	grid_size = grid_size,
+	mask_size = mask_size,
 }
 

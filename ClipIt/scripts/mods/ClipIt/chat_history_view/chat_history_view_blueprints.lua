@@ -1,104 +1,56 @@
 local mod = get_mod("ClipIt")
-local Color = Color
+local ButtonPassTemplates = mod:original_require("scripts/ui/pass_templates/button_pass_templates")
 local UIFontSettings = mod:original_require("scripts/managers/ui/ui_font_settings")
+local UIFonts = mod:original_require("scripts/managers/ui/ui_fonts")
+local UIRenderer = mod:original_require("scripts/managers/ui/ui_renderer")
+local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
+local Color = Color
 
 local constants = mod:io_dofile("ClipIt/scripts/mods/ClipIt/chat_history_view/chat_history_view_constants")
 
-local sessions_grid_size = constants.sessions_grid_size
-local messages_grid_size = constants.messages_grid_size
+local grid_size = constants.grid_size
+local category_panel_size = constants.category_panel_size
+local button_height = constants.button_height
 
 local blueprints = {}
 
-blueprints.session_entry = {
-	size = {sessions_grid_size[1] - 20, 60},
+-- Blueprint для кнопок сессий в левой панели (как tabs в GlobalStat)
+blueprints.session_button = {
+	size = {category_panel_size[1] - 20, button_height},
 	size_function = function()
-		return {sessions_grid_size[1] - 20, 60}
+		return {category_panel_size[1] - 20, button_height}
 	end,
-	pass_template = {
-		{
-			content_id = "hotspot",
-			pass_type = "hotspot",
-			content = {
-				use_is_focused = false,
-			},
-		},
-		{
-			pass_type = "rect",
-			style = {
-				color = {100, 30, 30, 30},
-				offset = {0, 0, 0},
-			},
-		},
-		{
-			pass_type = "rect",
-			value_id = "is_selected",
-			style = {
-				color = {150, 100, 150, 50},
-				offset = {0, 0, 0},
-			},
-			change_function = function(content, style)
-				style.color[1] = content.is_selected and 150 or 0
-			end,
-		},
-		{
-			pass_type = "text",
-			value_id = "text",
-			style = {
-				font_type = UIFontSettings.list_button.font_type or "proxima_nova_bold",
-				font_size = UIFontSettings.list_button.font_size or 24,
-				text_horizontal_alignment = "left",
-				text_vertical_alignment = "center",
-				text_color = Color.terminal_text_body(255, true),
-				default_color = Color.terminal_text_body(255, true),
-				hover_color = Color.terminal_text_header_selected(255, true),
-				offset = {15, 0, 1},
-			},
-			change_function = function(content, style)
-				local hotspot = content.hotspot
-				local default_color = style.default_color
-				local hover_color = style.hover_color
-				local hover_progress = hotspot.anim_hover_progress or 0
-				local color = style.text_color
-				
-				color[2] = math.lerp(default_color[2], hover_color[2], hover_progress)
-				color[3] = math.lerp(default_color[3], hover_color[3], hover_progress)
-				color[4] = math.lerp(default_color[4], hover_color[4], hover_progress)
-			end,
-		},
-		{
-			pass_type = "text",
-			value_id = "subtext",
-			style = {
-				font_type = "proxima_nova_bold",
-				font_size = 16,
-				text_horizontal_alignment = "right",
-				text_vertical_alignment = "center",
-				text_color = {200, 180, 180, 180},
-				offset = {-15, 0, 1},
-			},
-		},
-	},
+	pass_template = ButtonPassTemplates.list_button,
 	init = function(parent, widget, element, callback_name)
 		local content = widget.content
-		local hotspot = content.hotspot
-		
-		if hotspot and callback_name then
-			hotspot.pressed_callback = function()
-				callback(parent, callback_name, widget, element)()
-			end
-		end
+		local style = widget.style
 		
 		content.text = element.text or ""
-		content.subtext = element.subtext or ""
+		content.sub_text = element.subtext or ""
 		content.entry_data = element.entry_data
-		content.is_selected = false
+		
+		if callback_name and element.pressed_callback then
+			content.hotspot.pressed_callback = element.pressed_callback
+		end
 	end,
 }
 
+-- Blueprint для сообщений в правой панели
 blueprints.message_entry = {
-	size = {messages_grid_size[1] - 20, 40},
-	size_function = function()
-		return {messages_grid_size[1] - 20, 40}
+	size = {grid_size[1], nil},
+	size_function = function(parent, element, ui_renderer)
+		local text = element.text or ""
+		local text_style = UIFontSettings.body or {}
+		local font_type = text_style.font_type or "proxima_nova_bold"
+		local font_size = text_style.font_size or 18
+		local text_options = UIFonts.get_font_options_by_style(text_style)
+		
+		local width = grid_size[1] - 40
+		local _, text_height = UIRenderer.text_size(ui_renderer, text, font_type, font_size, {width, 0}, text_options)
+		
+		local height = math.max(text_height + 20, 40)
+		
+		return {grid_size[1], height}
 	end,
 	pass_template = {
 		{
@@ -106,17 +58,39 @@ blueprints.message_entry = {
 			value_id = "text",
 			style = {
 				font_type = "proxima_nova_bold",
-				font_size = 16,
+				font_size = 18,
 				text_horizontal_alignment = "left",
 				text_vertical_alignment = "top",
-				text_color = {255, 220, 220, 220},
+				text_color = Color.terminal_text_body(255, true),
 				word_wrap = true,
-				offset = {15, 5, 1},
-				size = {messages_grid_size[1] - 50, nil},
+				offset = {20, 10, 1},
+				size = {grid_size[1] - 40, nil},
 			},
 		},
 	},
-	init = function(_, widget, element)
+	init = function(parent, widget, element)
+		widget.content.text = element.text or ""
+	end,
+}
+
+-- Blueprint для заголовка категории (если потребуется)
+blueprints.category_header = {
+	size = {grid_size[1], 50},
+	pass_template = {
+		{
+			pass_type = "text",
+			value_id = "text",
+			style = {
+				font_type = "proxima_nova_bold",
+				font_size = 24,
+				text_horizontal_alignment = "left",
+				text_vertical_alignment = "center",
+				text_color = Color.terminal_text_header(255, true),
+				offset = {20, 0, 1},
+			},
+		},
+	},
+	init = function(parent, widget, element)
 		widget.content.text = element.text or ""
 	end,
 }

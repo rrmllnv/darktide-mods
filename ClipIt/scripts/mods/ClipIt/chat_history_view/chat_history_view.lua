@@ -2,19 +2,23 @@ local mod = get_mod("ClipIt")
 
 local ViewElementGrid = mod:original_require("scripts/ui/view_elements/view_element_grid/view_element_grid")
 local ViewElementInputLegend = mod:original_require("scripts/ui/view_elements/view_element_input_legend/view_element_input_legend")
+local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
+local UIRenderer = mod:original_require("scripts/managers/ui/ui_renderer")
+local UIFontSettings = mod:original_require("scripts/managers/ui/ui_font_settings")
+local UIFonts = mod:original_require("scripts/managers/ui/ui_fonts")
+local UIWidgetGrid = mod:original_require("scripts/ui/widget_logic/ui_widget_grid")
 
 local constants = mod:io_dofile("ClipIt/scripts/mods/ClipIt/chat_history_view/chat_history_view_constants")
 local blueprints = mod:io_dofile("ClipIt/scripts/mods/ClipIt/chat_history_view/chat_history_view_blueprints")
 local scenegraph_module = mod:io_dofile("ClipIt/scripts/mods/ClipIt/chat_history_view/chat_history_view_definitions")
 local Layout = mod:io_dofile("ClipIt/scripts/mods/ClipIt/chat_history_view/chat_history_view_layout")
 
-local sessions_panel_size = constants.sessions_panel_size
-local messages_panel_size = constants.messages_panel_size
+local button_height = constants.button_height
+local button_spacing = constants.button_spacing
 local scrollbar_width = constants.scrollbar_width
-local sessions_grid_size = constants.sessions_grid_size
-local messages_grid_size = constants.messages_grid_size
-local sessions_mask_size = constants.sessions_mask_size
-local messages_mask_size = constants.messages_mask_size
+local grid_size = scenegraph_module.grid_size
+local mask_size = scenegraph_module.mask_size
+local category_panel_size = constants.category_panel_size
 
 local definitions = {
 	scenegraph_definition = scenegraph_module.scenegraph_definition,
@@ -27,16 +31,18 @@ local ChatHistoryView = class("ChatHistoryView", "BaseView")
 function ChatHistoryView:init(settings, context)
 	ChatHistoryView.super.init(self, definitions, settings, context)
 	self._context = context
-	self._selected_entry = nil
+	self._selected_session_index = 1
+	self._session_entries = {}
 end
 
 function ChatHistoryView:on_enter()
 	ChatHistoryView.super.on_enter(self)
 	
 	self:_setup_input_legend()
-	self:_setup_sessions_grid()
+	self:_setup_session_buttons()
 	self:_setup_messages_grid()
-	self:_load_sessions_list()
+	self:_update_title()
+	self:_load_sessions()
 end
 
 function ChatHistoryView:_setup_input_legend()
@@ -51,30 +57,18 @@ function ChatHistoryView:_setup_input_legend()
 	end
 end
 
-function ChatHistoryView:_setup_sessions_grid()
-	local grid_settings = {
-		scrollbar_width = scrollbar_width,
-		grid_spacing = {0, 5},
-		grid_size = sessions_grid_size,
-		mask_size = sessions_mask_size,
-		title_height = 0,
-		edge_padding = 0,
-		use_terminal_background = false,
-		hide_dividers = true,
-		hide_background = true,
-		enable_gamepad_scrolling = true,
-	}
-	
-	local layer = 10
-	self._sessions_grid = self:_add_element(ViewElementGrid, "sessions_grid", layer, grid_settings, "sessions_grid_pivot")
+function ChatHistoryView:_setup_session_buttons()
+	-- Кнопки будут созданы динамически в _load_sessions
+	self._session_buttons = {}
+	self._session_button_widgets = {}
 end
 
 function ChatHistoryView:_setup_messages_grid()
 	local grid_settings = {
 		scrollbar_width = scrollbar_width,
-		grid_spacing = {0, 2},
-		grid_size = messages_grid_size,
-		mask_size = messages_mask_size,
+		grid_spacing = {0, 5},
+		grid_size = grid_size,
+		mask_size = mask_size,
 		title_height = 0,
 		edge_padding = 0,
 		use_terminal_background = false,
@@ -84,125 +78,174 @@ function ChatHistoryView:_setup_messages_grid()
 	}
 	
 	local layer = 10
-	self._messages_grid = self:_add_element(ViewElementGrid, "messages_grid", layer, grid_settings, "messages_grid_pivot")
+	self._messages_grid = self:_add_element(ViewElementGrid, "messages_grid", layer, grid_settings, "grid_pivot")
 end
 
-function ChatHistoryView:_load_sessions_list()
-	self._selected_entry = nil
+function ChatHistoryView:_update_title()
+	local title_widget = self._widgets_by_name.title_text
 	
-	local title_widget = self._widgets_by_name.title
-	if title_widget then
-		title_widget.content.text = mod:localize("chat_history_view_title") or "Chat History"
-		title_widget.dirty = true
+	if not title_widget then
+		return
 	end
 	
-	local entries = mod.history:get_history_entries(true)
+	local success, title_text = pcall(function()
+		return mod:localize("chat_history_view_title")
+	end)
 	
-	if #entries == 0 then
-		if self._sessions_grid then
-			self._sessions_grid:present_grid_layout({}, blueprints)
+	if success and title_text and title_text ~= "" then
+		title_widget.content.text = title_text
+	else
+		title_widget.content.text = "CHAT HISTORY"
+	end
+	
+	title_widget.dirty = true
+end
+
+function ChatHistoryView:_load_sessions()
+	-- Очищаем старые кнопки
+	if self._session_button_widgets then
+		for i = 1, #self._session_button_widgets do
+			local widget = self._session_button_widgets[i]
+			self:_unregister_widget_name(widget.name)
 		end
+	end
+	self._session_button_widgets = {}
+	
+	-- Получаем список сессий
+	self._session_entries = mod.history:get_history_entries(true)
+	
+	if #self._session_entries == 0 then
 		if self._messages_grid then
 			self._messages_grid:present_grid_layout({}, blueprints)
 		end
 		return
 	end
 	
-	local layout = Layout.create_sessions_layout(entries, mod)
-	if self._sessions_grid then
-		local left_click_callback = callback(self, "cb_on_grid_entry_left_pressed")
-		self._sessions_grid:present_grid_layout(layout, blueprints, left_click_callback)
-	end
+	-- Создаём кнопки для каждой сессии
+	self:_create_session_buttons()
 	
-	if #entries > 0 then
-		self:_on_session_selected(entries[1])
-	end
+	-- Выбираем первую сессию
+	self._selected_session_index = 1
+	self:_update_session_selection()
+	self:_load_session_messages()
 end
 
-function ChatHistoryView:cb_on_grid_entry_left_pressed(widget, element)
-	if element and element.entry_data then
-		self:_on_session_selected(element.entry_data)
-	end
-end
-
-function ChatHistoryView:_on_session_selected(entry)
-	if not entry then
-		return
-	end
+function ChatHistoryView:_create_session_buttons()
+	local widgets = {}
+	local alignment_list = {}
 	
-	self._selected_entry = entry
-	
-	if self._sessions_grid and self._sessions_grid._widgets_by_entry_id then
-		for entry_id, widgets_data in pairs(self._sessions_grid._widgets_by_entry_id) do
-			local widget = widgets_data.widget
-			if widget and widget.content then
-				if widget.content.entry_data == entry then
-					widget.content.is_selected = true
-				else
-					widget.content.is_selected = false
-				end
-			end
-		end
-	end
-	
-	local title_widget = self._widgets_by_name.title
-	if title_widget then
-		local session_type_localized = ""
-		if entry.session_type == "mission" then
-			session_type_localized = mod:localize("chat_history_session_mission") or "Mission"
-		elseif entry.session_type == "mourningstar" then
-			session_type_localized = mod:localize("chat_history_session_mourningstar") or "Mourningstar"
-		elseif entry.session_type == "psykhanium" then
-			session_type_localized = mod:localize("chat_history_session_psykhanium") or "Psykhanium"
-		else
-			session_type_localized = mod:localize("chat_history_session_unknown") or "Unknown"
-		end
+	for index, entry in ipairs(self._session_entries) do
+		-- Получаем информацию для отображения
+		local display_name = Layout.get_session_display_name(entry, mod)
+		local date_str = entry.date or ""
 		
-		local location_name = entry.location_name or "Unknown Location"
-		local display_location_name = location_name
-		
-		if entry.session_type == "mission" then
-			local Missions = mod:original_require("scripts/settings/mission/mission_templates")
-			local mission_settings = Missions[location_name]
-			if mission_settings and mission_settings.mission_name then
-				local localized = Localize(mission_settings.mission_name)
-				if localized and localized ~= "" and localized ~= mission_settings.mission_name then
-					display_location_name = localized
-				end
-			end
-		elseif entry.session_type == "mourningstar" and location_name == "hub_ship" then
-			display_location_name = "The Mourningstar"
-		elseif entry.session_type == "psykhanium" and (location_name == "tg_shooting_range" or location_name == "tg_training_grounds") then
-			display_location_name = "Psykhanium"
-		end
-		
-		title_widget.content.text = string.format("%s - %s: %s", 
-			mod:localize("chat_history_view_title") or "Chat History", 
-			session_type_localized, 
-			display_location_name
+		-- Создаём widget definition
+		local widget_definition = UIWidget.create_definition(
+			blueprints.session_button.pass_template, 
+			"sessions_list_pivot", 
+			nil, 
+			blueprints.session_button.size
 		)
-		title_widget.dirty = true
+		
+		local widget_name = "session_button_widget_" .. index
+		local widget = self:_create_widget(widget_name, widget_definition)
+		
+		-- Инициализируем widget
+		local element = {
+			text = display_name,
+			subtext = date_str,
+			entry_data = entry,
+			pressed_callback = callback(self, "_on_session_button_pressed", index),
+		}
+		
+		if blueprints.session_button.init then
+			blueprints.session_button.init(self, widget, element, nil)
+		end
+		
+		widget.content.hotspot.pressed_callback = element.pressed_callback
+		
+		widgets[index] = widget
+		alignment_list[index] = widget
 	end
 	
-	if not entry.file then
-		if self._messages_grid then
-			self._messages_grid:present_grid_layout({}, blueprints)
+	-- Создаём grid для кнопок сессий
+	local ui_scenegraph = self._ui_scenegraph
+	local direction = "down"
+	local grid_spacing = {0, button_spacing}
+	
+	self._session_buttons_grid = UIWidgetGrid:new(
+		widgets, 
+		alignment_list, 
+		ui_scenegraph, 
+		"sessions_list_pivot", 
+		direction, 
+		grid_spacing
+	)
+	
+	local render_scale = self._render_scale
+	self._session_buttons_grid:set_render_scale(render_scale)
+	
+	self._session_button_widgets = widgets
+end
+
+function ChatHistoryView:_on_session_button_pressed(index)
+	self._selected_session_index = index
+	self:_update_session_selection()
+	self:_load_session_messages()
+end
+
+function ChatHistoryView:_update_session_selection()
+	for i = 1, #self._session_button_widgets do
+		local widget = self._session_button_widgets[i]
+		if widget and widget.content and widget.content.hotspot then
+			widget.content.hotspot.is_selected = (self._selected_session_index == i)
 		end
+	end
+end
+
+function ChatHistoryView:_load_session_messages()
+	if not self._messages_grid then
 		return
 	end
 	
+	local selected_index = self._selected_session_index
+	if not selected_index or selected_index < 1 or selected_index > #self._session_entries then
+		self._messages_grid:present_grid_layout({}, blueprints)
+		return
+	end
+	
+	local entry = self._session_entries[selected_index]
+	if not entry or not entry.file then
+		self._messages_grid:present_grid_layout({}, blueprints)
+		return
+	end
+	
+	-- Обновляем заголовок с информацией о выбранной сессии
+	self:_update_title_with_session(entry)
+	
+	-- Загружаем данные сессии
 	local history_data = mod.history:load_history_entry(entry.file)
 	if not history_data or not history_data.messages then
-		if self._messages_grid then
-			self._messages_grid:present_grid_layout({}, blueprints)
-		end
+		self._messages_grid:present_grid_layout({}, blueprints)
 		return
 	end
 	
+	-- Создаём layout для сообщений
 	local layout = Layout.create_messages_layout(history_data.messages)
-	if self._messages_grid then
-		self._messages_grid:present_grid_layout(layout, blueprints)
+	self._messages_grid:present_grid_layout(layout, blueprints)
+end
+
+function ChatHistoryView:_update_title_with_session(entry)
+	local title_widget = self._widgets_by_name.title_text
+	if not title_widget then
+		return
 	end
+	
+	local base_title = mod:localize("chat_history_view_title") or "CHAT HISTORY"
+	local session_info = Layout.get_session_display_name(entry, mod)
+	
+	title_widget.content.text = base_title .. " - " .. session_info
+	title_widget.dirty = true
 end
 
 function ChatHistoryView:cb_on_back_pressed()
@@ -214,11 +257,38 @@ end
 function ChatHistoryView:update(dt, t, input_service)
 	ChatHistoryView.super.update(self, dt, t, input_service)
 	
+	-- Обновляем grid кнопок сессий
+	if self._session_buttons_grid then
+		self._session_buttons_grid:update(dt, t, input_service)
+	end
+	
 	if input_service and input_service:get("back_released") then
 		if Managers and Managers.ui then
 			Managers.ui:close_view(self.view_name)
 		end
 	end
+end
+
+function ChatHistoryView:draw(dt, t, input_service, layer)
+	local ui_renderer = self._ui_renderer
+	local ui_scenegraph = self._ui_scenegraph
+	local render_settings = self._render_settings
+	
+	-- Рисуем кнопки сессий через grid
+	if self._session_buttons_grid and ui_renderer then
+		UIRenderer.begin_pass(ui_renderer, ui_scenegraph, input_service, dt, render_settings)
+		
+		for i = 1, #self._session_button_widgets do
+			local widget = self._session_button_widgets[i]
+			if widget then
+				UIWidget.draw(widget, ui_renderer)
+			end
+		end
+		
+		UIRenderer.end_pass(ui_renderer)
+	end
+	
+	ChatHistoryView.super.draw(self, dt, t, input_service, layer)
 end
 
 function ChatHistoryView:on_exit()
@@ -227,14 +297,25 @@ function ChatHistoryView:on_exit()
 		self:_remove_element("input_legend")
 	end
 	
-	if self._sessions_grid then
-		self._sessions_grid = nil
-		self:_remove_element("sessions_grid")
-	end
-	
 	if self._messages_grid then
 		self._messages_grid = nil
 		self:_remove_element("messages_grid")
+	end
+	
+	-- Очищаем grid кнопок
+	if self._session_buttons_grid then
+		self._session_buttons_grid = nil
+	end
+	
+	-- Удаляем виджеты кнопок
+	if self._session_button_widgets then
+		for i = 1, #self._session_button_widgets do
+			local widget = self._session_button_widgets[i]
+			if widget and widget.name then
+				self:_unregister_widget_name(widget.name)
+			end
+		end
+		self._session_button_widgets = nil
 	end
 	
 	ChatHistoryView.super.on_exit(self)
