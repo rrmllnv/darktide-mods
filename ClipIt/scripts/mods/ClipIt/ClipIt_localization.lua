@@ -144,5 +144,10 @@ return {
 		ru = "Неизвестно",
 		["zh-cn"] = "未知",
 	},
+	chat_history_session_psykhanium = {
+		en = "Psykhanium",
+		ru = "Псайкиниум",
+		["zh-cn"] = "灵能训练场",
+	},
 }
 

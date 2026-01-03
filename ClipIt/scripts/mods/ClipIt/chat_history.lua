@@ -68,7 +68,7 @@ local ChatHistory = class("ChatHistory")
 function ChatHistory:init()
 	self._history_entries_cache = nil
 	self._current_session_messages = {}
-	self._current_session_type = nil -- "mission" или "mourningstar"
+	self._current_session_type = nil -- "mission", "mourningstar" или "psykhanium"
 	self._current_session_name = nil
 	self._last_save_time = 0
 end
@@ -81,7 +81,7 @@ end
 -- Парсинг имени файла истории
 function ChatHistory:parse_filename(file_name)
 	-- Формат: timestamp_type_location.json
-	-- type: mission или mourningstar
+	-- type: mission, mourningstar или psykhanium
 	local name_without_ext = file_name:match("(.+)%.json$")
 	if not name_without_ext then
 		return nil

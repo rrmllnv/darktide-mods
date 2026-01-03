@@ -261,23 +261,41 @@ end)
 
 -- Определение текущей локации
 local function get_current_location()
-	-- Проверяем есть ли активная миссия
-	if Managers.state and Managers.state.mission then
+	if not Managers.state or not Managers.state.game_mode then
+		return "mourningstar", "Unknown Location"
+	end
+	
+	local game_mode_name = Managers.state.game_mode:game_mode_name()
+	
+	if not game_mode_name then
+		return "mourningstar", "Unknown Location"
+	end
+	
+	if game_mode_name == "shooting_range" then
+		return "psykhanium", "Psykhanium"
+	end
+	
+	if game_mode_name == "hub" or game_mode_name == "prologue_hub" then
+		return "mourningstar", "The Mourningstar"
+	end
+	
+	if Managers.state.mission then
 		local mission_name = Managers.state.mission:mission_name()
 		if mission_name and mission_name ~= "" then
+			local MissionTemplates = mod:original_require("scripts/settings/mission/mission_templates")
+			local mission_template = MissionTemplates[mission_name]
+			
+			if mission_template and mission_template.mission_name then
+				local localized_name = Localize(mission_template.mission_name)
+				if localized_name and localized_name ~= "" and localized_name ~= mission_template.mission_name then
+					return "mission", localized_name
+				end
+			end
+			
 			return "mission", mission_name
 		end
 	end
 	
-	-- Проверяем название уровня
-	if Managers.state and Managers.state.game_mode then
-		local game_mode_name = Managers.state.game_mode:game_mode_name()
-		if game_mode_name and game_mode_name == "hub" then
-			return "mourningstar", "The Mourningstar"
-		end
-	end
-	
-	-- По умолчанию считаем что на Mourningstar
 	return "mourningstar", "Unknown Location"
 end
 

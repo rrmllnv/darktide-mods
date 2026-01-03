@@ -152,6 +152,8 @@ function ChatHistoryView:_on_session_selected(entry)
 			session_type_localized = mod:localize("chat_history_session_mission") or "Mission"
 		elseif entry.session_type == "mourningstar" then
 			session_type_localized = mod:localize("chat_history_session_mourningstar") or "Mourningstar"
+		elseif entry.session_type == "psykhanium" then
+			session_type_localized = mod:localize("chat_history_session_psykhanium") or "Psykhanium"
 		else
 			session_type_localized = mod:localize("chat_history_session_unknown") or "Unknown"
 		end

@@ -10,6 +10,8 @@ Layout.create_sessions_layout = function(entries, mod)
 			display_name = (mod:localize("chat_history_session_mission") or "Mission") .. ": " .. location_name
 		elseif entry.session_type == "mourningstar" then
 			display_name = (mod:localize("chat_history_session_mourningstar") or "Mourningstar") .. ": " .. location_name
+		elseif entry.session_type == "psykhanium" then
+			display_name = (mod:localize("chat_history_session_psykhanium") or "Psykhanium") .. ": " .. location_name
 		else
 			display_name = (mod:localize("chat_history_session_unknown") or "Unknown") .. ": " .. location_name
 		end
