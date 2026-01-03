@@ -189,13 +189,11 @@ function ChatHistory:save_current_session()
 	
 	local ok, json_str = pcall(cjson.encode, data)
 	if not ok then
-		mod:echo("Failed to encode chat history: " .. tostring(json_str))
 		return nil
 	end
 	
 	local file, err = _io.open(path, "w")
 	if not file then
-		mod:echo("Failed to open file for writing: " .. tostring(err))
 		return nil
 	end
 	file:write(json_str)
@@ -224,7 +222,6 @@ function ChatHistory:load_history_entry(file_name)
 	local path = self:get_path() .. file_name
 	local file, err = _io.open(path, "r")
 	if not file then
-		mod:echo("Failed to open file for reading: " .. tostring(err))
 		return nil
 	end
 	
@@ -233,7 +230,6 @@ function ChatHistory:load_history_entry(file_name)
 	
 	local ok, data = pcall(cjson.decode, json_str)
 	if not ok then
-		mod:echo("Failed to decode chat history: " .. tostring(data))
 		return nil
 	end
 	
@@ -256,16 +252,12 @@ end
 function ChatHistory:get_history_entries(scan_dir)
 	-- Если кеш не инициализирован, инициализируем его один раз
 	if self._history_entries_cache == nil then
-		mod:echo("[ChatHistory] Initializing cache for the first time")
 		self._history_entries_cache = scandir(self:get_path())
-		mod:echo("[ChatHistory] Cache initialized with " .. tostring(#self._history_entries_cache) .. " files")
 	end
 	
 	-- Принудительное сканирование только если явно запрошено
 	if scan_dir then
-		mod:echo("[ChatHistory] Force rescanning directory")
 		self._history_entries_cache = scandir(self:get_path())
-		mod:echo("[ChatHistory] Cache refreshed with " .. tostring(#self._history_entries_cache) .. " files")
 	end
 	
 	local entries = {}
@@ -277,8 +269,6 @@ function ChatHistory:get_history_entries(scan_dir)
 			end
 		end
 	end
-	
-	mod:echo("[ChatHistory] Returning " .. tostring(#entries) .. " entries")
 	
 	-- Сортируем по дате (новые первыми)
 	table.sort(entries, function(a, b)

@@ -102,17 +102,13 @@ function ChatHistoryView:_update_title()
 end
 
 function ChatHistoryView:_load_sessions()
-	mod:echo("[ChatHistoryView] _load_sessions called")
-	
 	-- Очищаем grid кнопок если существует
 	if self._session_buttons_grid then
-		mod:echo("[ChatHistoryView] Destroying existing grid")
 		self._session_buttons_grid = nil
 	end
 	
 	-- Удаляем и уничтожаем старые виджеты
 	if self._session_button_widgets and self._ui_renderer then
-		mod:echo("[ChatHistoryView] Destroying " .. tostring(#self._session_button_widgets) .. " old widgets")
 		for i = 1, #self._session_button_widgets do
 			local widget = self._session_button_widgets[i]
 			if widget then
@@ -129,10 +125,7 @@ function ChatHistoryView:_load_sessions()
 	-- Получаем список сессий (используем кеш, не сканируем каждый раз)
 	self._session_entries = mod.history:get_history_entries(false)
 	
-	mod:echo("[ChatHistoryView] Total session entries: " .. tostring(#self._session_entries))
-	
 	if #self._session_entries == 0 then
-		mod:echo("[ChatHistoryView] No sessions found, displaying empty list")
 		self._selected_session_index = nil
 		if self._messages_grid then
 			self._messages_grid:present_grid_layout({}, blueprints)
@@ -152,8 +145,6 @@ function ChatHistoryView:_load_sessions()
 end
 
 function ChatHistoryView:_create_session_buttons()
-	mod:echo("[ChatHistoryView] _create_session_buttons: creating " .. tostring(#self._session_entries) .. " buttons")
-	
 	local widgets = {}
 	local alignment_list = {}
 	
@@ -164,8 +155,6 @@ function ChatHistoryView:_create_session_buttons()
 		
 		-- Формат: время - название миссии
 		local display_text = time_str .. " - " .. mission_name
-		
-		mod:echo("[ChatHistoryView] Creating button " .. tostring(index) .. ": " .. display_text)
 		
 		-- Создаём widget definition
 		local widget_definition = UIWidget.create_definition(
@@ -214,33 +203,23 @@ function ChatHistoryView:_create_session_buttons()
 	self._session_buttons_grid:set_render_scale(render_scale)
 	
 	self._session_button_widgets = widgets
-	
-	mod:echo("[ChatHistoryView] _create_session_buttons: created " .. tostring(#self._session_button_widgets) .. " widgets")
 end
 
 function ChatHistoryView:_on_session_button_pressed(widget, entry)
-	mod:echo("[ChatHistoryView] _on_session_button_pressed called")
-	
 	if not entry then
-		mod:echo("[ChatHistoryView] ERROR: No entry provided")
 		return
 	end
 	
 	if not entry.file then
-		mod:echo("[ChatHistoryView] ERROR: No file in entry")
 		return
 	end
-	
-	mod:echo("[ChatHistoryView] Entry file: " .. tostring(entry.file))
 	
 	-- Сохраняем имя файла для поиска после перезагрузки
 	local target_file = entry.file
 	
 	-- Перезагружаем список сессий с пересканированием директории (как в Scoreboard)
 	-- Это гарантирует, что мы получим актуальные данные
-	mod:echo("[ChatHistoryView] Reloading sessions with directory scan")
 	self._session_entries = mod.history:get_history_entries(true)
-	mod:echo("[ChatHistoryView] Reloaded " .. tostring(#self._session_entries) .. " session entries")
 	
 	-- Пересоздаем кнопки с актуальными данными
 	self:_create_session_buttons()
@@ -256,7 +235,6 @@ function ChatHistoryView:_on_session_button_pressed(widget, entry)
 	end
 	
 	if not selected_index then
-		mod:echo("[ChatHistoryView] ERROR: Entry not found after reload (file: " .. tostring(target_file) .. ")")
 		return
 	end
 	
@@ -276,7 +254,6 @@ end
 
 function ChatHistoryView:_load_session_messages(entry_param)
 	if not self._messages_grid then
-		mod:echo("[ChatHistoryView] No messages grid")
 		return
 	end
 	
@@ -285,49 +262,39 @@ function ChatHistoryView:_load_session_messages(entry_param)
 	
 	if not entry then
 		if not self._session_entries or #self._session_entries == 0 then
-			mod:echo("[ChatHistoryView] No session entries available")
 			self._messages_grid:present_grid_layout({}, blueprints)
 			return
 		end
 		
 		local selected_index = self._selected_session_index
 		if not selected_index or selected_index < 1 or selected_index > #self._session_entries then
-			mod:echo("[ChatHistoryView] Invalid selected index: " .. tostring(selected_index) .. " (total: " .. tostring(#self._session_entries) .. ")")
 			self._messages_grid:present_grid_layout({}, blueprints)
 			return
 		end
 		
 		entry = self._session_entries[selected_index]
 		if not entry then
-			mod:echo("[ChatHistoryView] No entry for index: " .. tostring(selected_index))
 			self._messages_grid:present_grid_layout({}, blueprints)
 			return
 		end
 	end
 	
 	if not entry.file then
-		mod:echo("[ChatHistoryView] No file in entry")
 		self._messages_grid:present_grid_layout({}, blueprints)
 		return
 	end
 	
-	mod:echo("[ChatHistoryView] Loading file: " .. tostring(entry.file))
-	
 	-- Загружаем данные сессии
 	local history_data = mod.history:load_history_entry(entry.file)
 	if not history_data then
-		mod:echo("[ChatHistoryView] Failed to load history data")
 		self._messages_grid:present_grid_layout({}, blueprints)
 		return
 	end
 	
 	if not history_data.messages then
-		mod:echo("[ChatHistoryView] No messages in history data")
 		self._messages_grid:present_grid_layout({}, blueprints)
 		return
 	end
-	
-	mod:echo("[ChatHistoryView] Loaded " .. tostring(#history_data.messages) .. " messages")
 	
 	-- Создаём layout для сообщений
 	local layout = Layout.create_messages_layout(history_data.messages)

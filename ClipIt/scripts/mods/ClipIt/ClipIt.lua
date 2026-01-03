@@ -332,14 +332,12 @@ end)
 mod:hook(CLASS.EndView, "on_enter", function(func, self, ...)
 	func(self, ...)
 	-- Сессия продолжается - ничего не делаем
-	mod:echo("[ClipIt] Entered EndView - session continues")
 end)
 
 -- Хук для выхода из EndView (перед каруселью)
 mod:hook(CLASS.EndView, "on_exit", function(func, self, ...)
 	func(self, ...)
 	-- Сессия продолжается через карусель - ничего не делаем
-	mod:echo("[ClipIt] Exited EndView - session continues through carousel")
 end)
 
 -- Хук для отслеживания загрузки (возвращение в Mourningstar = конец ударной группы)
@@ -357,7 +355,6 @@ mod:hook(CLASS.StateLoading, "on_enter", function(func, self, parent, params, ..
 	
 	if mission_name == "hub_ship" and _current_session_active then
 		-- Возвращаемся в Mourningstar - сохраняем сессию и завершаем её
-		mod:echo("[ClipIt] Returning to Mourningstar - saving and ending session")
 		mod.history:save_current_session()
 		_current_session_active = false
 		_current_mission_name = nil
