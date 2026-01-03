@@ -105,20 +105,26 @@ local function copy_to_clipboard(text, count)
 	return false
 end
 
--- Сохраняем оригинальный текст сообщения при добавлении
-mod:hook("ConstantElementChat", "_add_message", function(func, self, message, sender, channel)
-	func(self, message, sender, channel)
+-- Сохраняем оригинальный текст сообщения и отправителя при добавлении
+mod:hook("ConstantElementChat", "_add_message_widget_to_message_list", function(func, self, new_message, new_message_widget)
+	func(self, new_message, new_message_widget)
 	
-	local message_widgets = self._message_widgets
-	if message_widgets then
-		local last_index = self._last_message_index
-		if last_index and message_widgets[last_index] then
-			local widget = message_widgets[last_index]
-			if widget and widget.content then
-				local original_text = scrub_chat_text(message)
-				if original_text and original_text ~= "" then
-					widget.content._clipit_original_message = original_text
-				end
+	-- Сохраняем данные в виджет после его добавления
+	if new_message_widget and new_message_widget.content then
+		local message_text = new_message.message_text
+		local sender_name = new_message.author_name
+		
+		if message_text and message_text ~= "" then
+			new_message_widget.content._clipit_original_message = message_text
+		end
+		
+		if sender_name and sender_name ~= "" then
+			-- Очищаем ник от форматирования, если оно есть
+			local clean_sender = scrub_chat_text(sender_name)
+			if clean_sender and clean_sender ~= "" then
+				new_message_widget.content._clipit_original_sender = clean_sender
+			else
+				new_message_widget.content._clipit_original_sender = sender_name
 			end
 		end
 	end
@@ -171,12 +177,29 @@ mod.copy_last_message = function()
 			
 			if widget and widget.content then
 				local original_text = widget.content._clipit_original_message
-				if not original_text then
-					original_text = scrub_chat_text(widget.content.message)
+				if not original_text or original_text == "" then
+					-- Если оригинальный текст не сохранен, пытаемся извлечь из форматированного сообщения
+					local formatted_message = widget.content.message
+					if formatted_message and formatted_message ~= "" then
+						original_text = scrub_chat_text(formatted_message)
+					end
 				end
 				
 				if original_text and original_text ~= "" then
-					table.insert(collected_messages, original_text)
+					local original_sender = widget.content._clipit_original_sender
+					if not original_sender or original_sender == "" then
+						original_sender = ""
+					end
+					
+					-- Формируем строку в формате "Ник: сообщение"
+					local formatted_message = ""
+					if original_sender and original_sender ~= "" then
+						formatted_message = original_sender .. ": " .. original_text
+					else
+						formatted_message = original_text
+					end
+					
+					table.insert(collected_messages, formatted_message)
 					actual_count = actual_count + 1
 				end
 			end
