@@ -157,11 +157,29 @@ function ChatHistoryView:_on_session_selected(entry)
 		else
 			session_type_localized = mod:localize("chat_history_session_unknown") or "Unknown"
 		end
+		
 		local location_name = entry.location_name or "Unknown Location"
+		local display_location_name = location_name
+		
+		if entry.session_type == "mission" then
+			local Missions = mod:original_require("scripts/settings/mission/mission_templates")
+			local mission_settings = Missions[location_name]
+			if mission_settings and mission_settings.mission_name then
+				local localized = Localize(mission_settings.mission_name)
+				if localized and localized ~= "" and localized ~= mission_settings.mission_name then
+					display_location_name = localized
+				end
+			end
+		elseif entry.session_type == "mourningstar" and location_name == "hub_ship" then
+			display_location_name = "The Mourningstar"
+		elseif entry.session_type == "psykhanium" and (location_name == "tg_shooting_range" or location_name == "tg_training_grounds") then
+			display_location_name = "Psykhanium"
+		end
+		
 		title_widget.content.text = string.format("%s - %s: %s", 
 			mod:localize("chat_history_view_title") or "Chat History", 
 			session_type_localized, 
-			location_name
+			display_location_name
 		)
 		title_widget.dirty = true
 	end

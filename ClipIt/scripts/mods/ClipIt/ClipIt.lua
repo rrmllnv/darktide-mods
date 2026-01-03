@@ -259,70 +259,64 @@ end)
 -- Функционал истории чата
 -- ============================================================================
 
--- Определение текущей локации
-local function get_current_location()
-	if not Managers.state or not Managers.state.game_mode then
-		return "mourningstar", "Unknown Location"
+-- Определение типа локации и названия по mission_name
+local function get_location_info(mission_name)
+	if not mission_name or mission_name == "" then
+		return "mourningstar", "hub_ship"
 	end
 	
-	local game_mode_name = Managers.state.game_mode:game_mode_name()
-	
-	if not game_mode_name then
-		return "mourningstar", "Unknown Location"
+	if mission_name == "hub_ship" then
+		return "mourningstar", "hub_ship"
 	end
 	
-	if game_mode_name == "shooting_range" then
-		return "psykhanium", "Psykhanium"
+	if mission_name == "tg_shooting_range" or mission_name == "tg_training_grounds" then
+		return "psykhanium", mission_name
 	end
 	
-	if game_mode_name == "hub" or game_mode_name == "prologue_hub" then
-		return "mourningstar", "The Mourningstar"
-	end
-	
-	if Managers.state.mission then
-		local mission_name = Managers.state.mission:mission_name()
-		if mission_name and mission_name ~= "" then
-			local MissionTemplates = mod:original_require("scripts/settings/mission/mission_templates")
-			local mission_template = MissionTemplates[mission_name]
-			
-			if mission_template and mission_template.mission_name then
-				local localized_name = Localize(mission_template.mission_name)
-				if localized_name and localized_name ~= "" and localized_name ~= mission_template.mission_name then
-					return "mission", localized_name
-				end
-			end
-			
-			return "mission", mission_name
-		end
-	end
-	
-	return "mourningstar", "Unknown Location"
+	return "mission", mission_name
 end
 
--- Проверка смены локации
-local _last_location_type = nil
-local _last_location_name = nil
+-- Текущая информация о локации
+local _current_location_type = nil
+local _current_mission_name = nil
 
-local function check_location_change()
+-- Хук для определения начала миссии
+mod:hook(CLASS.StateGameplay, "on_enter", function(func, self, parent, params, ...)
+	func(self, parent, params, ...)
+	
 	if not _cached_settings.save_chat_history then
 		return
 	end
 	
-	local current_type, current_name = get_current_location()
+	local mission_name = params.mission_name
 	
-	if current_type ~= _last_location_type or current_name ~= _last_location_name then
-		-- Локация изменилась
-		if _last_location_type then
-			-- Сохраняем предыдущую сессию
-			mod.history:save_current_session()
-		end
-		
-		-- Начинаем новую сессию
-		mod.history:start_session(current_type, current_name)
-		_last_location_type = current_type
-		_last_location_name = current_name
+	if not mission_name or mission_name == "" then
+		return
 	end
-end
+	
+	local location_type, location_name = get_location_info(mission_name)
+	
+	-- Если локация изменилась, сохраняем предыдущую сессию
+	if _current_location_type and (_current_location_type ~= location_type or _current_mission_name ~= mission_name) then
+		mod.history:save_current_session()
+	end
+	
+	-- Начинаем новую сессию
+	mod.history:start_session(location_type, location_name)
+	_current_location_type = location_type
+	_current_mission_name = mission_name
+end)
+
+-- Хук для сохранения при выходе из миссии
+mod:hook(CLASS.StateGameplay, "on_exit", function(func, self, ...)
+	if _cached_settings.save_chat_history and _current_location_type then
+		mod.history:save_current_session()
+		_current_location_type = nil
+		_current_mission_name = nil
+	end
+	
+	func(self, ...)
+end)
 
 -- Обновление состояния (вызывается каждый кадр)
 mod.update = function(dt)
@@ -334,9 +328,6 @@ mod.update = function(dt)
 	else
 		fade_audio_in()
 	end
-	
-	-- Проверка смены локации для сохранения истории
-	check_location_change()
 end
 
 -- ============================================================================
