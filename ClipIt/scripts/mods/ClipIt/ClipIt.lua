@@ -7,6 +7,7 @@ mod.version = "1.0.0"
 local _cached_settings = {
 	block_chat_enabled = false,
 	fade_audio_enabled = false,
+	fade_audio_channel = 1,
 	fade_audio_volume = 20,
 	last_check_time = 0,
 	check_interval = 0.5
@@ -21,7 +22,14 @@ local _input_state = {
 local _audio_state = {
 	is_faded = false,
 	original_volume = nil,
-	master_volume_param = "option_master_slider"
+	current_channel = nil
+}
+
+-- Каналы звука
+local _audio_channels = {
+	[1] = "option_master_slider",        -- Мастер-громкость (всё)
+	[2] = "options_sfx_slider",          -- Звуковые эффекты
+	[3] = "options_music_slider",        -- Музыка
 }
 
 -- Обновление кеша настроек
@@ -30,23 +38,24 @@ local function update_settings_cache()
 	if current_time - _cached_settings.last_check_time > _cached_settings.check_interval then
 		_cached_settings.block_chat_enabled = mod:get("auto_block") or false
 		_cached_settings.fade_audio_enabled = mod:get("fade_audio_unfocused") or false
+		_cached_settings.fade_audio_channel = mod:get("fade_audio_channel") or 1
 		_cached_settings.fade_audio_volume = mod:get("fade_audio_volume") or 20
 		_cached_settings.last_check_time = current_time
 	end
 end
 
 -- Получение текущей громкости из настроек
-local function get_current_volume()
+local function get_current_volume(channel_param)
 	if Application.user_setting then
-		return Application.user_setting("sound_settings", _audio_state.master_volume_param) or 100
+		return Application.user_setting("sound_settings", channel_param) or 100
 	end
 	return 100
 end
 
 -- Установка громкости
-local function set_volume(volume)
+local function set_volume(channel_param, volume)
 	if Wwise and Wwise.set_parameter then
-		Wwise.set_parameter(_audio_state.master_volume_param, volume)
+		Wwise.set_parameter(channel_param, volume)
 	end
 end
 
@@ -56,8 +65,14 @@ local function fade_audio_out()
 		return
 	end
 	
-	_audio_state.original_volume = get_current_volume()
-	set_volume(_cached_settings.fade_audio_volume)
+	local channel_param = _audio_channels[_cached_settings.fade_audio_channel]
+	if not channel_param then
+		return
+	end
+	
+	_audio_state.current_channel = channel_param
+	_audio_state.original_volume = get_current_volume(channel_param)
+	set_volume(channel_param, _cached_settings.fade_audio_volume)
 	_audio_state.is_faded = true
 end
 
@@ -67,9 +82,10 @@ local function fade_audio_in()
 		return
 	end
 	
-	if _audio_state.original_volume then
-		set_volume(_audio_state.original_volume)
+	if _audio_state.original_volume and _audio_state.current_channel then
+		set_volume(_audio_state.current_channel, _audio_state.original_volume)
 		_audio_state.original_volume = nil
+		_audio_state.current_channel = nil
 	end
 	_audio_state.is_faded = false
 end

@@ -69,6 +69,31 @@ return {
 		ru = "Если включено, снижает громкость игры при использовании чата, открытом оверлее Steam или когда игра не в фокусе. Те же условия, что и для автоблока.",
 		["zh-cn"] = "如果启用，在聊天、Steam 界面打开或游戏失去焦点时降低游戏音量。与自动格挡条件相同。",
 	},
+	fade_audio_channel_title = {
+		en = "Audio Channel to Fade",
+		ru = "Канал звука для затухания",
+		["zh-cn"] = "要降低的音频通道",
+	},
+	fade_audio_channel_tooltip = {
+		en = "Select which audio channel to fade when unfocused: Master (all sounds), SFX (game sounds), or Music.",
+		ru = "Выберите какой канал звука затухать при потере фокуса: Мастер (все звуки), Эффекты (звуки игры) или Музыка.",
+		["zh-cn"] = "选择失去焦点时要降低哪个音频通道：主音量（所有声音）、音效（游戏声音）或音乐。",
+	},
+	fade_audio_channel_master = {
+		en = "Master Volume (All)",
+		ru = "Общая громкость (всё)",
+		["zh-cn"] = "主音量（全部）",
+	},
+	fade_audio_channel_sfx = {
+		en = "Sound Effects (SFX)",
+		ru = "Звуковые эффекты",
+		["zh-cn"] = "音效",
+	},
+	fade_audio_channel_music = {
+		en = "Music",
+		ru = "Музыка",
+		["zh-cn"] = "音乐",
+	},
 	fade_audio_volume_title = {
 		en = "Unfocused Volume Level",
 		ru = "Уровень громкости без фокуса",

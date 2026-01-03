@@ -38,21 +38,33 @@ return {
 			tooltip_text = "auto_block_tooltip",
 			default_value = false,
 		},
-			{
-				setting_id = "fade_audio_unfocused",
-				type = "checkbox",
-				title = "fade_audio_unfocused_title",
-				tooltip_text = "fade_audio_unfocused_tooltip",
-				default_value = false,
+		{
+			setting_id = "fade_audio_unfocused",
+			type = "checkbox",
+			title = "fade_audio_unfocused_title",
+			tooltip_text = "fade_audio_unfocused_tooltip",
+			default_value = false,
+		},
+		{
+			setting_id = "fade_audio_channel",
+			type = "dropdown",
+			title = "fade_audio_channel_title",
+			tooltip_text = "fade_audio_channel_tooltip",
+			default_value = 1,
+			options = {
+				{text = "fade_audio_channel_master", value = 1},
+				{text = "fade_audio_channel_sfx", value = 2},
+				{text = "fade_audio_channel_music", value = 3},
 			},
-			{
-				setting_id = "fade_audio_volume",
-				type = "numeric",
-				title = "fade_audio_volume_title",
-				tooltip_text = "fade_audio_volume_tooltip",
-				default_value = 20,
-				range = {0, 100},
-			},
+		},
+		{
+			setting_id = "fade_audio_volume",
+			type = "numeric",
+			title = "fade_audio_volume_title",
+			tooltip_text = "fade_audio_volume_tooltip",
+			default_value = 20,
+			range = {0, 100},
+		},
 		}
 	}
 }
