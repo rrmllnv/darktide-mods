@@ -54,5 +54,15 @@ return {
 		ru = "Если включено, копирует сообщения в формате 'Отправитель: Сообщение'. Если выключено, копирует только текст сообщения.",
 		["zh-cn"] = "如果启用，以'发送者：消息'格式复制消息。如果禁用，仅复制消息文本。",
 	},
+	block_chat_title = {
+		en = "Block Chat",
+		ru = "Блокировать чат",
+		["zh-cn"] = "阻止聊天",
+	},
+	block_chat_tooltip = {
+		en = "If enabled, automatically holds block while chatting, opening the Steam overlay, or while the game is not focused.",
+		ru = "Если включено, автоматически удерживается блок во время использования чата, при открытии оверлея Steam или когда игра не находится в фокусе.",
+		["zh-cn"] = "如果启用，在聊天、打开 Steam 游戏内界面或游戏失去焦点时自动格挡。",
+	},
 }
 

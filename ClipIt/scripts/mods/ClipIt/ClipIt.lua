@@ -10,27 +10,34 @@ function input_get_hook(func, self, action_name)
 	if self.type == "Ingame" and action_name ~= "voip_push_to_talk" then
 		-- When checking if action_two_hold is held
 		if action_name == "action_two_hold" then
-			local unit = Managers.player:local_player(1).player_unit
-			if unit then
-				local unit_data = ScriptUnit.extension(unit, "unit_data_system")
-				local weapon_action_component = unit_data:read_component("weapon_action")
-				local weapon_template = WeaponTemplate.current_weapon_template(weapon_action_component)
-				if weapon_template then
-					-- If the current held weapon has a block action
-					if weapon_template.actions.action_block then
-						-- You alt tabbed
-						if IS_WINDOWS and not Window.has_focus() then
-							return true
-						end
+			local block_chat = mod:get("block_chat")
+			if block_chat == nil then
+				block_chat = false
+			end
+			
+			if block_chat then
+				local unit = Managers.player:local_player(1).player_unit
+				if unit then
+					local unit_data = ScriptUnit.extension(unit, "unit_data_system")
+					local weapon_action_component = unit_data:read_component("weapon_action")
+					local weapon_template = WeaponTemplate.current_weapon_template(weapon_action_component)
+					if weapon_template then
+						-- If the current held weapon has a block action
+						if weapon_template.actions.action_block then
+							-- You alt tabbed
+							if IS_WINDOWS and not Window.has_focus() then
+								return true
+							end
 
-						-- Steam overlay is open
-						if HAS_STEAM and Managers.steam:is_overlay_active() then
-							return true
-						end
+							-- Steam overlay is open
+							if HAS_STEAM and Managers.steam:is_overlay_active() then
+								return true
+							end
 
-						-- Chat or some other menu is open
-						if mod.input_blocked then
-							return true
+							-- Chat or some other menu is open
+							if mod.input_blocked then
+								return true
+							end
 						end
 					end
 				end
@@ -65,14 +72,23 @@ mod:hook("InputService", "_get", input_get_hook)
 mod:hook("InputService", "_get_simulate", input_get_hook)
 
 mod:hook("HumanGameplay", "_input_active", function(func, ...)
-	mod.input_blocked = not func(...)
-
-	if Managers.state.cinematic:cinematic_active() then
-		return false
+	local block_chat = mod:get("block_chat")
+	if block_chat == nil then
+		block_chat = false
 	end
+	
+	if block_chat then
+		mod.input_blocked = not func(...)
 
-	-- Keep the input active so you can block
-	return true
+		if Managers.state.cinematic:cinematic_active() then
+			return false
+		end
+
+		-- Keep the input active so you can block
+		return true
+	else
+		return func(...)
+	end
 end)
 
 -- Функционал копирования чата

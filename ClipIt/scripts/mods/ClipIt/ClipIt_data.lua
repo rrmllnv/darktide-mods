@@ -31,6 +31,13 @@ return {
 				tooltip_text = "copy_sender_names_tooltip",
 				default_value = true,
 			},
+			{
+				setting_id = "block_chat",
+				type = "checkbox",
+				title = "block_chat_title",
+				tooltip_text = "block_chat_tooltip",
+				default_value = false,
+			},
 		}
 	}
 }
