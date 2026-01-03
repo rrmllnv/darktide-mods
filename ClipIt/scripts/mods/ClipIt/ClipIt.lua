@@ -186,16 +186,27 @@ mod.copy_last_message = function()
 				end
 				
 				if original_text and original_text ~= "" then
-					local original_sender = widget.content._clipit_original_sender
-					if not original_sender or original_sender == "" then
-						original_sender = ""
+					local copy_sender_names = mod:get("copy_sender_names")
+					if copy_sender_names == nil then
+						copy_sender_names = true
 					end
 					
-					-- Формируем строку в формате "Ник: сообщение"
 					local formatted_message = ""
-					if original_sender and original_sender ~= "" then
-						formatted_message = original_sender .. ": " .. original_text
+					
+					if copy_sender_names then
+						local original_sender = widget.content._clipit_original_sender
+						if not original_sender or original_sender == "" then
+							original_sender = ""
+						end
+						
+						-- Формируем строку в формате "Ник: сообщение"
+						if original_sender and original_sender ~= "" then
+							formatted_message = original_sender .. ": " .. original_text
+						else
+							formatted_message = original_text
+						end
 					else
+						-- Копируем только текст сообщения без ника
 						formatted_message = original_text
 					end
 					

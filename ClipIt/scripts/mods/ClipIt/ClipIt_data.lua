@@ -24,6 +24,13 @@ return {
 				default_value = 1,
 				range = {1, 20},
 			},
+			{
+				setting_id = "copy_sender_names",
+				type = "checkbox",
+				title = "copy_sender_names_title",
+				tooltip_text = "copy_sender_names_tooltip",
+				default_value = true,
+			},
 		}
 	}
 }

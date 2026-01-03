@@ -5,9 +5,9 @@ return {
 		["zh-cn"] = "聊天复制",
 	},
 	mod_description = {
-		en = "Automatically hold block while chatting, opening the Steam overlay, or while the game is not focussed. Adds copy button to chat messages.",
-		["zh-cn"] = "在打开聊天、打开 Steam 游戏内界面或者切换到其他窗口时自动格挡。为聊天消息添加复制按钮。",
-		ru = "Автоматически удерживается блок во время использования чата, при открытии оверлея Steam или когда игра не находится в фокусе. Добавляет кнопку копирования к сообщениям чата.",
+		en = "Copy last chat messages to clipboard with hotkey.",
+		["zh-cn"] = "使用快捷键将最后几条聊天消息复制到剪贴板。",
+		ru = "Копирование последних сообщений чата в буфер обмена по горячей клавише.",
 	},
 	copy_last_message_key = {
 		en = "Copy Last Chat Message",
@@ -43,6 +43,16 @@ return {
 		en = "Messages copied to clipboard: ",
 		ru = "Скопировано сообщений: ",
 		["zh-cn"] = "已复制消息到剪贴板: ",
+	},
+	copy_sender_names_title = {
+		en = "Copy Sender Names",
+		ru = "Копировать имена отправителей",
+		["zh-cn"] = "复制发送者名称",
+	},
+	copy_sender_names_tooltip = {
+		en = "If enabled, copies messages in format 'Sender: Message'. If disabled, copies only message text.",
+		ru = "Если включено, копирует сообщения в формате 'Отправитель: Сообщение'. Если выключено, копирует только текст сообщения.",
+		["zh-cn"] = "如果启用，以'发送者：消息'格式复制消息。如果禁用，仅复制消息文本。",
 	},
 }
 
