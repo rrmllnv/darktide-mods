@@ -212,6 +212,17 @@ function ChatHistory:save_current_session()
 	return file_name
 end
 
+-- Сохранение с очисткой текущего состояния
+function ChatHistory:finalize_session()
+	local saved_file = self:save_current_session()
+	
+	self._current_session_messages = {}
+	self._current_session_type = nil
+	self._current_session_name = nil
+	
+	return saved_file
+end
+
 -- Загрузка записи истории
 function ChatHistory:load_history_entry(file_name)
 	-- Проверяем кеш загруженных файлов

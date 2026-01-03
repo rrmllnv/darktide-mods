@@ -281,6 +281,22 @@ local _current_session_active = false
 local _current_mission_name = nil
 local _current_location_type = nil
 local _ending_mission_through_endview = false
+local _pending_save_after_endview = false
+
+local function finalize_session_if_active()
+	if not _current_session_active then
+		_pending_save_after_endview = false
+		_ending_mission_through_endview = false
+		return
+	end
+	
+	mod.history:finalize_session()
+	_current_session_active = false
+	_current_mission_name = nil
+	_current_location_type = nil
+	_pending_save_after_endview = false
+	_ending_mission_through_endview = false
+end
 
 -- Хук для отслеживания входа в игровое состояние (присоединение к strike team)
 mod:hook(CLASS.StateGameplay, "on_enter", function(func, self, parent, params, ...)
@@ -332,17 +348,9 @@ mod:hook(CLASS.StateGameplay, "on_exit", function(func, self, ...)
 		return
 	end
 	
-	-- Если сессия активна и мы не завершаем миссию через EndView, сохраняем
-	-- (выход из миссии, выход из группы и т.д.)
-	if _current_session_active and not _ending_mission_through_endview then
-		-- Сохраняем сессию при выходе из миссии
-		-- Если мы возвращаемся в Mourningstar, сохранение произойдет и в StateLoading тоже
-		-- но это не критично - save_current_session проверяет наличие сообщений
-		mod.history:save_current_session()
+	if not _ending_mission_through_endview then
+		_pending_save_after_endview = false
 	end
-	
-	-- Сбрасываем флаг
-	_ending_mission_through_endview = false
 end)
 
 -- Хук для отслеживания завершения миссии (EndView - экран результатов)
@@ -351,12 +359,14 @@ mod:hook(CLASS.EndView, "on_enter", function(func, self, ...)
 	-- Устанавливаем флаг, что миссия завершается через EndView
 	-- Это предотвратит сохранение в StateGameplay.on_exit
 	_ending_mission_through_endview = true
+	_pending_save_after_endview = false
 end)
 
 -- Хук для выхода из EndView (перед каруселью)
 mod:hook(CLASS.EndView, "on_exit", function(func, self, ...)
 	func(self, ...)
-	-- Сессия продолжается через карусель - ничего не делаем
+	-- Ставим флаг сохранения на следующий StateLoading после выхода с экрана результатов
+	_pending_save_after_endview = true
 end)
 
 -- Хук для отслеживания загрузки (возвращение в Mourningstar = конец ударной группы)
@@ -371,14 +381,12 @@ mod:hook(CLASS.StateLoading, "on_enter", function(func, self, parent, params, ..
 	
 	-- Проверяем, загружаем ли мы Mourningstar (hub_ship)
 	local mission_name = params and params.mission_name
+	local loading_to_hub = mission_name == "hub_ship"
+	local loading_without_target = (not mission_name) and (_current_location_type == "mission" or _current_location_type == "psykhanium")
 	
-	if mission_name == "hub_ship" and _current_session_active then
-		-- Возвращаемся в Mourningstar - сохраняем сессию и завершаем её
-		mod.history:save_current_session()
-		_current_session_active = false
-		_current_mission_name = nil
-		_current_location_type = nil
-		_ending_mission_through_endview = false
+	if (_pending_save_after_endview or loading_to_hub or loading_without_target) and _current_session_active then
+		-- Сохраняем сессию при выходе из миссии/психаниума или после EndView
+		finalize_session_if_active()
 	end
 end)
 
