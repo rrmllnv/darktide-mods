@@ -142,12 +142,20 @@ local function clean_formatting_tags(text)
 		return ""
 	end
 	
-	-- Удаляем теги форматирования вида {#...}
-	local cleaned = text:gsub("{#[^}]*}", "")
-	-- Удаляем незакрытые теги в конце строки
-	cleaned = cleaned:gsub("{#[^}]*$", "")
+	local cleaned = text
+	local scrubbed_text
 	
-	return cleaned
+	-- Используем тот же подход, что и в ConstantElementChat._scrub
+	-- Нежадный поиск {#.-} удаляет все теги форматирования
+	while text ~= scrubbed_text do
+		text = scrubbed_text or text
+		scrubbed_text = string.gsub(text, "{#.-}", "")
+	end
+	
+	-- Удаляем незакрытые теги в конце строки
+	scrubbed_text = string.gsub(scrubbed_text, "{#.-$", "")
+	
+	return scrubbed_text
 end
 
 -- Копирование текста в буфер обмена
@@ -179,7 +187,7 @@ local function extract_message_text(widget_content)
 		return nil
 	end
 	
-	-- Приоритет: сохраненный оригинальный текст
+	-- Приоритет: сохраненный оригинальный текст (уже должен быть очищен)
 	local text = widget_content._clipit_original_message
 	
 	-- Если оригинал не сохранен, извлекаем из форматированного сообщения
@@ -188,6 +196,9 @@ local function extract_message_text(widget_content)
 		if formatted and formatted ~= "" then
 			text = clean_formatting_tags(formatted)
 		end
+	else
+		-- Дополнительно очищаем на случай, если текст был сохранен до исправления
+		text = clean_formatting_tags(text)
 	end
 	
 	return text
@@ -200,6 +211,37 @@ local function extract_sender_name(widget_content)
 	end
 	
 	return widget_content._clipit_original_sender or ""
+end
+
+-- Проверка, является ли сообщение системным
+local function is_system_message(text, sender_name)
+	if not text or text == "" then
+		return false
+	end
+	
+	-- Если нет отправителя, это системное сообщение
+	if not sender_name or sender_name == "" then
+		return true
+	end
+	
+	-- Проверяем паттерны системных сообщений
+	local lower_text = string.lower(text)
+	
+	-- Паттерны системных сообщений
+	local system_patterns = {
+		"joined",
+		"left channel",
+		"joined channel",
+		"left",
+	}
+	
+	for _, pattern in ipairs(system_patterns) do
+		if string.find(lower_text, pattern, 1, true) then
+			return true
+		end
+	end
+	
+	return false
 end
 
 -- Форматирование сообщения с именем отправителя или без
@@ -240,9 +282,9 @@ mod:hook("ConstantElementChat", "_add_message_widget_to_message_list", function(
 	
 	local widget_content = new_message_widget.content
 	
-	-- Сохраняем текст сообщения
+	-- Сохраняем текст сообщения (очищенный от форматирования)
 	if new_message.message_text and new_message.message_text ~= "" then
-		widget_content._clipit_original_message = new_message.message_text
+		widget_content._clipit_original_message = clean_formatting_tags(new_message.message_text)
 	end
 	
 	-- Сохраняем имя отправителя
@@ -279,8 +321,12 @@ mod.copy_last_message = function()
 	
 	-- Собираем сообщения
 	local messages_buffer = {}
+	local offset = 0
+	local collected_count = 0
+	local max_iterations = max_available * 2 -- Ограничение на количество попыток
 	
-	for offset = 0, messages_to_copy - 1 do
+	-- Собираем сообщения, пропуская системные
+	while collected_count < messages_to_copy and offset < max_iterations do
 		local widget_index = math.index_wrapper(last_message_index - offset, max_available)
 		local widget = message_widgets[widget_index]
 		
@@ -289,14 +335,21 @@ mod.copy_last_message = function()
 			
 			if message_text then
 				local sender_name = extract_sender_name(widget.content)
-				local formatted = format_message(message_text, sender_name, include_sender_names)
 				
-				if formatted then
-					-- Добавляем в начало массива для сохранения хронологического порядка
-					table.insert(messages_buffer, 1, formatted)
+				-- Пропускаем системные сообщения
+				if not is_system_message(message_text, sender_name) then
+					local formatted = format_message(message_text, sender_name, include_sender_names)
+					
+					if formatted then
+						-- Добавляем в начало массива для сохранения хронологического порядка
+						table.insert(messages_buffer, 1, formatted)
+						collected_count = collected_count + 1
+					end
 				end
 			end
 		end
+		
+		offset = offset + 1
 	end
 	
 	-- Копируем в буфер обмена
