@@ -3,8 +3,11 @@ local WeaponTemplate = require("scripts/utilities/weapon/weapon_template")
 
 mod.version = "1.0.0"
 
+-- Кеш для настроек и состояния
 local _cached_settings = {
 	block_chat_enabled = false,
+	fade_audio_enabled = false,
+	fade_audio_volume = 20,
 	last_check_time = 0,
 	check_interval = 0.5
 }
@@ -14,12 +17,85 @@ local _input_state = {
 	ui_using_input = false
 }
 
+-- Состояние звука
+local _audio_state = {
+	is_faded = false,
+	original_volume = nil,
+	master_volume_param = "option_master_slider"
+}
+
+-- Обновление кеша настроек
 local function update_settings_cache()
 	local current_time = os.clock()
 	if current_time - _cached_settings.last_check_time > _cached_settings.check_interval then
-		_cached_settings.block_chat_enabled = mod:get("block_chat") or false
+		_cached_settings.block_chat_enabled = mod:get("auto_block") or false
+		_cached_settings.fade_audio_enabled = mod:get("fade_audio_unfocused") or false
+		_cached_settings.fade_audio_volume = mod:get("fade_audio_volume") or 20
 		_cached_settings.last_check_time = current_time
 	end
+end
+
+-- Получение текущей громкости из настроек
+local function get_current_volume()
+	if Application.user_setting then
+		return Application.user_setting("sound_settings", _audio_state.master_volume_param) or 100
+	end
+	return 100
+end
+
+-- Установка громкости
+local function set_volume(volume)
+	if Wwise and Wwise.set_parameter then
+		Wwise.set_parameter(_audio_state.master_volume_param, volume)
+	end
+end
+
+-- Затухание звука
+local function fade_audio_out()
+	if _audio_state.is_faded then
+		return
+	end
+	
+	_audio_state.original_volume = get_current_volume()
+	set_volume(_cached_settings.fade_audio_volume)
+	_audio_state.is_faded = true
+end
+
+-- Восстановление звука
+local function fade_audio_in()
+	if not _audio_state.is_faded then
+		return
+	end
+	
+	if _audio_state.original_volume then
+		set_volume(_audio_state.original_volume)
+		_audio_state.original_volume = nil
+	end
+	_audio_state.is_faded = false
+end
+
+-- Проверка условий для затухания звука
+local function should_fade_audio()
+	if not _cached_settings.fade_audio_enabled then
+		return false
+	end
+	
+	-- Окно не в фокусе
+	if IS_WINDOWS and not Window.has_focus() then
+		return true
+	end
+	
+	-- Steam overlay активен
+	if HAS_STEAM and Managers.steam and Managers.steam:is_overlay_active() then
+		return true
+	end
+	
+	-- Интерфейс использует ввод (чат или меню открыты)
+	if _input_state.is_blocked then
+		return true
+	end
+	
+	return false
 end
 
 local function can_weapon_block()
@@ -95,9 +171,11 @@ local function handle_input_service(func, self, action_name)
 	return func(self, action_name)
 end
 
+-- Хукаем InputService для перехвата ввода
 mod:hook("InputService", "_get", handle_input_service)
 mod:hook("InputService", "_get_simulate", handle_input_service)
 
+-- Управление активностью ввода
 mod:hook("HumanGameplay", "_input_active", function(func, ...)
 	update_settings_cache()
 	
@@ -105,14 +183,33 @@ mod:hook("HumanGameplay", "_input_active", function(func, ...)
 		return func(...)
 	end
 	
+	-- Сохраняем состояние блокировки ввода
 	_input_state.is_blocked = not func(...)
 	
+	-- Отключаем ввод во время синематиков
 	if Managers.state.cinematic and Managers.state.cinematic:cinematic_active() then
 		return false
 	end
 	
+	-- Оставляем ввод активным для возможности блокировки
 	return true
 end)
+
+-- Обновление состояния звука (вызывается каждый кадр)
+mod.update = function(dt)
+	update_settings_cache()
+	
+	-- Управление затуханием звука
+	if should_fade_audio() then
+		fade_audio_out()
+	else
+		fade_audio_in()
+	end
+end
+
+-- ============================================================================
+-- Функционал копирования чата
+-- ============================================================================
 
 local function clean_formatting_tags(text)
 	if not text or text == "" then

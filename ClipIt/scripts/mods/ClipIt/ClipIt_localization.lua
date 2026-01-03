@@ -49,15 +49,35 @@ return {
 		ru = "Если включено, копирует сообщения в формате 'Отправитель: Сообщение'. Если выключено, копирует только текст сообщения.",
 		["zh-cn"] = "如果启用，以'发送者：消息'格式复制消息。如果禁用，仅复制消息文本。",
 	},
-	block_chat_title = {
+	auto_block_title = {
 		en = "Auto Block",
 		ru = "Автоматический блок",
 		["zh-cn"] = "自动格挡",
 	},
-	block_chat_tooltip = {
+	auto_block_tooltip = {
 		en = "If enabled, automatically holds block while chatting, opening the Steam overlay, or while the game is not focused.",
 		ru = "Если включено, автоматически удерживается блок во время использования чата, при открытии оверлея Steam или когда игра не находится в фокусе.",
 		["zh-cn"] = "如果启用，在聊天、打开 Steam 游戏内界面或游戏失去焦点时自动格挡。",
+	},
+	fade_audio_unfocused_title = {
+		en = "Fade Audio When Unfocused",
+		ru = "Затухание звука без фокуса",
+		["zh-cn"] = "失去焦点时降低音量",
+	},
+	fade_audio_unfocused_tooltip = {
+		en = "If enabled, reduces game volume when chatting, Steam overlay is open, or the game is not focused. Same conditions as auto-block.",
+		ru = "Если включено, снижает громкость игры при использовании чата, открытом оверлее Steam или когда игра не в фокусе. Те же условия, что и для автоблока.",
+		["zh-cn"] = "如果启用，在聊天、Steam 界面打开或游戏失去焦点时降低游戏音量。与自动格挡条件相同。",
+	},
+	fade_audio_volume_title = {
+		en = "Unfocused Volume Level",
+		ru = "Уровень громкости без фокуса",
+		["zh-cn"] = "失去焦点时的音量",
+	},
+	fade_audio_volume_tooltip = {
+		en = "Volume level (0-100%) when the game is unfocused. Default is 20%.",
+		ru = "Уровень громкости (0-100%) когда игра не в фокусе. По умолчанию 20%.",
+		["zh-cn"] = "游戏失去焦点时的音量（0-100%）。默认 20%。",
 	},
 }
 

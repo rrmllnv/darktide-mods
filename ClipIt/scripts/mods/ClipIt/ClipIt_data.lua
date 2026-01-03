@@ -31,12 +31,27 @@ return {
 				tooltip_text = "copy_sender_names_tooltip",
 				default_value = true,
 			},
+		{
+			setting_id = "auto_block",
+			type = "checkbox",
+			title = "auto_block_title",
+			tooltip_text = "auto_block_tooltip",
+			default_value = false,
+		},
 			{
-				setting_id = "block_chat",
+				setting_id = "fade_audio_unfocused",
 				type = "checkbox",
-				title = "block_chat_title",
-				tooltip_text = "block_chat_tooltip",
+				title = "fade_audio_unfocused_title",
+				tooltip_text = "fade_audio_unfocused_tooltip",
 				default_value = false,
+			},
+			{
+				setting_id = "fade_audio_volume",
+				type = "numeric",
+				title = "fade_audio_volume_title",
+				tooltip_text = "fade_audio_volume_tooltip",
+				default_value = 20,
+				range = {0, 100},
 			},
 		}
 	}
