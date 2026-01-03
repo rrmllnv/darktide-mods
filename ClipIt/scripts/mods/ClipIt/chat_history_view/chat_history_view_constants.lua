@@ -9,8 +9,8 @@ constants.scrollbar_width = 10
 constants.grid_size = {constants.messages_panel_size[1] - 140, constants.messages_panel_size[2] - 120}
 constants.mask_size = {constants.grid_size[1] + 32, constants.grid_size[2] + 32}
 
--- Размеры кнопок в левой панели
-constants.button_height = 80
+-- Размеры кнопок в левой панели (под две строки текста)
+constants.button_height = 110
 constants.button_spacing = 6
 
 -- Легенда кнопок

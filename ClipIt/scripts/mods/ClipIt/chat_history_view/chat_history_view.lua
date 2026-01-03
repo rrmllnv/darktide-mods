@@ -153,8 +153,8 @@ function ChatHistoryView:_create_session_buttons()
 		local mission_name = Layout.get_session_display_name(entry, mod)
 		local time_str = entry.date or ""
 		
-		-- Формат: время - название миссии
-		local display_text = time_str .. " - " .. mission_name
+		-- Первая строка: время, вторая строка: миссия
+		local display_text = time_str .. "\n" .. mission_name
 		
 		-- Создаём widget definition
 		local widget_definition = UIWidget.create_definition(
