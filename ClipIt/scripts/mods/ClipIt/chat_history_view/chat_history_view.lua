@@ -216,21 +216,27 @@ function ChatHistoryView:_on_session_button_pressed(widget, entry)
 	
 	-- Сохраняем имя файла для поиска после перезагрузки
 	local target_file = entry.file
-	
-	-- Перезагружаем список сессий с пересканированием директории (как в Scoreboard)
-	-- Это гарантирует, что мы получим актуальные данные
-	self._session_entries = mod.history:get_history_entries(true)
-	
-	-- Пересоздаем кнопки с актуальными данными
-	self:_create_session_buttons()
-	
-	-- Находим индекс для обновления выделения
+
+	-- Перезагружаем список только если нужный файл не найден в текущем списке
 	local selected_index = nil
 	for i = 1, #self._session_entries do
 		if self._session_entries[i].file == target_file then
 			selected_index = i
-			entry = self._session_entries[i] -- Используем актуальный entry
+			entry = self._session_entries[i]
 			break
+		end
+	end
+	
+	if not selected_index then
+		self._session_entries = mod.history:get_history_entries(true)
+		self:_create_session_buttons()
+		
+		for i = 1, #self._session_entries do
+			if self._session_entries[i].file == target_file then
+				selected_index = i
+				entry = self._session_entries[i]
+				break
+			end
 		end
 	end
 	

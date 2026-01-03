@@ -38,9 +38,10 @@ local function isdir(path)
 end
 
 -- Сканирование директории и возврат списка файлов
-local function scandir(directory)
+local function scandir(directory, pattern)
 	local i, file_names, popen = 0, {}, _io.popen
-	local pfile = popen('dir "' .. directory .. '" /b')
+	local search_pattern = pattern and (directory .. "\\" .. pattern) or directory
+	local pfile = popen('dir "' .. search_pattern .. '" /b')
 	if not pfile then
 		return {}
 	end
@@ -83,7 +84,7 @@ end
 -- Предварительная инициализация кеша (вызывается при первом сообщении)
 function ChatHistory:init_cache_async()
 	if not self._cache_initialized then
-		self._history_entries_cache = scandir(self:get_path())
+		self._history_entries_cache = scandir(self:get_path(), "*.json")
 		self._cache_initialized = true
 	end
 end
@@ -263,12 +264,12 @@ end
 function ChatHistory:get_history_entries(scan_dir)
 	-- Если кеш не инициализирован, инициализируем его один раз
 	if self._history_entries_cache == nil then
-		self._history_entries_cache = scandir(self:get_path())
+		self._history_entries_cache = scandir(self:get_path(), "*.json")
 	end
 	
 	-- Принудительное сканирование только если явно запрошено
 	if scan_dir then
-		self._history_entries_cache = scandir(self:get_path())
+		self._history_entries_cache = scandir(self:get_path(), "*.json")
 	end
 	
 	local entries = {}
