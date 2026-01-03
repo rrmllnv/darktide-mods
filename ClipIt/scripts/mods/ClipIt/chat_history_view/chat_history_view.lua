@@ -146,7 +146,9 @@ function ChatHistoryView:_load_sessions()
 	-- Выбираем первую сессию и загружаем её сообщения
 	self._selected_session_index = 1
 	self:_update_session_selection()
-	self:_load_session_messages()
+	if #self._session_entries > 0 then
+		self:_load_session_messages(self._session_entries[1])
+	end
 end
 
 function ChatHistoryView:_create_session_buttons()
@@ -182,10 +184,12 @@ function ChatHistoryView:_create_session_buttons()
 		widget.content.entry_data = entry
 		widget.file = entry.file
 		
-		-- Устанавливаем callback
+		-- Устанавливаем callback - передаем widget и entry напрямую
 		local hotspot = widget.content.hotspot
 		if hotspot then
-			hotspot.pressed_callback = callback(self, "_on_session_button_pressed", index)
+			hotspot.pressed_callback = function()
+				self:_on_session_button_pressed(widget, entry)
+			end
 		end
 		
 		widgets[index] = widget
@@ -214,26 +218,51 @@ function ChatHistoryView:_create_session_buttons()
 	mod:echo("[ChatHistoryView] _create_session_buttons: created " .. tostring(#self._session_button_widgets) .. " widgets")
 end
 
-function ChatHistoryView:_on_session_button_pressed(index)
-	mod:echo("[ChatHistoryView] _on_session_button_pressed called with index: " .. tostring(index))
-	mod:echo("[ChatHistoryView] Total session entries: " .. tostring(#self._session_entries))
+function ChatHistoryView:_on_session_button_pressed(widget, entry)
+	mod:echo("[ChatHistoryView] _on_session_button_pressed called")
 	
-	if not self._session_entries or #self._session_entries == 0 then
-		mod:echo("[ChatHistoryView] ERROR: No session entries available")
+	if not entry then
+		mod:echo("[ChatHistoryView] ERROR: No entry provided")
 		return
 	end
 	
-	if not self._session_entries[index] then
-		mod:echo("[ChatHistoryView] ERROR: Invalid index " .. tostring(index) .. " (max: " .. tostring(#self._session_entries) .. ")")
+	if not entry.file then
+		mod:echo("[ChatHistoryView] ERROR: No file in entry")
 		return
 	end
 	
-	local entry = self._session_entries[index]
 	mod:echo("[ChatHistoryView] Entry file: " .. tostring(entry.file))
 	
-	self._selected_session_index = index
+	-- Сохраняем имя файла для поиска после перезагрузки
+	local target_file = entry.file
+	
+	-- Перезагружаем список сессий с пересканированием директории (как в Scoreboard)
+	-- Это гарантирует, что мы получим актуальные данные
+	mod:echo("[ChatHistoryView] Reloading sessions with directory scan")
+	self._session_entries = mod.history:get_history_entries(true)
+	mod:echo("[ChatHistoryView] Reloaded " .. tostring(#self._session_entries) .. " session entries")
+	
+	-- Пересоздаем кнопки с актуальными данными
+	self:_create_session_buttons()
+	
+	-- Находим индекс для обновления выделения
+	local selected_index = nil
+	for i = 1, #self._session_entries do
+		if self._session_entries[i].file == target_file then
+			selected_index = i
+			entry = self._session_entries[i] -- Используем актуальный entry
+			break
+		end
+	end
+	
+	if not selected_index then
+		mod:echo("[ChatHistoryView] ERROR: Entry not found after reload (file: " .. tostring(target_file) .. ")")
+		return
+	end
+	
+	self._selected_session_index = selected_index
 	self:_update_session_selection()
-	self:_load_session_messages()
+	self:_load_session_messages(entry)
 end
 
 function ChatHistoryView:_update_session_selection()
@@ -245,30 +274,35 @@ function ChatHistoryView:_update_session_selection()
 	end
 end
 
-function ChatHistoryView:_load_session_messages()
+function ChatHistoryView:_load_session_messages(entry_param)
 	if not self._messages_grid then
 		mod:echo("[ChatHistoryView] No messages grid")
 		return
 	end
 	
-	if not self._session_entries or #self._session_entries == 0 then
-		mod:echo("[ChatHistoryView] No session entries available")
-		self._messages_grid:present_grid_layout({}, blueprints)
-		return
-	end
+	-- Используем переданный entry или получаем из индекса
+	local entry = entry_param
 	
-	local selected_index = self._selected_session_index
-	if not selected_index or selected_index < 1 or selected_index > #self._session_entries then
-		mod:echo("[ChatHistoryView] Invalid selected index: " .. tostring(selected_index) .. " (total: " .. tostring(#self._session_entries) .. ")")
-		self._messages_grid:present_grid_layout({}, blueprints)
-		return
-	end
-	
-	local entry = self._session_entries[selected_index]
 	if not entry then
-		mod:echo("[ChatHistoryView] No entry for index: " .. tostring(selected_index))
-		self._messages_grid:present_grid_layout({}, blueprints)
-		return
+		if not self._session_entries or #self._session_entries == 0 then
+			mod:echo("[ChatHistoryView] No session entries available")
+			self._messages_grid:present_grid_layout({}, blueprints)
+			return
+		end
+		
+		local selected_index = self._selected_session_index
+		if not selected_index or selected_index < 1 or selected_index > #self._session_entries then
+			mod:echo("[ChatHistoryView] Invalid selected index: " .. tostring(selected_index) .. " (total: " .. tostring(#self._session_entries) .. ")")
+			self._messages_grid:present_grid_layout({}, blueprints)
+			return
+		end
+		
+		entry = self._session_entries[selected_index]
+		if not entry then
+			mod:echo("[ChatHistoryView] No entry for index: " .. tostring(selected_index))
+			self._messages_grid:present_grid_layout({}, blueprints)
+			return
+		end
 	end
 	
 	if not entry.file then
