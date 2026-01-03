@@ -2,247 +2,307 @@ local mod = get_mod("ClipIt")
 local WeaponTemplate = require("scripts/utilities/weapon/weapon_template")
 
 mod.version = "1.0.0"
-mod.input_blocked = false
 
--- ChatBlock функционал
-function input_get_hook(func, self, action_name)
-	-- Don't impact the non gameplay input services
-	if self.type == "Ingame" and action_name ~= "voip_push_to_talk" then
-		-- When checking if action_two_hold is held
-		if action_name == "action_two_hold" then
-			local block_chat = mod:get("block_chat")
-			if block_chat == nil then
-				block_chat = false
-			end
-			
-			if block_chat then
-				local unit = Managers.player:local_player(1).player_unit
-				if unit then
-					local unit_data = ScriptUnit.extension(unit, "unit_data_system")
-					local weapon_action_component = unit_data:read_component("weapon_action")
-					local weapon_template = WeaponTemplate.current_weapon_template(weapon_action_component)
-					if weapon_template then
-						-- If the current held weapon has a block action
-						if weapon_template.actions.action_block then
-							-- You alt tabbed
-							if IS_WINDOWS and not Window.has_focus() then
-								return true
-							end
+-- Кеш для настроек и состояния
+local _cached_settings = {
+	block_chat_enabled = false,
+	last_check_time = 0,
+	check_interval = 0.5
+}
 
-							-- Steam overlay is open
-							if HAS_STEAM and Managers.steam:is_overlay_active() then
-								return true
-							end
+local _input_state = {
+	is_blocked = false,
+	ui_using_input = false
+}
 
-							-- Chat or some other menu is open
-							if mod.input_blocked then
-								return true
-							end
-						end
-					end
-				end
-			end
-		end
-
-		-- Act as if any other input is not working while the UI is using input
-		-- so you don't move or tag or dodge while typing
-		local ui_manager = Managers.ui
-		if ui_manager and ui_manager:using_input() then
-			local result = func(self, action_name)
-			local result_type = type(result)
-
-			if result_type == "boolean" then
-				return false
-			elseif result_type == "number" then
-				return 0
-			elseif result_type == "userdata" then
-				return Vector3(0, 0, 0)
-			else
-				return result
-			end
-		end
+-- Обновление кеша настроек
+local function update_settings_cache()
+	local current_time = os.clock()
+	if current_time - _cached_settings.last_check_time > _cached_settings.check_interval then
+		_cached_settings.block_chat_enabled = mod:get("block_chat") or false
+		_cached_settings.last_check_time = current_time
 	end
-
-	-- Default behaviour for other input services or
-	-- while UI not using input
-	return func(self, action_name)
 end
 
-mod:hook("InputService", "_get", input_get_hook)
-mod:hook("InputService", "_get_simulate", input_get_hook)
-
-mod:hook("HumanGameplay", "_input_active", function(func, ...)
-	local block_chat = mod:get("block_chat")
-	if block_chat == nil then
-		block_chat = false
-	end
-	
-	if block_chat then
-		mod.input_blocked = not func(...)
-
-		if Managers.state.cinematic:cinematic_active() then
-			return false
-		end
-
-		-- Keep the input active so you can block
-		return true
-	else
-		return func(...)
-	end
-end)
-
--- Функционал копирования чата
-local function scrub_chat_text(text)
-	if not text then
-		return ""
-	end
-	
-	local scrubbed = string.gsub(text, "{#.-}", "")
-	scrubbed = string.gsub(scrubbed, "{#.-$", "")
-	
-	return scrubbed
-end
-
-local function copy_to_clipboard(text, count)
-	if not text or text == "" then
+-- Проверка возможности блокировки оружием
+local function can_weapon_block()
+	local player = Managers.player:local_player(1)
+	if not player or not player.player_unit then
 		return false
 	end
 	
-	if rawget(_G, "Clipboard") and Clipboard.put then
-		Clipboard.put(text)
-		if count and count > 1 then
-			mod:notify(mod:localize("msgs_copied") .. count)
-		else
-			mod:notify(mod:localize("msg_copied"))
-		end
+	local unit = player.player_unit
+	local unit_data_extension = ScriptUnit.has_extension(unit, "unit_data_system")
+	
+	if not unit_data_extension then
+		return false
+	end
+	
+	local weapon_action_component = unit_data_extension:read_component("weapon_action")
+	local current_weapon_template = WeaponTemplate.current_weapon_template(weapon_action_component)
+	
+	return current_weapon_template and current_weapon_template.actions and current_weapon_template.actions.action_block
+end
+
+-- Проверка условий для автоматического блока
+local function should_auto_block()
+	if not _cached_settings.block_chat_enabled then
+		return false
+	end
+	
+	if not can_weapon_block() then
+		return false
+	end
+	
+	-- Окно не в фокусе
+	if IS_WINDOWS and not Window.has_focus() then
+		return true
+	end
+	
+	-- Steam overlay активен
+	if HAS_STEAM and Managers.steam and Managers.steam:is_overlay_active() then
+		return true
+	end
+	
+	-- Интерфейс использует ввод (чат или меню открыты)
+	if _input_state.is_blocked then
 		return true
 	end
 	
 	return false
 end
 
--- Сохраняем оригинальный текст сообщения и отправителя при добавлении
-mod:hook("ConstantElementChat", "_add_message_widget_to_message_list", function(func, self, new_message, new_message_widget)
-	func(self, new_message, new_message_widget)
-	
-	-- Сохраняем данные в виджет после его добавления
-	if new_message_widget and new_message_widget.content then
-		local message_text = new_message.message_text
-		local sender_name = new_message.author_name
-		
-		if message_text and message_text ~= "" then
-			new_message_widget.content._clipit_original_message = message_text
-		end
-		
-		if sender_name and sender_name ~= "" then
-			-- Очищаем ник от форматирования, если оно есть
-			local clean_sender = scrub_chat_text(sender_name)
-			if clean_sender and clean_sender ~= "" then
-				new_message_widget.content._clipit_original_sender = clean_sender
-			else
-				new_message_widget.content._clipit_original_sender = sender_name
-			end
-		end
+-- Обработка input для блокировки
+local function handle_input_service(func, self, action_name)
+	-- Обрабатываем только игровой ввод, исключая голосовой чат
+	if self.type ~= "Ingame" or action_name == "voip_push_to_talk" then
+		return func(self, action_name)
 	end
+	
+	-- Обновляем кеш настроек
+	update_settings_cache()
+	
+	-- Обрабатываем удержание блока
+	if action_name == "action_two_hold" and should_auto_block() then
+		return true
+	end
+	
+	-- Блокируем другие действия при открытом интерфейсе
+	local ui_manager = Managers.ui
+	if ui_manager and ui_manager:using_input() then
+		local original_result = func(self, action_name)
+		local result_type = type(original_result)
+		
+		-- Возвращаем "пустое" значение соответствующего типа
+		if result_type == "boolean" then
+			return false
+		elseif result_type == "number" then
+			return 0
+		elseif result_type == "userdata" then
+			return Vector3.zero()
+		end
+		
+		return original_result
+	end
+	
+	return func(self, action_name)
+end
+
+-- Хукаем InputService для перехвата ввода
+mod:hook("InputService", "_get", handle_input_service)
+mod:hook("InputService", "_get_simulate", handle_input_service)
+
+-- Управление активностью ввода
+mod:hook("HumanGameplay", "_input_active", function(func, ...)
+	update_settings_cache()
+	
+	if not _cached_settings.block_chat_enabled then
+		return func(...)
+	end
+	
+	-- Сохраняем состояние блокировки ввода
+	_input_state.is_blocked = not func(...)
+	
+	-- Отключаем ввод во время синематиков
+	if Managers.state.cinematic and Managers.state.cinematic:cinematic_active() then
+		return false
+	end
+	
+	-- Оставляем ввод активным для возможности блокировки
+	return true
 end)
 
--- Функция для копирования последних N сообщений (вызывается по горячей клавише)
-mod.copy_last_message = function()
+-- ============================================================================
+-- Функционал копирования чата
+-- ============================================================================
+
+-- Очистка текста от форматирования
+local function clean_formatting_tags(text)
+	if not text or text == "" then
+		return ""
+	end
+	
+	-- Удаляем теги форматирования вида {#...}
+	local cleaned = text:gsub("{#[^}]*}", "")
+	-- Удаляем незакрытые теги в конце строки
+	cleaned = cleaned:gsub("{#[^}]*$", "")
+	
+	return cleaned
+end
+
+-- Копирование текста в буфер обмена
+local function clipboard_copy(text, message_count)
+	if not text or text == "" then
+		return false
+	end
+	
+	local clipboard = rawget(_G, "Clipboard")
+	if not clipboard or not clipboard.put then
+		return false
+	end
+	
+	clipboard.put(text)
+	
+	-- Показываем уведомление
+	if message_count and message_count > 1 then
+		mod:notify(mod:localize("msgs_copied") .. message_count)
+	else
+		mod:notify(mod:localize("msg_copied"))
+	end
+	
+	return true
+end
+
+-- Извлечение текста сообщения из виджета
+local function extract_message_text(widget_content)
+	if not widget_content then
+		return nil
+	end
+	
+	-- Приоритет: сохраненный оригинальный текст
+	local text = widget_content._clipit_original_message
+	
+	-- Если оригинал не сохранен, извлекаем из форматированного сообщения
+	if not text or text == "" then
+		local formatted = widget_content.message
+		if formatted and formatted ~= "" then
+			text = clean_formatting_tags(formatted)
+		end
+	end
+	
+	return text
+end
+
+-- Извлечение имени отправителя из виджета
+local function extract_sender_name(widget_content)
+	if not widget_content then
+		return ""
+	end
+	
+	return widget_content._clipit_original_sender or ""
+end
+
+-- Форматирование сообщения с именем отправителя или без
+local function format_message(text, sender_name, include_sender)
+	if not text or text == "" then
+		return nil
+	end
+	
+	if include_sender and sender_name and sender_name ~= "" then
+		return sender_name .. ": " .. text
+	end
+	
+	return text
+end
+
+-- Получение элемента чата из UI
+local function get_chat_element()
 	local ui_manager = Managers.ui
 	if not ui_manager then
-		return
+		return nil
 	end
 	
 	local constant_elements = ui_manager._ui_constant_elements
-	if not constant_elements then
+	if not constant_elements or not constant_elements._elements then
+		return nil
+	end
+	
+	return constant_elements._elements.ConstantElementChat
+end
+
+-- Сохранение оригинального текста при добавлении сообщения
+mod:hook("ConstantElementChat", "_add_message_widget_to_message_list", function(func, self, new_message, new_message_widget)
+	func(self, new_message, new_message_widget)
+	
+	if not new_message_widget or not new_message_widget.content then
 		return
 	end
 	
-	local chat_element = constant_elements._elements and constant_elements._elements.ConstantElementChat
+	local widget_content = new_message_widget.content
+	
+	-- Сохраняем текст сообщения
+	if new_message.message_text and new_message.message_text ~= "" then
+		widget_content._clipit_original_message = new_message.message_text
+	end
+	
+	-- Сохраняем имя отправителя
+	if new_message.author_name and new_message.author_name ~= "" then
+		local cleaned_name = clean_formatting_tags(new_message.author_name)
+		widget_content._clipit_original_sender = cleaned_name ~= "" and cleaned_name or new_message.author_name
+	end
+end)
+
+-- Основная функция копирования последних N сообщений
+mod.copy_last_message = function()
+	local chat_element = get_chat_element()
 	if not chat_element then
 		return
 	end
 	
 	local message_widgets = chat_element._message_widgets
-	if not message_widgets or #message_widgets == 0 then
+	local last_message_index = chat_element._last_message_index
+	
+	if not message_widgets or #message_widgets == 0 or not last_message_index then
 		return
 	end
 	
-	local messages_count = mod:get("messages_count") or 1
-	local last_index = chat_element._last_message_index
-	
-	if not last_index then
-		return
+	-- Получаем настройки
+	local requested_count = mod:get("messages_count") or 1
+	local include_sender_names = mod:get("copy_sender_names")
+	if include_sender_names == nil then
+		include_sender_names = true
 	end
 	
-	local collected_messages = {}
-	local actual_count = 0
-	local used_indices = {}
+	-- Определяем количество сообщений для копирования
+	local max_available = #message_widgets
+	local messages_to_copy = math.min(requested_count, max_available)
 	
-	-- Ограничиваем количество итераций реальным количеством доступных сообщений
-	local max_iterations = math.min(messages_count, #message_widgets)
+	-- Собираем сообщения
+	local messages_buffer = {}
 	
-	-- Собираем последние N сообщений (от последнего к предыдущим)
-	for i = 0, max_iterations - 1 do
-		local index = math.index_wrapper(last_index - i, #message_widgets)
+	for offset = 0, messages_to_copy - 1 do
+		local widget_index = math.index_wrapper(last_message_index - offset, max_available)
+		local widget = message_widgets[widget_index]
 		
-		-- Пропускаем уже использованные индексы, чтобы избежать дубликатов
-		if not used_indices[index] then
-			used_indices[index] = true
-			local widget = message_widgets[index]
+		if widget and widget.content then
+			local message_text = extract_message_text(widget.content)
 			
-			if widget and widget.content then
-				local original_text = widget.content._clipit_original_message
-				if not original_text or original_text == "" then
-					-- Если оригинальный текст не сохранен, пытаемся извлечь из форматированного сообщения
-					local formatted_message = widget.content.message
-					if formatted_message and formatted_message ~= "" then
-						original_text = scrub_chat_text(formatted_message)
-					end
-				end
+			if message_text then
+				local sender_name = extract_sender_name(widget.content)
+				local formatted = format_message(message_text, sender_name, include_sender_names)
 				
-				if original_text and original_text ~= "" then
-					local copy_sender_names = mod:get("copy_sender_names")
-					if copy_sender_names == nil then
-						copy_sender_names = true
-					end
-					
-					local formatted_message = ""
-					
-					if copy_sender_names then
-						local original_sender = widget.content._clipit_original_sender
-						if not original_sender or original_sender == "" then
-							original_sender = ""
-						end
-						
-						-- Формируем строку в формате "Ник: сообщение"
-						if original_sender and original_sender ~= "" then
-							formatted_message = original_sender .. ": " .. original_text
-						else
-							formatted_message = original_text
-						end
-					else
-						-- Копируем только текст сообщения без ника
-						formatted_message = original_text
-					end
-					
-					table.insert(collected_messages, formatted_message)
-					actual_count = actual_count + 1
+				if formatted then
+					-- Добавляем в начало массива для сохранения хронологического порядка
+					table.insert(messages_buffer, 1, formatted)
 				end
 			end
 		end
 	end
 	
-	-- Переворачиваем массив, чтобы сообщения шли в хронологическом порядке (старые -> новые)
-	local reversed_messages = {}
-	for i = #collected_messages, 1, -1 do
-		table.insert(reversed_messages, collected_messages[i])
-	end
-	
-	-- Объединяем сообщения с переносами строк
-	if #reversed_messages > 0 then
-		local combined_text = table.concat(reversed_messages, "\n")
-		copy_to_clipboard(combined_text, actual_count)
+	-- Копируем в буфер обмена
+	if #messages_buffer > 0 then
+		local final_text = table.concat(messages_buffer, "\n")
+		clipboard_copy(final_text, #messages_buffer)
 	end
 end
 
