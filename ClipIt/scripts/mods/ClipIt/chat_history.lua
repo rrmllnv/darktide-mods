@@ -256,12 +256,16 @@ end
 function ChatHistory:get_history_entries(scan_dir)
 	-- Если кеш не инициализирован, инициализируем его один раз
 	if self._history_entries_cache == nil then
+		mod:echo("[ChatHistory] Initializing cache for the first time")
 		self._history_entries_cache = scandir(self:get_path())
+		mod:echo("[ChatHistory] Cache initialized with " .. tostring(#self._history_entries_cache) .. " files")
 	end
 	
 	-- Принудительное сканирование только если явно запрошено
 	if scan_dir then
+		mod:echo("[ChatHistory] Force rescanning directory")
 		self._history_entries_cache = scandir(self:get_path())
+		mod:echo("[ChatHistory] Cache refreshed with " .. tostring(#self._history_entries_cache) .. " files")
 	end
 	
 	local entries = {}
@@ -273,6 +277,8 @@ function ChatHistory:get_history_entries(scan_dir)
 			end
 		end
 	end
+	
+	mod:echo("[ChatHistory] Returning " .. tostring(#entries) .. " entries")
 	
 	-- Сортируем по дате (новые первыми)
 	table.sort(entries, function(a, b)
