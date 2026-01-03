@@ -104,5 +104,25 @@ return {
 		ru = "Уровень громкости (0-100%) когда игра не в фокусе. По умолчанию 20%.",
 		["zh-cn"] = "游戏失去焦点时的音量（0-100%）。默认 20%。",
 	},
+	save_chat_history_title = {
+		en = "Save Chat History",
+		ru = "Сохранять историю чата",
+		["zh-cn"] = "保存聊天记录",
+	},
+	save_chat_history_tooltip = {
+		en = "If enabled, automatically saves chat messages to history files. Separate history for missions and Mourningstar.",
+		ru = "Если включено, автоматически сохраняет сообщения чата в файлы истории. Отдельная история для миссий и Моурнингстара.",
+		["zh-cn"] = "如果启用，自动将聊天消息保存到历史文件。任务和 Mourningstar 分别保存。",
+	},
+	open_chat_history_key = {
+		en = "Open Chat History",
+		ru = "Открыть историю чата",
+		["zh-cn"] = "打开聊天记录",
+	},
+	open_chat_history_key_tooltip = {
+		en = "Hotkey to open chat history viewer",
+		ru = "Горячая клавиша для открытия просмотра истории чата",
+		["zh-cn"] = "打开聊天记录查看器的快捷键",
+	},
 }
 

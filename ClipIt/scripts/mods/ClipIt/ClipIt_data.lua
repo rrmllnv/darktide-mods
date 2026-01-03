@@ -65,7 +65,24 @@ return {
 			default_value = 20,
 			range = {0, 100},
 		},
-		}
+		{
+			setting_id = "save_chat_history",
+			type = "checkbox",
+			title = "save_chat_history_title",
+			tooltip_text = "save_chat_history_tooltip",
+			default_value = true,
+		},
+		{
+			setting_id = "open_chat_history_key",
+			type = "keybind",
+			title = "open_chat_history_key",
+			tooltip_text = "open_chat_history_key_tooltip",
+			default_value = {},
+			keybind_trigger = "pressed",
+			keybind_type = "function_call",
+			function_name = "open_chat_history",
+		},
 	}
+}
 }
 

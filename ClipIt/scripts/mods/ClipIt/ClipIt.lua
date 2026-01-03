@@ -1,7 +1,46 @@
 local mod = get_mod("ClipIt")
 local WeaponTemplate = require("scripts/utilities/weapon/weapon_template")
+local ChatHistory = mod:io_dofile("ClipIt/scripts/mods/ClipIt/chat_history")
 
 mod.version = "1.0.0"
+mod.history = ChatHistory:new()
+
+-- Регистрация view истории чата
+mod:add_require_path("ClipIt/scripts/mods/ClipIt/chat_history_view/chat_history_view")
+mod:add_require_path("ClipIt/scripts/mods/ClipIt/chat_history_view/chat_history_view_definitions")
+mod:add_require_path("ClipIt/scripts/mods/ClipIt/chat_history_view/chat_history_view_settings")
+mod:add_require_path("ClipIt/scripts/mods/ClipIt/chat_history_view/chat_history_view_blueprints")
+
+mod:register_view({
+	view_name = "chat_history_view",
+	view_settings = {
+		init_view_function = function(ingame_ui_context)
+			return true
+		end,
+		state_bound = true,
+		path = "ClipIt/scripts/mods/ClipIt/chat_history_view/chat_history_view",
+		class = "ChatHistoryView",
+		disable_game_world = false,
+		load_in_hub = true,
+		load_always = true,
+		game_world_blur = 1,
+		enter_sound_events = {
+			"wwise/events/ui/play_ui_enter",
+		},
+		exit_sound_events = {
+			"wwise/events/ui/play_ui_back",
+		},
+	},
+	view_transitions = {},
+	view_options = {
+		close_all = false,
+		close_previous = false,
+		close_transition_time = nil,
+		transition_time = nil
+	}
+})
+
+mod:io_dofile("ClipIt/scripts/mods/ClipIt/chat_history_view/chat_history_view")
 
 -- Кеш для настроек и состояния
 local _cached_settings = {
@@ -9,6 +48,7 @@ local _cached_settings = {
 	fade_audio_enabled = false,
 	fade_audio_channel = 1,
 	fade_audio_volume = 20,
+	save_chat_history = true,
 	last_check_time = 0,
 	check_interval = 0.5
 }
@@ -40,6 +80,10 @@ local function update_settings_cache()
 		_cached_settings.fade_audio_enabled = mod:get("fade_audio_unfocused") or false
 		_cached_settings.fade_audio_channel = mod:get("fade_audio_channel") or 1
 		_cached_settings.fade_audio_volume = mod:get("fade_audio_volume") or 20
+		_cached_settings.save_chat_history = mod:get("save_chat_history")
+		if _cached_settings.save_chat_history == nil then
+			_cached_settings.save_chat_history = true
+		end
 		_cached_settings.last_check_time = current_time
 	end
 end
@@ -211,7 +255,58 @@ mod:hook("HumanGameplay", "_input_active", function(func, ...)
 	return true
 end)
 
--- Обновление состояния звука (вызывается каждый кадр)
+-- ============================================================================
+-- Функционал истории чата
+-- ============================================================================
+
+-- Определение текущей локации
+local function get_current_location()
+	-- Проверяем есть ли активная миссия
+	if Managers.state and Managers.state.mission then
+		local mission_name = Managers.state.mission:mission_name()
+		if mission_name and mission_name ~= "" then
+			return "mission", mission_name
+		end
+	end
+	
+	-- Проверяем название уровня
+	if Managers.state and Managers.state.game_mode then
+		local game_mode_name = Managers.state.game_mode:game_mode_name()
+		if game_mode_name and game_mode_name == "hub" then
+			return "mourningstar", "The Mourningstar"
+		end
+	end
+	
+	-- По умолчанию считаем что на Mourningstar
+	return "mourningstar", "Unknown Location"
+end
+
+-- Проверка смены локации
+local _last_location_type = nil
+local _last_location_name = nil
+
+local function check_location_change()
+	if not _cached_settings.save_chat_history then
+		return
+	end
+	
+	local current_type, current_name = get_current_location()
+	
+	if current_type ~= _last_location_type or current_name ~= _last_location_name then
+		-- Локация изменилась
+		if _last_location_type then
+			-- Сохраняем предыдущую сессию
+			mod.history:save_current_session()
+		end
+		
+		-- Начинаем новую сессию
+		mod.history:start_session(current_type, current_name)
+		_last_location_type = current_type
+		_last_location_name = current_name
+	end
+end
+
+-- Обновление состояния (вызывается каждый кадр)
 mod.update = function(dt)
 	update_settings_cache()
 	
@@ -221,12 +316,16 @@ mod.update = function(dt)
 	else
 		fade_audio_in()
 	end
+	
+	-- Проверка смены локации для сохранения истории
+	check_location_change()
 end
 
 -- ============================================================================
 -- Функционал копирования чата
 -- ============================================================================
 
+-- Очистка текста от форматирования
 local function clean_formatting_tags(text)
 	if not text or text == "" then
 		return ""
@@ -336,6 +435,19 @@ mod:hook("ConstantElementChat", "_add_message_widget_to_message_list", function(
 		local cleaned_name = clean_formatting_tags(new_message.author_name)
 		widget_content._clipit_original_sender = cleaned_name ~= "" and cleaned_name or new_message.author_name
 	end
+	
+	-- Сохраняем в историю чата если включено
+	if _cached_settings.save_chat_history and new_message.message_text and new_message.message_text ~= "" then
+		local sender = new_message.author_name or ""
+		local message = new_message.message_text
+		local channel = new_message.channel_tag or "Strike Team"
+		
+		-- Очищаем от форматирования для сохранения
+		sender = clean_formatting_tags(sender)
+		message = clean_formatting_tags(message)
+		
+		mod.history:add_message(sender, message, channel)
+	end
 end)
 
 mod.copy_last_message = function()
@@ -384,6 +496,18 @@ mod.copy_last_message = function()
 		local final_text = table.concat(messages_buffer, "\n")
 		clipboard_copy(final_text, #messages_buffer)
 	end
+end
+
+-- Функция открытия истории чата
+mod.open_chat_history = function()
+	local ui_manager = Managers.ui
+	if not ui_manager then
+		mod:notify("UI Manager not available")
+		return
+	end
+	
+	-- Открываем view истории
+	ui_manager:open_view("chat_history_view")
 end
 
 
