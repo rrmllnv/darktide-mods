@@ -50,9 +50,9 @@ return {
 		["zh-cn"] = "如果启用，以'发送者：消息'格式复制消息。如果禁用，仅复制消息文本。",
 	},
 	block_chat_title = {
-		en = "Block Chat",
-		ru = "Блокировать чат",
-		["zh-cn"] = "阻止聊天",
+		en = "Auto Block",
+		ru = "Автоматический блок",
+		["zh-cn"] = "自动格挡",
 	},
 	block_chat_tooltip = {
 		en = "If enabled, automatically holds block while chatting, opening the Steam overlay, or while the game is not focused.",
