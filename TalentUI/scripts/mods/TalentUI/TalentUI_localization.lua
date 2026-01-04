@@ -4,8 +4,8 @@ return {
 		ru = "TalentUI",
 	},
 	mod_description = {
-		en = "Shows ability icons with cooldown timers for teammates and local player in the team HUD",
-		ru = "Показывает иконки способностей с таймерами кулдауна для тимейтов и локального игрока в team HUD",
+		en = "Shows ability icons with cooldown timers for teammates and local player in the team HUD\n\nAfter changing settings, reload mods: Ctrl+Shift+R",
+		ru = "Показывает иконки способностей с таймерами кулдауна для тимейтов и локального игрока в team HUD\n\nПри изменении настроек перезагрузите моды: Ctrl+Shift+R",
 	},
 	group_teammate_ability = {
 		en = "Teammate Ability",
