@@ -96,20 +96,13 @@ local function get_player_weapon_by_slot(player, extensions, slot_name)
 end
 
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
-	local weapon_icon_width = TalentUISettings.weapon_icon_width or 128
-	local weapon_icon_height = TalentUISettings.weapon_icon_height or 48
-	local coherency_icon_offset_x = 34
-	local coherency_icon_size = 24
-	local ability_spacing = TalentUISettings.ability_spacing or 50
-	local weapon_spacing = TalentUISettings.weapon_spacing or 50
-	local weapon_vertical_offset = TalentUISettings.weapon_vertical_offset or -20
-	
-	local max_abilities = 3
-	local weapons_start_offset = coherency_icon_offset_x + coherency_icon_size + ability_spacing + max_abilities * ability_spacing
+	local weapon_icon_width = TalentUISettings.weapon_icon_width or 96
+	local weapon_icon_height = TalentUISettings.weapon_icon_height or 36
 	
 	for i = 1, #WEAPON_SLOTS do
 		local weapon_slot = WEAPON_SLOTS[i]
-		local offset_x = weapons_start_offset + (i - 1) * weapon_spacing
+		local offset_x = 0
+		local offset_y = 0
 		
 		instance.widget_definitions[weapon_slot.name .. "_icon"] = UIWidget.create_definition({
 			{
@@ -118,11 +111,11 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 				value_id = "icon",
 				value = "content/ui/materials/icons/weapons/hud/combat_blade_01",
 				style = {
-					horizontal_alignment = "right",
-					vertical_alignment = "center",
+					horizontal_alignment = "left",
+					vertical_alignment = "top",
 					offset = {
 						offset_x,
-						weapon_vertical_offset,
+						offset_y,
 						1,
 					},
 					size = {
@@ -132,7 +125,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					color = UIHudSettings.color_tint_main_2,
 				},
 			},
-		}, "bar")
+		}, "background")
 	end
 end)
 
@@ -197,59 +190,11 @@ local function update_teammate_weapons(self, player, dt)
 		return
 	end
 	
-	local coherency_widget = self._widgets_by_name.coherency_indicator
-	local coherency_icon_offset_x = 34
-	local coherency_icon_size = 24
-	
-	if coherency_widget and coherency_widget.style and coherency_widget.style.texture and coherency_widget.style.texture.offset then
-		coherency_icon_offset_x = coherency_widget.style.texture.offset[1] - 15
-		if coherency_widget.style.texture.size then
-			coherency_icon_size = coherency_widget.style.texture.size[1]
-		end
-	end
-	
-	local ability_spacing = TalentUISettings.ability_spacing or 60
-	local weapon_spacing = TalentUISettings.weapon_spacing or 50
-	local weapon_vertical_offset = TalentUISettings.weapon_vertical_offset or -20
-	
-	local abilities_to_show = {}
-	local max_ability_offset_x = coherency_icon_offset_x + coherency_icon_size
-	
-	for i = 1, #mod.TALENT_ABILITY_METADATA do
-		local ability_info = mod.TALENT_ABILITY_METADATA[i]
-		local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_icon"]
-		
-		if icon_widget then
-			local data_key = player_identifier .. "_" .. ability_info.id
-			
-			if mod.teammate_abilities_data and mod.teammate_abilities_data[data_key] and mod.teammate_abilities_data[data_key].ability_type then
-				local show_icon = true
-				if ability_info.id == "ability" then
-					show_icon = mod:get("show_teammate_ability_icon")
-				elseif ability_info.id == "blitz" then
-					show_icon = mod:get("show_teammate_blitz_icon")
-				elseif ability_info.id == "aura" then
-					show_icon = mod:get("show_teammate_aura_icon")
-				end
-				
-				if show_icon then
-					table.insert(abilities_to_show, {
-						ability_info = ability_info,
-					})
-					
-					if icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.offset then
-						local ability_offset_x = icon_widget.style.icon.offset[1]
-						if ability_offset_x > max_ability_offset_x then
-							max_ability_offset_x = ability_offset_x
-						end
-					end
-				end
-			end
-		end
-	end
-	
-	local total_abilities = #abilities_to_show
-	local weapons_start_offset = max_ability_offset_x + ability_spacing
+	local weapon_spacing = TalentUISettings.weapon_spacing or 96
+	local weapon_horizontal_offset = TalentUISettings.weapon_horizontal_offset or 0
+	local weapon_vertical_offset = TalentUISettings.weapon_vertical_offset or 0
+	local weapon_icon_width = TalentUISettings.weapon_icon_width or 96
+	local weapon_icon_height = TalentUISettings.weapon_icon_height or 36
 	
 	local weapons_to_show = {}
 	
@@ -286,11 +231,13 @@ local function update_teammate_weapons(self, player, dt)
 	local total_weapons = #weapons_to_show
 	for position_index = 1, total_weapons do
 		local weapon_data = weapons_to_show[position_index]
-		local offset_x = weapons_start_offset + (position_index - 1) * weapon_spacing
+		local offset_x = weapon_horizontal_offset + weapon_spacing + (position_index - 1) * weapon_spacing
+		local offset_y = weapon_vertical_offset
 		enabled_weapons[weapon_data.weapon_slot.id] = {
 			weapon_slot = weapon_data.weapon_slot,
 			position = position_index,
 			offset_x = offset_x,
+			offset_y = offset_y,
 		}
 	end
 	
@@ -309,10 +256,8 @@ local function update_teammate_weapons(self, player, dt)
 				if not weapon_position then
 					icon_widget.visible = false
 				else
-					local weapon_icon_width = TalentUISettings.weapon_icon_width or 60
-					local weapon_icon_height = TalentUISettings.weapon_icon_height or 60
-					local weapon_vertical_offset = TalentUISettings.weapon_vertical_offset or -20
 					local new_offset_x = weapon_position.offset_x
+					local new_offset_y = weapon_position.offset_y
 					
 					if icon_widget.style and icon_widget.style.icon then
 						if icon_widget.style.icon.offset then
@@ -320,8 +265,8 @@ local function update_teammate_weapons(self, player, dt)
 								icon_widget.style.icon.offset[1] = new_offset_x
 								icon_widget.dirty = true
 							end
-							if icon_widget.style.icon.offset[2] ~= weapon_vertical_offset then
-								icon_widget.style.icon.offset[2] = weapon_vertical_offset
+							if icon_widget.style.icon.offset[2] ~= new_offset_y then
+								icon_widget.style.icon.offset[2] = new_offset_y
 								icon_widget.dirty = true
 							end
 						end
