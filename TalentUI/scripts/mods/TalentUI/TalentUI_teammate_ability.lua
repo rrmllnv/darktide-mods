@@ -525,9 +525,10 @@ local function update_teammate_all_abilities(self, player, dt)
 		if icon_widget then
 			local data_key = player_identifier .. "_" .. ability_info.id
 			
-			if not teammate_abilities_data[data_key] or not teammate_abilities_data[data_key].ability_type then
-				local ability_data = get_player_ability_by_type(player, extensions, ability_info.slot)
-				if ability_data then
+			local ability_data = get_player_ability_by_type(player, extensions, ability_info.slot)
+			if ability_data then
+				local cached_data = teammate_abilities_data[data_key]
+				if not cached_data or cached_data.ability_type ~= ability_data.ability_type or cached_data.icon ~= ability_data.icon then
 					teammate_abilities_data[data_key] = {
 						ability_id = ability_data.ability_id,
 						ability_type = ability_data.ability_type,
