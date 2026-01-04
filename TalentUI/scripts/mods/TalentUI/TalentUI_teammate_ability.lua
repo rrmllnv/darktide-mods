@@ -357,6 +357,27 @@ end
 
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	local icon_size = TalentUISettings.ability_icon_size
+	local icon_text_alignment = TalentUISettings.icon_text_alignment or "left"
+	
+	local text_horizontal_alignment = "center"
+	local text_vertical_alignment = "center"
+	
+	if icon_text_alignment == "left" then
+		text_horizontal_alignment = "left"
+		text_vertical_alignment = "center"
+	elseif icon_text_alignment == "right" then
+		text_horizontal_alignment = "right"
+		text_vertical_alignment = "center"
+	elseif icon_text_alignment == "top" then
+		text_horizontal_alignment = "center"
+		text_vertical_alignment = "top"
+	elseif icon_text_alignment == "bottom" then
+		text_horizontal_alignment = "center"
+		text_vertical_alignment = "bottom"
+	elseif icon_text_alignment == "center" then
+		text_horizontal_alignment = "center"
+		text_vertical_alignment = "center"
+	end
 
 	for i = 1, #TALENT_ABILITY_METADATA do
 		local ability_type = TALENT_ABILITY_METADATA[i]
@@ -383,7 +404,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					offset = {
 						offset_x,
 						offset_y,
-						1,
+						2,
 					},
 					size = {
 						icon_size,
@@ -403,8 +424,8 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 				style = {
 					horizontal_alignment = "left",
 					vertical_alignment = "top",
-					text_horizontal_alignment = "center",
-					text_vertical_alignment = "center",
+					text_horizontal_alignment = text_horizontal_alignment,
+					text_vertical_alignment = text_vertical_alignment,
 					font_type = hud_body_font_settings.font_type or "machine_medium",
 					font_size = TalentUISettings.cooldown_font_size,
 					line_spacing = 1.2,
@@ -416,7 +437,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 						3,
 					},
 					size = {
-						icon_size,
+						icon_size + 10,
 						icon_size,
 					},
 				},
@@ -515,6 +536,7 @@ local function update_teammate_all_abilities(self, player, dt)
 	local ability_spacing = TalentUISettings.ability_spacing or 50
 	local horizontal_offset = TalentUISettings.icon_horizontal_offset or 0
 	local vertical_offset = TalentUISettings.icon_vertical_offset or 0
+	local icon_orientation = TalentUISettings.icon_orientation or "vertical"
 	local icon_size = TalentUISettings.ability_icon_size or 40
 	
 	local abilities_to_show = {}
@@ -559,11 +581,20 @@ local function update_teammate_all_abilities(self, player, dt)
 	
 	local enabled_abilities = {}
 	local total_abilities = #abilities_to_show
+	local is_horizontal = icon_orientation == "horizontal"
+	
 	for position_index = 1, total_abilities do
 		local ability_data = abilities_to_show[position_index]
-		local offset_x = horizontal_offset + ability_spacing
-		local offset_y = vertical_offset + (position_index - 1) * 28
-		--mod:echo(offset_x .. " " .. offset_y)
+		local offset_x, offset_y
+		
+		if is_horizontal then
+			offset_x = horizontal_offset + ability_spacing + (position_index - 1) * (icon_size + ability_spacing)
+			offset_y = vertical_offset
+		else
+			offset_x = horizontal_offset + ability_spacing
+			offset_y = vertical_offset + (position_index - 1) * 28
+		end
+		
 		enabled_abilities[ability_data.ability_info.id] = {
 			ability_info = ability_data.ability_info,
 			position = position_index,
@@ -615,15 +646,25 @@ local function update_teammate_all_abilities(self, player, dt)
 						end
 					end
 					
-					if text_widget and text_widget.style and text_widget.style.text and text_widget.style.text.offset then
-						local text_offset_x = new_offset_x - 23
-						if text_widget.style.text.offset[1] ~= text_offset_x then
-							text_widget.style.text.offset[1] = text_offset_x
-							text_widget.dirty = true
+					if text_widget and text_widget.style and text_widget.style.text then
+						if text_widget.style.text.offset then
+							local text_offset_x = new_offset_x -- - 23
+							if text_widget.style.text.offset[1] ~= text_offset_x then
+								text_widget.style.text.offset[1] = text_offset_x
+								text_widget.dirty = true
+							end
+							if text_widget.style.text.offset[2] ~= new_offset_y then
+								text_widget.style.text.offset[2] = new_offset_y
+								text_widget.dirty = true
+							end
 						end
-						if text_widget.style.text.offset[2] ~= new_offset_y then
-							text_widget.style.text.offset[2] = new_offset_y
-							text_widget.dirty = true
+						
+						if text_widget.style.text.size then
+							if text_widget.style.text.size[1] ~= icon_size or text_widget.style.text.size[2] ~= icon_size then
+								text_widget.style.text.size[1] = icon_size
+								text_widget.style.text.size[2] = icon_size
+								text_widget.dirty = true
+							end
 						end
 					end
 					

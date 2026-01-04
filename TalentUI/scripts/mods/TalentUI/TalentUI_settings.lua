@@ -8,6 +8,8 @@ local SETTINGS = {
 
 	icon_vertical_offset = -10,
 	icon_horizontal_offset = 0,
+	icon_orientation = "vertical", -- horizontal, vertical
+	icon_text_alignment = "left", -- left, top, right, bottom, center
 	ability_icon_size = 33,
 	ability_spacing = 0,
 
