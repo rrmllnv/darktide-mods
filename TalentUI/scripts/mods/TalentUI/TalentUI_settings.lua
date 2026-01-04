@@ -11,9 +11,9 @@ local SETTINGS = {
 	ability_spacing = 0,
 
 	
-	weapon_icon_width = 128,
-	weapon_icon_height = 48,
-	weapon_spacing = 128,
+	weapon_icon_width = 96,
+	weapon_icon_height = 36,
+	weapon_spacing = 96,
 	weapon_vertical_offset = -40,
 
 	icon_material_settings = {
