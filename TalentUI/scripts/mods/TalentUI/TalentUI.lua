@@ -137,11 +137,24 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	
 	local weapon_icon_width = TalentUISettings.teammate_weapon_icon_width
 	local weapon_icon_height = TalentUISettings.teammate_weapon_icon_height
+	local weapon_spacing = TalentUISettings.teammate_weapon_spacing
+	local weapon_horizontal_offset = mod:get("teammate_weapon_horizontal_offset") or TalentUISettings.teammate_weapon_horizontal_offset
+	local weapon_vertical_offset = mod:get("teammate_weapon_vertical_offset") or TalentUISettings.teammate_weapon_vertical_offset
+	local weapon_orientation = mod:get("teammate_weapon_orientation") or TalentUISettings.teammate_weapon_orientation
+	local is_horizontal_weapon = weapon_orientation == "horizontal"
 	
 	for i = 1, #WEAPON_SLOTS do
 		local weapon_slot = WEAPON_SLOTS[i]
-		local offset_x = 0
-		local offset_y = 0
+		local position_index = i
+		local offset_x, offset_y
+		
+		if is_horizontal_weapon then
+			offset_x = weapon_horizontal_offset + weapon_spacing + (position_index - 1) * (weapon_icon_width + weapon_spacing)
+			offset_y = weapon_vertical_offset
+		else
+			offset_x = weapon_horizontal_offset + weapon_spacing
+			offset_y = weapon_vertical_offset + (position_index - 1) * (weapon_icon_height + weapon_spacing)
+		end
 		
 		instance.widget_definitions[weapon_slot.name .. "_icon"] = UIWidget.create_definition({
 			{

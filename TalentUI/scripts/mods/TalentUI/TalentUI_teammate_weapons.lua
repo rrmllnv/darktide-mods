@@ -141,14 +141,8 @@ local function update_teammate_weapons(self, player, dt)
 		return
 	end
 	
-	local weapon_spacing = TalentUISettings.teammate_weapon_spacing
-	local weapon_horizontal_offset = mod:get("teammate_weapon_horizontal_offset") or TalentUISettings.teammate_weapon_horizontal_offset
-	local weapon_vertical_offset = mod:get("teammate_weapon_vertical_offset") or TalentUISettings.teammate_weapon_vertical_offset
 	local weapon_icon_width = TalentUISettings.teammate_weapon_icon_width
 	local weapon_icon_height = TalentUISettings.teammate_weapon_icon_height
-	local weapon_orientation = mod:get("teammate_weapon_orientation") or TalentUISettings.teammate_weapon_orientation
-	
-	local weapons_to_show = {}
 	
 	for i = 1, #WEAPON_SLOTS do
 		local weapon_slot = WEAPON_SLOTS[i]
@@ -178,93 +172,26 @@ local function update_teammate_weapons(self, player, dt)
 			end
 			
 			if has_weapon and show_weapon_icon then
-				table.insert(weapons_to_show, {
-					weapon_slot = weapon_slot,
-					data_key = data_key,
-				})
-			end
-		end
-	end
-	
-	local enabled_weapons = {}
-	local total_weapons = #weapons_to_show
-	local is_horizontal = weapon_orientation == "horizontal"
-	
-	for position_index = 1, total_weapons do
-		local weapon_data = weapons_to_show[position_index]
-		local offset_x, offset_y
-		
-		if is_horizontal then
-			offset_x = weapon_horizontal_offset + weapon_spacing + (position_index - 1) * (weapon_icon_width + weapon_spacing)
-			offset_y = weapon_vertical_offset
-		else
-			offset_x = weapon_horizontal_offset + weapon_spacing
-			offset_y = weapon_vertical_offset + (position_index - 1) * (weapon_icon_height + weapon_spacing)
-		end
-		
-		enabled_weapons[weapon_data.weapon_slot.id] = {
-			weapon_slot = weapon_data.weapon_slot,
-			position = position_index,
-			offset_x = offset_x,
-			offset_y = offset_y,
-		}
-	end
-	
-	for i = 1, #WEAPON_SLOTS do
-		local weapon_slot = WEAPON_SLOTS[i]
-		local icon_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_icon"]
-		
-		if icon_widget then
-			local data_key = player_identifier .. "_" .. weapon_slot.id
-			
-			local show_weapon_icon = true
-			if weapon_slot.id == "primary" then
-				show_weapon_icon = mod:get("show_teammate_weapon_primary_icon")
-			elseif weapon_slot.id == "secondary" then
-				show_weapon_icon = mod:get("show_teammate_weapon_secondary_icon")
-			end
-			
-			if icon_widget and teammate_weapons_data[data_key] and teammate_weapons_data[data_key].icon then
 				local icon = teammate_weapons_data[data_key].icon
 				
-				local weapon_position = enabled_weapons[weapon_slot.id]
-				
-				if not show_weapon_icon or not weapon_position then
-					icon_widget.visible = false
-				else
-					local new_offset_x = weapon_position.offset_x
-					local new_offset_y = weapon_position.offset_y
-					
-					if icon_widget.style and icon_widget.style.icon then
-						if icon_widget.style.icon.offset then
-							if icon_widget.style.icon.offset[1] ~= new_offset_x then
-								icon_widget.style.icon.offset[1] = new_offset_x
-								icon_widget.dirty = true
-							end
-							if icon_widget.style.icon.offset[2] ~= new_offset_y then
-								icon_widget.style.icon.offset[2] = new_offset_y
-								icon_widget.dirty = true
-							end
-						end
-						
-						if icon_widget.style.icon.size then
-							if icon_widget.style.icon.size[1] ~= weapon_icon_width or icon_widget.style.icon.size[2] ~= weapon_icon_height then
-								icon_widget.style.icon.size[1] = weapon_icon_width
-								icon_widget.style.icon.size[2] = weapon_icon_height
-								icon_widget.dirty = true
-							end
-						end
-					end
-					
-					if icon and icon_widget.content then
-						if icon_widget.content.icon ~= icon then
-							icon_widget.content.icon = icon
+				if icon_widget.style and icon_widget.style.icon then
+					if icon_widget.style.icon.size then
+						if icon_widget.style.icon.size[1] ~= weapon_icon_width or icon_widget.style.icon.size[2] ~= weapon_icon_height then
+							icon_widget.style.icon.size[1] = weapon_icon_width
+							icon_widget.style.icon.size[2] = weapon_icon_height
 							icon_widget.dirty = true
 						end
 					end
-					
-					icon_widget.visible = true
 				end
+				
+				if icon and icon_widget.content then
+					if icon_widget.content.icon ~= icon then
+						icon_widget.content.icon = icon
+						icon_widget.dirty = true
+					end
+				end
+				
+				icon_widget.visible = true
 			else
 				icon_widget.visible = false
 			end
