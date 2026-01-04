@@ -1,16 +1,16 @@
 local mod = get_mod("TalentUI")
 
 local SETTINGS = {
-	icon_position_left_shift = 0,
-	icon_position_vertical_offset = -20,
+	icon_position_vertical_offset = 0,
 	ability_icon_size = 60,
 	ability_spacing = 50,
 	cooldown_font_size = 20,
 	local_cooldown_font_size = 40,
-	blitz_icon_position_offset = 40,
-	blitz_icon_position_left_shift = 60,
-	blitz_icon_position_vertical_offset = 0,
 	show_abilities_for_bots = false,
+	weapon_icon_width = 100,
+	weapon_icon_height = 50,
+	weapon_spacing = 80,
+	weapon_vertical_offset = -40,
 	icon_material_settings = {
 		ability = {
 			active = {intensity = 0, saturation = 1},

@@ -26,6 +26,8 @@ local TalentUISettings = mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_
 
 local teammate_abilities_data = {}
 
+mod.teammate_abilities_data = teammate_abilities_data
+
 local player_previous_human_state = {}
 
 local function get_talent_from_character_sheet(player, ability_key)
@@ -82,6 +84,8 @@ local TALENT_ABILITY_METADATA = {
 		mask = "circular_frame_mask",
 	},
 }
+
+mod.TALENT_ABILITY_METADATA = TALENT_ABILITY_METADATA
 
 local function get_player_ability_by_type(player, extensions, slot_type)
 	if slot_type == "slot_coherency_ability" then
@@ -741,6 +745,10 @@ local function update_player_features_hook(func, self, dt, t, player, ui_rendere
 	func(self, dt, t, player, ui_renderer)
 	
 	update_teammate_all_abilities(self, player, dt)
+	
+	if mod.update_teammate_weapons then
+		mod.update_teammate_weapons(self, player, dt)
+	end
 end
 
 mod:hook("HudElementTeamPlayerPanel", "_update_player_features", update_player_features_hook)
@@ -748,11 +756,16 @@ mod:hook("HudElementTeamPlayerPanel", "_update_player_features", update_player_f
 mod:hook_safe("HudElementTeamPlayerPanel", "destroy", function(self)
 	local player = self._data.player
 	if player then
-		local success, player_name = pcall(function()
-			return player:name()
+		local success, player_identifier = pcall(function()
+			local unique_id = player:unique_id()
+			local peer_id = player:peer_id()
+			return unique_id or tostring(peer_id)
 		end)
-		if success and player_name then
-			mod.clear_teammate_all_abilities_data(player_name)
+		if success and player_identifier then
+			mod.clear_teammate_all_abilities_data(player_identifier)
+			if mod.clear_teammate_weapons_data then
+				mod.clear_teammate_weapons_data(player_identifier)
+			end
 		end
 	end
 end)
