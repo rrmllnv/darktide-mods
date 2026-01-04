@@ -41,9 +41,9 @@ local SETTINGS = {
 	teammate_weapon_icon_width = 70, -- 96,
 	teammate_weapon_icon_height = 26, -- 36,
 	teammate_weapon_spacing = 0,
-	teammate_weapon_horizontal_offset = 163,
-	teammate_weapon_vertical_offset = 16,
-	teammate_weapon_orientation = "horizontal", -- horizontal, vertical
+	teammate_weapon_horizontal_offset = 330, -- 163
+	teammate_weapon_vertical_offset = 16, -- 16
+	teammate_weapon_orientation = "vertical", -- horizontal, vertical
 }
 
 return SETTINGS
