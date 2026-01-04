@@ -26,8 +26,6 @@ local TalentUISettings = mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_
 
 local teammate_abilities_data = {}
 
-mod.teammate_abilities_data = teammate_abilities_data
-
 local player_previous_human_state = {}
 
 local function get_talent_from_character_sheet(player, ability_key)
@@ -84,8 +82,6 @@ local TALENT_ABILITY_METADATA = {
 		mask = "circular_frame_mask",
 	},
 }
-
-mod.TALENT_ABILITY_METADATA = TALENT_ABILITY_METADATA
 
 local function get_player_ability_by_type(player, extensions, slot_type)
 	if slot_type == "slot_coherency_ability" then
@@ -356,33 +352,16 @@ local function get_ability_material_settings(ability_id, on_cooldown, uses_charg
 end
 
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
+	local bar_size = HudElementTeamPlayerPanelSettings.size
 	local icon_size = TalentUISettings.ability_icon_size
-	local icon_text_alignment = TalentUISettings.icon_text_alignment or "left"
-	
-	local text_horizontal_alignment = "center"
-	local text_vertical_alignment = "center"
-	
-	if icon_text_alignment == "left" then
-		text_horizontal_alignment = "left"
-		text_vertical_alignment = "center"
-	elseif icon_text_alignment == "right" then
-		text_horizontal_alignment = "right"
-		text_vertical_alignment = "center"
-	elseif icon_text_alignment == "top" then
-		text_horizontal_alignment = "center"
-		text_vertical_alignment = "top"
-	elseif icon_text_alignment == "bottom" then
-		text_horizontal_alignment = "center"
-		text_vertical_alignment = "bottom"
-	elseif icon_text_alignment == "center" then
-		text_horizontal_alignment = "center"
-		text_vertical_alignment = "center"
-	end
+	local coherency_icon_offset_x = 34
+	local coherency_icon_size = 24
+	local ability_spacing = TalentUISettings.ability_spacing or 50
+	local vertical_offset = TalentUISettings.icon_position_vertical_offset or 0
 
 	for i = 1, #TALENT_ABILITY_METADATA do
 		local ability_type = TALENT_ABILITY_METADATA[i]
-		local offset_x = 0
-		local offset_y = 0
+		local offset_x = coherency_icon_offset_x + coherency_icon_size + ability_spacing + (i - 1) * ability_spacing
 		
 		instance.widget_definitions[ability_type.name .. "_icon"] = UIWidget.create_definition({
 			{
@@ -390,8 +369,8 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 				style_id = "icon",
 				value = "content/ui/materials/frames/talents/talent_icon_container",
 				style = {
-					horizontal_alignment = "left",
-					vertical_alignment = "top",
+					horizontal_alignment = "right",
+					vertical_alignment = "center",
 					scale_to_material = true,
 					material_values = {
 						frame = "content/ui/textures/frames/talents/" .. ability_type.frame,
@@ -403,8 +382,8 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					},
 					offset = {
 						offset_x,
-						offset_y,
-						2,
+						vertical_offset,
+						1,
 					},
 					size = {
 						icon_size,
@@ -413,7 +392,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					color = UIHudSettings.color_tint_main_2,
 				},
 			},
-		}, "background")
+		}, "bar")
 		
 		instance.widget_definitions[ability_type.name .. "_text"] = UIWidget.create_definition({
 			{
@@ -422,10 +401,10 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 				value_id = "text",
 				value = "",
 				style = {
-					horizontal_alignment = "left",
-					vertical_alignment = "top",
-					text_horizontal_alignment = text_horizontal_alignment,
-					text_vertical_alignment = text_vertical_alignment,
+					horizontal_alignment = "right",
+					vertical_alignment = "center",
+					text_horizontal_alignment = "center",
+					text_vertical_alignment = "center",
 					font_type = hud_body_font_settings.font_type or "machine_medium",
 					font_size = TalentUISettings.cooldown_font_size,
 					line_spacing = 1.2,
@@ -433,37 +412,24 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					drop_shadow = true,
 					offset = {
 						offset_x,
-						offset_y,
+						vertical_offset,
 						3,
 					},
 					size = {
-						icon_size + 10,
+						icon_size,
 						icon_size,
 					},
 				},
 			},
-		}, "background")
+		}, "bar")
 	end
 end)
 
 local function update_teammate_all_abilities(self, player, dt)
 	local player_name = player:name()
 
-	if not player_name then
-		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
-			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
-			local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
-			if icon_widget then
-				icon_widget.visible = false
-			end
-			if text_widget then
-				text_widget.visible = false
-			end
-		end
-		return
-	end
-
-	if not player_name then
+	local player_peer_id = player:peer_id()
+	if not player_peer_id then
 		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
 			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
 			local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
@@ -531,11 +497,19 @@ local function update_teammate_all_abilities(self, player, dt)
 		return
 	end
 	
-	local ability_spacing = TalentUISettings.ability_spacing or 50
-	local horizontal_offset = TalentUISettings.icon_horizontal_offset or 0
-	local vertical_offset = TalentUISettings.icon_vertical_offset or 0
-	local icon_orientation = TalentUISettings.icon_orientation or "vertical"
-	local icon_size = TalentUISettings.ability_icon_size or 40
+	local coherency_widget = self._widgets_by_name.coherency_indicator
+	local coherency_icon_offset_x = 34
+	local coherency_icon_size = 24
+	
+	if coherency_widget and coherency_widget.style and coherency_widget.style.texture and coherency_widget.style.texture.offset then
+		coherency_icon_offset_x = coherency_widget.style.texture.offset[1] - 15
+		if coherency_widget.style.texture.size then
+			coherency_icon_size = coherency_widget.style.texture.size[1]
+		end
+	end
+	
+	local ability_spacing = TalentUISettings.ability_spacing or 60
+	local vertical_offset = TalentUISettings.icon_position_vertical_offset or 0
 	
 	local abilities_to_show = {}
 	
@@ -546,10 +520,9 @@ local function update_teammate_all_abilities(self, player, dt)
 		if icon_widget then
 			local data_key = player_name .. "_" .. ability_info.id
 			
-			local ability_data = get_player_ability_by_type(player, extensions, ability_info.slot)
-			if ability_data and ability_data.ability_type and ability_data.icon then
-				local cached_data = teammate_abilities_data[data_key]
-				if not cached_data or cached_data.ability_type ~= ability_data.ability_type or cached_data.icon ~= ability_data.icon then
+			if not teammate_abilities_data[data_key] or not teammate_abilities_data[data_key].ability_type then
+				local ability_data = get_player_ability_by_type(player, extensions, ability_info.slot)
+				if ability_data then
 					teammate_abilities_data[data_key] = {
 						ability_id = ability_data.ability_id,
 						ability_type = ability_data.ability_type,
@@ -557,8 +530,8 @@ local function update_teammate_all_abilities(self, player, dt)
 					}
 				end
 			end
-
-			local has_ability = teammate_abilities_data[data_key] and teammate_abilities_data[data_key].ability_type
+			
+			local has_ability = teammate_abilities_data[data_key] and teammate_abilities_data[data_key].ability_type ~= nil
 			local show_icon = true
 			if ability_info.id == "ability" then
 				show_icon = mod:get("show_teammate_ability_icon")
@@ -579,25 +552,13 @@ local function update_teammate_all_abilities(self, player, dt)
 	
 	local enabled_abilities = {}
 	local total_abilities = #abilities_to_show
-	local is_horizontal = icon_orientation == "horizontal"
-
 	for position_index = 1, total_abilities do
 		local ability_data = abilities_to_show[position_index]
-		local offset_x, offset_y
-
-		if is_horizontal then
-			offset_x = horizontal_offset + ability_spacing + (position_index - 1) * (icon_size + ability_spacing)
-			offset_y = vertical_offset
-		else
-			offset_x = horizontal_offset + ability_spacing
-			offset_y = vertical_offset + (position_index - 1) * 28
-		end
-
+		local offset_x = coherency_icon_offset_x + coherency_icon_size + ability_spacing + (total_abilities - position_index) * ability_spacing
 		enabled_abilities[ability_data.ability_info.id] = {
 			ability_info = ability_data.ability_info,
 			position = position_index,
 			offset_x = offset_x,
-			offset_y = offset_y,
 		}
 	end
 	
@@ -624,46 +585,20 @@ local function update_teammate_all_abilities(self, player, dt)
 				
 				local ability_position = enabled_abilities[ability_info.id]
 				
-				if not show_icon or not ability_position or not ability_position.offset_x or not ability_position.offset_y then
+				if not show_icon or not ability_position then
 					icon_widget.visible = false
 					if text_widget then
 						text_widget.visible = false
 					end
 				else
 					local new_offset_x = ability_position.offset_x
-					local new_offset_y = ability_position.offset_y
-					
-					if icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.offset then
-						if icon_widget.style.icon.offset[1] ~= new_offset_x then
-							icon_widget.style.icon.offset[1] = new_offset_x
-							icon_widget.dirty = true
-						end
-						if icon_widget.style.icon.offset[2] ~= new_offset_y then
-							icon_widget.style.icon.offset[2] = new_offset_y
-							icon_widget.dirty = true
-						end
+					if icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.offset and icon_widget.style.icon.offset[1] ~= new_offset_x then
+						icon_widget.style.icon.offset[1] = new_offset_x
+						icon_widget.dirty = true
 					end
-					
-					if text_widget and text_widget.style and text_widget.style.text then
-						if text_widget.style.text.offset then
-							local text_offset_x = new_offset_x -- - 23
-							if text_widget.style.text.offset[1] ~= text_offset_x then
-								text_widget.style.text.offset[1] = text_offset_x
-								text_widget.dirty = true
-							end
-							if text_widget.style.text.offset[2] ~= new_offset_y then
-								text_widget.style.text.offset[2] = new_offset_y
-								text_widget.dirty = true
-							end
-						end
-						
-						if text_widget.style.text.size then
-							if text_widget.style.text.size[1] ~= icon_size or text_widget.style.text.size[2] ~= icon_size then
-								text_widget.style.text.size[1] = icon_size
-								text_widget.style.text.size[2] = icon_size
-								text_widget.dirty = true
-							end
-						end
+					if text_widget and text_widget.style and text_widget.style.text and text_widget.style.text.offset and text_widget.style.text.offset[1] ~= new_offset_x then
+						text_widget.style.text.offset[1] = new_offset_x
+						text_widget.dirty = true
 					end
 					
 					local cooldown_progress, on_cooldown, remaining_charges, has_charges_left, max_charges = get_ability_state(player, extensions, ability_type)
@@ -806,10 +741,6 @@ local function update_player_features_hook(func, self, dt, t, player, ui_rendere
 	func(self, dt, t, player, ui_renderer)
 	
 	update_teammate_all_abilities(self, player, dt)
-	
-	if mod.update_teammate_weapons then
-		mod.update_teammate_weapons(self, player, dt)
-	end
 end
 
 mod:hook("HudElementTeamPlayerPanel", "_update_player_features", update_player_features_hook)
@@ -822,9 +753,6 @@ mod:hook_safe("HudElementTeamPlayerPanel", "destroy", function(self)
 		end)
 		if success and player_name then
 			mod.clear_teammate_all_abilities_data(player_name)
-			if mod.clear_teammate_weapons_data then
-				mod.clear_teammate_weapons_data(player_identifier)
-			end
 		end
 	end
 end)
