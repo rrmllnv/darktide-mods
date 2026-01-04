@@ -12,6 +12,7 @@ local SETTINGS = {
 	teammate_ability_icon_size = 33,
 	teammate_ability_spacing = 0,
 	teammate_ability_cooldown_font_size = 15,
+	teammate_ability_text_offset = 10,
 
 	teammate_ability_icon_material_settings = {
 		ability = {

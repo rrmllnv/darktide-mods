@@ -18,7 +18,7 @@ local TalentUISettings = mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_
 
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	local icon_size = TalentUISettings.teammate_ability_icon_size
-	local icon_text_alignment = TalentUISettings.teammate_ability_text_alignment or "left"
+	local icon_text_alignment = TalentUISettings.teammate_ability_text_alignment
 	
 	local text_horizontal_alignment = "center"
 	local text_vertical_alignment = "center"
@@ -106,8 +106,8 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 		}, "background")
 	end
 	
-	local weapon_icon_width = TalentUISettings.teammate_weapon_icon_width or 96
-	local weapon_icon_height = TalentUISettings.teammate_weapon_icon_height or 36
+	local weapon_icon_width = TalentUISettings.teammate_weapon_icon_width
+	local weapon_icon_height = TalentUISettings.teammate_weapon_icon_height
 	
 	for i = 1, #WEAPON_SLOTS do
 		local weapon_slot = WEAPON_SLOTS[i]
