@@ -104,6 +104,35 @@ return {
 					},
 				},
 			},
+			{
+				setting_id = "group_teammate_weapon_common",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "teammate_weapon_vertical_offset",
+						type = "numeric",
+						default_value = 20,
+						range = { -50, 350 },
+						decimals_number = 0,
+					},
+					{
+						setting_id = "teammate_weapon_horizontal_offset",
+						type = "numeric",
+						default_value = 330,
+						range = { -50, 400 },
+						decimals_number = 0,
+					},
+					{
+						setting_id = "teammate_weapon_orientation",
+						type = "dropdown",
+						default_value = "vertical",
+						options = {
+							{ text = "vertical", value = "vertical" },
+							{ text = "horizontal", value = "horizontal" },
+						},
+					},
+				},
+			},
 
 			{
 				setting_id = "group_local_player",

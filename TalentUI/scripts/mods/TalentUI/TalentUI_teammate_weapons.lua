@@ -142,11 +142,11 @@ local function update_teammate_weapons(self, player, dt)
 	end
 	
 	local weapon_spacing = TalentUISettings.teammate_weapon_spacing
-	local weapon_horizontal_offset = TalentUISettings.teammate_weapon_horizontal_offset
-	local weapon_vertical_offset = TalentUISettings.teammate_weapon_vertical_offset
+	local weapon_horizontal_offset = mod:get("teammate_weapon_horizontal_offset") or TalentUISettings.teammate_weapon_horizontal_offset
+	local weapon_vertical_offset = mod:get("teammate_weapon_vertical_offset") or TalentUISettings.teammate_weapon_vertical_offset
 	local weapon_icon_width = TalentUISettings.teammate_weapon_icon_width
 	local weapon_icon_height = TalentUISettings.teammate_weapon_icon_height
-	local weapon_orientation = TalentUISettings.teammate_weapon_orientation
+	local weapon_orientation = mod:get("teammate_weapon_orientation") or TalentUISettings.teammate_weapon_orientation
 	
 	local weapons_to_show = {}
 	

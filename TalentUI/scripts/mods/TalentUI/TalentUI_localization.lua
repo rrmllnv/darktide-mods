@@ -23,6 +23,10 @@ return {
 		en = "Teammate Aura",
 		ru = "Аура тимейтов",
 	},
+	group_teammate_weapon_common = {
+		en = "Common Weapon Settings",
+		ru = "Общие настройки оружия",
+	},
 	group_local_player = {
 		en = "Local Player",
 		ru = "Локальный игрок",
@@ -90,6 +94,18 @@ return {
 	teammate_ability_icon_size = {
 		en = "Icon Size",
 		ru = "Размер иконки",
+	},
+	teammate_weapon_horizontal_offset = {
+		en = "Horizontal Offset",
+		ru = "Горизонтальное смещение",
+	},
+	teammate_weapon_vertical_offset = {
+		en = "Vertical Offset",
+		ru = "Вертикальное смещение",
+	},
+	teammate_weapon_orientation = {
+		en = "Orientation",
+		ru = "Ориентация",
 	},
 	vertical = {
 		en = "Vertical",
