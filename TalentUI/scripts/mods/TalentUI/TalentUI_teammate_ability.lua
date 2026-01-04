@@ -23,6 +23,7 @@ mod.teammate_abilities_data = teammate_abilities_data
 
 local player_previous_human_state = {}
 
+
 local function get_talent_from_character_sheet(player, ability_key)
 	local profile = player and player:profile()
 
@@ -407,17 +408,12 @@ local function update_teammate_all_abilities(self, player, dt)
 		return
 	end
 	
-	local ability_spacing = TalentUISettings.teammate_ability_spacing
-	local horizontal_offset = mod:get("teammate_ability_horizontal_offset") or TalentUISettings.teammate_ability_horizontal_offset
-	local vertical_offset = mod:get("teammate_ability_vertical_offset") or TalentUISettings.teammate_ability_vertical_offset
-	local icon_orientation = mod:get("teammate_ability_orientation") or TalentUISettings.teammate_ability_orientation
 	local icon_size = mod:get("teammate_ability_icon_size") or TalentUISettings.teammate_ability_icon_size
-	
-	local abilities_to_show = {}
 	
 	for i = 1, #TALENT_ABILITY_METADATA do
 		local ability_info = TALENT_ABILITY_METADATA[i]
 		local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_icon"]
+		local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_text"]
 		
 		if icon_widget then
 			local data_key = player_name .. "_" .. ability_info.id
@@ -445,143 +441,44 @@ local function update_teammate_all_abilities(self, player, dt)
 			end
 			
 			if has_ability and show_icon then
-				table.insert(abilities_to_show, {
-					ability_info = ability_info,
-					data_key = data_key,
-				})
-			end
-		end
-	end
-	
-	local enabled_abilities = {}
-	local total_abilities = #abilities_to_show
-	local is_horizontal = icon_orientation == "horizontal"
-
-	for position_index = 1, total_abilities do
-		local ability_data = abilities_to_show[position_index]
-		local offset_x, offset_y
-
-		if is_horizontal then
-			offset_x = horizontal_offset + ability_spacing + (position_index - 1) * (icon_size + ability_spacing)
-			offset_y = vertical_offset
-		else
-			offset_x = horizontal_offset + ability_spacing
-			offset_y = vertical_offset + (position_index - 1) * 28
-		end
-
-		enabled_abilities[ability_data.ability_info.id] = {
-			ability_info = ability_data.ability_info,
-			position = position_index,
-			offset_x = offset_x,
-			offset_y = offset_y,
-		}
-	end
-	
-	for i = 1, #TALENT_ABILITY_METADATA do
-		local ability_info = TALENT_ABILITY_METADATA[i]
-		local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_icon"]
-		local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_text"]
-		
-		if icon_widget then
-			local data_key = player_name .. "_" .. ability_info.id
-			
-			if icon_widget and teammate_abilities_data[data_key] and teammate_abilities_data[data_key].ability_type then
 				local ability_type = teammate_abilities_data[data_key].ability_type
 				local icon = teammate_abilities_data[data_key].icon
 				
-				local show_icon = true
-				if ability_info.id == "ability" then
-					show_icon = mod:get("show_teammate_ability_icon")
-				elseif ability_info.id == "blitz" then
-					show_icon = mod:get("show_teammate_blitz_icon")
-				elseif ability_info.id == "aura" then
-					show_icon = mod:get("show_teammate_aura_icon")
+				if text_widget and text_widget.style and text_widget.style.text then
+					if text_widget.style.text.size then
+						if text_widget.style.text.size[1] ~= icon_size or text_widget.style.text.size[2] ~= icon_size then
+							text_widget.style.text.size[1] = icon_size
+							text_widget.style.text.size[2] = icon_size
+							text_widget.dirty = true
+						end
+					end
 				end
 				
-				local ability_position = enabled_abilities[ability_info.id]
+				local cooldown_progress, on_cooldown, remaining_charges, has_charges_left, max_charges = get_ability_state(player, extensions, ability_type)
+				local uses_charges = max_charges > 1
 				
-				if not show_icon or not ability_position or not ability_position.offset_x or not ability_position.offset_y then
-					icon_widget.visible = false
-					if text_widget then
-						text_widget.visible = false
-					end
-				else
-					local new_offset_x = ability_position.offset_x
-					local new_offset_y = ability_position.offset_y
-					
-					if icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.offset then
-						if icon_widget.style.icon.offset[1] ~= new_offset_x then
-							icon_widget.style.icon.offset[1] = new_offset_x
-							icon_widget.dirty = true
-						end
-						if icon_widget.style.icon.offset[2] ~= new_offset_y then
-							icon_widget.style.icon.offset[2] = new_offset_y
-							icon_widget.dirty = true
-						end
-					end
-					
-					if text_widget and text_widget.style and text_widget.style.text then
-						if text_widget.style.text.offset then
-							local icon_text_alignment = mod:get("teammate_ability_text_alignment") or TalentUISettings.teammate_ability_text_alignment
-							local text_offset_x = new_offset_x
-							local text_offset_y = new_offset_y
-							
-							local text_offset = TalentUISettings.teammate_ability_text_offset
-							
-							if icon_text_alignment == "left" then
-								text_offset_x = new_offset_x - text_offset
-							elseif icon_text_alignment == "right" then
-								text_offset_x = new_offset_x + text_offset
-							elseif icon_text_alignment == "top" then
-								text_offset_y = new_offset_y - text_offset
-							elseif icon_text_alignment == "bottom" then
-								text_offset_y = new_offset_y + text_offset
-							end
-							
-							if text_widget.style.text.offset[1] ~= text_offset_x then
-								text_widget.style.text.offset[1] = text_offset_x
-								text_widget.dirty = true
-							end
-							if text_widget.style.text.offset[2] ~= text_offset_y then
-								text_widget.style.text.offset[2] = text_offset_y
-								text_widget.dirty = true
-							end
-						end
-						
-						if text_widget.style.text.size then
-							if text_widget.style.text.size[1] ~= icon_size or text_widget.style.text.size[2] ~= icon_size then
-								text_widget.style.text.size[1] = icon_size
-								text_widget.style.text.size[2] = icon_size
-								text_widget.dirty = true
-							end
-						end
-					end
-					
-					local cooldown_progress, on_cooldown, remaining_charges, has_charges_left, max_charges = get_ability_state(player, extensions, ability_type)
-					local uses_charges = max_charges > 1
-					
-					local gradient_map = get_ability_gradient_map(ability_info.id)
-					if gradient_map and icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.material_values and icon_widget.style.icon.material_values.gradient_map ~= gradient_map then
-						icon_widget.style.icon.material_values.gradient_map = gradient_map
-						icon_widget.dirty = true
-					end
-					
-					local material_settings = get_ability_material_settings(ability_info.id, on_cooldown, uses_charges, has_charges_left, max_charges)
-					
-					if icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.material_values then
-						icon_widget.style.icon.material_values.intensity = material_settings.intensity
-						icon_widget.style.icon.material_values.saturation = material_settings.saturation
-						icon_widget.dirty = true
-					end
-					
-					if icon and icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.material_values then
-						icon_widget.style.icon.material_values.icon = icon
-						icon_widget.dirty = true
-					end
-					
-					icon_widget.visible = true
-					
-					if text_widget then
+				local gradient_map = get_ability_gradient_map(ability_info.id)
+				if gradient_map and icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.material_values and icon_widget.style.icon.material_values.gradient_map ~= gradient_map then
+					icon_widget.style.icon.material_values.gradient_map = gradient_map
+					icon_widget.dirty = true
+				end
+				
+				local material_settings = get_ability_material_settings(ability_info.id, on_cooldown, uses_charges, has_charges_left, max_charges)
+				
+				if icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.material_values then
+					icon_widget.style.icon.material_values.intensity = material_settings.intensity
+					icon_widget.style.icon.material_values.saturation = material_settings.saturation
+					icon_widget.dirty = true
+				end
+				
+				if icon and icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.material_values then
+					icon_widget.style.icon.material_values.icon = icon
+					icon_widget.dirty = true
+				end
+				
+				icon_widget.visible = true
+				
+				if text_widget then
 					local display_text = ""
 					local show_text = true
 					
@@ -660,10 +557,9 @@ local function update_teammate_all_abilities(self, player, dt)
 						end
 					end
 					
-						text_widget.content.text = display_text
-						text_widget.visible = show_text and display_text ~= ""
-						text_widget.dirty = true
-					end
+					text_widget.content.text = display_text
+					text_widget.visible = show_text and display_text ~= ""
+					text_widget.dirty = true
 				end
 			else
 				icon_widget.visible = false

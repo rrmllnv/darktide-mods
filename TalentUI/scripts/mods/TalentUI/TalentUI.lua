@@ -40,10 +40,39 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 		text_vertical_alignment = "center"
 	end
 
+	local ability_spacing = TalentUISettings.teammate_ability_spacing
+	local horizontal_offset = mod:get("teammate_ability_horizontal_offset") or TalentUISettings.teammate_ability_horizontal_offset
+	local vertical_offset = mod:get("teammate_ability_vertical_offset") or TalentUISettings.teammate_ability_vertical_offset
+	local icon_orientation = mod:get("teammate_ability_orientation") or TalentUISettings.teammate_ability_orientation
+	local is_horizontal = icon_orientation == "horizontal"
+	
+	local text_offset = TalentUISettings.teammate_ability_text_offset
+	
 	for i = 1, #TALENT_ABILITY_METADATA do
 		local ability_type = TALENT_ABILITY_METADATA[i]
-		local offset_x = 0
-		local offset_y = 0
+		local position_index = i
+		local offset_x, offset_y
+		
+		if is_horizontal then
+			offset_x = horizontal_offset + ability_spacing + (position_index - 1) * (icon_size + ability_spacing)
+			offset_y = vertical_offset
+		else
+			offset_x = horizontal_offset + ability_spacing
+			offset_y = vertical_offset + (position_index - 1) * 28
+		end
+		
+		local text_offset_x = offset_x
+		local text_offset_y = offset_y
+		
+		if icon_text_alignment == "left" then
+			text_offset_x = offset_x - text_offset
+		elseif icon_text_alignment == "right" then
+			text_offset_x = offset_x + text_offset
+		elseif icon_text_alignment == "top" then
+			text_offset_y = offset_y - text_offset
+		elseif icon_text_alignment == "bottom" then
+			text_offset_y = offset_y + text_offset
+		end
 		
 		instance.widget_definitions[ability_type.name .. "_icon"] = UIWidget.create_definition({
 			{
@@ -93,8 +122,8 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					text_color = UIHudSettings.color_tint_main_1,
 					drop_shadow = true,
 					offset = {
-						offset_x,
-						offset_y,
+						text_offset_x,
+						text_offset_y,
 						3,
 					},
 					size = {
