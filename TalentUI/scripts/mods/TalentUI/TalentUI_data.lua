@@ -113,7 +113,7 @@ return {
 					{
 						setting_id = "teammate_ability_cooldown_font_size",
 						type = "numeric",
-						default_value = 13,
+						default_value = 12,
 						range = { 10, 30 },
 						decimals_number = 0,
 					},
