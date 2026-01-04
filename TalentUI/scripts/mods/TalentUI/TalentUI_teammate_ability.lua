@@ -522,13 +522,26 @@ local function update_teammate_all_abilities(self, player, dt)
 					
 					if text_widget and text_widget.style and text_widget.style.text then
 						if text_widget.style.text.offset then
-							local text_offset_x = new_offset_x -- - 23
+							local icon_text_alignment = TalentUISettings.teammate_ability_text_alignment or "left"
+							local text_offset_x = new_offset_x
+							local text_offset_y = new_offset_y
+							
+							if icon_text_alignment == "left" then
+								text_offset_x = new_offset_x - icon_size / 3
+							elseif icon_text_alignment == "right" then
+								text_offset_x = new_offset_x + icon_size / 3	
+							elseif icon_text_alignment == "top" then
+								text_offset_y = new_offset_y - icon_size / 2
+							elseif icon_text_alignment == "bottom" then
+								text_offset_y = new_offset_y + icon_size / 2
+							end
+							
 							if text_widget.style.text.offset[1] ~= text_offset_x then
 								text_widget.style.text.offset[1] = text_offset_x
 								text_widget.dirty = true
 							end
-							if text_widget.style.text.offset[2] ~= new_offset_y then
-								text_widget.style.text.offset[2] = new_offset_y
+							if text_widget.style.text.offset[2] ~= text_offset_y then
+								text_widget.style.text.offset[2] = text_offset_y
 								text_widget.dirty = true
 							end
 						end

@@ -98,7 +98,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 						3,
 					},
 					size = {
-						icon_size + 10,
+						icon_size,
 						icon_size,
 					},
 				},
