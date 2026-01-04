@@ -1,10 +1,5 @@
 local mod = get_mod("TalentUI")
 
-local TEAM_HUD_DEF_PATH = "scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_definitions"
-
-local UIWidget = require("scripts/managers/ui/ui_widget")
-local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
-local HudElementTeamPlayerPanelSettings = require("scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_settings")
 local MasterItems = require("scripts/backend/master_items")
 
 local TalentUISettings = mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_settings")
@@ -95,39 +90,6 @@ local function get_player_weapon_by_slot(player, extensions, slot_name)
 	}
 end
 
-mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
-	local weapon_icon_width = TalentUISettings.weapon_icon_width or 96
-	local weapon_icon_height = TalentUISettings.weapon_icon_height or 36
-	
-	for i = 1, #WEAPON_SLOTS do
-		local weapon_slot = WEAPON_SLOTS[i]
-		local offset_x = 0
-		local offset_y = 0
-		
-		instance.widget_definitions[weapon_slot.name .. "_icon"] = UIWidget.create_definition({
-			{
-				pass_type = "texture",
-				style_id = "icon",
-				value_id = "icon",
-				value = "content/ui/materials/icons/weapons/hud/combat_blade_01",
-				style = {
-					horizontal_alignment = "left",
-					vertical_alignment = "top",
-					offset = {
-						offset_x,
-						offset_y,
-						1,
-					},
-					size = {
-						weapon_icon_width,
-						weapon_icon_height,
-					},
-					color = UIHudSettings.color_tint_main_2,
-				},
-			},
-		}, "background")
-	end
-end)
 
 local function update_teammate_weapons(self, player, dt)
 	if not self._widgets_by_name then

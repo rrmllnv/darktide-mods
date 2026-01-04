@@ -19,6 +19,7 @@ local HudElementTeamPlayerPanelSettings = require("scripts/ui/hud/elements/team_
 local HudElementPlayerAbilitySettings = require("scripts/ui/hud/elements/player_ability/hud_element_player_ability_settings")
 local FixedFrame = require("scripts/utilities/fixed_frame")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
+local MasterItems = require("scripts/backend/master_items")
 
 local hud_body_font_settings = UIFontSettings.hud_body
 
@@ -355,6 +356,19 @@ local function get_ability_material_settings(ability_id, on_cooldown, uses_charg
 	return {intensity = 0, saturation = 1}
 end
 
+local WEAPON_SLOTS = {
+	{
+		id = "primary",
+		slot = "slot_primary",
+		name = "talent_ui_weapon_primary",
+	},
+	{
+		id = "secondary",
+		slot = "slot_secondary",
+		name = "talent_ui_weapon_secondary",
+	},
+}
+
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	local icon_size = TalentUISettings.ability_icon_size
 	local icon_text_alignment = TalentUISettings.icon_text_alignment or "left"
@@ -440,6 +454,38 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 						icon_size + 10,
 						icon_size,
 					},
+				},
+			},
+		}, "background")
+	end
+	
+	local weapon_icon_width = TalentUISettings.weapon_icon_width or 96
+	local weapon_icon_height = TalentUISettings.weapon_icon_height or 36
+	
+	for i = 1, #WEAPON_SLOTS do
+		local weapon_slot = WEAPON_SLOTS[i]
+		local offset_x = 0
+		local offset_y = 0
+		
+		instance.widget_definitions[weapon_slot.name .. "_icon"] = UIWidget.create_definition({
+			{
+				pass_type = "texture",
+				style_id = "icon",
+				value_id = "icon",
+				value = "content/ui/materials/icons/weapons/hud/combat_blade_01",
+				style = {
+					horizontal_alignment = "left",
+					vertical_alignment = "top",
+					offset = {
+						offset_x,
+						offset_y,
+						1,
+					},
+					size = {
+						weapon_icon_width,
+						weapon_icon_height,
+					},
+					color = UIHudSettings.color_tint_main_2,
 				},
 			},
 		}, "background")
@@ -823,7 +869,12 @@ mod:hook_safe("HudElementTeamPlayerPanel", "destroy", function(self)
 		if success and player_name then
 			mod.clear_teammate_all_abilities_data(player_name)
 			if mod.clear_teammate_weapons_data then
-				mod.clear_teammate_weapons_data(player_identifier)
+				local player_peer_id = player:peer_id()
+				if player_peer_id then
+					local player_unique_id = player:unique_id()
+					local player_identifier = player_unique_id or tostring(player_peer_id)
+					mod.clear_teammate_weapons_data(player_identifier)
+				end
 			end
 		end
 	end
