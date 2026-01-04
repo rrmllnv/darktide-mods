@@ -513,7 +513,8 @@ local function update_teammate_all_abilities(self, player, dt)
 	end
 	
 	local ability_spacing = TalentUISettings.ability_spacing or 50
-	local vertical_offset = TalentUISettings.icon_position_vertical_offset or 0
+	local horizontal_offset = TalentUISettings.icon_horizontal_offset or 0
+	local vertical_offset = TalentUISettings.icon_vertical_offset or 0
 	local icon_size = TalentUISettings.ability_icon_size or 40
 	
 	local abilities_to_show = {}
@@ -560,7 +561,7 @@ local function update_teammate_all_abilities(self, player, dt)
 	local total_abilities = #abilities_to_show
 	for position_index = 1, total_abilities do
 		local ability_data = abilities_to_show[position_index]
-		local offset_x = ability_spacing
+		local offset_x = horizontal_offset + ability_spacing
 		local offset_y = vertical_offset + (position_index - 1) * 28
 		--mod:echo(offset_x .. " " .. offset_y)
 		enabled_abilities[ability_data.ability_info.id] = {

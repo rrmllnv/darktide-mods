@@ -6,7 +6,8 @@ local SETTINGS = {
 	cooldown_font_size = 15,
 	local_cooldown_font_size = 40,
 
-	icon_position_vertical_offset = -10,
+	icon_vertical_offset = -10,
+	icon_horizontal_offset = 0,
 	ability_icon_size = 33,
 	ability_spacing = 0,
 
