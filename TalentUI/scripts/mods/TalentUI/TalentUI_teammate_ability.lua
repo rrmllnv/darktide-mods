@@ -408,10 +408,10 @@ local function update_teammate_all_abilities(self, player, dt)
 	end
 	
 	local ability_spacing = TalentUISettings.teammate_ability_spacing
-	local horizontal_offset = TalentUISettings.teammate_ability_horizontal_offset
-	local vertical_offset = TalentUISettings.teammate_ability_vertical_offset
-	local icon_orientation = TalentUISettings.teammate_ability_orientation
-	local icon_size = TalentUISettings.teammate_ability_icon_size
+	local horizontal_offset = mod:get("teammate_ability_horizontal_offset") or TalentUISettings.teammate_ability_horizontal_offset
+	local vertical_offset = mod:get("teammate_ability_vertical_offset") or TalentUISettings.teammate_ability_vertical_offset
+	local icon_orientation = mod:get("teammate_ability_orientation") or TalentUISettings.teammate_ability_orientation
+	local icon_size = mod:get("teammate_ability_icon_size") or TalentUISettings.teammate_ability_icon_size
 	
 	local abilities_to_show = {}
 	
@@ -522,7 +522,7 @@ local function update_teammate_all_abilities(self, player, dt)
 					
 					if text_widget and text_widget.style and text_widget.style.text then
 						if text_widget.style.text.offset then
-							local icon_text_alignment = TalentUISettings.teammate_ability_text_alignment
+							local icon_text_alignment = mod:get("teammate_ability_text_alignment") or TalentUISettings.teammate_ability_text_alignment
 							local text_offset_x = new_offset_x
 							local text_offset_y = new_offset_y
 							

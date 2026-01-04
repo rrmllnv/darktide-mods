@@ -9,7 +9,7 @@ local SETTINGS = {
 	teammate_ability_horizontal_offset = 0,
 	teammate_ability_orientation = "vertical", -- horizontal, vertical
 	teammate_ability_text_alignment = "left", -- left, top, right, bottom, center
-	teammate_ability_icon_size = 33,
+	teammate_ability_icon_size = 30,
 	teammate_ability_spacing = 0,
 	teammate_ability_cooldown_font_size = 13,
 	teammate_ability_text_offset = 10,
@@ -42,7 +42,7 @@ local SETTINGS = {
 	teammate_weapon_icon_height = 26, -- 36,
 	teammate_weapon_spacing = 0,
 	teammate_weapon_horizontal_offset = 330, -- 163
-	teammate_weapon_vertical_offset = 16, -- 16
+	teammate_weapon_vertical_offset = 20, -- 20
 	teammate_weapon_orientation = "vertical", -- horizontal, vertical
 }
 

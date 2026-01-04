@@ -11,6 +11,10 @@ return {
 		en = "Teammate Ability",
 		ru = "Способность тимейтов",
 	},
+	group_teammate_ability_common = {
+		en = "Common Ability Settings",
+		ru = "Общие настройки способностей",
+	},
 	group_teammate_blitz = {
 		en = "Teammate Blitz",
 		ru = "Blitz тимейтов",
@@ -62,6 +66,58 @@ return {
 	local_cooldown_font_size = {
 		en = "Font Size",
 		ru = "Размер шрифта",
+	},
+	teammate_ability_vertical_offset = {
+		en = "Vertical Offset",
+		ru = "Вертикальное смещение",
+	},
+	teammate_ability_horizontal_offset = {
+		en = "Horizontal Offset",
+		ru = "Горизонтальное смещение",
+	},
+	teammate_ability_orientation = {
+		en = "Orientation",
+		ru = "Ориентация",
+	},
+	teammate_ability_text_alignment = {
+		en = "Text Alignment",
+		ru = "Выравнивание текста",
+	},
+	teammate_ability_cooldown_font_size = {
+		en = "Cooldown Font Size",
+		ru = "Размер шрифта кулдауна",
+	},
+	teammate_ability_icon_size = {
+		en = "Icon Size",
+		ru = "Размер иконки",
+	},
+	vertical = {
+		en = "Vertical",
+		ru = "Вертикально",
+	},
+	horizontal = {
+		en = "Horizontal",
+		ru = "Горизонтально",
+	},
+	left = {
+		en = "Left",
+		ru = "Слева",
+	},
+	top = {
+		en = "Top",
+		ru = "Сверху",
+	},
+	right = {
+		en = "Right",
+		ru = "Справа",
+	},
+	bottom = {
+		en = "Bottom",
+		ru = "Снизу",
+	},
+	center = {
+		en = "Center",
+		ru = "По центру",
 	},
 }
 

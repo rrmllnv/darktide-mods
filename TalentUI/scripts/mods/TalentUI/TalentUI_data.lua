@@ -50,6 +50,62 @@ return {
 				},
 			},
 			{
+				setting_id = "group_teammate_ability_common",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "teammate_ability_vertical_offset",
+						type = "numeric",
+						default_value = -10,
+						range = { -50, 100 },
+						decimals_number = 0,
+					},
+					{
+						setting_id = "teammate_ability_horizontal_offset",
+						type = "numeric",
+						default_value = 0,
+						range = { -50, 400 },
+						decimals_number = 0,
+					},
+					{
+						setting_id = "teammate_ability_orientation",
+						type = "dropdown",
+						default_value = "vertical",
+						options = {
+							{ text = "vertical", value = "vertical" },
+							{ text = "horizontal", value = "horizontal" },
+						},
+					},
+					{
+						setting_id = "teammate_ability_text_alignment",
+						type = "dropdown",
+						default_value = "left",
+						options = {
+							{ text = "left", value = "left" },
+							{ text = "top", value = "top" },
+							{ text = "right", value = "right" },
+							{ text = "bottom", value = "bottom" },
+							{ text = "center", value = "center" },
+						},
+					},
+					{
+						setting_id = "teammate_ability_cooldown_font_size",
+						type = "numeric",
+						default_value = 13,
+						range = { 10, 30 },
+						decimals_number = 0,
+					},
+					{
+						setting_id = "teammate_ability_icon_size",
+						type = "numeric",
+						default_value = 33,
+						range = { 30, 100 },
+						decimals_number = 0,
+					},
+				},
+			},
+
+			{
 				setting_id = "group_local_player",
 				type = "group",
 				sub_widgets = {

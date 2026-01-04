@@ -17,8 +17,8 @@ local hud_body_font_settings = UIFontSettings.hud_body
 local TalentUISettings = mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_settings")
 
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
-	local icon_size = TalentUISettings.teammate_ability_icon_size
-	local icon_text_alignment = TalentUISettings.teammate_ability_text_alignment
+	local icon_size = mod:get("teammate_ability_icon_size") or TalentUISettings.teammate_ability_icon_size
+	local icon_text_alignment = mod:get("teammate_ability_text_alignment") or TalentUISettings.teammate_ability_text_alignment
 	
 	local text_horizontal_alignment = "center"
 	local text_vertical_alignment = "center"
@@ -88,7 +88,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					text_horizontal_alignment = text_horizontal_alignment,
 					text_vertical_alignment = text_vertical_alignment,
 					font_type = hud_body_font_settings.font_type or "machine_medium",
-					font_size = TalentUISettings.teammate_ability_cooldown_font_size,
+					font_size = mod:get("teammate_ability_cooldown_font_size") or TalentUISettings.teammate_ability_cooldown_font_size,
 					line_spacing = 1.2,
 					text_color = UIHudSettings.color_tint_main_1,
 					drop_shadow = true,
