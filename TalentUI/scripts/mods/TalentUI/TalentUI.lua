@@ -58,7 +58,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 			offset_y = vertical_offset
 		else
 			offset_x = horizontal_offset + ability_spacing
-			offset_y = vertical_offset + (position_index - 1) * 28
+			offset_y = vertical_offset + ability_spacing + (position_index - 1) * (icon_size + ability_spacing)
 		end
 		
 		local text_offset_x = offset_x
