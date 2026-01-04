@@ -96,8 +96,8 @@ local function get_player_weapon_by_slot(player, extensions, slot_name)
 end
 
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
-	local weapon_icon_width = TalentUISettings.weapon_icon_width or 100
-	local weapon_icon_height = TalentUISettings.weapon_icon_height or 50
+	local weapon_icon_width = TalentUISettings.weapon_icon_width or 128
+	local weapon_icon_height = TalentUISettings.weapon_icon_height or 48
 	local coherency_icon_offset_x = 34
 	local coherency_icon_size = 24
 	local ability_spacing = TalentUISettings.ability_spacing or 50
