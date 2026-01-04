@@ -356,16 +356,12 @@ local function get_ability_material_settings(ability_id, on_cooldown, uses_charg
 end
 
 mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
-	local bar_size = HudElementTeamPlayerPanelSettings.size
 	local icon_size = TalentUISettings.ability_icon_size
-	local coherency_icon_offset_x = 34
-	local coherency_icon_size = 24
-	local ability_spacing = TalentUISettings.ability_spacing or 50
-	local vertical_offset = TalentUISettings.icon_position_vertical_offset or 0
 
 	for i = 1, #TALENT_ABILITY_METADATA do
 		local ability_type = TALENT_ABILITY_METADATA[i]
-		local offset_x = coherency_icon_offset_x + coherency_icon_size + ability_spacing + (i - 1) * ability_spacing
+		local offset_x = 0
+		local offset_y = 0
 		
 		instance.widget_definitions[ability_type.name .. "_icon"] = UIWidget.create_definition({
 			{
@@ -373,8 +369,8 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 				style_id = "icon",
 				value = "content/ui/materials/frames/talents/talent_icon_container",
 				style = {
-					horizontal_alignment = "right",
-					vertical_alignment = "center",
+					horizontal_alignment = "left",
+					vertical_alignment = "top",
 					scale_to_material = true,
 					material_values = {
 						frame = "content/ui/textures/frames/talents/" .. ability_type.frame,
@@ -386,7 +382,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					},
 					offset = {
 						offset_x,
-						vertical_offset,
+						offset_y,
 						1,
 					},
 					size = {
@@ -396,7 +392,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					color = UIHudSettings.color_tint_main_2,
 				},
 			},
-		}, "bar")
+		}, "background")
 		
 		instance.widget_definitions[ability_type.name .. "_text"] = UIWidget.create_definition({
 			{
@@ -405,8 +401,8 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 				value_id = "text",
 				value = "",
 				style = {
-					horizontal_alignment = "right",
-					vertical_alignment = "center",
+					horizontal_alignment = "left",
+					vertical_alignment = "top",
 					text_horizontal_alignment = "center",
 					text_vertical_alignment = "center",
 					font_type = hud_body_font_settings.font_type or "machine_medium",
@@ -416,7 +412,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					drop_shadow = true,
 					offset = {
 						offset_x,
-						vertical_offset,
+						offset_y,
 						3,
 					},
 					size = {
@@ -425,14 +421,29 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					},
 				},
 			},
-		}, "bar")
+		}, "background")
 	end
 end)
 
 local function update_teammate_all_abilities(self, player, dt)
-	local player_name = player:name()
-
 	local player_peer_id = player:peer_id()
+	local player_unique_id = player:unique_id()
+	local player_identifier = player_unique_id or tostring(player_peer_id)
+
+	if not player_identifier then
+		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
+			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
+			local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
+			if icon_widget then
+				icon_widget.visible = false
+			end
+			if text_widget then
+				text_widget.visible = false
+			end
+		end
+		return
+	end
+
 	if not player_peer_id then
 		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
 			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
@@ -464,13 +475,13 @@ local function update_teammate_all_abilities(self, player, dt)
 	end
 
 	local is_human_controlled = player:is_human_controlled()
-	local was_human_controlled = player_previous_human_state[player_name]
+	local was_human_controlled = player_previous_human_state[player_identifier]
 
 	if was_human_controlled and not is_human_controlled then
-		mod.clear_teammate_all_abilities_data(player_name)
+		mod.clear_teammate_all_abilities_data(player_identifier)
 	end
 
-	player_previous_human_state[player_name] = is_human_controlled
+	player_previous_human_state[player_identifier] = is_human_controlled
 
 	if self._show_as_dead or self._dead or self._hogtied then
 		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
@@ -501,19 +512,9 @@ local function update_teammate_all_abilities(self, player, dt)
 		return
 	end
 	
-	local coherency_widget = self._widgets_by_name.coherency_indicator
-	local coherency_icon_offset_x = 34
-	local coherency_icon_size = 24
-	
-	if coherency_widget and coherency_widget.style and coherency_widget.style.texture and coherency_widget.style.texture.offset then
-		coherency_icon_offset_x = coherency_widget.style.texture.offset[1] - 15
-		if coherency_widget.style.texture.size then
-			coherency_icon_size = coherency_widget.style.texture.size[1]
-		end
-	end
-	
-	local ability_spacing = TalentUISettings.ability_spacing or 60
+	local ability_spacing = TalentUISettings.ability_spacing or 50
 	local vertical_offset = TalentUISettings.icon_position_vertical_offset or 0
+	local icon_size = TalentUISettings.ability_icon_size or 40
 	
 	local abilities_to_show = {}
 	
@@ -522,7 +523,7 @@ local function update_teammate_all_abilities(self, player, dt)
 		local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_icon"]
 		
 		if icon_widget then
-			local data_key = player_name .. "_" .. ability_info.id
+			local data_key = player_identifier .. "_" .. ability_info.id
 			
 			if not teammate_abilities_data[data_key] or not teammate_abilities_data[data_key].ability_type then
 				local ability_data = get_player_ability_by_type(player, extensions, ability_info.slot)
@@ -558,11 +559,14 @@ local function update_teammate_all_abilities(self, player, dt)
 	local total_abilities = #abilities_to_show
 	for position_index = 1, total_abilities do
 		local ability_data = abilities_to_show[position_index]
-		local offset_x = coherency_icon_offset_x + coherency_icon_size + ability_spacing + (total_abilities - position_index) * ability_spacing
+		local offset_x = ability_spacing
+		local offset_y = vertical_offset + (position_index - 1) * 30
+		--mod:echo(offset_x .. " " .. offset_y)
 		enabled_abilities[ability_data.ability_info.id] = {
 			ability_info = ability_data.ability_info,
 			position = position_index,
 			offset_x = offset_x,
+			offset_y = offset_y,
 		}
 	end
 	
@@ -572,7 +576,7 @@ local function update_teammate_all_abilities(self, player, dt)
 		local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_text"]
 		
 		if icon_widget then
-			local data_key = player_name .. "_" .. ability_info.id
+			local data_key = player_identifier .. "_" .. ability_info.id
 			
 			if icon_widget and teammate_abilities_data[data_key] and teammate_abilities_data[data_key].ability_type then
 				local ability_type = teammate_abilities_data[data_key].ability_type
@@ -596,13 +600,28 @@ local function update_teammate_all_abilities(self, player, dt)
 					end
 				else
 					local new_offset_x = ability_position.offset_x
-					if icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.offset and icon_widget.style.icon.offset[1] ~= new_offset_x then
-						icon_widget.style.icon.offset[1] = new_offset_x
-						icon_widget.dirty = true
+					local new_offset_y = ability_position.offset_y
+					
+					if icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.offset then
+						if icon_widget.style.icon.offset[1] ~= new_offset_x then
+							icon_widget.style.icon.offset[1] = new_offset_x
+							icon_widget.dirty = true
+						end
+						if icon_widget.style.icon.offset[2] ~= new_offset_y then
+							icon_widget.style.icon.offset[2] = new_offset_y
+							icon_widget.dirty = true
+						end
 					end
-					if text_widget and text_widget.style and text_widget.style.text and text_widget.style.text.offset and text_widget.style.text.offset[1] ~= new_offset_x then
-						text_widget.style.text.offset[1] = new_offset_x
-						text_widget.dirty = true
+					
+					if text_widget and text_widget.style and text_widget.style.text and text_widget.style.text.offset then
+						if text_widget.style.text.offset[1] ~= new_offset_x then
+							text_widget.style.text.offset[1] = new_offset_x
+							text_widget.dirty = true
+						end
+						if text_widget.style.text.offset[2] ~= new_offset_y then
+							text_widget.style.text.offset[2] = new_offset_y
+							text_widget.dirty = true
+						end
 					end
 					
 					local cooldown_progress, on_cooldown, remaining_charges, has_charges_left, max_charges = get_ability_state(player, extensions, ability_type)
@@ -725,11 +744,11 @@ end
 
 mod.update_teammate_all_abilities = update_teammate_all_abilities
 
-mod.clear_teammate_all_abilities_data = function(player_name)
+mod.clear_teammate_all_abilities_data = function(player_identifier)
 	local keys_to_remove = {}
 	
 	for key, _ in pairs(teammate_abilities_data) do
-		if string.find(key, player_name .. "_", 1, true) == 1 then
+		if string.find(key, player_identifier .. "_", 1, true) == 1 then
 			table.insert(keys_to_remove, key)
 		end
 	end
@@ -738,7 +757,7 @@ mod.clear_teammate_all_abilities_data = function(player_name)
 		teammate_abilities_data[key] = nil
 	end
 	
-	player_previous_human_state[player_name] = nil
+	player_previous_human_state[player_identifier] = nil
 end
 
 local function update_player_features_hook(func, self, dt, t, player, ui_renderer)
