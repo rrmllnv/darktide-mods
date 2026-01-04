@@ -489,7 +489,7 @@ local function update_teammate_all_abilities(self, player, dt)
 							local charges_text = ""
 							local cooldown_text = ""
 							
-							if uses_charges and remaining_charges >= 1 then
+							if uses_charges and remaining_charges ~= nil then
 								charges_text = tostring(remaining_charges)
 							end
 							
