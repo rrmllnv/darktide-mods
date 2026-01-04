@@ -141,11 +141,11 @@ local function update_teammate_weapons(self, player, dt)
 		return
 	end
 	
-	local weapon_spacing = TalentUISettings.weapon_spacing or 96
-	local weapon_horizontal_offset = TalentUISettings.weapon_horizontal_offset or 0
-	local weapon_vertical_offset = TalentUISettings.weapon_vertical_offset or 0
-	local weapon_icon_width = TalentUISettings.weapon_icon_width or 96
-	local weapon_icon_height = TalentUISettings.weapon_icon_height or 36
+	local weapon_spacing = TalentUISettings.teammate_weapon_spacing or 96
+	local weapon_horizontal_offset = TalentUISettings.teammate_weapon_horizontal_offset or 0
+	local weapon_vertical_offset = TalentUISettings.teammate_weapon_vertical_offset or 0
+	local weapon_icon_width = TalentUISettings.teammate_weapon_icon_width or 96
+	local weapon_icon_height = TalentUISettings.teammate_weapon_icon_height or 36
 	
 	local weapons_to_show = {}
 	

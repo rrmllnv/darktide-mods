@@ -3,24 +3,17 @@ local mod = get_mod("TalentUI")
 local SETTINGS = {
 	show_abilities_for_bots = true,
 
-	cooldown_font_size = 15,
 	local_cooldown_font_size = 40,
 
-	icon_vertical_offset = -10,
-	icon_horizontal_offset = 0,
-	icon_orientation = "vertical", -- horizontal, vertical
-	icon_text_alignment = "left", -- left, top, right, bottom, center
-	ability_icon_size = 33,
-	ability_spacing = 0,
+	teammate_ability_vertical_offset = -10,
+	teammate_ability_horizontal_offset = 0,
+	teammate_ability_orientation = "vertical", -- horizontal, vertical
+	teammate_ability_text_alignment = "left", -- left, top, right, bottom, center
+	teammate_ability_icon_size = 33,
+	teammate_ability_spacing = 0,
+	teammate_ability_cooldown_font_size = 15,
 
-	
-	weapon_icon_width = 70, -- 96,
-	weapon_icon_height = 26, -- 36,
-	weapon_spacing = 60,
-	weapon_horizontal_offset = 115,
-	weapon_vertical_offset = 16,
-
-	icon_material_settings = {
+	teammate_ability_icon_material_settings = {
 		ability = {
 			active = {intensity = 0, saturation = 1},
 			on_cooldown = {intensity = -0.5, saturation = 0.5},
@@ -43,6 +36,12 @@ local SETTINGS = {
 			inactive = {intensity = -0.5, saturation = 0.5},
 		},
 	},
+
+	teammate_weapon_icon_width = 70, -- 96,
+	teammate_weapon_icon_height = 26, -- 36,
+	teammate_weapon_spacing = 60,
+	teammate_weapon_horizontal_offset = 115,
+	teammate_weapon_vertical_offset = 16,
 }
 
 return SETTINGS

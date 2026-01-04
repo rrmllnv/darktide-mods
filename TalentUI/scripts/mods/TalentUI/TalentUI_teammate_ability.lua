@@ -256,11 +256,11 @@ local function get_ability_gradient_map(ability_id)
 end
 
 local function get_ability_material_settings(ability_id, on_cooldown, uses_charges, has_charges_left, max_charges)
-	if not TalentUISettings or not TalentUISettings.icon_material_settings then
+	if not TalentUISettings or not TalentUISettings.teammate_ability_icon_material_settings then
 		return {intensity = 0, saturation = 1}
 	end
 	
-	local icon_settings = TalentUISettings.icon_material_settings
+	local icon_settings = TalentUISettings.teammate_ability_icon_material_settings
 	if not icon_settings[ability_id] then
 		return {intensity = 0, saturation = 1}
 	end
@@ -407,11 +407,11 @@ local function update_teammate_all_abilities(self, player, dt)
 		return
 	end
 	
-	local ability_spacing = TalentUISettings.ability_spacing or 50
-	local horizontal_offset = TalentUISettings.icon_horizontal_offset or 0
-	local vertical_offset = TalentUISettings.icon_vertical_offset or 0
-	local icon_orientation = TalentUISettings.icon_orientation or "vertical"
-	local icon_size = TalentUISettings.ability_icon_size or 40
+	local ability_spacing = TalentUISettings.teammate_ability_spacing or 50
+	local horizontal_offset = TalentUISettings.teammate_ability_horizontal_offset or 0
+	local vertical_offset = TalentUISettings.teammate_ability_vertical_offset or 0
+	local icon_orientation = TalentUISettings.teammate_ability_orientation or "vertical"
+	local icon_size = TalentUISettings.teammate_ability_icon_size or 40
 	
 	local abilities_to_show = {}
 	
