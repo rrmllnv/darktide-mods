@@ -170,7 +170,14 @@ local function update_teammate_weapons(self, player, dt)
 			
 			local has_weapon = teammate_weapons_data[data_key] and teammate_weapons_data[data_key].icon ~= nil
 			
-			if has_weapon then
+			local show_weapon_icon = true
+			if weapon_slot.id == "primary" then
+				show_weapon_icon = mod:get("show_teammate_weapon_primary_icon")
+			elseif weapon_slot.id == "secondary" then
+				show_weapon_icon = mod:get("show_teammate_weapon_secondary_icon")
+			end
+			
+			if has_weapon and show_weapon_icon then
 				table.insert(weapons_to_show, {
 					weapon_slot = weapon_slot,
 					data_key = data_key,
@@ -210,12 +217,19 @@ local function update_teammate_weapons(self, player, dt)
 		if icon_widget then
 			local data_key = player_identifier .. "_" .. weapon_slot.id
 			
+			local show_weapon_icon = true
+			if weapon_slot.id == "primary" then
+				show_weapon_icon = mod:get("show_teammate_weapon_primary_icon")
+			elseif weapon_slot.id == "secondary" then
+				show_weapon_icon = mod:get("show_teammate_weapon_secondary_icon")
+			end
+			
 			if icon_widget and teammate_weapons_data[data_key] and teammate_weapons_data[data_key].icon then
 				local icon = teammate_weapons_data[data_key].icon
 				
 				local weapon_position = enabled_weapons[weapon_slot.id]
 				
-				if not weapon_position then
+				if not show_weapon_icon or not weapon_position then
 					icon_widget.visible = false
 				else
 					local new_offset_x = weapon_position.offset_x

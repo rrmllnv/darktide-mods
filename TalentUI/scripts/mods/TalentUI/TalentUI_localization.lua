@@ -23,6 +23,14 @@ return {
 		en = "Teammate Aura",
 		ru = "Аура тимейтов",
 	},
+	group_teammate_weapon_primary = {
+		en = "Melee Weapon",
+		ru = "Оружие ближнего боя",
+	},
+	group_teammate_weapon_secondary = {
+		en = "Ranged Weapon",
+		ru = "Оружие дальнего боя",
+	},
 	group_teammate_weapon_common = {
 		en = "Common Weapon Settings",
 		ru = "Общие настройки оружия",
@@ -50,6 +58,14 @@ return {
 	show_teammate_aura_icon = {
 		en = "Show Aura Icons",
 		ru = "Показывать иконки ауры",
+	},
+	show_teammate_weapon_primary_icon = {
+		en = "Show Melee Weapon Icon",
+		ru = "Показывать иконку оружия ближнего боя",
+	},
+	show_teammate_weapon_secondary_icon = {
+		en = "Show Ranged Weapon Icon",
+		ru = "Показывать иконку оружия дальнего боя",
 	},
 	show_local_ability_cooldown = {
 		en = "Show Cooldown",

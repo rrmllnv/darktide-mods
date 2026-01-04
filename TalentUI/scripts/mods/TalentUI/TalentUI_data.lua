@@ -50,6 +50,28 @@ return {
 				},
 			},
 			{
+				setting_id = "group_teammate_weapon_primary",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "show_teammate_weapon_primary_icon",
+						type = "checkbox",
+						default_value = true,
+					},
+				},
+			},
+			{
+				setting_id = "group_teammate_weapon_secondary",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "show_teammate_weapon_secondary_icon",
+						type = "checkbox",
+						default_value = true,
+					},
+				},
+			},
+			{
 				setting_id = "group_teammate_ability_common",
 				type = "group",
 				sub_widgets = {
