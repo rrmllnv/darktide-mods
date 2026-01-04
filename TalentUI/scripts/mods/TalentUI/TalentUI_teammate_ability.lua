@@ -611,14 +611,7 @@ local function update_teammate_all_abilities(self, player, dt)
 		if icon_widget then
 			local data_key = player_identifier .. "_" .. ability_info.id
 			
-			local ability_position = enabled_abilities[ability_info.id]
-			
-			if not ability_position or not teammate_abilities_data[data_key] or not teammate_abilities_data[data_key].ability_type then
-				icon_widget.visible = false
-				if text_widget then
-					text_widget.visible = false
-				end
-			else
+			if icon_widget and teammate_abilities_data[data_key] and teammate_abilities_data[data_key].ability_type then
 				local ability_type = teammate_abilities_data[data_key].ability_type
 				local icon = teammate_abilities_data[data_key].icon
 				
@@ -631,7 +624,9 @@ local function update_teammate_all_abilities(self, player, dt)
 					show_icon = mod:get("show_teammate_aura_icon")
 				end
 				
-				if not show_icon then
+				local ability_position = enabled_abilities[ability_info.id]
+				
+				if not show_icon or not ability_position or not ability_position.offset_x or not ability_position.offset_y then
 					icon_widget.visible = false
 					if text_widget then
 						text_widget.visible = false
