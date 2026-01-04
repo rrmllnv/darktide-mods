@@ -183,6 +183,15 @@ return {
 					},
 				},
 			},
+			{
+				setting_id = "reset_talent_ui_settings",
+				type = "dropdown",
+				default_value = 0,
+				options = {
+					{ text = "", value = 0 },
+					{ text = "reset_talent_ui_settings", value = 1 },
+				},
+			},
 		},
 	},
 }

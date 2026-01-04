@@ -139,6 +139,28 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	end
 end)
 
+local function reset_talent_ui_settings()
+	mod:set("teammate_ability_vertical_offset", TalentUISettings.teammate_ability_vertical_offset)
+	mod:set("teammate_ability_horizontal_offset", TalentUISettings.teammate_ability_horizontal_offset)
+	mod:set("teammate_ability_orientation", TalentUISettings.teammate_ability_orientation)
+	mod:set("teammate_ability_text_alignment", TalentUISettings.teammate_ability_text_alignment)
+	mod:set("teammate_ability_icon_size", TalentUISettings.teammate_ability_icon_size)
+	mod:set("teammate_ability_cooldown_font_size", TalentUISettings.teammate_ability_cooldown_font_size)
+	mod:set("teammate_weapon_horizontal_offset", TalentUISettings.teammate_weapon_horizontal_offset)
+	mod:set("teammate_weapon_vertical_offset", TalentUISettings.teammate_weapon_vertical_offset)
+	mod:set("teammate_weapon_orientation", TalentUISettings.teammate_weapon_orientation)
+end
+
+function mod.on_setting_changed(setting_id)
+	if setting_id == "reset_talent_ui_settings" then
+		if mod:get("reset_talent_ui_settings") == 1 then
+			mod:notify("Settings Reset")
+			mod:set("reset_talent_ui_settings", 0)
+			reset_talent_ui_settings()
+		end
+	end
+end
+
 mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_teammate_ability")
 mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_teammate_weapons")
 mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_local_ability")

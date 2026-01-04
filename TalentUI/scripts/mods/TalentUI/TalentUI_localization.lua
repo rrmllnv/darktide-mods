@@ -151,5 +151,9 @@ return {
 		en = "Center",
 		ru = "По центру",
 	},
+	reset_talent_ui_settings = {
+		en = "Reset Settings",
+		ru = "Сбросить настройки",
+	},
 }
 
