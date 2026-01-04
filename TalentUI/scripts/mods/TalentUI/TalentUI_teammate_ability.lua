@@ -466,14 +466,30 @@ local function update_teammate_all_abilities(self, player, dt)
 				local material_settings = get_ability_material_settings(ability_info.id, on_cooldown, uses_charges, has_charges_left, max_charges)
 				
 				if icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.material_values then
-					icon_widget.style.icon.material_values.intensity = material_settings.intensity
-					icon_widget.style.icon.material_values.saturation = material_settings.saturation
-					icon_widget.dirty = true
+					local material_values = icon_widget.style.icon.material_values
+					local needs_update = false
+					
+					if material_values.intensity ~= material_settings.intensity then
+						material_values.intensity = material_settings.intensity
+						needs_update = true
+					end
+					
+					if material_values.saturation ~= material_settings.saturation then
+						material_values.saturation = material_settings.saturation
+						needs_update = true
+					end
+					
+					if needs_update then
+						icon_widget.dirty = true
+					end
 				end
 				
 				if icon and icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.material_values then
-					icon_widget.style.icon.material_values.icon = icon
-					icon_widget.dirty = true
+					local material_values = icon_widget.style.icon.material_values
+					if material_values.icon ~= icon then
+						material_values.icon = icon
+						icon_widget.dirty = true
+					end
 				end
 				
 				icon_widget.visible = true
