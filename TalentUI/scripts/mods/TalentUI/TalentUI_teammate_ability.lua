@@ -505,28 +505,25 @@ local function update_teammate_all_abilities(self, player, dt)
 							local charges_text = ""
 							local cooldown_text = ""
 							
-							if uses_charges and remaining_charges ~= nil then
+							if uses_charges and remaining_charges ~= nil and remaining_charges > 0 then
 								charges_text = tostring(remaining_charges)
 							end
 							
-							if on_cooldown then
-								local format_type = mod:get("cooldown_format")
-								if format_type == "time" then
-									local unit_data_extension = extensions.unit_data
-									if unit_data_extension then
-										local ability_component = unit_data_extension:read_component("combat_ability")
-										if ability_component and ability_component.cooldown then
-											local fixed_frame_t = FixedFrame.get_latest_fixed_time()
-											local time_remaining = math.max(ability_component.cooldown - fixed_frame_t, 0)
-											if time_remaining > 0 then
-												cooldown_text = string.format("%d", math.ceil(time_remaining))
+							if extensions and extensions.ability then
+								local ability_ext = extensions.ability
+								local remaining_cooldown = ability_ext:remaining_ability_cooldown("combat_ability")
+								if remaining_cooldown and remaining_cooldown > 0 then
+									local format_type = mod:get("cooldown_format")
+									if format_type == "time" then
+										cooldown_text = string.format("%d", math.ceil(remaining_cooldown))
+									elseif format_type == "percent" then
+										local max_cooldown = ability_ext:max_ability_cooldown("combat_ability")
+										if max_cooldown and max_cooldown > 0 then
+											local percent = (1 - remaining_cooldown / max_cooldown) * 100
+											if percent < 99 then
+												cooldown_text = string.format("%d%%", math.floor(percent))
 											end
 										end
-									end
-								elseif format_type == "percent" then
-									local percent = (1 - cooldown_progress) * 100
-									if percent < 99 then
-										cooldown_text = string.format("%d%%", math.floor(percent))
 									end
 								end
 							end
@@ -543,29 +540,27 @@ local function update_teammate_all_abilities(self, player, dt)
 						show_text = mod:get("show_teammate_blitz_charges")
 						
 						if show_text then
-							if uses_charges then
-								if remaining_charges >= 1 then
-									display_text = tostring(remaining_charges)
-								end
-							else
-								if on_cooldown then
-									local format_type = mod:get("cooldown_format")
-									if format_type == "time" then
-										local unit_data_extension = extensions.unit_data
-										if unit_data_extension then
-											local grenade_ability_component = unit_data_extension:read_component("grenade_ability")
-											if grenade_ability_component and grenade_ability_component.cooldown then
-												local fixed_frame_t = FixedFrame.get_latest_fixed_time()
-												local time_remaining = math.max(grenade_ability_component.cooldown - fixed_frame_t, 0)
-												if time_remaining > 0 then
-													display_text = string.format("%d", math.ceil(time_remaining))
+							if extensions and extensions.ability then
+								local ability_ext = extensions.ability
+								if uses_charges then
+									local charges = ability_ext:remaining_ability_charges("grenade_ability")
+									if charges ~= nil and charges >= 0 then
+										display_text = tostring(charges)
+									end
+								else
+									local remaining_cooldown = ability_ext:remaining_ability_cooldown("grenade_ability")
+									if remaining_cooldown and remaining_cooldown > 0 then
+										local format_type = mod:get("cooldown_format")
+										if format_type == "time" then
+											display_text = string.format("%d", math.ceil(remaining_cooldown))
+										elseif format_type == "percent" then
+											local max_cooldown = ability_ext:max_ability_cooldown("grenade_ability")
+											if max_cooldown and max_cooldown > 0 then
+												local percent = (1 - remaining_cooldown / max_cooldown) * 100
+												if percent < 99 then
+													display_text = string.format("%d%%", math.floor(percent))
 												end
 											end
-										end
-									elseif format_type == "percent" then
-										local percent = (1 - cooldown_progress) * 100
-										if percent < 99 then
-											display_text = string.format("%d%%", math.floor(percent))
 										end
 									end
 								end

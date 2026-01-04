@@ -124,7 +124,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 					offset = {
 						text_offset_x,
 						text_offset_y,
-						3,
+						4,
 					},
 					size = {
 						icon_size,
