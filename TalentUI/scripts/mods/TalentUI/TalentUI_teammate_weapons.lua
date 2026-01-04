@@ -8,18 +8,7 @@ local teammate_weapons_data = {}
 
 local player_previous_human_state_weapons = {}
 
-local WEAPON_SLOTS = {
-	{
-		id = "primary",
-		slot = "slot_primary",
-		name = "talent_ui_weapon_primary",
-	},
-	{
-		id = "secondary",
-		slot = "slot_secondary",
-		name = "talent_ui_weapon_secondary",
-	},
-}
+local WEAPON_SLOTS = mod.WEAPON_SLOTS
 
 local function get_player_weapon_by_slot(player, extensions, slot_name)
 	if not extensions or not extensions.visual_loadout or not extensions.unit_data then

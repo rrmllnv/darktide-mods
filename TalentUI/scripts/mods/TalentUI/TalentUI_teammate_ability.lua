@@ -11,17 +11,9 @@ if not success_require or not CharacterSheet then
 	CharacterSheet.class_loadout = function() end
 end
 
-local TEAM_HUD_DEF_PATH = "scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_definitions"
-
-local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
-local HudElementTeamPlayerPanelSettings = require("scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_settings")
 local HudElementPlayerAbilitySettings = require("scripts/ui/hud/elements/player_ability/hud_element_player_ability_settings")
 local FixedFrame = require("scripts/utilities/fixed_frame")
-local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
-local MasterItems = require("scripts/backend/master_items")
-
-local hud_body_font_settings = UIFontSettings.hud_body
 
 local TalentUISettings = mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_settings")
 
@@ -59,34 +51,7 @@ local function get_talent_from_character_sheet(player, ability_key)
 	return nil
 end
 
-local TALENT_ABILITY_METADATA = {
-	{
-		id = "ability",
-		slot = "slot_combat_ability",
-		type = "combat_ability",
-		name = "talent_ui_all_ability",
-		frame = "hex_frame",
-		mask = "hex_frame_mask",
-	},
-	{
-		id = "blitz",
-		slot = "slot_grenade_ability",
-		type = "grenade_ability",
-		name = "talent_ui_all_blitz",
-		frame = "square_frame",
-		mask = "square_frame_mask",
-	},
-	{
-		id = "aura",
-		slot = "slot_coherency_ability",
-		type = "coherency_ability",
-		name = "talent_ui_all_aura",
-		frame = "circular_frame",
-		mask = "circular_frame_mask",
-	},
-}
-
-mod.TALENT_ABILITY_METADATA = TALENT_ABILITY_METADATA
+local TALENT_ABILITY_METADATA = mod.TALENT_ABILITY_METADATA
 
 local function get_player_ability_by_type(player, extensions, slot_type)
 	if slot_type == "slot_coherency_ability" then
@@ -356,141 +321,6 @@ local function get_ability_material_settings(ability_id, on_cooldown, uses_charg
 	return {intensity = 0, saturation = 1}
 end
 
-local WEAPON_SLOTS = {
-	{
-		id = "primary",
-		slot = "slot_primary",
-		name = "talent_ui_weapon_primary",
-	},
-	{
-		id = "secondary",
-		slot = "slot_secondary",
-		name = "talent_ui_weapon_secondary",
-	},
-}
-
-mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
-	local icon_size = TalentUISettings.ability_icon_size
-	local icon_text_alignment = TalentUISettings.icon_text_alignment or "left"
-	
-	local text_horizontal_alignment = "center"
-	local text_vertical_alignment = "center"
-	
-	if icon_text_alignment == "left" then
-		text_horizontal_alignment = "left"
-		text_vertical_alignment = "center"
-	elseif icon_text_alignment == "right" then
-		text_horizontal_alignment = "right"
-		text_vertical_alignment = "center"
-	elseif icon_text_alignment == "top" then
-		text_horizontal_alignment = "center"
-		text_vertical_alignment = "top"
-	elseif icon_text_alignment == "bottom" then
-		text_horizontal_alignment = "center"
-		text_vertical_alignment = "bottom"
-	elseif icon_text_alignment == "center" then
-		text_horizontal_alignment = "center"
-		text_vertical_alignment = "center"
-	end
-
-	for i = 1, #TALENT_ABILITY_METADATA do
-		local ability_type = TALENT_ABILITY_METADATA[i]
-		local offset_x = 0
-		local offset_y = 0
-		
-		instance.widget_definitions[ability_type.name .. "_icon"] = UIWidget.create_definition({
-			{
-				pass_type = "texture",
-				style_id = "icon",
-				value = "content/ui/materials/frames/talents/talent_icon_container",
-				style = {
-					horizontal_alignment = "left",
-					vertical_alignment = "top",
-					scale_to_material = true,
-					material_values = {
-						frame = "content/ui/textures/frames/talents/" .. ability_type.frame,
-						icon_mask = "content/ui/textures/frames/talents/" .. ability_type.mask,
-						icon = nil,
-						gradient_map = nil,
-						intensity = 0,
-						saturation = 1,
-					},
-					offset = {
-						offset_x,
-						offset_y,
-						2,
-					},
-					size = {
-						icon_size,
-						icon_size,
-					},
-					color = UIHudSettings.color_tint_main_2,
-				},
-			},
-		}, "background")
-		
-		instance.widget_definitions[ability_type.name .. "_text"] = UIWidget.create_definition({
-			{
-				pass_type = "text",
-				style_id = "text",
-				value_id = "text",
-				value = "",
-				style = {
-					horizontal_alignment = "left",
-					vertical_alignment = "top",
-					text_horizontal_alignment = text_horizontal_alignment,
-					text_vertical_alignment = text_vertical_alignment,
-					font_type = hud_body_font_settings.font_type or "machine_medium",
-					font_size = TalentUISettings.cooldown_font_size,
-					line_spacing = 1.2,
-					text_color = UIHudSettings.color_tint_main_1,
-					drop_shadow = true,
-					offset = {
-						offset_x,
-						offset_y,
-						3,
-					},
-					size = {
-						icon_size + 10,
-						icon_size,
-					},
-				},
-			},
-		}, "background")
-	end
-	
-	local weapon_icon_width = TalentUISettings.weapon_icon_width or 96
-	local weapon_icon_height = TalentUISettings.weapon_icon_height or 36
-	
-	for i = 1, #WEAPON_SLOTS do
-		local weapon_slot = WEAPON_SLOTS[i]
-		local offset_x = 0
-		local offset_y = 0
-		
-		instance.widget_definitions[weapon_slot.name .. "_icon"] = UIWidget.create_definition({
-			{
-				pass_type = "texture",
-				style_id = "icon",
-				value_id = "icon",
-				value = "content/ui/materials/icons/weapons/hud/combat_blade_01",
-				style = {
-					horizontal_alignment = "left",
-					vertical_alignment = "top",
-					offset = {
-						offset_x,
-						offset_y,
-						1,
-					},
-					size = {
-						weapon_icon_width,
-						weapon_icon_height,
-					},
-					color = UIHudSettings.color_tint_main_2,
-				},
-			},
-		}, "background")
-	end
-end)
 
 local function update_teammate_all_abilities(self, player, dt)
 	local player_name = player:name()
