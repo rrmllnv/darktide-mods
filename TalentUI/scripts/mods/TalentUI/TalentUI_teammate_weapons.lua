@@ -146,6 +146,7 @@ local function update_teammate_weapons(self, player, dt)
 	local weapon_vertical_offset = TalentUISettings.teammate_weapon_vertical_offset
 	local weapon_icon_width = TalentUISettings.teammate_weapon_icon_width
 	local weapon_icon_height = TalentUISettings.teammate_weapon_icon_height
+	local weapon_orientation = TalentUISettings.teammate_weapon_orientation
 	
 	local weapons_to_show = {}
 	
@@ -180,10 +181,20 @@ local function update_teammate_weapons(self, player, dt)
 	
 	local enabled_weapons = {}
 	local total_weapons = #weapons_to_show
+	local is_horizontal = weapon_orientation == "horizontal"
+	
 	for position_index = 1, total_weapons do
 		local weapon_data = weapons_to_show[position_index]
-		local offset_x = weapon_horizontal_offset + weapon_spacing + (position_index - 1) * weapon_spacing
-		local offset_y = weapon_vertical_offset
+		local offset_x, offset_y
+		
+		if is_horizontal then
+			offset_x = weapon_horizontal_offset + weapon_spacing + (position_index - 1) * (weapon_icon_width + weapon_spacing)
+			offset_y = weapon_vertical_offset
+		else
+			offset_x = weapon_horizontal_offset + weapon_spacing
+			offset_y = weapon_vertical_offset + (position_index - 1) * (weapon_icon_height + weapon_spacing)
+		end
+		
 		enabled_weapons[weapon_data.weapon_slot.id] = {
 			weapon_slot = weapon_data.weapon_slot,
 			position = position_index,
