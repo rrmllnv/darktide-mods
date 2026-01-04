@@ -560,7 +560,7 @@ local function update_teammate_all_abilities(self, player, dt)
 	for position_index = 1, total_abilities do
 		local ability_data = abilities_to_show[position_index]
 		local offset_x = ability_spacing
-		local offset_y = vertical_offset + (position_index - 1) * 30
+		local offset_y = vertical_offset + (position_index - 1) * 28
 		--mod:echo(offset_x .. " " .. offset_y)
 		enabled_abilities[ability_data.ability_info.id] = {
 			ability_info = ability_data.ability_info,
@@ -614,8 +614,9 @@ local function update_teammate_all_abilities(self, player, dt)
 					end
 					
 					if text_widget and text_widget.style and text_widget.style.text and text_widget.style.text.offset then
-						if text_widget.style.text.offset[1] ~= new_offset_x then
-							text_widget.style.text.offset[1] = new_offset_x
+						local text_offset_x = new_offset_x - 23
+						if text_widget.style.text.offset[1] ~= text_offset_x then
+							text_widget.style.text.offset[1] = text_offset_x
 							text_widget.dirty = true
 						end
 						if text_widget.style.text.offset[2] ~= new_offset_y then

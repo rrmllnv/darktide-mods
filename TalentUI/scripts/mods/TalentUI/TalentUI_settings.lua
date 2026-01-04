@@ -3,11 +3,11 @@ local mod = get_mod("TalentUI")
 local SETTINGS = {
 	show_abilities_for_bots = true,
 
-	cooldown_font_size = 20,
+	cooldown_font_size = 15,
 	local_cooldown_font_size = 40,
 
 	icon_position_vertical_offset = -10,
-	ability_icon_size = 35,
+	ability_icon_size = 33,
 	ability_spacing = 0,
 
 	
