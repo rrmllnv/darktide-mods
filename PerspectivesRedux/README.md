@@ -1,6 +1,10 @@
 # PerspectivesRedux
 
-**Redux версия мода Perspectives с оптимизациями, исправлениями и улучшениями.**
+**Redux версия мода Perspectives с оптимизациями, исправлениями и улучшениями безопасности.**
+
+[![Status](https://img.shields.io/badge/status-stable-green.svg)]()
+[![Lint](https://img.shields.io/badge/lint-passing-brightgreen.svg)]()
+[![Optimized](https://img.shields.io/badge/optimized-yes-blue.svg)]()
 
 ## Описание
 

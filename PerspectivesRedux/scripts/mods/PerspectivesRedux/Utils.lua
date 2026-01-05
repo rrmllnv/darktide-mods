@@ -25,10 +25,16 @@ mod.get_camera_handler = function()
 		camera_handler = plr and plr.camera_handler
 
 		if camera_handler then
+			-- При уничтожении handler очищаем кэш
 			mod:hook_safe(camera_handler, "destroy", function(self)
 				camera_handler = nil
 			end)
 		end
 	end
 	return camera_handler
+end
+
+-- Очистка кэша camera_handler (для выгрузки мода)
+mod.clear_camera_handler_cache = function()
+	camera_handler = nil
 end
