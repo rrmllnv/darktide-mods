@@ -110,6 +110,18 @@ return {
 		en = "Control transparency of the entire timer widget (0-100%, default: 100).",
 		ru = "Управление прозрачностью всего виджета таймера (0-100%, по умолчанию: 100).",
 	},
+	group_speedometer = {
+		en = "Speedometer",
+		ru = "Спидометр",
+	},
+	speedometer_enabled = {
+		en = "Enable Speedometer",
+		ru = "Включить спидометр",
+	},
+	speedometer_enabled_description = {
+		en = "Show speedometer next to the timer.",
+		ru = "Показывать спидометр рядом с таймером.",
+	},
 }
 
 

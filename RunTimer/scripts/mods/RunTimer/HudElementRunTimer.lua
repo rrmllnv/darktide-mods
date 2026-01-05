@@ -14,7 +14,7 @@ local FONT_SIZE_MAX = 30
 local DEFAULT_FONT_SIZE = 20
 local DEFAULT_COLOR_NAME = "orange"
 local DEFAULT_POSITION = "left"
-local TIMER_WIDTH = 160
+local TIMER_WIDTH = 80
 local BORDER_PADDING = 5
 
 local COLOR_PRESETS = {
@@ -171,6 +171,7 @@ end
 
 local function create_scenegraph_definition()
 	local timer_height = calculate_timer_height()
+	local container_width = TIMER_WIDTH -- * 2 + 10 -- Два таймера + отступ между ними
 	return {
 		screen = UIWorkspaceSettings.screen,
 		run_timer_background = {
@@ -178,7 +179,7 @@ local function create_scenegraph_definition()
 			parent = "screen",
 			vertical_alignment = "top",
 			size = {
-				TIMER_WIDTH,
+				container_width,
 				timer_height,
 			},
 			position = {
@@ -188,6 +189,20 @@ local function create_scenegraph_definition()
 			},
 		},
 		run_timer_text = {
+			horizontal_alignment = "left",
+			parent = "run_timer_background",
+			vertical_alignment = "center",
+			size = {
+				TIMER_WIDTH,
+				timer_height,
+			},
+			position = {
+				0,
+				0,
+				2,
+			},
+		},
+		speedometer_text = {
 			horizontal_alignment = "left",
 			parent = "run_timer_background",
 			vertical_alignment = "center",
@@ -269,6 +284,16 @@ local widget_definitions = {
 			style = timer_active_text_style,
 		},
 	}, "run_timer_text"),
+	speedometer_text = UIWidget.create_definition({
+		{
+			visible = false,
+			pass_type = "text",
+			style_id = "speed",
+			value = "",
+			value_id = "speed",
+			style = clone_style(UIFontSettings.body),
+		},
+	}, "speedometer_text"),
 }
 
 local function format_double_digit(value)
@@ -362,6 +387,13 @@ HudElementRunTimer.init = function(self, parent, draw_layer, start_scale)
 	self._cached_exclude_intro = mod:get("exclude_intro_time") or 1
 	self._cached_timer_format = mod:get("timer_format") or 2
 	
+	-- Инициализируем спидометр
+	local speedometer_widget = self._widgets_by_name and self._widgets_by_name.speedometer_text
+	if speedometer_widget then
+		speedometer_widget.content.speed = ""
+		speedometer_widget.content.visible = false
+	end
+	
 	self:_apply_style()
 	self:_apply_layout()
 end
@@ -371,15 +403,43 @@ HudElementRunTimer.update = function(self, dt, t, ui_renderer, render_settings, 
 
 	local text_widget = self._widgets_by_name.run_timer_text
 	local background_widget = self._widgets_by_name.run_timer_background
+	local speedometer_widget = self._widgets_by_name.speedometer_text
 
 	if not text_widget or not background_widget then
 		return
 	end
 
 	local visible = should_show_timer()
+	local speedometer_enabled = mod:get("speedometer_enabled") or false
 
 	text_widget.content.visible = visible
 	background_widget.content.visible = visible
+	
+	-- Обновляем спидометр независимо от видимости таймера, но только если включен
+	if speedometer_enabled and speedometer_widget then
+		local speed_text = ""
+		local player = Managers.player:local_player(1)
+		if player and player:unit_is_alive() then
+			local player_unit = player.player_unit
+			if player_unit then
+				local locomotion_extension = ScriptUnit.has_extension(player_unit, "locomotion_system")
+				if locomotion_extension then
+					local velocity = locomotion_extension:current_velocity()
+					if velocity ~= nil then
+						local speed = Vector3.length(velocity)
+						speed_text = string.format("%.2f", speed)
+					end
+				end
+			end
+		end
+		speedometer_widget.content.speed = speed_text
+		speedometer_widget.content.visible = visible
+		speedometer_widget.dirty = true
+	elseif speedometer_widget then
+		speedometer_widget.content.visible = false
+		speedometer_widget.content.speed = ""
+		speedometer_widget.dirty = true
+	end
 
 	if not visible then
 		return
@@ -406,8 +466,10 @@ end
 HudElementRunTimer._apply_style = function(self)
 	-- Обновляем высоту на основе размера шрифта
 	local timer_height = calculate_timer_height()
-	self:_set_scenegraph_size("run_timer_background", TIMER_WIDTH, timer_height)
+	local container_width = TIMER_WIDTH * 2 + 10 -- Два таймера + отступ между ними
+	self:_set_scenegraph_size("run_timer_background", container_width, timer_height)
 	self:_set_scenegraph_size("run_timer_text", TIMER_WIDTH, timer_height)
+	self:_set_scenegraph_size("speedometer_text", TIMER_WIDTH, timer_height)
 	
 	local text_widget = self._widgets_by_name and self._widgets_by_name.run_timer_text
 
@@ -418,6 +480,16 @@ HudElementRunTimer._apply_style = function(self)
 		color[1] = alpha
 		text_widget.style.text.text_color = color
 		text_widget.dirty = true
+	end
+	
+	local speedometer_widget = self._widgets_by_name and self._widgets_by_name.speedometer_text
+	if speedometer_widget and speedometer_widget.style and speedometer_widget.style.speed then
+		local alpha = get_opacity_alpha()
+		speedometer_widget.style.speed.font_size = current_font_size()
+		local color = table.clone(current_font_color())
+		color[1] = alpha
+		speedometer_widget.style.speed.text_color = color
+		speedometer_widget.dirty = true
 	end
 	
 	local background_widget = self._widgets_by_name and self._widgets_by_name.run_timer_background
@@ -473,6 +545,20 @@ HudElementRunTimer._apply_layout = function(self)
 				text_widget.style.text.offset = table.clone(text_settings.offset)
 			end
 			text_widget.dirty = true
+		end
+		
+		-- Настраиваем спидометр рядом с таймером (в том же контейнере)
+		local speedometer_widget = self._widgets_by_name and self._widgets_by_name.speedometer_text
+		if speedometer_widget then
+			-- Спидометр уже позиционирован в scenegraph относительно контейнера
+			-- Просто применяем те же настройки стиля, что и для таймера
+			if speedometer_widget.style and speedometer_widget.style.speed then
+				speedometer_widget.style.speed.text_horizontal_alignment = text_settings.text_alignment or text_settings.horizontal_alignment or "left"
+				if text_settings.offset then
+					speedometer_widget.style.speed.offset = table.clone(text_settings.offset)
+				end
+				speedometer_widget.dirty = true
+			end
 		end
 	end
 

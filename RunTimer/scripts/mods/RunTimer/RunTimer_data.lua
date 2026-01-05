@@ -82,6 +82,17 @@ return {
 				default_value = 100,
 				range = {0, 100},
 			},
+			{
+				setting_id = "group_speedometer",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "speedometer_enabled",
+						type = "checkbox",
+						default_value = false,
+					},
+				},
+			},
 		},
 	},
 }
