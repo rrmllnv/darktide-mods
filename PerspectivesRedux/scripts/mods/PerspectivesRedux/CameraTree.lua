@@ -1,4 +1,4 @@
-local mod = get_mod("Perspectives")
+local mod = get_mod("PerspectivesRedux")
 local CameraSettings = require("scripts/settings/camera/camera_settings")
 
 local FOV_NORMAL = 62.5

@@ -1,4 +1,4 @@
-local mod = get_mod("Perspectives")
+local mod = get_mod("PerspectivesRedux")
 
 local camera_handler = nil
 

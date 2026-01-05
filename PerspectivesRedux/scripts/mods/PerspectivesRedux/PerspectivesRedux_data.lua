@@ -1,4 +1,4 @@
-local mod = get_mod("Perspectives")
+local mod = get_mod("PerspectivesRedux")
 
 local autoswitch_options = {
 	{ text = "autoswitch_to_none",  value = 0 },
@@ -14,9 +14,9 @@ for _, type in ipairs(mod._xhair_types) do
 	})
 end
 
-return {
-	name = "Perspectives",
-	description = mod:localize("mod_description"),
+	return {
+		name = "PerspectivesRedux",
+		description = mod:localize("mod_description"),
 	is_togglable = false,
 	options = {
 		widgets = {

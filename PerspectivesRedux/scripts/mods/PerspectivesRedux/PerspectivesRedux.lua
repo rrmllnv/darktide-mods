@@ -1,9 +1,9 @@
-local mod = get_mod("Perspectives")
+local mod = get_mod("PerspectivesRedux")
 local CameraTransitionTemplates = require("scripts/settings/camera/camera_transition_templates")
 local PlayerUnitStatus = require("scripts/utilities/attack/player_unit_status")
 
-mod:io_dofile("Perspectives/scripts/mods/Perspectives/Utils")
-mod:io_dofile("Perspectives/scripts/mods/Perspectives/CameraTree")
+mod:io_dofile("PerspectivesRedux/scripts/mods/PerspectivesRedux/Utils")
+mod:io_dofile("PerspectivesRedux/scripts/mods/PerspectivesRedux/CameraTree")
 
 local OPT_PREFIX_AUTOSWITCH = "^autoswitch_"
 local ZOOM_SUFFIX = "_zoom"
