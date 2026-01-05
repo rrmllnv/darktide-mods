@@ -1,0 +1,47 @@
+local mod = get_mod("PerspectivesRedux")
+
+-- Кэшируемый camera_handler
+local camera_handler = nil
+
+-- Получить локального игрока
+mod.get_player = function()
+	return Managers.player and Managers.player:local_player(1)
+end
+
+-- Получить локального игрока безопасно
+mod.get_player_safe = function()
+	return Managers.player and Managers.player:local_player_safe(1)
+end
+
+-- Получить юнит игрока
+mod.get_player_unit = function()
+	local plr = mod.get_player()
+	return plr and plr.player_unit
+end
+
+-- Проверить активен ли курсор
+mod.is_cursor_active = function()
+	return Managers.input and Managers.input:cursor_active()
+end
+
+-- Получить camera handler с кэшированием
+mod.get_camera_handler = function()
+	if not camera_handler then
+		local plr = mod.get_player_safe()
+		camera_handler = plr and plr.camera_handler
+
+		if camera_handler then
+			-- При уничтожении handler очищаем кэш
+			mod:hook_safe(camera_handler, "destroy", function(self)
+				camera_handler = nil
+			end)
+		end
+	end
+	return camera_handler
+end
+
+-- Очистка кэша camera_handler (для выгрузки мода)
+mod.clear_camera_handler_cache = function()
+	camera_handler = nil
+end
+
