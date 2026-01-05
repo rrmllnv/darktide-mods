@@ -1,6 +1,6 @@
 local mod = get_mod("TalentUI")
 
-mod.version = "1.0.0"
+mod.version = "1.1.0"
 
 local TalentUIConstants = mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_constants")
 local TALENT_ABILITY_METADATA = TalentUIConstants.TALENT_ABILITY_METADATA
