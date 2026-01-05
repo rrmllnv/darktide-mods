@@ -1,13 +1,11 @@
-local mod = get_mod("PerspectivesRedux")
+local mod = get_mod("Perspectives")
 
--- Общие опции для автопереключения (используется одна таблица без клонирования)
 local autoswitch_options = {
 	{ text = "autoswitch_to_none",  value = 0 },
 	{ text = "autoswitch_to_first", value = 1 },
 	{ text = "autoswitch_to_third", value = 2 },
 }
 
--- Опции для прицелов
 local xhair_options = {}
 for _, type in ipairs(mod._xhair_types) do
 	table.insert(xhair_options, {
@@ -17,7 +15,7 @@ for _, type in ipairs(mod._xhair_types) do
 end
 
 return {
-	name = "PerspectivesRedux",
+	name = "Perspectives",
 	description = mod:localize("mod_description"),
 	is_togglable = false,
 	options = {
@@ -193,83 +191,82 @@ return {
 						setting_id    = "autoswitch_spectate",
 						type          = "dropdown",
 						default_value = 2,
-						options       = autoswitch_options,
+						options       = table.clone(autoswitch_options),
 					},
 					{
 						setting_id    = "autoswitch_slot_primary",
 						type          = "dropdown",
 						default_value = 0,
-						options       = autoswitch_options,
+						options       = table.clone(autoswitch_options),
 					},
 					{
 						setting_id    = "autoswitch_slot_secondary",
 						type          = "dropdown",
 						default_value = 0,
-						options       = autoswitch_options,
+						options       = table.clone(autoswitch_options),
 					},
 					{
 						setting_id    = "autoswitch_slot_grenade_ability",
 						type          = "dropdown",
 						default_value = 0,
-						options       = autoswitch_options,
+						options       = table.clone(autoswitch_options),
 					},
 					{
 						setting_id    = "autoswitch_slot_pocketable",
 						type          = "dropdown",
 						default_value = 0,
-						options       = autoswitch_options,
+						options       = table.clone(autoswitch_options),
 					},
 					{
 						setting_id    = "autoswitch_slot_pocketable_small",
 						type          = "dropdown",
 						default_value = 0,
-						options       = autoswitch_options,
+						options       = table.clone(autoswitch_options),
 					},
 					{
 						setting_id    = "autoswitch_slot_luggable",
 						type          = "dropdown",
 						default_value = 0,
-						options       = autoswitch_options,
+						options       = table.clone(autoswitch_options),
 					},
 					{
 						setting_id    = "autoswitch_slot_unarmed",
 						type          = "dropdown",
 						default_value = 0,
-						options       = autoswitch_options,
+						options       = table.clone(autoswitch_options),
 					},
 					{
 						setting_id    = "autoswitch_sprint",
 						type          = "dropdown",
 						default_value = 0,
-						options       = autoswitch_options,
+						options       = table.clone(autoswitch_options),
 					},
 					{
 						setting_id    = "autoswitch_lunge_ogryn",
 						type          = "dropdown",
 						default_value = 0,
-						options       = autoswitch_options,
+						options       = table.clone(autoswitch_options),
 					},
 					{
 						setting_id    = "autoswitch_lunge_human",
 						type          = "dropdown",
 						default_value = 0,
-						options       = autoswitch_options,
+						options       = table.clone(autoswitch_options),
 					},
 					{
 						setting_id    = "autoswitch_act2_primary",
 						type          = "dropdown",
 						default_value = 0,
-						options       = autoswitch_options,
+						options       = table.clone(autoswitch_options),
 					},
 					{
 						setting_id    = "autoswitch_act2_secondary",
 						type          = "dropdown",
 						default_value = 0,
-						options       = autoswitch_options,
+						options       = table.clone(autoswitch_options),
 					},
 				},
 			},
 		}
 	}
 }
-
