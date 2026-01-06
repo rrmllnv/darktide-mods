@@ -2,20 +2,35 @@ local mod = get_mod("ThirdPersonLight")
 
 -- Простая проверка режима третьего лица
 local function check_third_person_mode()
-	if not Managers or not Managers.player then
+	-- Безопасная проверка всех необходимых объектов
+	if not Managers then
+		return false
+	end
+	
+	if not Managers.player then
 		return false
 	end
 
-	local player = Managers.player:local_player(1)
-	if not player then
+	-- Безопасный вызов local_player с проверкой на ошибки
+	local success, player = pcall(function()
+		return Managers.player:local_player(1)
+	end)
+	
+	if not success or not player then
+		return false
+	end
+
+	-- Проверяем что у player есть player_unit
+	if not player.player_unit then
 		return false
 	end
 
 	local player_unit = player.player_unit
-	if not player_unit or not Unit.alive(player_unit) then
+	if not Unit.alive(player_unit) then
 		return false
 	end
 
+	-- Безопасная проверка расширения
 	local first_person_extension = ScriptUnit.has_extension(player_unit, "first_person_system")
 	if first_person_extension then
 		-- Проверяем _force_third_person_mode от модов третьего лица
@@ -23,9 +38,14 @@ local function check_third_person_mode()
 			return true
 		end
 
-		-- Проверяем стандартную функцию
-		local wants_first_person = first_person_extension:wants_first_person_camera()
-		return not wants_first_person
+		-- Безопасный вызов wants_first_person_camera
+		local wants_first_person_success, wants_first_person = pcall(function()
+			return first_person_extension:wants_first_person_camera()
+		end)
+		
+		if wants_first_person_success and wants_first_person ~= nil then
+			return not wants_first_person
+		end
 	end
 
 	return false
