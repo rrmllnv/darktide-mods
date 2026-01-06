@@ -16,12 +16,12 @@ local SETTINGS = {
 	
 	teammate_ability_position_presets = {
 		default = {
-			vertical_offset = -10,
+			vertical_offset = -5,
 			horizontal_offset = 5,
 			orientation = "vertical",
 			text_alignment = "left",
 			icon_size = 30,
-			spacing = 0,
+			spacing = -3,
 			cooldown_font_size = 12,
 			text_offset = 10,
 		},
