@@ -141,7 +141,32 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	local weapon_horizontal_offset = mod:get("teammate_weapon_horizontal_offset") or TalentUISettings.teammate_weapon_horizontal_offset
 	local weapon_vertical_offset = mod:get("teammate_weapon_vertical_offset") or TalentUISettings.teammate_weapon_vertical_offset
 	local weapon_orientation = mod:get("teammate_weapon_orientation") or TalentUISettings.teammate_weapon_orientation
+	local weapon_text_alignment = mod:get("teammate_weapon_text_alignment") or TalentUISettings.teammate_weapon_text_alignment
 	local is_horizontal_weapon = weapon_orientation == "horizontal"
+	
+	local text_horizontal_alignment = "center"
+	local text_vertical_alignment = "center"
+	
+	if weapon_text_alignment == "left" then
+		text_horizontal_alignment = "left"
+		text_vertical_alignment = "center"
+	elseif weapon_text_alignment == "right" then
+		text_horizontal_alignment = "right"
+		text_vertical_alignment = "center"
+	elseif weapon_text_alignment == "top" then
+		text_horizontal_alignment = "center"
+		text_vertical_alignment = "top"
+	elseif weapon_text_alignment == "bottom" then
+		text_horizontal_alignment = "center"
+		text_vertical_alignment = "bottom"
+	elseif weapon_text_alignment == "center" then
+		text_horizontal_alignment = "center"
+		text_vertical_alignment = "center"
+	end
+	
+	local weapon_ammo_text_offset_x = mod:get("teammate_weapon_ammo_text_offset_x") or TalentUISettings.teammate_weapon_ammo_text_offset_x
+	local weapon_ammo_text_offset_y = mod:get("teammate_weapon_ammo_text_offset_y") or TalentUISettings.teammate_weapon_ammo_text_offset_y
+	local weapon_ammo_font_size = mod:get("teammate_weapon_ammo_font_size") or TalentUISettings.teammate_weapon_ammo_font_size
 	
 	for i = 1, #WEAPON_SLOTS do
 		local weapon_slot = WEAPON_SLOTS[i]
@@ -154,6 +179,26 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 		else
 			offset_x = weapon_horizontal_offset + weapon_spacing
 			offset_y = weapon_vertical_offset + (position_index - 1) * (weapon_icon_height + weapon_spacing)
+		end
+		
+		local text_offset_x = offset_x
+		local text_offset_y = offset_y
+		
+		if weapon_text_alignment == "left" then
+			text_offset_x = offset_x - weapon_ammo_text_offset_x
+			text_offset_y = offset_y + weapon_ammo_text_offset_y
+		elseif weapon_text_alignment == "right" then
+			text_offset_x = offset_x + weapon_ammo_text_offset_x
+			text_offset_y = offset_y + weapon_ammo_text_offset_y
+		elseif weapon_text_alignment == "top" then
+			text_offset_x = offset_x + weapon_ammo_text_offset_x
+			text_offset_y = offset_y - weapon_ammo_text_offset_y
+		elseif weapon_text_alignment == "bottom" then
+			text_offset_x = offset_x + weapon_ammo_text_offset_x
+			text_offset_y = offset_y + weapon_ammo_text_offset_y
+		elseif weapon_text_alignment == "center" then
+			text_offset_x = offset_x + weapon_ammo_text_offset_x
+			text_offset_y = offset_y + weapon_ammo_text_offset_y
 		end
 		
 		instance.widget_definitions[weapon_slot.name .. "_icon"] = UIWidget.create_definition({
@@ -178,6 +223,35 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 				},
 			},
 		}, "background")
+		
+		instance.widget_definitions[weapon_slot.name .. "_text"] = UIWidget.create_definition({
+			{
+				pass_type = "text",
+				style_id = "text",
+				value_id = "text",
+				value = "",
+				style = {
+					horizontal_alignment = "left",
+					vertical_alignment = "top",
+					text_horizontal_alignment = text_horizontal_alignment,
+					text_vertical_alignment = text_vertical_alignment,
+					font_type = hud_body_font_settings.font_type or "machine_medium",
+					font_size = weapon_ammo_font_size,
+					line_spacing = 1.2,
+					text_color = UIHudSettings.color_tint_main_1,
+					drop_shadow = true,
+					offset = {
+						text_offset_x,
+						text_offset_y,
+						4,
+					},
+					size = {
+						weapon_icon_width,
+						weapon_icon_height,
+					},
+				},
+			},
+		}, "background")
 	end
 end)
 
@@ -191,6 +265,10 @@ local function reset_talent_ui_settings()
 	mod:set("teammate_weapon_horizontal_offset", TalentUISettings.teammate_weapon_horizontal_offset)
 	mod:set("teammate_weapon_vertical_offset", TalentUISettings.teammate_weapon_vertical_offset)
 	mod:set("teammate_weapon_orientation", TalentUISettings.teammate_weapon_orientation)
+	mod:set("teammate_weapon_text_alignment", TalentUISettings.teammate_weapon_text_alignment)
+	mod:set("teammate_weapon_ammo_font_size", TalentUISettings.teammate_weapon_ammo_font_size)
+	mod:set("teammate_weapon_ammo_text_offset_x", TalentUISettings.teammate_weapon_ammo_text_offset_x)
+	mod:set("teammate_weapon_ammo_text_offset_y", TalentUISettings.teammate_weapon_ammo_text_offset_y)
 end
 
 function mod.on_setting_changed(setting_id)
@@ -214,4 +292,3 @@ end
 mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_teammate_ability")
 mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_teammate_weapons")
 mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_local_ability")
-

@@ -1,6 +1,7 @@
 local mod = get_mod("TalentUI")
 
 local MasterItems = require("scripts/backend/master_items")
+local Ammo = require("scripts/utilities/ammo")
 
 local TalentUISettings = mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_settings")
 
@@ -92,6 +93,11 @@ local function update_teammate_weapons(self, player, dt)
 			if icon_widget then
 				icon_widget.visible = false
 			end
+			local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
+			if text_widget then
+				text_widget.visible = false
+				text_widget.dirty = true
+			end
 		end
 		return
 	end
@@ -106,6 +112,11 @@ local function update_teammate_weapons(self, player, dt)
 			local icon_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_icon"]
 			if icon_widget then
 				icon_widget.visible = false
+			end
+			local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
+			if text_widget then
+				text_widget.visible = false
+				text_widget.dirty = true
 			end
 		end
 		return
@@ -126,6 +137,11 @@ local function update_teammate_weapons(self, player, dt)
 			if icon_widget then
 				icon_widget.visible = false
 			end
+			local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
+			if text_widget then
+				text_widget.visible = false
+				text_widget.dirty = true
+			end
 		end
 		return
 	end
@@ -136,6 +152,11 @@ local function update_teammate_weapons(self, player, dt)
 			local icon_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_icon"]
 			if icon_widget then
 				icon_widget.visible = false
+			end
+			local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
+			if text_widget then
+				text_widget.visible = false
+				text_widget.dirty = true
 			end
 		end
 		return
@@ -192,8 +213,49 @@ local function update_teammate_weapons(self, player, dt)
 				end
 				
 				icon_widget.visible = true
+				
+				local show_ammo = mod:get("teammate_weapon_show_ammo")
+				local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
+				if text_widget then
+					if show_ammo then
+						local unit_data_extension = extensions.unit_data
+						local inventory_component = unit_data_extension and unit_data_extension:read_component(weapon_slot.slot)
+						
+						if inventory_component then
+							local max_clip = Ammo.max_ammo_in_clips(inventory_component) or 0
+							local max_reserve = Ammo.max_ammo_in_reserve(inventory_component) or 0
+							local current_clip = Ammo.current_ammo_in_clips(inventory_component) or 0
+							local current_reserve = Ammo.current_ammo_in_reserve(inventory_component) or 0
+							local total_current_ammo = current_clip + current_reserve
+							local total_max_ammo = max_clip + max_reserve
+							
+							if total_max_ammo == 0 or self._show_as_dead or self._dead or self._hogtied then
+								text_widget.content.text = ""
+								text_widget.visible = false
+							else
+								text_widget.content.text = string.format("%d/%d", total_current_ammo, total_max_ammo)
+								text_widget.visible = true
+							end
+							text_widget.dirty = true
+						else
+							text_widget.content.text = ""
+							text_widget.visible = false
+							text_widget.dirty = true
+						end
+					else
+						text_widget.content.text = ""
+						text_widget.visible = false
+						text_widget.dirty = true
+					end
+				end
 			else
 				icon_widget.visible = false
+				
+				local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
+				if text_widget then
+					text_widget.visible = false
+					text_widget.dirty = true
+				end
 			end
 		end
 	end

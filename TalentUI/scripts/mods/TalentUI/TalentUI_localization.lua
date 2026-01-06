@@ -135,6 +135,26 @@ return {
 		en = "Orientation",
 		ru = "Ориентация",
 	},
+	teammate_weapon_text_alignment = {
+		en = "Ammo Text Alignment",
+		ru = "Выравнивание текста боеприпасов",
+	},
+	teammate_weapon_show_ammo = {
+		en = "Show Ammo",
+		ru = "Показывать боеприпасы",
+	},
+	teammate_weapon_ammo_font_size = {
+		en = "Ammo Font Size",
+		ru = "Размер шрифта боеприпасов",
+	},
+	teammate_weapon_ammo_text_offset_x = {
+		en = "Ammo Text Horizontal Offset",
+		ru = "Горизонтальное смещение текста боеприпасов",
+	},
+	teammate_weapon_ammo_text_offset_y = {
+		en = "Ammo Text Vertical Offset",
+		ru = "Вертикальное смещение текста боеприпасов",
+	},
 	vertical = {
 		en = "Vertical",
 		ru = "Вертикально",
