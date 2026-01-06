@@ -136,19 +136,6 @@ local SETTINGS = {
 			ammo_text_offset_x = 60,
 			ammo_text_offset_y = 5,
 		},
-		numericui = {
-			icon_width = 70,
-			icon_height = 26,
-			vertical_offset = 20,
-			horizontal_offset = 350,
-			orientation = "vertical",
-			spacing = 0,
-			show_ammo = true,
-			text_alignment = "bottom",
-			ammo_font_size = 12,
-			ammo_text_offset_x = 60,
-			ammo_text_offset_y = 5,
-		},
 	},
 }
 

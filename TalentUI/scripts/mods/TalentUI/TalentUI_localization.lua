@@ -155,10 +155,6 @@ return {
 		en = "Default",
 		ru = "По умолчанию",
 	},
-	weapon_preset_numericui = {
-		en = "NumericUI",
-		ru = "NumericUI",
-	},
 	weapon_preset_equipment_side = {
 		en = "Equipment Side",
 		ru = "Рядом со снаряжением",
