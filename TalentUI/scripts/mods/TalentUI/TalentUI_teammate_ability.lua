@@ -67,53 +67,7 @@ local function get_player_ability_by_type(player, extensions, slot_type)
 			}
 		end
 
-		local success, result = pcall(function()
-			local profile = player:profile()
-			if profile then
-				local loadout_data = {
-					ability = {},
-					blitz = {},
-					aura = {},
-				}
-				local loadout_success = pcall(function()
-					CharacterSheet.class_loadout(profile, loadout_data, false, profile.talents or {})
-				end)
-				if loadout_success and loadout_data and loadout_data.aura then
-					local icon = loadout_data.aura.icon
-					
-					if icon then
-						return {
-							ability_id = "aura",
-							ability_type = "coherency_ability",
-							icon = icon,
-							name = loadout_data.aura.talent and loadout_data.aura.talent.display_name or "Aura",
-						}
-					end
-				end
-			end
-			return nil
-		end)
-		
-		if success and result then
-			return result
-		end
-
 		return nil
-	end
-	
-	if slot_type == "slot_grenade_ability" then
-		local blitz_entry = get_talent_from_character_sheet(player, "blitz")
-
-		if blitz_entry and blitz_entry.talent then
-			return {
-				ability_id = "blitz",
-				ability_type = "grenade_ability",
-				icon = blitz_entry.icon,
-				name = blitz_entry.talent.display_name or "Blitz",
-			}
-		else
-			return nil
-		end
 	end
 	
 	if not extensions or not extensions.ability then
@@ -185,17 +139,17 @@ end
 
 local function get_ability_state(player, extensions, ability_type)
 	if ability_type == "coherency_ability" then
-		return 1, false, 1, true, 1
+		return 1, false, nil, false, nil
 	end
 	
 	if not extensions or not extensions.ability then
-		return 1, false, 1, true, 1
+		return 1, false, nil, false, nil
 	end
 	
 	local ability_extension = extensions.ability
 	
 	if not ability_extension:ability_is_equipped(ability_type) then
-		return 1, false, 1, true, 1
+		return 1, false, nil, false, nil
 	end
 	
 	local remaining_cooldown = ability_extension:remaining_ability_cooldown(ability_type)
@@ -204,7 +158,7 @@ local function get_ability_state(player, extensions, ability_type)
 	local max_charges = ability_extension:max_ability_charges(ability_type)
 	
 	local uses_charges = max_charges and max_charges > 1
-	local has_charges_left = remaining_charges > 0
+	local has_charges_left = remaining_charges and remaining_charges > 0 or false
 	
 	local cooldown_progress = 1
 	
@@ -219,7 +173,7 @@ local function get_ability_state(player, extensions, ability_type)
 	
 	local on_cooldown = cooldown_progress ~= 1
 	
-	return cooldown_progress, on_cooldown, remaining_charges or 1, has_charges_left, max_charges or 1
+	return cooldown_progress, on_cooldown, remaining_charges, has_charges_left, max_charges
 end
 
 local function get_ability_state_colors(on_cooldown, uses_charges, has_charges_left)
@@ -322,51 +276,65 @@ local function get_ability_material_settings(ability_id, on_cooldown, uses_charg
 	return {intensity = 0, saturation = 1}
 end
 
+local function hide_all_ability_widgets(self)
+	for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
+		local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
+		local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
+		if icon_widget then
+			icon_widget.visible = false
+		end
+		if text_widget then
+			text_widget.visible = false
+		end
+	end
+end
+
+local function format_cooldown_text(ability_ext, ability_type_name, format_type, uses_charges, remaining_charges)
+	local charges_text = ""
+	local cooldown_text = ""
+	
+	if uses_charges and remaining_charges ~= nil and remaining_charges > 0 then
+		charges_text = tostring(remaining_charges)
+	end
+	
+	local remaining_cooldown = ability_ext:remaining_ability_cooldown(ability_type_name)
+	if remaining_cooldown and remaining_cooldown > 0 then
+		if format_type == "time" then
+			cooldown_text = string.format("%d", math.ceil(remaining_cooldown))
+		elseif format_type == "percent" then
+			local max_cooldown = ability_ext:max_ability_cooldown(ability_type_name)
+			if max_cooldown and max_cooldown > 0 then
+				local percent = (1 - remaining_cooldown / max_cooldown) * 100
+				if percent < 99 then
+					cooldown_text = string.format("%d%%", math.floor(percent))
+				end
+			end
+		end
+	end
+	
+	if charges_text ~= "" and cooldown_text ~= "" then
+		return string.format("%s (%s)", charges_text, cooldown_text)
+	elseif charges_text ~= "" then
+		return charges_text
+	elseif cooldown_text ~= "" then
+		return cooldown_text
+	end
+	
+	return ""
+end
 
 local function update_teammate_all_abilities(self, player, dt)
 	local player_name = player:name()
 
 	if not player_name then
-		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
-			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
-			local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
-			if icon_widget then
-				icon_widget.visible = false
-			end
-			if text_widget then
-				text_widget.visible = false
-			end
-		end
-		return
-	end
-
-	if not player_name then
-		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
-			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
-			local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
-			if icon_widget then
-				icon_widget.visible = false
-			end
-			if text_widget then
-				text_widget.visible = false
-			end
-		end
+		hide_all_ability_widgets(self)
 		return
 	end
 
 	local extensions = self:_player_extensions(player)
 
 	if not extensions then
-		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
-			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
-			local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
-			if icon_widget then
-				icon_widget.visible = false
-			end
-			if text_widget then
-				text_widget.visible = false
-			end
-		end
+		hide_all_ability_widgets(self)
 		return
 	end
 
@@ -381,16 +349,7 @@ local function update_teammate_all_abilities(self, player, dt)
 
 	local show_for_bots = TalentUISettings and TalentUISettings.show_abilities_for_bots ~= false
 	if (not show_for_bots and not player:is_human_controlled()) or self._show_as_dead or self._dead or self._hogtied then
-		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
-			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
-			local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
-			if icon_widget then
-				icon_widget.visible = false
-			end
-			if text_widget then
-				text_widget.visible = false
-			end
-		end
+		hide_all_ability_widgets(self)
 		return
 	end
 	
@@ -441,7 +400,7 @@ local function update_teammate_all_abilities(self, player, dt)
 				end
 				
 				local cooldown_progress, on_cooldown, remaining_charges, has_charges_left, max_charges = get_ability_state(player, extensions, ability_type)
-				local uses_charges = max_charges > 1
+				local uses_charges = max_charges and max_charges > 1
 				
 				local gradient_map = get_ability_gradient_map(ability_info.id)
 				if gradient_map and icon_widget.style and icon_widget.style.icon and icon_widget.style.icon.material_values and icon_widget.style.icon.material_values.gradient_map ~= gradient_map then
@@ -487,69 +446,24 @@ local function update_teammate_all_abilities(self, player, dt)
 					if ability_info.id == "ability" then
 						show_text = mod:get("show_teammate_ability_cooldown")
 						
-						if show_text then
-							local charges_text = ""
-							local cooldown_text = ""
-							
-							if uses_charges and remaining_charges ~= nil and remaining_charges > 0 then
-								charges_text = tostring(remaining_charges)
-							end
-							
-							if extensions and extensions.ability then
-								local ability_ext = extensions.ability
-								local remaining_cooldown = ability_ext:remaining_ability_cooldown("combat_ability")
-								if remaining_cooldown and remaining_cooldown > 0 then
-									local format_type = mod:get("cooldown_format")
-									if format_type == "time" then
-										cooldown_text = string.format("%d", math.ceil(remaining_cooldown))
-									elseif format_type == "percent" then
-										local max_cooldown = ability_ext:max_ability_cooldown("combat_ability")
-										if max_cooldown and max_cooldown > 0 then
-											local percent = (1 - remaining_cooldown / max_cooldown) * 100
-											if percent < 99 then
-												cooldown_text = string.format("%d%%", math.floor(percent))
-											end
-										end
-									end
-								end
-							end
-							
-							if charges_text ~= "" and cooldown_text ~= "" then
-								display_text = string.format("%s (%s)", charges_text, cooldown_text)
-							elseif charges_text ~= "" then
-								display_text = charges_text
-							elseif cooldown_text ~= "" then
-								display_text = cooldown_text
-							end
+						if show_text and extensions and extensions.ability then
+							local ability_ext = extensions.ability
+							local format_type = mod:get("cooldown_format")
+							display_text = format_cooldown_text(ability_ext, "combat_ability", format_type, uses_charges, remaining_charges)
 						end
 					elseif ability_info.id == "blitz" then
 						show_text = mod:get("show_teammate_blitz_charges")
 						
-						if show_text then
-							if extensions and extensions.ability then
-								local ability_ext = extensions.ability
-								if uses_charges then
-									local charges = ability_ext:remaining_ability_charges("grenade_ability")
-									if charges ~= nil and charges >= 0 then
-										display_text = tostring(charges)
-									end
-								else
-									local remaining_cooldown = ability_ext:remaining_ability_cooldown("grenade_ability")
-									if remaining_cooldown and remaining_cooldown > 0 then
-										local format_type = mod:get("cooldown_format")
-										if format_type == "time" then
-											display_text = string.format("%d", math.ceil(remaining_cooldown))
-										elseif format_type == "percent" then
-											local max_cooldown = ability_ext:max_ability_cooldown("grenade_ability")
-											if max_cooldown and max_cooldown > 0 then
-												local percent = (1 - remaining_cooldown / max_cooldown) * 100
-												if percent < 99 then
-													display_text = string.format("%d%%", math.floor(percent))
-												end
-											end
-										end
-									end
+						if show_text and extensions and extensions.ability then
+							local ability_ext = extensions.ability
+							if uses_charges then
+								local charges = ability_ext:remaining_ability_charges("grenade_ability")
+								if charges ~= nil and charges >= 0 then
+									display_text = tostring(charges)
 								end
+							else
+								local format_type = mod:get("cooldown_format")
+								display_text = format_cooldown_text(ability_ext, "grenade_ability", format_type, uses_charges, remaining_charges)
 							end
 						end
 					end

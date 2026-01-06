@@ -80,6 +80,19 @@ local function get_player_weapon_by_slot(player, extensions, slot_name)
 	}
 end
 
+local function hide_all_weapon_widgets(self)
+	for _, weapon_slot in ipairs(WEAPON_SLOTS) do
+		local icon_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_icon"]
+		if icon_widget then
+			icon_widget.visible = false
+		end
+		local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
+		if text_widget then
+			text_widget.visible = false
+			text_widget.dirty = true
+		end
+	end
+end
 
 local function update_teammate_weapons(self, player, dt)
 	if not self._widgets_by_name then
@@ -88,17 +101,7 @@ local function update_teammate_weapons(self, player, dt)
 	
 	local player_peer_id = player:peer_id()
 	if not player_peer_id then
-		for _, weapon_slot in ipairs(WEAPON_SLOTS) do
-			local icon_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_icon"]
-			if icon_widget then
-				icon_widget.visible = false
-			end
-			local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
-			if text_widget then
-				text_widget.visible = false
-				text_widget.dirty = true
-			end
-		end
+		hide_all_weapon_widgets(self)
 		return
 	end
 	
@@ -108,17 +111,7 @@ local function update_teammate_weapons(self, player, dt)
 	local extensions = self:_player_extensions(player)
 
 	if not extensions then
-		for _, weapon_slot in ipairs(WEAPON_SLOTS) do
-			local icon_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_icon"]
-			if icon_widget then
-				icon_widget.visible = false
-			end
-			local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
-			if text_widget then
-				text_widget.visible = false
-				text_widget.dirty = true
-			end
-		end
+		hide_all_weapon_widgets(self)
 		return
 	end
 
@@ -132,33 +125,13 @@ local function update_teammate_weapons(self, player, dt)
 	player_previous_human_state_weapons[player_identifier] = is_human_controlled
 
 	if self._show_as_dead or self._dead or self._hogtied then
-		for _, weapon_slot in ipairs(WEAPON_SLOTS) do
-			local icon_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_icon"]
-			if icon_widget then
-				icon_widget.visible = false
-			end
-			local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
-			if text_widget then
-				text_widget.visible = false
-				text_widget.dirty = true
-			end
-		end
+		hide_all_weapon_widgets(self)
 		return
 	end
 
 	local show_for_bots = TalentUISettings and TalentUISettings.show_abilities_for_bots ~= false
 	if not show_for_bots and not player:is_human_controlled() then
-		for _, weapon_slot in ipairs(WEAPON_SLOTS) do
-			local icon_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_icon"]
-			if icon_widget then
-				icon_widget.visible = false
-			end
-			local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
-			if text_widget then
-				text_widget.visible = false
-				text_widget.dirty = true
-			end
-		end
+		hide_all_weapon_widgets(self)
 		return
 	end
 	
