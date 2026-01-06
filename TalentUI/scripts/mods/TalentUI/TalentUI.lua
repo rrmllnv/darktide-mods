@@ -284,8 +284,39 @@ function mod.on_setting_changed(setting_id)
 		
 		if TalentUISettings.teammate_weapon_position_presets and TalentUISettings.teammate_weapon_position_presets[preset] then
 			local preset_values = TalentUISettings.teammate_weapon_position_presets[preset]
-			mod:set("teammate_weapon_horizontal_offset", preset_values.horizontal_offset)
-			mod:set("teammate_weapon_vertical_offset", preset_values.vertical_offset)
+			if preset_values.icon_width then
+				mod:set("teammate_weapon_icon_width", preset_values.icon_width)
+			end
+			if preset_values.icon_height then
+				mod:set("teammate_weapon_icon_height", preset_values.icon_height)
+			end
+			if preset_values.horizontal_offset then
+				mod:set("teammate_weapon_horizontal_offset", preset_values.horizontal_offset)
+			end
+			if preset_values.vertical_offset then
+				mod:set("teammate_weapon_vertical_offset", preset_values.vertical_offset)
+			end
+			if preset_values.orientation then
+				mod:set("teammate_weapon_orientation", preset_values.orientation)
+			end
+			if preset_values.spacing then
+				mod:set("teammate_weapon_spacing", preset_values.spacing)
+			end
+			if preset_values.show_ammo ~= nil then
+				mod:set("teammate_weapon_show_ammo", preset_values.show_ammo)
+			end
+			if preset_values.text_alignment then
+				mod:set("teammate_weapon_text_alignment", preset_values.text_alignment)
+			end
+			if preset_values.ammo_font_size then
+				mod:set("teammate_weapon_ammo_font_size", preset_values.ammo_font_size)
+			end
+			if preset_values.ammo_text_offset_x then
+				mod:set("teammate_weapon_ammo_text_offset_x", preset_values.ammo_text_offset_x)
+			end
+			if preset_values.ammo_text_offset_y then
+				mod:set("teammate_weapon_ammo_text_offset_y", preset_values.ammo_text_offset_y)
+			end
 		end
 	end
 end
