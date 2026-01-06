@@ -11,12 +11,9 @@ local function check_third_person_mode()
 		return false
 	end
 
-	-- Безопасный вызов local_player с проверкой на ошибки
-	local success, player = pcall(function()
-		return Managers.player:local_player(1)
-	end)
-	
-	if not success or not player then
+	-- Используем local_player_safe для безопасного получения игрока
+	local player = Managers.player:local_player_safe(1)
+	if not player then
 		return false
 	end
 
@@ -57,7 +54,8 @@ local function is_flashlight_enabled()
 		return false
 	end
 
-	local player = Managers.player:local_player(1)
+	-- Используем local_player_safe для безопасного получения игрока
+	local player = Managers.player:local_player_safe(1)
 	if not player then
 		return false
 	end
@@ -99,7 +97,20 @@ local function get_flashlight_attachments_3p()
 		return nil
 	end
 
-	local player = Managers.player:local_player(1)
+	-- Безопасный вызов local_player
+	local player
+	if Managers.player.local_player_safe then
+		player = Managers.player:local_player_safe(1)
+	else
+		local success, result = pcall(function()
+			return Managers.player:local_player(1)
+		end)
+		if not success then
+			return nil
+		end
+		player = result
+	end
+	
 	if not player then
 		return nil
 	end
