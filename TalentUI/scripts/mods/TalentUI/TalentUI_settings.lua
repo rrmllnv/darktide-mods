@@ -5,12 +5,12 @@ local SETTINGS = {
 
 	local_cooldown_font_size = 40,
 
-	teammate_ability_vertical_offset = -10,
+	teammate_ability_vertical_offset = -5,
 	teammate_ability_horizontal_offset = 5,
 	teammate_ability_orientation = "vertical", -- horizontal, vertical
 	teammate_ability_text_alignment = "left", -- left, top, right, bottom, center
 	teammate_ability_icon_size = 30,
-	teammate_ability_spacing = 0,
+	teammate_ability_spacing = -3,
 	teammate_ability_cooldown_font_size = 12,
 	teammate_ability_text_offset = 10,
 	
