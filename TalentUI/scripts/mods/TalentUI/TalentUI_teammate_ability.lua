@@ -379,22 +379,8 @@ local function update_teammate_all_abilities(self, player, dt)
 
 	player_previous_human_state[player_name] = is_human_controlled
 
-	if self._show_as_dead or self._dead or self._hogtied then
-		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
-			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
-			local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
-			if icon_widget then
-				icon_widget.visible = false
-			end
-			if text_widget then
-				text_widget.visible = false
-			end
-		end
-		return
-	end
-
 	local show_for_bots = TalentUISettings and TalentUISettings.show_abilities_for_bots ~= false
-	if not show_for_bots and not player:is_human_controlled() then
+	if (not show_for_bots and not player:is_human_controlled()) or self._show_as_dead or self._dead or self._hogtied then
 		for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
 			local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
 			local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
@@ -440,7 +426,7 @@ local function update_teammate_all_abilities(self, player, dt)
 				show_icon = mod:get("show_teammate_aura_icon")
 			end
 			
-			if has_ability and show_icon then
+			if has_ability and show_icon and not self._show_as_dead and not self._dead and not self._hogtied then
 				local ability_type = teammate_abilities_data[data_key].ability_type
 				local icon = teammate_abilities_data[data_key].icon
 				
@@ -599,37 +585,3 @@ mod.clear_teammate_all_abilities_data = function(player_name)
 	
 	player_previous_human_state[player_name] = nil
 end
-
-local function update_player_features_hook(func, self, dt, t, player, ui_renderer)
-	func(self, dt, t, player, ui_renderer)
-	
-	update_teammate_all_abilities(self, player, dt)
-	
-	if mod.update_teammate_weapons then
-		mod.update_teammate_weapons(self, player, dt)
-	end
-end
-
-mod:hook("HudElementTeamPlayerPanel", "_update_player_features", update_player_features_hook)
-
-mod:hook_safe("HudElementTeamPlayerPanel", "destroy", function(self)
-	local player = self._data.player
-	if player then
-		local success, player_name = pcall(function()
-			return player:name()
-		end)
-		if success and player_name then
-			mod.clear_teammate_all_abilities_data(player_name)
-			if mod.clear_teammate_weapons_data then
-				local player_peer_id = player:peer_id()
-				if player_peer_id then
-					local player_unique_id = player:unique_id()
-					local player_identifier = player_unique_id or tostring(player_peer_id)
-					mod.clear_teammate_weapons_data(player_identifier)
-				end
-			end
-		end
-	end
-end)
-
-

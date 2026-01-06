@@ -354,6 +354,42 @@ function mod.on_setting_changed(setting_id)
 	end
 end
 
+local function update_player_features_hook(func, self, dt, t, player, ui_renderer)
+	func(self, dt, t, player, ui_renderer)
+	
+	if mod.update_teammate_all_abilities then
+		mod.update_teammate_all_abilities(self, player, dt)
+	end
+	
+	if mod.update_teammate_weapons then
+		mod.update_teammate_weapons(self, player, dt)
+	end
+end
+
+mod:hook("HudElementTeamPlayerPanel", "_update_player_features", update_player_features_hook)
+
+mod:hook_safe("HudElementTeamPlayerPanel", "destroy", function(self)
+	local player = self._data.player
+	if player then
+		local success, player_name = pcall(function()
+			return player:name()
+		end)
+		if success and player_name then
+			if mod.clear_teammate_all_abilities_data then
+				mod.clear_teammate_all_abilities_data(player_name)
+			end
+			if mod.clear_teammate_weapons_data then
+				local player_peer_id = player:peer_id()
+				if player_peer_id then
+					local player_unique_id = player:unique_id()
+					local player_identifier = player_unique_id or tostring(player_peer_id)
+					mod.clear_teammate_weapons_data(player_identifier)
+				end
+			end
+		end
+	end
+end)
+
 mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_teammate_ability")
 mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_teammate_weapons")
 mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_local_ability")
