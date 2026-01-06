@@ -100,8 +100,8 @@ return {
 		ru = "Ориентация",
 	},
 	teammate_ability_spacing = {
-		en = "Spacing",
-		ru = "Расстояние",
+		en = "Distance Between Icons",
+		ru = "Расстояние между иконками",
 	},
 	teammate_ability_text_alignment = {
 		en = "Text Alignment",
@@ -176,8 +176,8 @@ return {
 		ru = "Ориентация",
 	},
 	teammate_weapon_spacing = {
-		en = "Spacing",
-		ru = "Расстояние",
+		en = "Distance Between Icons",
+		ru = "Расстояние между иконками",
 	},
 	teammate_weapon_text_alignment = {
 		en = "Ammo Text Alignment",
