@@ -1,11 +1,10 @@
 local mod = get_mod("ConsoleLog")
 
-local HudElementBase = require("scripts/ui/hud/elements/hud_element_base")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local UIWorkspaceSettings = require("scripts/settings/ui/ui_workspace_settings")
 
-local HudElementConsoleLog = class("HudElementConsoleLog", HudElementBase)
+local HudElementConsoleLog = class("HudElementConsoleLog", "HudElementBase")
 
 -- Scenegraph definition
 local scenegraph_definition = {
