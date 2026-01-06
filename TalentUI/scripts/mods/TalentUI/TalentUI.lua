@@ -186,19 +186,19 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 		
 		if weapon_text_alignment == "left" then
 			text_offset_x = offset_x - weapon_ammo_text_offset_x
-			text_offset_y = offset_y + weapon_ammo_text_offset_y
+			text_offset_y = offset_y -- + weapon_ammo_text_offset_y
 		elseif weapon_text_alignment == "right" then
 			text_offset_x = offset_x + weapon_ammo_text_offset_x
-			text_offset_y = offset_y + weapon_ammo_text_offset_y
+			text_offset_y = offset_y -- + weapon_ammo_text_offset_y
 		elseif weapon_text_alignment == "top" then
-			text_offset_x = offset_x + weapon_ammo_text_offset_x
+			text_offset_x = offset_x -- + weapon_ammo_text_offset_x
 			text_offset_y = offset_y - weapon_ammo_text_offset_y
 		elseif weapon_text_alignment == "bottom" then
-			text_offset_x = offset_x + weapon_ammo_text_offset_x
+			text_offset_x = offset_x --+ weapon_ammo_text_offset_x
 			text_offset_y = offset_y + weapon_ammo_text_offset_y
 		elseif weapon_text_alignment == "center" then
-			text_offset_x = offset_x + weapon_ammo_text_offset_x
-			text_offset_y = offset_y + weapon_ammo_text_offset_y
+			text_offset_x = offset_x -- + weapon_ammo_text_offset_x
+			text_offset_y = offset_y -- + weapon_ammo_text_offset_y
 		end
 		
 		instance.widget_definitions[weapon_slot.name .. "_icon"] = UIWidget.create_definition({
@@ -262,6 +262,7 @@ local function reset_talent_ui_settings()
 	mod:set("teammate_ability_text_alignment", TalentUISettings.teammate_ability_text_alignment)
 	mod:set("teammate_ability_icon_size", TalentUISettings.teammate_ability_icon_size)
 	mod:set("teammate_ability_cooldown_font_size", TalentUISettings.teammate_ability_cooldown_font_size)
+	mod:set("teammate_weapon_position_preset", "default")
 	mod:set("teammate_weapon_horizontal_offset", TalentUISettings.teammate_weapon_horizontal_offset)
 	mod:set("teammate_weapon_vertical_offset", TalentUISettings.teammate_weapon_vertical_offset)
 	mod:set("teammate_weapon_orientation", TalentUISettings.teammate_weapon_orientation)

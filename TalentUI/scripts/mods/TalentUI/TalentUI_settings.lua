@@ -44,10 +44,10 @@ local SETTINGS = {
 	teammate_weapon_vertical_offset = 20, -- 20
 	teammate_weapon_orientation = "vertical", -- horizontal, vertical
 	teammate_weapon_spacing = 0,
-	teammate_weapon_text_alignment = "left", -- left, top, right, bottom, center
+	teammate_weapon_text_alignment = "bottom", -- left, top, right, bottom, center
 	teammate_weapon_ammo_font_size = 12,
 	teammate_weapon_ammo_text_offset_x = 60,
-	teammate_weapon_ammo_text_offset_y = 10,
+	teammate_weapon_ammo_text_offset_y = 5,
 	teammate_weapon_show_ammo = true,
 
 	teammate_weapon_position_presets = {
