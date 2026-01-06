@@ -223,48 +223,82 @@ mod.update = function(dt)
 		local has_attachments = flashlights_3p ~= nil and #flashlights_3p > 0
 		local flashlight_on = is_flashlight_enabled()
 		
-		-- Выводим собранную информацию
-		mod:echo("=== ThirdPersonLight Debug Info ===")
-		mod:echo(string.format("3P=%s, Flashlight=%s, Enabled=%s",
-			tostring(is_3p),
-			tostring(flashlight_on),
-			tostring(mod:get("enable_light"))
-		))
-		
-		if debug_info.error then
-			mod:echo(string.format("ERROR: %s", debug_info.error))
-		else
-			mod:echo(string.format("WieldedSlot=%s, Unit3P=%s", 
-				tostring(debug_info.wielded_slot), 
-				tostring(debug_info.unit_3p)))
-			mod:echo(string.format("HasAttachmentsByUnit3P=%s, NumAttachments=%s, Unit3PComponents=%s",
-				tostring(debug_info.has_attachments_by_unit_3p),
-				tostring(debug_info.num_attachments or 0),
-				tostring(debug_info.unit_3p_components or 0)
+		-- Выводим собранную информацию через ConsoleLog если доступен
+		local console_log_mod = get_mod("ConsoleLog")
+		if console_log_mod and console_log_mod.add_log then
+			-- Очищаем предыдущие логи ThirdPersonLight
+			-- (ConsoleLog сам управляет количеством логов)
+			
+			-- Выводим основную информацию
+			console_log_mod:add_log("ThirdPersonLight", string.format("3P=%s, Flashlight=%s, Enabled=%s",
+				tostring(is_3p),
+				tostring(flashlight_on),
+				tostring(mod:get("enable_light"))
 			))
 			
-			if debug_info.attachment_details and #debug_info.attachment_details > 0 then
-				for i = 1, #debug_info.attachment_details do
-					local det = debug_info.attachment_details[i]
-					mod:echo(string.format("  Att[%d]: unit=%s, components=%d",
-						det.index, det.unit, det.num_components))
+			if debug_info.error then
+				console_log_mod:add_log("ThirdPersonLight", string.format("ERROR: %s", debug_info.error), {255, 255, 0, 0})
+			else
+				console_log_mod:add_log("ThirdPersonLight", string.format("WieldedSlot=%s, Unit3P=%s", 
+					tostring(debug_info.wielded_slot), 
+					tostring(debug_info.unit_3p)))
+				console_log_mod:add_log("ThirdPersonLight", string.format("HasAttachmentsByUnit3P=%s, NumAttachments=%s, Unit3PComponents=%s",
+					tostring(debug_info.has_attachments_by_unit_3p),
+					tostring(debug_info.num_attachments or 0),
+					tostring(debug_info.unit_3p_components or 0)
+				))
+				
+				if debug_info.attachment_details and #debug_info.attachment_details > 0 then
+					for i = 1, #debug_info.attachment_details do
+						local det = debug_info.attachment_details[i]
+						console_log_mod:add_log("ThirdPersonLight", string.format("  Att[%d]: unit=%s, components=%d",
+							det.index, det.unit, det.num_components))
+					end
+				end
+				
+				console_log_mod:add_log("ThirdPersonLight", string.format("Found Flashlights: %d", debug_info.found_flashlights or 0))
+				
+				if has_attachments then
+					for i = 1, #flashlights_3p do
+						local f = flashlights_3p[i]
+						local unit_alive = f.unit and Unit.alive(f.unit)
+						local has_component = f.component ~= nil
+						local num_lights = f.unit and Unit.num_lights(f.unit) or 0
+						console_log_mod:add_log("ThirdPersonLight", string.format("  Flashlight[%d]: unit_alive=%s, has_component=%s, num_lights=%d",
+							i, tostring(unit_alive), tostring(has_component), num_lights))
+					end
 				end
 			end
-			
-			mod:echo(string.format("Found Flashlights: %d", debug_info.found_flashlights or 0))
-			
-			if has_attachments then
-				for i = 1, #flashlights_3p do
-					local f = flashlights_3p[i]
-					local unit_alive = f.unit and Unit.alive(f.unit)
-					local has_component = f.component ~= nil
-					local num_lights = f.unit and Unit.num_lights(f.unit) or 0
-					mod:echo(string.format("  Flashlight[%d]: unit_alive=%s, has_component=%s, num_lights=%d",
-						i, tostring(unit_alive), tostring(has_component), num_lights))
+		else
+			-- Fallback на обычный echo если ConsoleLog недоступен
+			mod:echo("=== ThirdPersonLight Debug Info ===")
+			mod:echo(string.format("3P=%s, Flashlight=%s, Enabled=%s",
+				tostring(is_3p),
+				tostring(flashlight_on),
+				tostring(mod:get("enable_light"))
+			))
+			if debug_info.error then
+				mod:echo(string.format("ERROR: %s", debug_info.error))
+			else
+				mod:echo(string.format("WieldedSlot=%s, Unit3P=%s", 
+					tostring(debug_info.wielded_slot), 
+					tostring(debug_info.unit_3p)))
+				mod:echo(string.format("HasAttachmentsByUnit3P=%s, NumAttachments=%s, Unit3PComponents=%s",
+					tostring(debug_info.has_attachments_by_unit_3p),
+					tostring(debug_info.num_attachments or 0),
+					tostring(debug_info.unit_3p_components or 0)
+				))
+				if debug_info.attachment_details and #debug_info.attachment_details > 0 then
+					for i = 1, #debug_info.attachment_details do
+						local det = debug_info.attachment_details[i]
+						mod:echo(string.format("  Att[%d]: unit=%s, components=%d",
+							det.index, det.unit, det.num_components))
+					end
 				end
+				mod:echo(string.format("Found Flashlights: %d", debug_info.found_flashlights or 0))
 			end
+			mod:echo("===================================")
 		end
-		mod:echo("===================================")
 	end
 end
 
