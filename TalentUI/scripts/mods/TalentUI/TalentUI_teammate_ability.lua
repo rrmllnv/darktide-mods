@@ -282,9 +282,11 @@ local function hide_all_ability_widgets(self)
 		local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
 		if icon_widget then
 			icon_widget.visible = false
+			icon_widget.dirty = true
 		end
 		if text_widget then
 			text_widget.visible = false
+			text_widget.dirty = true
 		end
 	end
 end
@@ -326,6 +328,11 @@ end
 local function update_teammate_all_abilities(self, player, dt)
 	local player_name = player:name()
 
+	-- if self._show_as_dead or self._dead or self._hogtied then
+	-- 	hide_all_ability_widgets(self)
+	-- 	return
+	-- end
+
 	if not player_name then
 		hide_all_ability_widgets(self)
 		return
@@ -356,6 +363,11 @@ local function update_teammate_all_abilities(self, player, dt)
 	local icon_size = mod:get("teammate_ability_icon_size") or TalentUISettings.teammate_ability_icon_size
 	
 	for i = 1, #TALENT_ABILITY_METADATA do
+		-- if self._show_as_dead or self._dead or self._hogtied then
+		-- 	hide_all_ability_widgets(self)
+		-- 	return
+		-- end
+		
 		local ability_info = TALENT_ABILITY_METADATA[i]
 		local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_icon"]
 		local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_info.id .. "_text"]

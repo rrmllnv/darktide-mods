@@ -85,6 +85,7 @@ local function hide_all_weapon_widgets(self)
 		local icon_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_icon"]
 		if icon_widget then
 			icon_widget.visible = false
+			icon_widget.dirty = true
 		end
 		local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
 		if text_widget then
@@ -98,6 +99,11 @@ local function update_teammate_weapons(self, player, dt)
 	if not self._widgets_by_name then
 		return
 	end
+	
+	-- if self._show_as_dead or self._dead or self._hogtied then
+	-- 	hide_all_weapon_widgets(self)
+	-- 	return
+	-- end
 	
 	local player_peer_id = player:peer_id()
 	if not player_peer_id then
@@ -124,13 +130,8 @@ local function update_teammate_weapons(self, player, dt)
 
 	player_previous_human_state_weapons[player_identifier] = is_human_controlled
 
-	if self._show_as_dead or self._dead or self._hogtied then
-		hide_all_weapon_widgets(self)
-		return
-	end
-
 	local show_for_bots = TalentUISettings and TalentUISettings.show_abilities_for_bots ~= false
-	if not show_for_bots and not player:is_human_controlled() then
+	if (not show_for_bots and not player:is_human_controlled()) or self._show_as_dead or self._dead or self._hogtied then
 		hide_all_weapon_widgets(self)
 		return
 	end
@@ -139,6 +140,11 @@ local function update_teammate_weapons(self, player, dt)
 	local weapon_icon_height = TalentUISettings.teammate_weapon_icon_height
 	
 	for i = 1, #WEAPON_SLOTS do
+		-- if self._show_as_dead or self._dead or self._hogtied then
+		-- 	hide_all_weapon_widgets(self)
+		-- 	return
+		-- end
+		
 		local weapon_slot = WEAPON_SLOTS[i]
 		local icon_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_icon"]
 		
@@ -165,7 +171,7 @@ local function update_teammate_weapons(self, player, dt)
 				show_weapon_icon = mod:get("show_teammate_weapon_secondary_icon")
 			end
 			
-			if has_weapon and show_weapon_icon then
+			if has_weapon and show_weapon_icon and not self._show_as_dead and not self._dead and not self._hogtied then
 				local icon = teammate_weapons_data[data_key].icon
 				
 				if icon_widget.style and icon_widget.style.icon then
