@@ -134,7 +134,7 @@ return {
 						setting_id = "teammate_weapon_vertical_offset",
 						type = "numeric",
 						default_value = 20,
-						range = { -50, 350 },
+						range = { -50, 100 },
 						decimals_number = 0,
 					},
 					{
