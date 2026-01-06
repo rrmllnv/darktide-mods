@@ -25,7 +25,17 @@ local SETTINGS = {
 			cooldown_font_size = 12,
 			text_offset = 10,
 		},
-		numericui = {
+		health_below = {
+			vertical_offset = 60,
+			horizontal_offset = 120,
+			orientation = "horizontal",
+			text_alignment = "center",
+			icon_size = 30,
+			spacing = 0,
+			cooldown_font_size = 12,
+			text_offset = 10,
+		},
+		coherency_side = {
 			vertical_offset = -10,
 			horizontal_offset = 5,
 			orientation = "vertical",

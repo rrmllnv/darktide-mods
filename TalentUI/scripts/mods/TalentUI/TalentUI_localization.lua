@@ -131,9 +131,13 @@ return {
 		en = "Default",
 		ru = "По умолчанию",
 	},
-	teammate_ability_preset_numericui = {
-		en = "NumericUI",
-		ru = "NumericUI",
+	teammate_ability_preset_health_below = {
+		en = "Below Health",
+		ru = "Под здоровьем",
+	},
+	teammate_ability_preset_coherency_side = {
+		en = "Coherency Side",
+		ru = "Рядом со стойкостью",
 	},
 	teammate_weapon_position_preset = {
 		en = "Position Preset",
