@@ -290,11 +290,11 @@ function mod.on_setting_changed(setting_id)
 			if preset_values.icon_height then
 				mod:set("teammate_weapon_icon_height", preset_values.icon_height)
 			end
-			if preset_values.horizontal_offset then
-				mod:set("teammate_weapon_horizontal_offset", preset_values.horizontal_offset)
-			end
 			if preset_values.vertical_offset then
 				mod:set("teammate_weapon_vertical_offset", preset_values.vertical_offset)
+			end
+			if preset_values.horizontal_offset then
+				mod:set("teammate_weapon_horizontal_offset", preset_values.horizontal_offset)
 			end
 			if preset_values.orientation then
 				mod:set("teammate_weapon_orientation", preset_values.orientation)

@@ -131,6 +131,18 @@ return {
 		en = "NumericUI",
 		ru = "NumericUI",
 	},
+	weapon_preset_equipment_side = {
+		en = "Equipment Side",
+		ru = "Рядом со снаряжением",
+	},
+	weapon_preset_player_name_above = {
+		en = "Above Player Name",
+		ru = "Над именем игрока",
+	},
+	weapon_preset_health_below = {
+		en = "Below Health",
+		ru = "Под здоровьем",
+	},
 	teammate_weapon_orientation = {
 		en = "Orientation",
 		ru = "Ориентация",

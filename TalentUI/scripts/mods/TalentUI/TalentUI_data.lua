@@ -137,6 +137,9 @@ return {
 						options = {
 							{ text = "weapon_preset_default", value = "default" },
 							{ text = "weapon_preset_numericui", value = "numericui" },
+							{ text = "weapon_preset_equipment_side", value = "equipment_side" },
+							{ text = "weapon_preset_player_name_above", value = "player_name_above" },
+							{ text = "weapon_preset_health_below", value = "health_below" },
 						},
 					},
 					{
