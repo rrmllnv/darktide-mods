@@ -183,6 +183,10 @@ return {
 		en = "Center",
 		ru = "По центру",
 	},
+	group_system_settings = {
+		en = "System Settings",
+		ru = "Системные настройки",
+	},
 	reset_talent_ui_settings = {
 		en = "Reset Settings",
 		ru = "Сбросить настройки",
