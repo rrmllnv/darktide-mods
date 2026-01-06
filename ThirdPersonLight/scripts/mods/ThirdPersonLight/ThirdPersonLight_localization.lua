@@ -1,50 +1,51 @@
-local mod = get_mod("ThirdPersonLight")
-
 return {
 	mod_name = {
 		en = "Third Person Light",
-		ru = "Свет третьего лица",
-		["zh-cn"] = "第三人称灯光",
+		ru = "Свет от третьего лица",
 	},
 	mod_description = {
-		en = "Adds light to third person camera, similar to first person camera light",
-		ru = "Добавляет свет к камере третьего лица, аналогичный свету первого лица",
-		["zh-cn"] = "为第三人称相机添加灯光，类似于第一人称相机灯光",
+		en = "Adds camera light in third person mode, similar to first person flashlight",
+		ru = "Добавляет свет камеры в режиме от третьего лица, аналогично фонарику от первого лица",
 	},
-	enabled = {
-		en = "Enabled",
-		ru = "Включено",
-		["zh-cn"] = "启用",
+	enable_light = {
+		en = "Enable Camera Light",
+		ru = "Включить свет камеры",
+	},
+	enable_light_description = {
+		en = "Enable or disable camera light in third person mode",
+		ru = "Включить или выключить свет камеры в режиме от третьего лица",
 	},
 	light_intensity = {
 		en = "Light Intensity",
 		ru = "Интенсивность света",
-		["zh-cn"] = "灯光强度",
 	},
-	light_radius = {
-		en = "Light Radius",
-		ru = "Радиус света",
-		["zh-cn"] = "灯光半径",
+	light_intensity_description = {
+		en = "Adjust the brightness of the camera light",
+		ru = "Настройка яркости света камеры",
 	},
-	light_color_r = {
-		en = "Light Color - Red",
-		ru = "Цвет света - Красный",
-		["zh-cn"] = "灯光颜色 - 红色",
+	light_range = {
+		en = "Light Range",
+		ru = "Дальность света",
 	},
-	light_color_g = {
-		en = "Light Color - Green",
-		ru = "Цвет света - Зеленый",
-		["zh-cn"] = "灯光颜色 - 绿色",
+	light_range_description = {
+		en = "Maximum distance the light reaches",
+		ru = "Максимальная дистанция освещения",
 	},
-	light_color_b = {
-		en = "Light Color - Blue",
-		ru = "Цвет света - Синий",
-		["zh-cn"] = "灯光颜色 - 蓝色",
+	light_angle = {
+		en = "Light Angle",
+		ru = "Угол света",
 	},
-	only_in_darkness = {
-		en = "Only in Darkness",
-		ru = "Только в темноте",
-		["zh-cn"] = "仅在黑暗中",
+	light_angle_description = {
+		en = "Cone angle of the spotlight",
+		ru = "Угол конуса прожектора",
+	},
+	cast_shadows = {
+		en = "Cast Shadows",
+		ru = "Отбрасывать тени",
+	},
+	cast_shadows_description = {
+		en = "Enable shadow casting from the camera light",
+		ru = "Включить отбрасывание теней от света камеры",
 	},
 }
 

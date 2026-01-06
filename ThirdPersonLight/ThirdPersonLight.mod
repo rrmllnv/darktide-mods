@@ -8,6 +8,8 @@ return {
 			mod_localization = "ThirdPersonLight/scripts/mods/ThirdPersonLight/ThirdPersonLight_localization",
 		})
 	end,
-	packages = {},
+	packages = {
+		"content/weapons/player/attachments/flashlights/flashlight_01/flashlight_01",
+	},
 }
 
