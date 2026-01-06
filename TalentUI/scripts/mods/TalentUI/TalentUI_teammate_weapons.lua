@@ -192,6 +192,7 @@ local function update_teammate_weapons(self, player, dt)
 				end
 				
 				icon_widget.visible = true
+				icon_widget.dirty = true
 				
 				local show_ammo = mod:get("teammate_weapon_show_ammo")
 				local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
@@ -229,6 +230,7 @@ local function update_teammate_weapons(self, player, dt)
 				end
 			else
 				icon_widget.visible = false
+				icon_widget.dirty = true
 				
 				local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
 				if text_widget then

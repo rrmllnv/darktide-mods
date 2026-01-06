@@ -450,6 +450,7 @@ local function update_teammate_all_abilities(self, player, dt)
 				end
 				
 				icon_widget.visible = true
+				icon_widget.dirty = true
 				
 				if text_widget then
 					local display_text = ""
@@ -486,8 +487,10 @@ local function update_teammate_all_abilities(self, player, dt)
 				end
 			else
 				icon_widget.visible = false
+				icon_widget.dirty = true
 				if text_widget then
 					text_widget.visible = false
+					text_widget.dirty = true
 				end
 			end
 		end
