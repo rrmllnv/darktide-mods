@@ -1,43 +1,31 @@
-local mod = get_mod("PerspectivesRedux")
+local mod = get_mod("Perspectives")
 local CameraSettings = require("scripts/settings/camera/camera_settings")
 
--- ============================================================================
--- КОНСТАНТЫ
--- ============================================================================
-local FOV_NORMAL = 62.5  -- Стандартный FOV
-local FOV_ZOOM = 55.0    -- FOV при прицеливании
-local CUSTOM_MULT = 0.75 -- Множитель для кастомных настроек
+local FOV_NORMAL = 62.5
+local FOV_ZOOM = 55.0
+local CUSTOM_MULT = 0.75
 
--- ============================================================================
--- НАСТРОЙКИ КАМЕРЫ
--- ============================================================================
--- Кэшированные значения настроек
 local custom_distance = 0.0
 local custom_offset = 0.0
 local custom_distance_zoom = 0.0
 local custom_offset_zoom = 0.0
 
--- Смещения камеры (система координат):
--- +x/-x = право/лево
--- +y/-y = вперед/назад
--- +z/-z = вверх/вниз
+-- +x/-x = right/left
+-- +y/-y = forward/back
+-- +z/-z = up/down
 local ogryn_offset = {
 	x = 0.0,
 	y = 0.0,
 	z = 0.0,
 }
-
 local shoulder_offset = {
 	x = 0.5,
 	y = 0.0,
 	z = 0.0,
 }
 
--- Запечённое смещение для огрина (обновляется при рефреше)
+-- this gets baked when tree refreshes
 local ogryn_shoulder_bake = { x = 0.0, y = 0.0, z = 0.0 }
-
--- ОПТИМИЗАЦИЯ: Флаг необходимости обновления дерева камеры
-local camera_tree_needs_update = false
 
 -- flip is either true (flip), false (don't flip), or nil (it's a center viewpoint)
 local _transform_offset = function(offset, flip, is_zoom, ignore_custom_offset)
@@ -190,49 +178,18 @@ local function _alter_third_person_tree(node)
 end
 
 
--- Обновить дерево камеры
 local _refresh_camera_trees = function()
-	-- Запечь смещение плеча для огрина
 	ogryn_shoulder_bake.x = ogryn_offset.x + shoulder_offset.x
 	ogryn_shoulder_bake.y = ogryn_offset.y + shoulder_offset.y
 	ogryn_shoulder_bake.z = ogryn_offset.z + shoulder_offset.z
-	
-	-- Модифицировать дерево камеры
 	_alter_third_person_tree(CameraSettings.player_third_person)
-	
-	-- ИСПРАВЛЕНИЕ: Безопасно перезагрузить camera handler
 	local camera_handler = mod.get_camera_handler()
 	if camera_handler then
-		local success, error_msg = pcall(function()
-			if camera_handler.on_reload then
-				camera_handler:on_reload()
-			end
-		end)
-		
-		if not success then
-			mod:error("Failed to reload camera handler: %s", error_msg)
-		end
+		camera_handler:on_reload()
 	end
-	
-	camera_tree_needs_update = false
 end
-
--- Инициализация дерева камеры
 _refresh_camera_trees()
 
--- ОПТИМИЗАЦИЯ: Отметить дерево камеры для обновления (отложенное обновление)
-mod.mark_camera_tree_dirty = function()
-	camera_tree_needs_update = true
-end
-
--- ОПТИМИЗАЦИЯ: Применить обновление если нужно
-mod.apply_camera_tree_update = function()
-	if camera_tree_needs_update then
-		_refresh_camera_trees()
-	end
-end
-
--- Применить кастомные настройки viewpoint
 mod.apply_custom_viewpoint = function()
 	ogryn_offset.y = -mod:get("custom_distance_ogryn") * CUSTOM_MULT - 0.75
 	ogryn_offset.z = mod:get("custom_offset_ogryn") * CUSTOM_MULT - 0.1
