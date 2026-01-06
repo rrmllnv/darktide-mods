@@ -131,6 +131,15 @@ return {
 				type = "group",
 				sub_widgets = {
 					{
+						setting_id = "teammate_weapon_position_preset",
+						type = "dropdown",
+						default_value = "default",
+						options = {
+							{ text = "weapon_preset_default", value = "default" },
+							{ text = "weapon_preset_numericui", value = "numericui" },
+						},
+					},
+					{
 						setting_id = "teammate_weapon_vertical_offset",
 						type = "numeric",
 						default_value = 20,

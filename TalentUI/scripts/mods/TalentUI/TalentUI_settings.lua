@@ -44,6 +44,17 @@ local SETTINGS = {
 	teammate_weapon_vertical_offset = 20, -- 20
 	teammate_weapon_orientation = "vertical", -- horizontal, vertical
 	teammate_weapon_spacing = 0,
+
+	teammate_weapon_position_presets = {
+		default = {
+			horizontal_offset = 330,
+			vertical_offset = 20,
+		},
+		numericui = {
+			horizontal_offset = 350,
+			vertical_offset = 20,
+		},
+	},
 }
 
 return SETTINGS

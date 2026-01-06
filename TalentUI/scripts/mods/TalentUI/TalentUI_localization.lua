@@ -119,6 +119,18 @@ return {
 		en = "Vertical Offset",
 		ru = "Вертикальное смещение",
 	},
+	teammate_weapon_position_preset = {
+		en = "Position Preset",
+		ru = "Пресет позиции",
+	},
+	weapon_preset_default = {
+		en = "Default",
+		ru = "По умолчанию",
+	},
+	weapon_preset_numericui = {
+		en = "NumericUI",
+		ru = "NumericUI",
+	},
 	teammate_weapon_orientation = {
 		en = "Orientation",
 		ru = "Ориентация",

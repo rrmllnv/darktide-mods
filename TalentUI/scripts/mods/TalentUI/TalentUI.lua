@@ -200,6 +200,14 @@ function mod.on_setting_changed(setting_id)
 			mod:set("reset_talent_ui_settings", 0)
 			reset_talent_ui_settings()
 		end
+	elseif setting_id == "teammate_weapon_position_preset" then
+		local preset = mod:get("teammate_weapon_position_preset")
+		
+		if TalentUISettings.teammate_weapon_position_presets and TalentUISettings.teammate_weapon_position_presets[preset] then
+			local preset_values = TalentUISettings.teammate_weapon_position_presets[preset]
+			mod:set("teammate_weapon_horizontal_offset", preset_values.horizontal_offset)
+			mod:set("teammate_weapon_vertical_offset", preset_values.vertical_offset)
+		end
 	end
 end
 
