@@ -48,297 +48,202 @@ local function check_third_person_mode()
 	return false
 end
 
--- Проверка включен ли фонарик через special_active
-local function is_flashlight_enabled()
-	if not Managers or not Managers.player then
-		return false
-	end
+-- =========================================================================================
+-- Камера-свет (независимый источник), по образцу `servo_friend`
+-- =========================================================================================
 
-	-- Используем local_player_safe для безопасного получения игрока
-	local player = Managers.player:local_player_safe(1)
-	if not player then
-		return false
-	end
+local CAMERA_LIGHT_UNIT = "content/weapons/player/attachments/flashlights/flashlight_01/flashlight_01"
+local CAMERA_LIGHT_IES_PROFILE = "content/environment/ies_profiles/narrow/flashlight_custom_02"
+local CAMERA_LIGHT_COLOR_TEMPERATURE = 8000
+local CAMERA_LIGHT_VOLUMETRIC_INTENSITY = 0.1
 
-	local player_unit = player.player_unit
-	if not player_unit or not Unit.alive(player_unit) then
-		return false
-	end
+local _world = nil
+local _camera_light_world = nil
+local _camera_light_unit = nil
+local _camera_light = nil
 
-	local unit_data_extension = ScriptUnit.has_extension(player_unit, "unit_data_system")
-	if not unit_data_extension then
-		return false
-	end
-
-	local inventory_component = unit_data_extension:read_component("inventory")
-	if not inventory_component then
-		return false
-	end
-
-	local wielded_slot = inventory_component.wielded_slot
-	if not wielded_slot or wielded_slot == "none" or wielded_slot == "slot_unarmed" then
-		return false
-	end
-
-	local slot_component = unit_data_extension:read_component(wielded_slot)
-	if not slot_component then
-		return false
-	end
-
-	return slot_component.special_active == true
-end
-
--- Таблица для сбора отладочной информации
-local debug_info = {}
-
--- Получение attachment units с фонариком напрямую (без скрипта)
-local function get_flashlight_attachments_3p()
-	if not Managers or not Managers.player then
+local function _get_level_world()
+	if not Managers or not Managers.world then
 		return nil
 	end
 
-	-- Безопасный вызов local_player
-	local player
-	if Managers.player.local_player_safe then
-		player = Managers.player:local_player_safe(1)
-	else
-		local success, result = pcall(function()
-			return Managers.player:local_player(1)
+	_world = _world or Managers.world:world("level_world")
+
+	return _world
+end
+
+local function _destroy_camera_light()
+	-- ВАЖНО: world для юнита должен совпадать с миром, в котором он был создан.
+	-- Иначе `World.update_unit_and_children` / `World.destroy_unit` будут падать с "Unit not found".
+	local world = _camera_light_world or _get_level_world()
+
+	if _camera_light then
+		_camera_light = nil
+	end
+
+	if world and _camera_light_unit and Unit.alive(_camera_light_unit) then
+		pcall(function()
+			World.destroy_unit(world, _camera_light_unit)
 		end)
-		if not success then
-			return nil
-		end
-		player = result
-	end
-	
-	if not player then
-		return nil
 	end
 
-	local player_unit = player.player_unit
-	if not player_unit or not Unit.alive(player_unit) then
-		return nil
-	end
-
-	local visual_loadout_extension = ScriptUnit.has_extension(player_unit, "visual_loadout_system")
-	if not visual_loadout_extension then
-		return nil
-	end
-
-	-- Получаем текущий слот
-	local unit_data_extension = ScriptUnit.has_extension(player_unit, "unit_data_system")
-	if not unit_data_extension then
-		return nil
-	end
-
-	local inventory_component = unit_data_extension:read_component("inventory")
-	if not inventory_component then
-		return nil
-	end
-
-	local wielded_slot = inventory_component.wielded_slot
-	if not wielded_slot or wielded_slot == "none" or wielded_slot == "slot_unarmed" then
-		return nil
-	end
-
-	-- Получаем unit_3p и attachments для текущего слота
-	local unit_1p, unit_3p, attachments_by_unit_1p, attachments_by_unit_3p = visual_loadout_extension:unit_and_attachments_from_slot(wielded_slot)
-	
-	-- Собираем отладочную информацию вместо немедленного вывода
-	table.clear(debug_info)
-	debug_info.wielded_slot = wielded_slot
-	debug_info.unit_3p = unit_3p and tostring(unit_3p) or "nil"
-	debug_info.has_attachments_by_unit_3p = attachments_by_unit_3p ~= nil
-	
-	if not unit_3p then
-		debug_info.error = "unit_3p is nil"
-		return nil
-	end
-	
-	if not attachments_by_unit_3p then
-		debug_info.error = "attachments_by_unit_3p is nil"
-		return nil
-	end
-
-	-- Ищем attachment units с компонентом WeaponFlashlight (ТОЧНО как в исходниках _components)
-	local Component = require("scripts/utilities/component")
-	local flashlights = {}
-	local attachments_3p = attachments_by_unit_3p[unit_3p]
-	
-	-- СНАЧАЛА проверяем сам unit_3p на наличие компонента WeaponFlashlight
-	if unit_3p and Unit.alive(unit_3p) then
-		local flash_light_components = Component.get_components_by_name(unit_3p, "WeaponFlashlight")
-		debug_info.unit_3p_components = #flash_light_components
-		
-		for _, flash_light_component in ipairs(flash_light_components) do
-			table.insert(flashlights, {
-				unit = unit_3p,
-				component = flash_light_component,
-			})
-		end
-	end
-	
-	if not attachments_3p then
-		debug_info.error = "attachments_3p is nil"
-		return #flashlights > 0 and flashlights or nil
-	end
-	
-	debug_info.num_attachments = #attachments_3p
-	debug_info.attachment_details = {}
-	
-	-- Затем проверяем attachments
-	for i = 1, #attachments_3p do
-		local attachment_unit = attachments_3p[i]
-		if attachment_unit and Unit.alive(attachment_unit) then
-			local flash_light_components = Component.get_components_by_name(attachment_unit, "WeaponFlashlight")
-			table.insert(debug_info.attachment_details, {
-				index = i,
-				unit = tostring(attachment_unit),
-				num_components = #flash_light_components
-			})
-			
-			for _, flash_light_component in ipairs(flash_light_components) do
-				table.insert(flashlights, {
-					unit = attachment_unit,
-					component = flash_light_component,
-				})
-			end
-		else
-			table.insert(debug_info.attachment_details, {
-				index = i,
-				unit = "nil or not alive",
-				num_components = 0
-			})
-		end
-	end
-
-	debug_info.found_flashlights = #flashlights
-	return #flashlights > 0 and flashlights or nil
+	_camera_light_world = nil
+	_camera_light_unit = nil
 end
 
--- Обновление каждый кадр
-mod.update = function(dt)
-	if not mod:get("enable_light") then
+local function _apply_camera_light_settings()
+	if not _camera_light or not _camera_light_unit or not Unit.alive(_camera_light_unit) then
 		return
 	end
 
-	local is_3p = check_third_person_mode()
-	
-	-- Если в третьем лице - включаем свет третьего лица напрямую через attachment units (ТОЧНО как в _enable_light)
-	if is_3p then
-		local flashlights_3p = get_flashlight_attachments_3p()
-		if flashlights_3p and #flashlights_3p > 0 then
-			-- Включаем все фонарики третьего лица (как в _enable_light из исходников)
-			for i = 1, #flashlights_3p do
-				local flashlight = flashlights_3p[i]
-				if flashlight and flashlight.component and flashlight.unit and Unit.alive(flashlight.unit) then
-					-- Включаем свет ТОЧНО как в исходниках: flashlight.component:enable(flashlight.unit)
-					local success, err = pcall(function()
-						flashlight.component:enable(flashlight.unit)
-					end)
-					if not success then
-						mod:echo(string.format("ThirdPersonLight: Error enabling light: %s", tostring(err)))
-					end
-				end
-			end
-		end
+	local intensity = mod:get("light_intensity") or 20
+	local range = mod:get("light_range") or 30
+	local angle_deg = mod:get("light_angle") or 35
+	local cast_shadows = mod:get("cast_shadows") == true
+
+	-- В шаблонах игры spot_angle хранится в радианах (см. `FlashlightTemplates`).
+	local angle_rad = math.rad(angle_deg)
+
+	Light.set_enabled(_camera_light, true)
+	Light.set_casts_shadows(_camera_light, cast_shadows)
+	Light.set_ies_profile(_camera_light, CAMERA_LIGHT_IES_PROFILE)
+	Light.set_correlated_color_temperature(_camera_light, CAMERA_LIGHT_COLOR_TEMPERATURE)
+	Light.set_intensity(_camera_light, intensity)
+	Light.set_volumetric_intensity(_camera_light, CAMERA_LIGHT_VOLUMETRIC_INTENSITY)
+	Light.set_spot_angle_start(_camera_light, 0)
+	Light.set_spot_angle_end(_camera_light, angle_rad)
+	Light.set_spot_reflector(_camera_light, false)
+	Light.set_falloff_start(_camera_light, 0)
+	Light.set_falloff_end(_camera_light, range)
+
+	local color = Light.color_with_intensity(_camera_light)
+
+	if color then
+		Unit.set_vector3_for_materials(_camera_light_unit, "light_color", color)
+	end
+end
+
+local function _ensure_camera_light()
+	local world = _get_level_world()
+
+	if not world then
+		return false
+	end
+
+	if _camera_light_unit and Unit.alive(_camera_light_unit) and _camera_light then
+		-- Если по какой-то причине мир не сохранён, фиксируем его,
+		-- чтобы последующие `World.*` шли в корректный world.
+		_camera_light_world = _camera_light_world or world
+
+		return true
+	end
+
+	_destroy_camera_light()
+
+	-- Спавним юнит фонарика (пакет уже прописан в `ThirdPersonLight.mod`).
+	local spawn_success, spawned_unit = pcall(function()
+		return World.spawn_unit_ex(world, CAMERA_LIGHT_UNIT, nil, Vector3.zero(), Quaternion.identity())
+	end)
+
+	if not spawn_success then
+		_destroy_camera_light()
+		return false
+	end
+
+	_camera_light_unit = spawned_unit
+	_camera_light_world = world
+
+	if not _camera_light_unit or not Unit.alive(_camera_light_unit) then
+		_destroy_camera_light()
+		return false
+	end
+
+	if Unit.num_lights(_camera_light_unit) <= 0 then
+		_destroy_camera_light()
+		return false
+	end
+
+	_camera_light = Unit.light(_camera_light_unit, 1)
+
+	if not _camera_light then
+		_destroy_camera_light()
+		return false
+	end
+
+	_apply_camera_light_settings()
+	return true
+end
+
+mod.update = function(dt)
+	if not mod:get("enable_light") then
+		_destroy_camera_light()
+		return
+	end
+
+	if not check_third_person_mode() then
+		_destroy_camera_light()
+		return
+	end
+
+	local player_manager = Managers and Managers.player
+	local camera_manager = Managers and Managers.state and Managers.state.camera
+
+	if not player_manager or not camera_manager then
+		return
+	end
+
+	local player = player_manager:local_player_safe(1)
+	local viewport_name = player and player.viewport_name
+
+	if not viewport_name or not camera_manager.camera_position or not camera_manager.camera_rotation then
+		return
+	end
+
+	-- Защита от краша: viewport может быть ещё не создан (см. `CameraManager.has_viewport` в исходниках).
+	if camera_manager.has_viewport and not camera_manager:has_viewport(viewport_name) then
+		return
+	end
+
+	if not _ensure_camera_light() then
+		return
 	end
 	
-	-- Отладка каждые 10 секунд (собираем информацию, выводим реже)
-	local current_time = Managers.time and Managers.time:time("main") or 0
-	if not mod._last_debug_time or current_time - mod._last_debug_time > 10.0 then
-		mod._last_debug_time = current_time
-		
-		-- Получаем информацию (это заполнит debug_info)
-		local flashlights_3p = get_flashlight_attachments_3p()
-		local has_attachments = flashlights_3p ~= nil and #flashlights_3p > 0
-		local flashlight_on = is_flashlight_enabled()
-		
-		-- Выводим собранную информацию через ConsoleLog если доступен
-		local console_log_mod = get_mod("ConsoleLog")
-		if console_log_mod and console_log_mod.add_log then
-			-- Очищаем предыдущие логи ThirdPersonLight
-			-- (ConsoleLog сам управляет количеством логов)
-			
-			-- Выводим основную информацию
-			console_log_mod:add_log("ThirdPersonLight", string.format("3P=%s, Flashlight=%s, Enabled=%s",
-				tostring(is_3p),
-				tostring(flashlight_on),
-				tostring(mod:get("enable_light"))
-			))
-			
-			if debug_info.error then
-				console_log_mod:add_log("ThirdPersonLight", string.format("ERROR: %s", debug_info.error), {255, 255, 0, 0})
-			else
-				console_log_mod:add_log("ThirdPersonLight", string.format("WieldedSlot=%s, Unit3P=%s", 
-					tostring(debug_info.wielded_slot), 
-					tostring(debug_info.unit_3p)))
-				console_log_mod:add_log("ThirdPersonLight", string.format("HasAttachmentsByUnit3P=%s, NumAttachments=%s, Unit3PComponents=%s",
-					tostring(debug_info.has_attachments_by_unit_3p),
-					tostring(debug_info.num_attachments or 0),
-					tostring(debug_info.unit_3p_components or 0)
-				))
-				
-				if debug_info.attachment_details and #debug_info.attachment_details > 0 then
-					for i = 1, #debug_info.attachment_details do
-						local det = debug_info.attachment_details[i]
-						console_log_mod:add_log("ThirdPersonLight", string.format("  Att[%d]: unit=%s, components=%d",
-							det.index, det.unit, det.num_components))
-					end
-				end
-				
-				console_log_mod:add_log("ThirdPersonLight", string.format("Found Flashlights: %d", debug_info.found_flashlights or 0))
-				
-				if has_attachments then
-					for i = 1, #flashlights_3p do
-						local f = flashlights_3p[i]
-						local unit_alive = f.unit and Unit.alive(f.unit)
-						local has_component = f.component ~= nil
-						local num_lights = f.unit and Unit.num_lights(f.unit) or 0
-						console_log_mod:add_log("ThirdPersonLight", string.format("  Flashlight[%d]: unit_alive=%s, has_component=%s, num_lights=%d",
-							i, tostring(unit_alive), tostring(has_component), num_lights))
-					end
-				end
-			end
-		else
-			-- Fallback на обычный echo если ConsoleLog недоступен
-			mod:echo("=== ThirdPersonLight Debug Info ===")
-			mod:echo(string.format("3P=%s, Flashlight=%s, Enabled=%s",
-				tostring(is_3p),
-				tostring(flashlight_on),
-				tostring(mod:get("enable_light"))
-			))
-			if debug_info.error then
-				mod:echo(string.format("ERROR: %s", debug_info.error))
-			else
-				mod:echo(string.format("WieldedSlot=%s, Unit3P=%s", 
-					tostring(debug_info.wielded_slot), 
-					tostring(debug_info.unit_3p)))
-				mod:echo(string.format("HasAttachmentsByUnit3P=%s, NumAttachments=%s, Unit3PComponents=%s",
-					tostring(debug_info.has_attachments_by_unit_3p),
-					tostring(debug_info.num_attachments or 0),
-					tostring(debug_info.unit_3p_components or 0)
-				))
-				if debug_info.attachment_details and #debug_info.attachment_details > 0 then
-					for i = 1, #debug_info.attachment_details do
-						local det = debug_info.attachment_details[i]
-						mod:echo(string.format("  Att[%d]: unit=%s, components=%d",
-							det.index, det.unit, det.num_components))
-					end
-				end
-				mod:echo(string.format("Found Flashlights: %d", debug_info.found_flashlights or 0))
-			end
-			mod:echo("===================================")
+	-- Юнит мог быть удалён между кадрами/переходами (хаб/миссия). Проверяем максимально рано.
+	if not _camera_light_unit or not Unit.alive(_camera_light_unit) then
+		_destroy_camera_light()
+		return
+	end
+
+	local camera_position = camera_manager:camera_position(viewport_name)
+	local camera_rotation = camera_manager:camera_rotation(viewport_name)
+
+	if not camera_position or not camera_rotation then
+		return
+	end
+
+	Unit.set_local_position(_camera_light_unit, 1, camera_position)
+	Unit.set_local_rotation(_camera_light_unit, 1, camera_rotation)
+
+	local world = _camera_light_world or _get_level_world()
+
+	if world then
+		local ok = pcall(function()
+			World.update_unit_and_children(world, _camera_light_unit)
+		end)
+
+		if not ok then
+			_destroy_camera_light()
+			return
 		end
 	end
 end
 
 -- Обработка изменения настроек
 mod.on_setting_changed = function(setting_id)
-	-- Настройки обрабатываются автоматически
+	_apply_camera_light_settings()
 end
 
 -- Выгрузка мода
 mod.on_unload = function(exit_game)
-	-- Ничего не нужно очищать
+	_destroy_camera_light()
 end
