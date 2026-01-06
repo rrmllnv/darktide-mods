@@ -76,6 +76,16 @@ return {
 				type = "group",
 				sub_widgets = {
 					{
+						setting_id = "teammate_ability_position_preset",
+						type = "dropdown",
+						default_value = "default",
+						tooltip = "teammate_ability_position_preset_tooltip",
+						options = {
+							{ text = "teammate_ability_preset_default", value = "default" },
+							{ text = "teammate_ability_preset_numericui", value = "numericui" },
+						},
+					},
+					{
 						setting_id = "teammate_ability_vertical_offset",
 						type = "numeric",
 						default_value = -10,

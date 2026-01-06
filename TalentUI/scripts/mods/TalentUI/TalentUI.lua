@@ -256,6 +256,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 end)
 
 local function reset_talent_ui_settings()
+	mod:set("teammate_ability_position_preset", "default")
 	mod:set("teammate_ability_vertical_offset", TalentUISettings.teammate_ability_vertical_offset)
 	mod:set("teammate_ability_horizontal_offset", TalentUISettings.teammate_ability_horizontal_offset)
 	mod:set("teammate_ability_orientation", TalentUISettings.teammate_ability_orientation)
@@ -278,6 +279,36 @@ function mod.on_setting_changed(setting_id)
 			mod:notify("Settings Reset")
 			mod:set("reset_talent_ui_settings", 0)
 			reset_talent_ui_settings()
+		end
+	elseif setting_id == "teammate_ability_position_preset" then
+		local preset = mod:get("teammate_ability_position_preset")
+		
+		if TalentUISettings.teammate_ability_position_presets and TalentUISettings.teammate_ability_position_presets[preset] then
+			local preset_values = TalentUISettings.teammate_ability_position_presets[preset]
+			if preset_values.vertical_offset then
+				mod:set("teammate_ability_vertical_offset", preset_values.vertical_offset)
+			end
+			if preset_values.horizontal_offset then
+				mod:set("teammate_ability_horizontal_offset", preset_values.horizontal_offset)
+			end
+			if preset_values.orientation then
+				mod:set("teammate_ability_orientation", preset_values.orientation)
+			end
+			if preset_values.text_alignment then
+				mod:set("teammate_ability_text_alignment", preset_values.text_alignment)
+			end
+			if preset_values.icon_size then
+				mod:set("teammate_ability_icon_size", preset_values.icon_size)
+			end
+			if preset_values.spacing then
+				mod:set("teammate_ability_spacing", preset_values.spacing)
+			end
+			if preset_values.cooldown_font_size then
+				mod:set("teammate_ability_cooldown_font_size", preset_values.cooldown_font_size)
+			end
+			if preset_values.text_offset then
+				mod:set("teammate_ability_text_offset", preset_values.text_offset)
+			end
 		end
 	elseif setting_id == "teammate_weapon_position_preset" then
 		local preset = mod:get("teammate_weapon_position_preset")

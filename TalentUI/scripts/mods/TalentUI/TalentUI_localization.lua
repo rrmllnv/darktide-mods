@@ -119,6 +119,22 @@ return {
 		en = "Vertical Offset",
 		ru = "Вертикальное смещение",
 	},
+	teammate_ability_position_preset = {
+		en = "Position Preset",
+		ru = "Пресет позиции",
+	},
+	teammate_ability_position_preset_tooltip = {
+		en = "Select a preset position for ability icons. Each preset applies predefined offset values and settings.",
+		ru = "Выберите пресет позиции для иконок способностей. Каждый пресет применяет предустановленные значения смещения и настройки.",
+	},
+	teammate_ability_preset_default = {
+		en = "Default",
+		ru = "По умолчанию",
+	},
+	teammate_ability_preset_numericui = {
+		en = "NumericUI",
+		ru = "NumericUI",
+	},
 	teammate_weapon_position_preset = {
 		en = "Position Preset",
 		ru = "Пресет позиции",
