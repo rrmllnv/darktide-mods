@@ -110,6 +110,13 @@ return {
 						},
 					},
 					{
+						setting_id = "teammate_ability_spacing",
+						type = "numeric",
+						default_value = -5,
+						range = { -20, 20 },
+						decimals_number = 0,
+					},
+					{
 						setting_id = "teammate_ability_text_alignment",
 						type = "dropdown",
 						default_value = "left",
@@ -176,6 +183,13 @@ return {
 							{ text = "vertical", value = "vertical" },
 							{ text = "horizontal", value = "horizontal" },
 						},
+					},
+					{
+						setting_id = "teammate_weapon_spacing",
+						type = "numeric",
+						default_value = 0,
+						range = { -20, 20 },
+						decimals_number = 0,
 					},
 					{
 						setting_id = "teammate_weapon_show_ammo",

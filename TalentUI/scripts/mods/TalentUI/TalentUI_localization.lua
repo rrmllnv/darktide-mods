@@ -99,6 +99,10 @@ return {
 		en = "Orientation",
 		ru = "Ориентация",
 	},
+	teammate_ability_spacing = {
+		en = "Spacing",
+		ru = "Расстояние",
+	},
 	teammate_ability_text_alignment = {
 		en = "Text Alignment",
 		ru = "Выравнивание текста",
@@ -170,6 +174,10 @@ return {
 	teammate_weapon_orientation = {
 		en = "Orientation",
 		ru = "Ориентация",
+	},
+	teammate_weapon_spacing = {
+		en = "Spacing",
+		ru = "Расстояние",
 	},
 	teammate_weapon_text_alignment = {
 		en = "Ammo Text Alignment",

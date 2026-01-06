@@ -40,7 +40,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 		text_vertical_alignment = "center"
 	end
 
-	local ability_spacing = TalentUISettings.teammate_ability_spacing
+	local ability_spacing = mod:get("teammate_ability_spacing") or TalentUISettings.teammate_ability_spacing
 	local horizontal_offset = mod:get("teammate_ability_horizontal_offset") or TalentUISettings.teammate_ability_horizontal_offset
 	local vertical_offset = mod:get("teammate_ability_vertical_offset") or TalentUISettings.teammate_ability_vertical_offset
 	local icon_orientation = mod:get("teammate_ability_orientation") or TalentUISettings.teammate_ability_orientation
@@ -137,7 +137,7 @@ mod:hook_require(TEAM_HUD_DEF_PATH, function(instance)
 	
 	local weapon_icon_width = TalentUISettings.teammate_weapon_icon_width
 	local weapon_icon_height = TalentUISettings.teammate_weapon_icon_height
-	local weapon_spacing = TalentUISettings.teammate_weapon_spacing
+	local weapon_spacing = mod:get("teammate_weapon_spacing") or TalentUISettings.teammate_weapon_spacing
 	local weapon_horizontal_offset = mod:get("teammate_weapon_horizontal_offset") or TalentUISettings.teammate_weapon_horizontal_offset
 	local weapon_vertical_offset = mod:get("teammate_weapon_vertical_offset") or TalentUISettings.teammate_weapon_vertical_offset
 	local weapon_orientation = mod:get("teammate_weapon_orientation") or TalentUISettings.teammate_weapon_orientation
@@ -260,6 +260,7 @@ local function reset_talent_ui_settings()
 	mod:set("teammate_ability_vertical_offset", TalentUISettings.teammate_ability_vertical_offset)
 	mod:set("teammate_ability_horizontal_offset", TalentUISettings.teammate_ability_horizontal_offset)
 	mod:set("teammate_ability_orientation", TalentUISettings.teammate_ability_orientation)
+	mod:set("teammate_ability_spacing", TalentUISettings.teammate_ability_spacing)
 	mod:set("teammate_ability_text_alignment", TalentUISettings.teammate_ability_text_alignment)
 	mod:set("teammate_ability_icon_size", TalentUISettings.teammate_ability_icon_size)
 	mod:set("teammate_ability_cooldown_font_size", TalentUISettings.teammate_ability_cooldown_font_size)
@@ -267,6 +268,7 @@ local function reset_talent_ui_settings()
 	mod:set("teammate_weapon_horizontal_offset", TalentUISettings.teammate_weapon_horizontal_offset)
 	mod:set("teammate_weapon_vertical_offset", TalentUISettings.teammate_weapon_vertical_offset)
 	mod:set("teammate_weapon_orientation", TalentUISettings.teammate_weapon_orientation)
+	mod:set("teammate_weapon_spacing", TalentUISettings.teammate_weapon_spacing)
 	mod:set("teammate_weapon_text_alignment", TalentUISettings.teammate_weapon_text_alignment)
 	mod:set("teammate_weapon_ammo_font_size", TalentUISettings.teammate_weapon_ammo_font_size)
 	mod:set("teammate_weapon_ammo_text_offset_x", TalentUISettings.teammate_weapon_ammo_text_offset_x)
