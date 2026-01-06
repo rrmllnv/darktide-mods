@@ -278,15 +278,17 @@ end
 
 mod:hook_safe(CLASS.PlayerUnitWeaponExtension, "on_slot_wielded", function(self, slot_name, ...)
 	local is_scanner_slot = slot_name == "slot_device" or slot_name == "slot_pocketable" or slot_name == "slot_pocketable_small"
+	local is_blitz_slot = slot_name == "slot_grenade_ability"
+	local is_special_slot = is_scanner_slot or is_blitz_slot
 	
-	if is_scanner_slot then
-		-- Когда достаем сканер, запоминаем, были ли мы в 3-м лице
+	if is_special_slot then
+		-- Когда достаем сканер или блиц, запоминаем, были ли мы в 3-м лице
 		-- И не применяем автосвитч, чтобы игра сама переключила на 1-е лицо
 		was_in_3p_before_scanner = mod.is_requesting_third_person()
 		-- Очищаем автосвитч для слота, чтобы не переключать камеру обратно
 		mod.clear_reason("slot")
 	else
-		-- Когда убираем сканер и возвращаемся к оружию, восстанавливаем 3-е лицо, если были в нем
+		-- Когда убираем сканер/блиц и возвращаемся к оружию, восстанавливаем 3-е лицо, если были в нем
 		if was_in_3p_before_scanner then
 			mod.enable_3p_due_to("slot", true)
 			was_in_3p_before_scanner = false
@@ -379,17 +381,37 @@ mod:hook(CLASS.PlayerUnitCameraExtension, "_evaluate_camera_tree", function(func
 	local is_ogryn = self._breed.name == "ogryn"
 	mod.disable_3p_due_to("aim", _should_aim_to_1p(alternate_fire_is_active, is_ogryn))
 
+	-- Проверяем, использует ли игрок сканер или блиц
+	local unit_data_extension = ScriptUnit.has_extension(self._unit, "unit_data_system")
+	local is_using_special_slot = false
+	if unit_data_extension then
+		local inventory_component = unit_data_extension:read_component("inventory")
+		if inventory_component then
+			local wielded_slot = inventory_component.wielded_slot
+			is_using_special_slot = wielded_slot == "slot_device" 
+				or wielded_slot == "slot_pocketable" 
+				or wielded_slot == "slot_pocketable_small"
+				or wielded_slot == "slot_grenade_ability"
+		end
+	end
+
 	local wants_sprint_camera = sprint_character_state_component.wants_sprint_camera
 	local is_lunging = self._lunge_character_state_component.is_lunging
-	if wants_sprint_camera then
-		_autoswitch_from_event("movt", "sprint")
-	elseif is_lunging then
-		if is_ogryn then
-			_autoswitch_from_event("movt", "lunge_ogryn")
+	-- Если используем сканер или блиц, не применяем автосвитч для движения
+	if not is_using_special_slot then
+		if wants_sprint_camera then
+			_autoswitch_from_event("movt", "sprint")
+		elseif is_lunging then
+			if is_ogryn then
+				_autoswitch_from_event("movt", "lunge_ogryn")
+			else
+				_autoswitch_from_event("movt", "lunge_human")
+			end
 		else
-			_autoswitch_from_event("movt", "lunge_human")
+			_autoswitch_from_event("movt", nil)
 		end
 	else
+		-- Очищаем автосвитч для движения, если используем специальный слот
 		_autoswitch_from_event("movt", nil)
 	end
 
