@@ -72,6 +72,12 @@ mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, para
 	return func(self, elements, visibility_groups, params)
 end)
 
+-- Функция для переключения видимости через горячую клавишу
+mod.kb_toggle_visibility = function()
+	local current_value = mod:get("enabled")
+	mod:set("enabled", not current_value)
+end
+
 -- Обработка изменения настроек
 mod.on_setting_changed = function(setting_id)
 	if setting_id == "max_lines" then

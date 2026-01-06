@@ -7,6 +7,14 @@ return {
 		en = "Mod for displaying logs from other mods on screen",
 		ru = "Мод для отображения логов других модов на экране",
 	},
+	toggle_visibility = {
+		en = "Toggle Visibility",
+		ru = "Переключить видимость",
+	},
+	toggle_visibility_description = {
+		en = "Hotkey to toggle log display on/off",
+		ru = "Горячая клавиша для включения/выключения отображения логов",
+	},
 	enabled = {
 		en = "Enabled",
 		ru = "Включен",

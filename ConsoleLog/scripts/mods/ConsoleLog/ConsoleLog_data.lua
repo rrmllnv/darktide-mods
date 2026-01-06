@@ -7,6 +7,15 @@ return {
 	options = {
 		widgets = {
 			{
+				setting_id = "toggle_visibility",
+				type = "keybind",
+				default_value = {},
+				keybind_global = false,
+				keybind_trigger = "pressed",
+				keybind_type = "function_call",
+				function_name = "kb_toggle_visibility",
+			},
+			{
 				setting_id = "enabled",
 				type = "checkbox",
 				default_value = true,
