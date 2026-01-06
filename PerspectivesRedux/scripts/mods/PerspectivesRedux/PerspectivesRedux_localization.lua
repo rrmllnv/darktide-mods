@@ -270,6 +270,36 @@ local loc = {
 		ru = "Третье лицо",
 		["zh-cn"] = "第三人称",
 	},
+	group_tracer = {
+		en = "Tracer Beam",
+		ru = "Луч трассера",
+		["zh-cn"] = "弹道轨迹",
+	},
+	tracer_enabled = {
+		en = "Enable Tracer Beam",
+		ru = "Включить луч трассера",
+		["zh-cn"] = "启用弹道轨迹",
+	},
+	tracer_duration = {
+		en = "Tracer Duration",
+		ru = "Длительность луча",
+		["zh-cn"] = "轨迹持续时间",
+	},
+	tracer_color_r = {
+		en = "Tracer Color (Red)",
+		ru = "Цвет луча (Красный)",
+		["zh-cn"] = "轨迹颜色（红色）",
+	},
+	tracer_color_g = {
+		en = "Tracer Color (Green)",
+		ru = "Цвет луча (Зеленый)",
+		["zh-cn"] = "轨迹颜色（绿色）",
+	},
+	tracer_color_b = {
+		en = "Tracer Color (Blue)",
+		ru = "Цвет луча (Синий)",
+		["zh-cn"] = "轨迹颜色（蓝色）",
+	},
 }
 
 local crosshair_remap = get_mod("crosshair_remap")

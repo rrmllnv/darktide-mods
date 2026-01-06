@@ -5,6 +5,7 @@ local PlayerUnitStatus = require("scripts/utilities/attack/player_unit_status")
 -- Загрузка дополнительных модулей
 mod:io_dofile("PerspectivesRedux/scripts/mods/PerspectivesRedux/Utils")
 mod:io_dofile("PerspectivesRedux/scripts/mods/PerspectivesRedux/CameraTree")
+mod:io_dofile("PerspectivesRedux/scripts/mods/PerspectivesRedux/TracerBeam")
 
 -- ============================================================================
 -- КОНСТАНТЫ
@@ -119,6 +120,14 @@ end
 
 -- Хук для совместимости с другими модами при загрузке всех модов
 mod.on_all_mods_loaded = function()
+	-- Инициализация трассера после загрузки всех модов (когда мир уже готов)
+	if mod.set_tracer_enabled then
+		local tracer_enabled = mod:get("tracer_enabled")
+		if tracer_enabled then
+			mod.set_tracer_enabled(tracer_enabled)
+		end
+	end
+	
 	-- Интеграция с camera_freeflight
 	local freeflight_mod = get_mod("camera_freeflight")
 	if freeflight_mod then
@@ -320,6 +329,10 @@ mod.on_setting_changed = function(id)
 		-- ОПТИМИЗАЦИЯ: Обновляем lookup-таблицу autoswitch событий
 		local key = string.sub(id, string.len(OPT_PREFIX_AUTOSWITCH) + 1)
 		autoswitch_events[key] = val
+	elseif id == "tracer_enabled" then
+		mod.set_tracer_enabled(val)
+	elseif id == "tracer_duration" or id == "tracer_color_r" or id == "tracer_color_g" or id == "tracer_color_b" then
+		-- Настройки трассера обновляются автоматически при следующем кадре
 	end
 end
 
@@ -342,6 +355,9 @@ local _initialize_settings = function()
 	-- Применение критичных настроек
 	mod.on_setting_changed("perspective_transition_time")
 	mod.on_setting_changed("allow_switching")
+	
+	-- Инициализация трассера
+	mod.on_setting_changed("tracer_enabled")
 	
 	-- ОПТИМИЗАЦИЯ: Загрузка всех autoswitch настроек одним блоком
 	local autoswitch_settings = {
@@ -700,4 +716,15 @@ mod:hook(CLASS.HudElementCrosshair, "_get_current_crosshair_type", function(func
 	end
 	
 	return type
+end)
+
+-- Хук для обновления трассера каждый кадр
+mod:hook(CLASS.PlayerUnitFirstPersonExtension, "update", function(func, self, unit, dt, t, ...)
+	func(self, unit, dt, t, ...)
+	
+	-- Обновляем систему трассера если она включена
+	-- Проверяем что это юнит игрока (не husk)
+	if unit == mod.get_player_unit() and mod.update_tracer_system then
+		mod.update_tracer_system()
+	end
 end)

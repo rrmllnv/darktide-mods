@@ -267,6 +267,45 @@ end
 					},
 				},
 			},
+			{
+				setting_id  = "group_tracer",
+				type        = "group",
+				sub_widgets = {
+					{
+						setting_id    = "tracer_enabled",
+						type          = "checkbox",
+						default_value = false,
+					},
+					{
+						setting_id      = "tracer_duration",
+						type            = "numeric",
+						default_value   = 0.1,
+						range           = { 0.01, 1.0 },
+						decimals_number = 2,
+					},
+					{
+						setting_id      = "tracer_color_r",
+						type            = "numeric",
+						default_value   = 255,
+						range           = { 0, 255 },
+						decimals_number = 0,
+					},
+					{
+						setting_id      = "tracer_color_g",
+						type            = "numeric",
+						default_value   = 255,
+						range           = { 0, 255 },
+						decimals_number = 0,
+					},
+					{
+						setting_id      = "tracer_color_b",
+						type            = "numeric",
+						default_value   = 0,
+						range           = { 0, 255 },
+						decimals_number = 0,
+					},
+				},
+			},
 		}
 	}
 }
