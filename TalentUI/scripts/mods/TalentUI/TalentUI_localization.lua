@@ -123,6 +123,10 @@ return {
 		en = "Position Preset",
 		ru = "Пресет позиции",
 	},
+	teammate_weapon_position_preset_tooltip = {
+		en = "Select a preset position for weapon icons. Each preset applies predefined offset values and settings.",
+		ru = "Выберите пресет позиции для иконок оружия. Каждый пресет применяет предустановленные значения смещения и настройки.",
+	},
 	weapon_preset_default = {
 		en = "Default",
 		ru = "По умолчанию",

@@ -134,6 +134,7 @@ return {
 						setting_id = "teammate_weapon_position_preset",
 						type = "dropdown",
 						default_value = "default",
+						tooltip = "teammate_weapon_position_preset_tooltip",
 						options = {
 							{ text = "weapon_preset_default", value = "default" },
 							{ text = "weapon_preset_numericui", value = "numericui" },
