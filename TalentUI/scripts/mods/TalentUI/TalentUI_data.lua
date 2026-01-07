@@ -1,5 +1,9 @@
 local mod = get_mod("TalentUI")
 
+local numericui_mod = get_mod("NumericUI")
+local has_numericui = numericui_mod ~= nil
+local default_show_local_cooldown = not has_numericui
+
 return {
 	name = mod:localize("mod_name"),
 	description = mod:localize("mod_description"),
@@ -244,7 +248,7 @@ return {
 					{
 						setting_id = "show_local_ability_cooldown",
 						type = "checkbox",
-						default_value = false,
+						default_value = default_show_local_cooldown,
 						tooltip = "show_local_ability_cooldown_tooltip",
 					},
 					{
