@@ -25,6 +25,17 @@ local SETTINGS = {
 			cooldown_font_size = 12,
 			text_offset = 10,
 		},
+		portrait_side = {
+			vertical_offset = 5,
+			horizontal_offset = 5,
+			orientation = "vertical",
+			text_alignment = "center",
+			icon_size = 60,
+			spacing = 5,
+			cooldown_font_size = 14,
+			text_offset = 10,
+			show_aura_icon = false,
+		},
 		health_below = {
 			vertical_offset = 60,
 			horizontal_offset = 120,

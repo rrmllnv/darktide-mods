@@ -86,6 +86,7 @@ return {
 						tooltip = "teammate_ability_position_preset_tooltip",
 						options = {
 							{ text = "teammate_ability_preset_default", value = "default" },
+							{ text = "teammate_ability_preset_portrait_side", value = "portrait_side" },
 							{ text = "teammate_ability_preset_health_below", value = "health_below" },
 							{ text = "teammate_ability_preset_coherency_side", value = "coherency_side" },
 						},

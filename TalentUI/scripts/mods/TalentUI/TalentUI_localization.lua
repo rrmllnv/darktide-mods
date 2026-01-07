@@ -175,6 +175,10 @@ return {
 		en = "Coherency Side",
 		ru = "Рядом с когерентностью",
 	},
+	teammate_ability_preset_portrait_side = {
+		en = "Large Icons Next to Portrait",
+		ru = "Большие иконки рядом с портретом",
+	},
 	teammate_weapon_position_preset = {
 		en = "Position Preset",
 		ru = "Пресет позиции",

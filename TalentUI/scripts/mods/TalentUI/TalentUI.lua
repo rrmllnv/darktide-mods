@@ -311,6 +311,9 @@ function mod.on_setting_changed(setting_id)
 			if preset_values.text_offset then
 				mod:set("teammate_ability_text_offset", preset_values.text_offset)
 			end
+			if preset_values.show_aura_icon ~= nil then
+				mod:set("show_teammate_aura_icon", preset_values.show_aura_icon)
+			end
 		end
 	elseif setting_id == "teammate_weapon_position_preset" then
 		local preset = mod:get("teammate_weapon_position_preset")
