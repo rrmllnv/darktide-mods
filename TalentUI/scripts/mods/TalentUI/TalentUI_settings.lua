@@ -1,7 +1,7 @@
 local mod = get_mod("TalentUI")
 
 local SETTINGS = {
-	show_abilities_for_bots = true,
+	show_abilities_for_bots = false,
 
 	local_cooldown_font_size = 40,
 
