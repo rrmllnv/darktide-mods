@@ -4,8 +4,8 @@ return {
 		ru = "TalentUI",
 	},
 	mod_description = {
-		en = "Shows ability icons with cooldown timers for teammates and local player in the team HUD\n\nAfter changing settings, reload mods: Ctrl+Shift+R",
-		ru = "Показывает иконки способностей с таймерами кулдауна для тимейтов и локального игрока в team HUD\n\nПри изменении настроек перезагрузите моды: Ctrl+Shift+R",
+		en = "Shows ability icons with cooldown timers for teammates and local player in the team HUD. Displays teammate weapon icons with ammunition count. Supports multiple position presets and customizable settings for icons, cooldowns, and text display.\n\nAfter changing settings, reload mods: Ctrl+Shift+R",
+		ru = "Показывает иконки способностей с таймерами кулдауна для тимейтов и локального игрока в team HUD. Отображает иконки оружия тимейтов с количеством боеприпасов. Поддерживает несколько пресетов позиций и настраиваемые параметры для иконок, кулдаунов и текста.\n\nПри изменении настроек перезагрузите моды: Ctrl+Shift+R",
 	},
 	group_teammate_ability = {
 		en = "Teammate Ability",
