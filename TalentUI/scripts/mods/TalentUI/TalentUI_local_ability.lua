@@ -49,7 +49,7 @@ mod:hook(_G, "dofile", function(func, path)
 			},
 		}
 		
-		instance.widget_definitions.cooldown_timer = UIWidget.create_definition({
+		instance.widget_definitions.talentui_cooldown_timer = UIWidget.create_definition({
 			{
 				value_id = "text",
 				style_id = "text",
@@ -92,7 +92,7 @@ mod:hook_safe("HudElementPlayerAbility", "update", function(self)
 	end
 	
 	local widgets_by_name = self._widgets_by_name
-	local text_widget = widgets_by_name.cooldown_timer
+	local text_widget = widgets_by_name.talentui_cooldown_timer
 	
 	if not text_widget then
 		return
