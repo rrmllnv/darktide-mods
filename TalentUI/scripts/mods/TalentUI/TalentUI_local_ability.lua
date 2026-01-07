@@ -4,10 +4,14 @@ local PLAYER_ABILITY_DEF_PATH = "scripts/ui/hud/elements/player_ability/hud_elem
 
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
+local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local HudElementPlayerAbilitySettings = require("scripts/ui/hud/elements/player_ability/hud_element_player_ability_settings")
 local FixedFrame = require("scripts/utilities/fixed_frame")
 
 local TalentUISettings = mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_settings")
+
+local ACTIVE_COLOR = UIHudSettings.color_tint_main_1
+local COOLDOWN_COLOR = UIHudSettings.color_tint_alert_2
 
 mod:hook(_G, "dofile", function(func, path)
 	local instance = func(path)
@@ -46,6 +50,29 @@ mod:hook(_G, "dofile", function(func, path)
 	return instance
 end)
 
+local function get_buff_remaining_time(buff_extension, buff_template_name)
+	if not buff_extension then
+		return 0
+	end
+
+	local buffs_by_index = buff_extension._buffs_by_index
+	if not buffs_by_index then
+		return 0
+	end
+
+	local timer = 0
+	for _, buff in pairs(buffs_by_index) do
+		local template = buff:template()
+		if template and template.name == buff_template_name then
+			local remaining = buff:duration_progress() or 1
+			local duration = buff:duration() or 15
+			timer = math.max(timer, duration * remaining)
+		end
+	end
+
+	return timer
+end
+
 mod:hook_safe("HudElementPlayerAbility", "update", function(self)
 	if not mod:get("show_local_ability_cooldown") then
 		return
@@ -58,20 +85,73 @@ mod:hook_safe("HudElementPlayerAbility", "update", function(self)
 		return
 	end
 	
+	local player = self._data.player
+	local player_unit = player.player_unit
+	local parent = self._parent
+	local ability_id = self._ability_id
+	
+	if not rawget(_G, "ALIVE") or not ALIVE[player_unit] then
+		text_widget.content.text = ""
+		text_widget.visible = false
+		text_widget.dirty = true
+		return
+	end
+	
+	local ability_extension = parent:get_player_extension(player, "ability_system")
+	local buff_extension = parent:get_player_extension(player, "buff_system")
+	
 	local progress = self._ability_progress
 	local on_cooldown = self._on_cooldown
 	local format_type = mod:get("cooldown_format")
+	local show_active = mod:get("show_local_ability_active") ~= false
+	local show_decimals = mod:get("show_local_ability_decimals") ~= false
 	
 	local display_text = ""
+	local display_color = COOLDOWN_COLOR
+	local is_active = false
 	
-	if not on_cooldown or progress >= 1 then
-		display_text = ""
-	else
-		if format_type == "time" then
-			local player = self._data.player
-			local player_unit = player.player_unit
+	if ability_extension and ability_extension:ability_is_equipped(ability_id) then
+		local pause_cooldown_settings = ability_extension:ability_pause_cooldown_settings(ability_id)
+		
+		if pause_cooldown_settings and buff_extension then
+			local duration_tracking_buff = pause_cooldown_settings.duration_tracking_buff
 			
-			if rawget(_G, "ALIVE") and ALIVE[player_unit] then
+			if duration_tracking_buff then
+				local has_active_buff = buff_extension:current_stacks(duration_tracking_buff) > 0
+				
+				if has_active_buff and show_active then
+					is_active = true
+					local remaining_buff_time = get_buff_remaining_time(buff_extension, duration_tracking_buff)
+					
+					if remaining_buff_time and remaining_buff_time >= 0.05 then
+						display_color = ACTIVE_COLOR
+						
+						if format_type == "time" then
+							if show_decimals then
+								display_text = string.format("%.1f", remaining_buff_time)
+							else
+								display_text = string.format("%.0f", math.ceil(remaining_buff_time))
+							end
+						elseif format_type == "percent" then
+							local duration_progress = buff_extension:buff_duration_progress(duration_tracking_buff)
+							local percent = (1 - duration_progress) * 100
+							display_text = string.format("%d%%", math.floor(percent))
+						end
+					else
+						display_text = ""
+					end
+				end
+			end
+		end
+	end
+	
+	if not is_active then
+		if not on_cooldown or progress >= 1 then
+			display_text = ""
+		else
+			display_color = COOLDOWN_COLOR
+			
+			if format_type == "time" then
 				if rawget(_G, "ScriptUnit") then
 					local unit_data_extension = ScriptUnit.extension(player_unit, "unit_data_system")
 					if unit_data_extension then
@@ -81,7 +161,11 @@ mod:hook_safe("HudElementPlayerAbility", "update", function(self)
 							local time_remaining = math.max(ability_component.cooldown - fixed_frame_t, 0)
 							
 							if time_remaining > 0 then
-								display_text = string.format("%d", math.ceil(time_remaining))
+								if show_decimals then
+									display_text = string.format("%.1f", time_remaining)
+								else
+									display_text = string.format("%.0f", math.ceil(time_remaining))
+								end
 							else
 								display_text = ""
 							end
@@ -94,22 +178,21 @@ mod:hook_safe("HudElementPlayerAbility", "update", function(self)
 				else
 					display_text = ""
 				end
+			elseif format_type == "percent" then
+				local percent = progress * 100
+				if percent >= 100 or progress >= 1 then
+					display_text = ""
+				else
+					display_text = string.format("%d%%", math.floor(percent))
+				end
 			else
 				display_text = ""
 			end
-		elseif format_type == "percent" then
-			local percent = progress * 100
-			if percent >= 100 or progress >= 1 then
-				display_text = ""
-			else
-				display_text = string.format("%d%%", math.floor(percent))
-			end
-		else
-			display_text = ""
 		end
 	end
 	
 	text_widget.content.text = display_text
+	text_widget.style.text.text_color = display_color
 	text_widget.visible = display_text ~= ""
 	text_widget.dirty = true
 end)

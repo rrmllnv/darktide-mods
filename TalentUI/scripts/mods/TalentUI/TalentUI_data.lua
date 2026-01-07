@@ -236,9 +236,22 @@ return {
 				type = "group",
 				sub_widgets = {
 					{
+						setting_id = "show_local_ability_active",
+						type = "checkbox",
+						default_value = true,
+						tooltip = "show_local_ability_active_tooltip",
+					},
+					{
 						setting_id = "show_local_ability_cooldown",
 						type = "checkbox",
 						default_value = false,
+						tooltip = "show_local_ability_cooldown_tooltip",
+					},
+					{
+						setting_id = "show_local_ability_decimals",
+						type = "checkbox",
+						default_value = true,
+						tooltip = "show_local_ability_decimals_tooltip",
 					},
 					{
 						setting_id = "cooldown_format",

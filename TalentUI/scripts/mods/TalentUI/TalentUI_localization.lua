@@ -68,8 +68,28 @@ return {
 		ru = "Показывать иконку оружия дальнего боя",
 	},
 	show_local_ability_cooldown = {
-		en = "Show Cooldown",
-		ru = "Показывать кулдаун",
+		en = "Show Cooldown Timer",
+		ru = "Показывать таймер перезарядки",
+	},
+	show_local_ability_cooldown_tooltip = {
+		en = "Show ability cooldown when recharging.",
+		ru = "Показывать время перезарядки способности.",
+	},
+	show_local_ability_active = {
+		en = "Show Active Timer",
+		ru = "Показывать таймер действия",
+	},
+	show_local_ability_active_tooltip = {
+		en = "Show remaining ability duration when active.",
+		ru = "Показывать оставшееся время действия способности когда она активна.",
+	},
+	show_local_ability_decimals = {
+		en = "Show Decimals",
+		ru = "Показывать десятичные",
+	},
+	show_local_ability_decimals_tooltip = {
+		en = "Show time with decimal point (e.g. 12.5 instead of 13).",
+		ru = "Показывать время с десятичной точкой (например 12.5 вместо 13).",
 	},
 	cooldown_format = {
 		en = "Display Format",
