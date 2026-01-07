@@ -91,6 +91,18 @@ return {
 		en = "Show time with decimal point (e.g. 12.5 instead of 13).",
 		ru = "Показывать время с десятичной точкой (например 12.5 вместо 13).",
 	},
+	show_local_ability_ready_notification = {
+		en = "Notify when ability is ready",
+		ru = "Уведомлять когда способность готова",
+	},
+	show_local_ability_ready_notification_tooltip = {
+		en = "Show a notification when the ability is ready to use.",
+		ru = "Показывать уведомление когда способность готова к использованию.",
+	},
+	local_ability_ready_notification = {
+		en = "Ability ready",
+		ru = "Способность готова",
+	},
 	cooldown_format = {
 		en = "Display Format",
 		ru = "Формат отображения",

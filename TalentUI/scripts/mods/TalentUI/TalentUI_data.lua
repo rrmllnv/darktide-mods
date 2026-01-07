@@ -269,6 +269,12 @@ return {
 						range = { 30, 50 },
 						decimals_number = 0,
 					},
+					{
+						setting_id = "show_local_ability_ready_notification",
+						type = "checkbox",
+						default_value = true,
+						tooltip = "show_local_ability_ready_notification_tooltip",
+					},
 				},
 			},
 			{

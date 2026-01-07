@@ -12,6 +12,19 @@ local TalentUISettings = mod:io_dofile("TalentUI/scripts/mods/TalentUI/TalentUI_
 
 local ACTIVE_COLOR = UIHudSettings.color_tint_main_1
 local COOLDOWN_COLOR = UIHudSettings.color_tint_alert_2
+local NOTIFICATION_LINE_DEFAULT = UIHudSettings.color_tint_main_2
+local NOTIFICATION_ICON_DEFAULT = UIHudSettings.color_tint_main_2
+local NOTIFICATION_TEXT_DEFAULT = UIHudSettings.color_tint_main_1
+local NOTIFICATION_BACKGROUND_DEFAULT = Color.terminal_grid_background(180, true)
+
+local function clone_color(color)
+	return {
+		color[1],
+		color[2],
+		color[3],
+		color[4],
+	}
+end
 
 mod:hook(_G, "dofile", function(func, path)
 	local instance = func(path)
@@ -105,6 +118,7 @@ mod:hook_safe("HudElementPlayerAbility", "update", function(self)
 	local format_type = mod:get("cooldown_format")
 	local show_active = mod:get("show_local_ability_active") ~= false
 	local show_decimals = mod:get("show_local_ability_decimals") ~= false
+	local show_ready_notification = mod:get("show_local_ability_ready_notification") ~= false
 	
 	local display_text = ""
 	local display_color = COOLDOWN_COLOR
@@ -195,5 +209,39 @@ mod:hook_safe("HudElementPlayerAbility", "update", function(self)
 	text_widget.style.text.text_color = display_color
 	text_widget.visible = display_text ~= ""
 	text_widget.dirty = true
+	
+	local is_ready = not on_cooldown and progress >= 1 and not is_active
+	
+	if show_ready_notification then
+		if self._ability_ready_prev == nil then
+			self._ability_ready_prev = is_ready
+			self._ability_prev_on_cooldown = on_cooldown
+		else
+			local became_ready_after_cooldown = is_ready and not self._ability_ready_prev and (self._ability_prev_on_cooldown or on_cooldown)
+			
+			if became_ready_after_cooldown then
+				local line_color = clone_color(NOTIFICATION_LINE_DEFAULT)
+				local icon_color = clone_color(NOTIFICATION_ICON_DEFAULT)
+				local background_color = clone_color(NOTIFICATION_BACKGROUND_DEFAULT)
+				local text_color = clone_color(NOTIFICATION_TEXT_DEFAULT)
+				local line_1_text = mod:localize("local_ability_ready_notification")
+				line_1_text = string.format("{#color(%d,%d,%d)}%s{#reset()}", text_color[2], text_color[3], text_color[4], line_1_text)
+				
+				local notification_data = {
+					icon_size = "currency",
+					color = background_color,
+					line_color = line_color,
+					icon_color = icon_color,
+					line_1 = line_1_text,
+					show_shine = true,
+				}
+				
+				Managers.event:trigger("event_add_notification_message", "custom", notification_data)
+			end
+			
+			self._ability_ready_prev = is_ready
+			self._ability_prev_on_cooldown = on_cooldown
+		end
+	end
 end)
 
