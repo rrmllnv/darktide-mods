@@ -449,8 +449,15 @@ local function update_teammate_all_abilities(self, player, dt)
 					end
 				end
 				
-				icon_widget.visible = true
-				icon_widget.dirty = true
+				local needs_icon_update = false
+				if icon_widget.visible ~= true then
+					icon_widget.visible = true
+					needs_icon_update = true
+				end
+				
+				if needs_icon_update then
+					icon_widget.dirty = true
+				end
 				
 				if text_widget then
 					local display_text = ""
@@ -481,16 +488,33 @@ local function update_teammate_all_abilities(self, player, dt)
 						end
 					end
 					
-					text_widget.content.text = display_text
-					text_widget.visible = show_text and display_text ~= ""
-					text_widget.dirty = true
+					local needs_text_update = false
+					local new_visible = show_text and display_text ~= ""
+					
+					if text_widget.content.text ~= display_text then
+						text_widget.content.text = display_text
+						needs_text_update = true
+					end
+					
+					if text_widget.visible ~= new_visible then
+						text_widget.visible = new_visible
+						needs_text_update = true
+					end
+					
+					if needs_text_update then
+						text_widget.dirty = true
+					end
 				end
 			else
-				icon_widget.visible = false
-				icon_widget.dirty = true
+				if icon_widget.visible ~= false then
+					icon_widget.visible = false
+					icon_widget.dirty = true
+				end
 				if text_widget then
-					text_widget.visible = false
-					text_widget.dirty = true
+					if text_widget.visible ~= false then
+						text_widget.visible = false
+						text_widget.dirty = true
+					end
 				end
 			end
 		end

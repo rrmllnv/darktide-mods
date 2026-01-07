@@ -173,13 +173,14 @@ local function update_teammate_weapons(self, player, dt)
 			
 			if has_weapon and show_weapon_icon and not self._show_as_dead and not self._dead and not self._hogtied then
 				local icon = teammate_weapons_data[data_key].icon
+				local needs_icon_update = false
 				
 				if icon_widget.style and icon_widget.style.icon then
 					if icon_widget.style.icon.size then
 						if icon_widget.style.icon.size[1] ~= weapon_icon_width or icon_widget.style.icon.size[2] ~= weapon_icon_height then
 							icon_widget.style.icon.size[1] = weapon_icon_width
 							icon_widget.style.icon.size[2] = weapon_icon_height
-							icon_widget.dirty = true
+							needs_icon_update = true
 						end
 					end
 				end
@@ -187,16 +188,26 @@ local function update_teammate_weapons(self, player, dt)
 				if icon and icon_widget.content then
 					if icon_widget.content.icon ~= icon then
 						icon_widget.content.icon = icon
-						icon_widget.dirty = true
+						needs_icon_update = true
 					end
 				end
 				
-				icon_widget.visible = true
-				icon_widget.dirty = true
+				if icon_widget.visible ~= true then
+					icon_widget.visible = true
+					needs_icon_update = true
+				end
+				
+				if needs_icon_update then
+					icon_widget.dirty = true
+				end
 				
 				local show_ammo = mod:get("teammate_weapon_show_ammo")
 				local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
 				if text_widget then
+					local needs_text_update = false
+					local new_text = ""
+					local new_visible = false
+					
 					if show_ammo then
 						local unit_data_extension = extensions.unit_data
 						local inventory_component = unit_data_extension and unit_data_extension:read_component(weapon_slot.slot)
@@ -210,32 +221,47 @@ local function update_teammate_weapons(self, player, dt)
 							local total_max_ammo = max_clip + max_reserve
 							
 							if total_max_ammo == 0 or self._show_as_dead or self._dead or self._hogtied then
-								text_widget.content.text = ""
-								text_widget.visible = false
+								new_text = ""
+								new_visible = false
 							else
-								text_widget.content.text = string.format("%d/%d", total_current_ammo, total_max_ammo)
-								text_widget.visible = true
+								new_text = string.format("%d/%d", total_current_ammo, total_max_ammo)
+								new_visible = true
 							end
-							text_widget.dirty = true
 						else
-							text_widget.content.text = ""
-							text_widget.visible = false
-							text_widget.dirty = true
+							new_text = ""
+							new_visible = false
 						end
 					else
-						text_widget.content.text = ""
-						text_widget.visible = false
+						new_text = ""
+						new_visible = false
+					end
+					
+					if text_widget.content.text ~= new_text then
+						text_widget.content.text = new_text
+						needs_text_update = true
+					end
+					
+					if text_widget.visible ~= new_visible then
+						text_widget.visible = new_visible
+						needs_text_update = true
+					end
+					
+					if needs_text_update then
 						text_widget.dirty = true
 					end
 				end
 			else
-				icon_widget.visible = false
-				icon_widget.dirty = true
+				if icon_widget.visible ~= false then
+					icon_widget.visible = false
+					icon_widget.dirty = true
+				end
 				
 				local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
 				if text_widget then
-					text_widget.visible = false
-					text_widget.dirty = true
+					if text_widget.visible ~= false then
+						text_widget.visible = false
+						text_widget.dirty = true
+					end
 				end
 			end
 		end
