@@ -159,7 +159,7 @@ return {
 						tooltip = "teammate_weapon_position_preset_tooltip",
 						options = {
 							{ text = "weapon_preset_default", value = "default" },
-							{ text = "weapon_preset_equipment_side", value = "equipment_side" },
+							{ text = "weapon_preset_coherency_side", value = "coherency_side" },
 							{ text = "weapon_preset_player_name_above", value = "player_name_above" },
 							{ text = "weapon_preset_health_below", value = "health_below" },
 						},

@@ -1,7 +1,7 @@
 local mod = get_mod("TalentUI")
 
 local SETTINGS = {
-	show_abilities_for_bots = false,
+	show_abilities_for_bots = true,
 
 	local_cooldown_font_size = 40,
 
@@ -84,7 +84,7 @@ local SETTINGS = {
 	teammate_weapon_ammo_text_offset_y = 5,
 	
 	teammate_weapon_position_presets = {
-		default = {
+		coherency_side = {
 			icon_width = 70,
 			icon_height = 26,
 			vertical_offset = 20,
@@ -97,7 +97,7 @@ local SETTINGS = {
 			ammo_text_offset_x = 60,
 			ammo_text_offset_y = 5,
 		},
-		equipment_side = {
+		default = {
 			icon_width = 70,
 			icon_height = 26,
 			vertical_offset = 15,

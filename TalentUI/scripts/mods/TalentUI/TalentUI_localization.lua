@@ -173,7 +173,7 @@ return {
 	},
 	teammate_ability_preset_coherency_side = {
 		en = "Coherency Side",
-		ru = "Рядом со стойкостью",
+		ru = "Рядом с когерентностью",
 	},
 	teammate_weapon_position_preset = {
 		en = "Position Preset",
@@ -187,9 +187,9 @@ return {
 		en = "Default",
 		ru = "По умолчанию",
 	},
-	weapon_preset_equipment_side = {
-		en = "Equipment Side",
-		ru = "Рядом со снаряжением",
+	weapon_preset_coherency_side = {
+		en = "Coherency Side",
+		ru = "Рядом с когерентностью",
 	},
 	weapon_preset_player_name_above = {
 		en = "Above Player Name",
