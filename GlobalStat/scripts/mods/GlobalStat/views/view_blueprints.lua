@@ -99,21 +99,28 @@ blueprints.stat_line = {
 		widget.content.original_text = original_text
 		widget.content.value = element.value or ""
 		
+		-- Проверяем, является ли строка пустой
+		local is_empty = (original_text == nil or original_text == "") and (widget.content.value == nil or widget.content.value == "")
+		
 		-- Сохраняем данные из element
 		widget.content.text_key = element.text_key
 		widget.content.stat_name = element.stat_name
 		widget.content.description_key = element.description_key
 		widget.content.tab_key = element.tab_key
 		
-		-- Создаем уникальный element_id с учетом tab_key
-		local tab_key = element.tab_key or ""
-		local text_key = element.text_key or ""
-		local stat_name = element.stat_name or ""
-		widget.content.element_id = element.id or (tab_key .. "_" .. text_key .. "_" .. stat_name)
+		-- Создаем уникальный element_id с учетом tab_key только для непустых строк
+		widget.content.element_id = nil
+		if not is_empty then
+			local tab_key = element.tab_key or ""
+			local text_key = element.text_key or ""
+			local stat_name = element.stat_name or ""
+			widget.content.element_id = element.id or (tab_key .. "_" .. text_key .. "_" .. stat_name)
+		end
 		
 		widget.content.checked = false
 		
-		if widget.content.element_id and widget.content.element_id ~= "" then
+		-- Загружаем состояние только для непустых строк с element_id
+		if not is_empty and widget.content.element_id and widget.content.element_id ~= "" then
 			local checkbox_states = mod:get("globalstat_checkbox_states") or {}
 			widget.content.checked = checkbox_states[widget.content.element_id] or false
 		end
@@ -293,21 +300,28 @@ blueprints.stat_line_with_description = {
 		widget.content.value = element.value or ""
 		widget.content.description = element.description or ""
 		
+		-- Проверяем, является ли строка пустой
+		local is_empty = (original_text == nil or original_text == "") and (widget.content.value == nil or widget.content.value == "")
+		
 		-- Сохраняем данные из element
 		widget.content.text_key = element.text_key
 		widget.content.stat_name = element.stat_name
 		widget.content.description_key = element.description_key
 		widget.content.tab_key = element.tab_key
 		
-		-- Создаем уникальный element_id с учетом tab_key
-		local tab_key = element.tab_key or ""
-		local text_key = element.text_key or ""
-		local stat_name = element.stat_name or ""
-		widget.content.element_id = element.id or (tab_key .. "_" .. text_key .. "_" .. stat_name)
+		-- Создаем уникальный element_id с учетом tab_key только для непустых строк
+		widget.content.element_id = nil
+		if not is_empty then
+			local tab_key = element.tab_key or ""
+			local text_key = element.text_key or ""
+			local stat_name = element.stat_name or ""
+			widget.content.element_id = element.id or (tab_key .. "_" .. text_key .. "_" .. stat_name)
+		end
 		
 		widget.content.checked = false
 		
-		if widget.content.element_id and widget.content.element_id ~= "" then
+		-- Загружаем состояние только для непустых строк с element_id
+		if not is_empty and widget.content.element_id and widget.content.element_id ~= "" then
 			local checkbox_states = mod:get("globalstat_checkbox_states") or {}
 			widget.content.checked = checkbox_states[widget.content.element_id] or false
 		end

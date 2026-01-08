@@ -19,6 +19,7 @@ TabMissionProgress.create_layout = function(safe_read_stat, localize, format_num
                 labels[#labels + 1] = {
                     suffix = tostring(i),
                     label = Localize(danger.display_name),
+                    text_key = danger.display_name, -- Сохраняем ключ локализации
                 }
                 if #labels == 5 then
                     break
@@ -29,11 +30,11 @@ TabMissionProgress.create_layout = function(safe_read_stat, localize, format_num
         -- Fallback, если что-то пошло не так
         if #labels == 0 then
             labels = {
-                {suffix = "1", label = localize("stats_difficulty_1")},
-                {suffix = "2", label = localize("stats_difficulty_2")},
-                {suffix = "3", label = localize("stats_difficulty_3")},
-                {suffix = "4", label = localize("stats_difficulty_4")},
-                {suffix = "5", label = localize("stats_difficulty_5")},
+                {suffix = "1", label = localize("stats_difficulty_1"), text_key = "stats_difficulty_1"},
+                {suffix = "2", label = localize("stats_difficulty_2"), text_key = "stats_difficulty_2"},
+                {suffix = "3", label = localize("stats_difficulty_3"), text_key = "stats_difficulty_3"},
+                {suffix = "4", label = localize("stats_difficulty_4"), text_key = "stats_difficulty_4"},
+                {suffix = "5", label = localize("stats_difficulty_5"), text_key = "stats_difficulty_5"},
             }
         end
 
@@ -71,11 +72,17 @@ TabMissionProgress.create_layout = function(safe_read_stat, localize, format_num
                     end
 
                     local status = (val > 0) and localize("mission_progress_done") or localize("mission_progress_not_done")
+                    
+                    -- Используем text_key из diff (сохранен при создании labels)
+                    local text_key = diff.text_key or ("stats_difficulty_" .. diff.suffix)
 
                     table.insert(layout, {
                         widget_type = "stat_line",
                         text = diff.label,
                         value = status,
+                        text_key = text_key,
+                        stat_name = stat_name,
+                        description_key = nil,
                     })
                 end
             end
