@@ -140,7 +140,7 @@ local function setup_game_progress(tactical_overlay, ui_renderer)
 	if not has_selected then
 		table.insert(configs, {
 			blueprint = "body",
-			text = "Выберите элементы в статистике для отображения здесь",
+			text = mod:localize("game_progress_no_selected_items"),
 		})
 	end
 	
@@ -204,8 +204,8 @@ mod:hook("HudElementTacticalOverlay", "init", function(func, self, parent, draw_
 		index = 4,
 		loc_key = "tactical_overlay_game_progress",
 		icon = {
-			blueprint_type = "text_icon",
-			value = "📊",
+			blueprint_type = "texture_icon",
+			value = "content/ui/materials/hud/interactions/icons/havoc",
 		},
 	}
 	

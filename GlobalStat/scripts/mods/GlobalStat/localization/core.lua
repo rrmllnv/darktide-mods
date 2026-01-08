@@ -31,5 +31,9 @@ return {
 		en = "Clear Selected Items",
 		ru = "Очистить выбранные элементы",
 	},
+	game_progress_no_selected_items = {
+		en = "Select items in statistics to display here",
+		ru = "Выберите элементы в статистике для отображения здесь",
+	},
 }
 
