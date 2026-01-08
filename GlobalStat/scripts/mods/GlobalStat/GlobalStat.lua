@@ -271,4 +271,24 @@ mod:hook("HudElementTacticalOverlay", "update", function(func, self, dt, t, ui_r
 	return result
 end)
 
+function mod.on_setting_changed(setting_id)
+	if setting_id == "reset_selected_items" then
+		if mod:get("reset_selected_items") == 1 then
+			mod:notify("Selected items cleared")
+			mod:set("reset_selected_items", 0)
+			
+			-- Очищаем выбранные элементы
+			mod:set("globalstat_selected_items", {})
+			mod:set("globalstat_selected_items_order", {})
+			mod:set("globalstat_checkbox_states", {})
+			
+			-- Принудительно сохраняем в файл
+			local dmf = get_mod("DMF")
+			if dmf and dmf.save_unsaved_settings_to_file then
+				dmf.save_unsaved_settings_to_file()
+			end
+		end
+	end
+end
+
 

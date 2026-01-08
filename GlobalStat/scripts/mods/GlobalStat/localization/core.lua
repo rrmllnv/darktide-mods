@@ -23,5 +23,13 @@ return {
 		en = "Game Progress",
 		ru = "Игровой прогресс",
 	},
+	group_system_settings = {
+		en = "System Settings",
+		ru = "Системные настройки",
+	},
+	reset_selected_items = {
+		en = "Clear Selected Items",
+		ru = "Очистить выбранные элементы",
+	},
 }
 
