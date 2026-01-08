@@ -4,6 +4,10 @@ local system_view_injected = false
 local global_loc_registered = false
 
 views.register_views = function(mod, view_templates)
+	if not view_templates then
+		return
+	end
+	
 	for _, view_template in pairs(view_templates) do
 		local path = view_template.view_settings.path
 		mod:add_require_path(path)

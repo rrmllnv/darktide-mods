@@ -19,5 +19,9 @@ return {
 		en = "PLAYER STATISTICS",
 		ru = "СТАТИСТИКА ИГРОКА",
 	},
+	tactical_overlay_game_progress = {
+		en = "Game Progress",
+		ru = "Игровой прогресс",
+	},
 }
 
