@@ -248,9 +248,28 @@ end)
 mod:hook("HudElementTacticalOverlay", "_get_page", function(func, self, page_key)
 	local result = func(self, page_key)
 	
-	if page_key == "game_progress" and result then
-		local localized_title = mod:localize("tactical_overlay_game_progress")
-		result.loc_key = localized_title
+	if page_key == "game_progress" then
+		if not result then
+			-- Если настройки не найдены, создаем их
+			result = {
+				index = 4,
+				loc_key = "tactical_overlay_game_progress",
+				icon = {
+					blueprint_type = "texture_icon",
+					value = "content/ui/materials/hud/interactions/icons/havoc",
+				},
+			}
+			
+			-- Сохраняем в grid_overrides для последующих вызовов
+			if not self._grid_overrides then
+				self._grid_overrides = {}
+			end
+			self._grid_overrides["game_progress"] = result
+		else
+			-- Обновляем локализованный заголовок
+			local localized_title = mod:localize("tactical_overlay_game_progress")
+			result.loc_key = localized_title
+		end
 	end
 	
 	return result
