@@ -8,6 +8,7 @@ mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandW
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/HudElementCommandWheel")
 
 local Utils = require("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_utils")
+local InputDevice = require("scripts/managers/input/input_device")
 local is_in_valid_lvl = Utils.is_in_valid_lvl
 local is_in_psykhanium = Utils.is_in_psykhanium
 
@@ -148,72 +149,112 @@ end
 mod._command_wheel_eval_func = nil
 
 mod._is_command_wheel_key_pressed = function(self)
+	local function check_controller_button()
+		if not InputDevice.gamepad_active then
+			return false
+		end
+		
+		local last_device = InputDevice.last_pressed_device
+		if not last_device then
+			return false
+		end
+		
+		local device_type = last_device:type()
+		local controller_key = nil
+		
+		if device_type == "xbox_controller" then
+			controller_key = "xbox_controller_left_trigger"
+		elseif device_type == "ps4_controller" then
+			controller_key = "ps4_controller_r1"
+		else
+			return false
+		end
+		
+		local SUPPORTED_CONTROLLER_DEVICES = {"xbox_controller", "ps4_controller"}
+		local device_info = Utils.find_device_for_key(controller_key, SUPPORTED_CONTROLLER_DEVICES)
+		
+		if device_info and device_info.device and device_info.index then
+			return device_info.device:held(device_info.index)
+		end
+		
+		return false
+	end
+	
 	if not mod._command_wheel_eval_func then
 		local keys = mod:get("open_command_wheel_key")
-		if not keys or #keys == 0 then
-			return false
-		end
+		local has_keyboard_binding = keys and #keys > 0
 		
-		local dmf = get_mod("DMF")
-		local keywatch_result = dmf.local_keys_to_keywatch_result(keys)
-		if not keywatch_result or not keywatch_result.main then
-			return false
-		end
-		
-		local keybind_data = {
-			main = keywatch_result.main,
-			enablers = keywatch_result.enablers or {},
-			disablers = keywatch_result.disablers or {},
-			trigger = "held"
-		}
-		
-		local main_key = keybind_data.main
-		local SUPPORTED_DEVICES = {"keyboard", "mouse"}
-		
-		local device_info = Utils.find_device_for_key(main_key, SUPPORTED_DEVICES)
-		if not device_info then
-			return false
-		end
-		
-		local key_info = {
-			main_device = device_info.device,
-			main_index = device_info.index,
-			enablers = {},
-			disablers = {},
-		}
-		
-		if #keybind_data.enablers > 0 then
-			for _, enabler_key in ipairs(keybind_data.enablers) do
-				local device_info_enabler = Utils.find_device_for_key(enabler_key, SUPPORTED_DEVICES)
-				if device_info_enabler then
-					table.insert(key_info.enablers, device_info_enabler)
-				end
-			end
-		end
-		
-		if keybind_data.disablers and #keybind_data.disablers > 0 then
-			for _, disabler_key in ipairs(keybind_data.disablers) do
-				local device_info_disabler = Utils.find_device_for_key(disabler_key, SUPPORTED_DEVICES)
-				if device_info_disabler then
-					table.insert(key_info.disablers, device_info_disabler)
+		local keyboard_check_func = nil
+		if has_keyboard_binding then
+			local dmf = get_mod("DMF")
+			local keywatch_result = dmf.local_keys_to_keywatch_result(keys)
+			if keywatch_result and keywatch_result.main then
+				local keybind_data = {
+					main = keywatch_result.main,
+					enablers = keywatch_result.enablers or {},
+					disablers = keywatch_result.disablers or {},
+					trigger = "held"
+				}
+				
+				local main_key = keybind_data.main
+				local SUPPORTED_DEVICES = {"keyboard", "mouse"}
+				
+				local device_info = Utils.find_device_for_key(main_key, SUPPORTED_DEVICES)
+				if device_info then
+					local key_info = {
+						main_device = device_info.device,
+						main_index = device_info.index,
+						enablers = {},
+						disablers = {},
+					}
+					
+					if #keybind_data.enablers > 0 then
+						for _, enabler_key in ipairs(keybind_data.enablers) do
+							local device_info_enabler = Utils.find_device_for_key(enabler_key, SUPPORTED_DEVICES)
+							if device_info_enabler then
+								table.insert(key_info.enablers, device_info_enabler)
+							end
+						end
+					end
+					
+					if keybind_data.disablers and #keybind_data.disablers > 0 then
+						for _, disabler_key in ipairs(keybind_data.disablers) do
+							local device_info_disabler = Utils.find_device_for_key(disabler_key, SUPPORTED_DEVICES)
+							if device_info_disabler then
+								table.insert(key_info.disablers, device_info_disabler)
+							end
+						end
+					end
+					
+					keyboard_check_func = function()
+						for _, enabler in ipairs(key_info.enablers) do
+							if not enabler.device:held(enabler.index) then
+								return false
+							end
+						end
+						
+						for _, disabler in ipairs(key_info.disablers) do
+							if disabler.device:held(disabler.index) then
+								return false
+							end
+						end
+						
+						return key_info.main_device:held(key_info.main_index)
+					end
 				end
 			end
 		end
 		
 		local function check_key_pressed()
-			for _, enabler in ipairs(key_info.enablers) do
-				if not enabler.device:held(enabler.index) then
-					return false
-				end
+			if keyboard_check_func and keyboard_check_func() then
+				return true
 			end
 			
-			for _, disabler in ipairs(key_info.disablers) do
-				if disabler.device:held(disabler.index) then
-					return false
-				end
+			if check_controller_button() then
+				return true
 			end
 			
-			return key_info.main_device:held(key_info.main_index)
+			return false
 		end
 		
 		mod._command_wheel_eval_func = check_key_pressed

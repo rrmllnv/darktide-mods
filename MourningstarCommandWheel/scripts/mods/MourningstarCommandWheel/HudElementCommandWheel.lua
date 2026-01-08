@@ -114,6 +114,7 @@ HudElementCommandWheel.init = function(self, parent, draw_layer, start_scale)
 	}
 	self._wheel_context = {}
 	self._close_delay = nil
+	self._controller_stick_moved = false
 	
 
 	self._wheel_config = load_wheel_config()
@@ -128,6 +129,23 @@ HudElementCommandWheel.init = function(self, parent, draw_layer, start_scale)
 	self:_populate_wheel(options)
 	
 	self._wheel_background_widget = self._widgets_by_name.wheel_background
+end
+
+HudElementCommandWheel._reset_hover_state = function(self)
+	for i = 1, #self._entries do
+		local entry = self._entries[i]
+		if entry and entry.widget then
+			entry.widget.content.hotspot.force_hover = false
+		end
+	end
+	
+	if self._wheel_background_widget then
+		self._wheel_background_widget.content.force_hover = false
+		self._wheel_background_widget.style.mark.color[1] = 0
+	end
+	
+	self._last_widget_hover_data.index = nil
+	self._last_widget_hover_data.t = nil
 end
 
 HudElementCommandWheel._setup_entries = function(self, num_entries)
@@ -252,24 +270,32 @@ HudElementCommandWheel._update_wheel_presentation = function(self, dt, t, ui_ren
 	end
 
 
-	if not input_service:has("cursor") and not (InputDevice.gamepad_active and input_service:has("navigate_controller_right")) then
-		return
-	end
-
 	local screen_width, screen_height = RESOLUTION_LOOKUP.width, RESOLUTION_LOOKUP.height
 	local scale = render_settings.scale
 	local cursor = nil
 
-	if input_service:has("cursor") then
-		cursor = input_service:get("cursor")
-	end
-
-	if not cursor and InputDevice.gamepad_active and input_service:has("navigate_controller_right") then
-		cursor = input_service:get("navigate_controller_right")
-		if cursor then
-			cursor[1] = screen_width * 0.5 + cursor[1] * screen_width * 0.5
-			cursor[2] = screen_height * 0.5 - cursor[2] * screen_height * 0.5
+	if input_service and InputDevice.gamepad_active then
+		local controller_input = input_service:get("navigate_controller_right")
+		
+		if not controller_input or (math.abs(controller_input[1]) < 0.01 and math.abs(controller_input[2]) < 0.01) then
+			controller_input = input_service:get("navigate_controller")
 		end
+		
+		if controller_input and (math.abs(controller_input[1]) > 0.01 or math.abs(controller_input[2]) > 0.01) then
+			self._controller_stick_moved = true
+			cursor = {
+				screen_width * 0.5 + controller_input[1] * screen_width * 0.5,
+				screen_height * 0.5 - controller_input[2] * screen_height * 0.5,
+				0
+			}
+		else
+			if self._controller_stick_moved then
+				self:_reset_hover_state()
+			end
+			return
+		end
+	else
+		cursor = input_service and input_service:get("cursor")
 	end
 
 	if not cursor then
@@ -350,6 +376,10 @@ HudElementCommandWheel._is_wheel_entry_hovered = function(self, t)
 		end
 	end
 
+	if InputDevice.gamepad_active and not self._controller_stick_moved then
+		return nil, nil
+	end
+
 	local last_hover = self._last_widget_hover_data
 	local hover_grace_period = CommandWheelSettings.hover_grace_period or 0.4
 
@@ -394,7 +424,6 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 	if input_pressed and not start_time then
 		self:_on_wheel_start(t, input_service)
 	elseif not input_pressed and start_time then
-
 		local hovered_entry, hovered_index = self:_is_wheel_entry_hovered(t)
 		if hovered_entry then
 			activate_option(hovered_entry.option)
@@ -417,7 +446,8 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 
 	if draw_wheel and not self._wheel_active then
 		self._wheel_active = true
-		
+		self._controller_stick_moved = false
+		self:_reset_hover_state()
 
 		local options = generate_options_from_config(self._wheel_config)
 		self:_populate_wheel(options)
@@ -514,9 +544,19 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 		local hovered_entry, hovered_index = self:_is_wheel_entry_hovered(t)
 		
 
-		if hovered_entry and input_service:has("left_pressed") and input_service:get("left_pressed") then
-			if activate_option(hovered_entry.option) then
-				self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
+		if hovered_entry then
+			local should_activate = false
+			
+			if input_service:has("left_pressed") and input_service:get("left_pressed") then
+				should_activate = true
+			elseif InputDevice.gamepad_active and input_service:has("gamepad_confirm_pressed") and input_service:get("gamepad_confirm_pressed") then
+				should_activate = true
+			end
+			
+			if should_activate then
+				if activate_option(hovered_entry.option) then
+					self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
+				end
 			end
 		end
 	end
@@ -539,6 +579,9 @@ HudElementCommandWheel._on_wheel_stop = function(self, t, ui_renderer, render_se
 
 	self._wheel_active = false
 	self._close_delay = nil
+	self._controller_stick_moved = false
+	self._last_widget_hover_data.index = nil
+	self._last_widget_hover_data.t = nil
 	
 
 	mod.dragged_entry = nil
