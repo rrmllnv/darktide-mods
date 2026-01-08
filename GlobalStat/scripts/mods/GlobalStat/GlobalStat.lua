@@ -111,7 +111,15 @@ local function setup_game_progress(tactical_overlay, ui_renderer)
 			-- Восстанавливаем значение из статистики
 			if item_data.stat_name and item_data.stat_name ~= "" then
 				local stat_value = safe_read_stat(item_data.stat_name)
-				value = format_number(stat_value)
+				
+				-- Если это элемент миссии, преобразуем значение в статус
+				if item_data.mission_key or item_data.mission_name then
+					-- Для миссий: 1 = пройдено, 0 = не пройдено
+					value = (stat_value and stat_value > 0) and localize("mission_progress_done") or localize("mission_progress_not_done")
+				else
+					-- Для остальных элементов - обычное форматирование числа
+					value = format_number(stat_value)
+				end
 			end
 			
 			-- Добавляем название миссии, если есть
@@ -125,10 +133,12 @@ local function setup_game_progress(tactical_overlay, ui_renderer)
 				end
 			end
 			
-			-- Объединяем текст и значение
+			-- Объединяем текст и значение с цветовым форматированием
 			local display_text = text
 			if value and value ~= "" then
-				display_text = string.format("%s: %s", text, value)
+				-- Применяем светлый цвет к значению
+				local colored_value = string.format("{#color(255,255,255)}%s", value)
+				display_text = string.format("%s: %s", text, colored_value)
 			end
 			
 			-- Определяем blueprint в зависимости от наличия description_key
