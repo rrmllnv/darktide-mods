@@ -75,6 +75,9 @@ TabMissionProgress.create_layout = function(safe_read_stat, localize, format_num
                     
                     -- Используем text_key из diff (сохранен при создании labels)
                     local text_key = diff.text_key or ("stats_difficulty_" .. diff.suffix)
+                    
+                    -- Сохраняем ключ локализации миссии или внутреннее имя
+                    local mission_key = mission.local_variable or mission.name
 
                     table.insert(layout, {
                         widget_type = "stat_line",
@@ -83,6 +86,8 @@ TabMissionProgress.create_layout = function(safe_read_stat, localize, format_num
                         text_key = text_key,
                         stat_name = stat_name,
                         description_key = nil,
+                        mission_key = mission_key, -- Ключ локализации или имя миссии
+                        mission_name = mission_name, -- Локализованное название миссии для отображения
                     })
                 end
             end

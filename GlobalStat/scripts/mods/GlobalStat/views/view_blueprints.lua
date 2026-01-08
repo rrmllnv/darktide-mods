@@ -107,6 +107,8 @@ blueprints.stat_line = {
 		widget.content.stat_name = element.stat_name
 		widget.content.description_key = element.description_key
 		widget.content.tab_key = element.tab_key
+		widget.content.mission_key = element.mission_key
+		widget.content.mission_name = element.mission_name
 		
 		-- Создаем уникальный element_id с учетом tab_key только для непустых строк
 		widget.content.element_id = nil
@@ -154,6 +156,8 @@ blueprints.stat_line = {
 							stat_name = content.stat_name,
 							description_key = content.description_key,
 							tab_key = content.tab_key,
+							mission_key = content.mission_key,
+							mission_name = content.mission_name,
 						}
 						-- Добавляем в порядок, если еще нет
 						local found = false
@@ -308,6 +312,8 @@ blueprints.stat_line_with_description = {
 		widget.content.stat_name = element.stat_name
 		widget.content.description_key = element.description_key
 		widget.content.tab_key = element.tab_key
+		widget.content.mission_key = element.mission_key
+		widget.content.mission_name = element.mission_name
 		
 		-- Создаем уникальный element_id с учетом tab_key только для непустых строк
 		widget.content.element_id = nil
@@ -355,6 +361,8 @@ blueprints.stat_line_with_description = {
 							stat_name = content.stat_name,
 							description_key = content.description_key,
 							tab_key = content.tab_key,
+							mission_key = content.mission_key,
+							mission_name = content.mission_name,
 						}
 						-- Добавляем в порядок, если еще нет
 						local found = false

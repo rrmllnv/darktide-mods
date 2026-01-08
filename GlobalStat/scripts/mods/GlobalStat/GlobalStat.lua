@@ -114,6 +114,17 @@ local function setup_game_progress(tactical_overlay, ui_renderer)
 				value = format_number(stat_value)
 			end
 			
+			-- Добавляем название миссии, если есть
+			if item_data.mission_key or item_data.mission_name then
+				local mission_display_name = item_data.mission_name
+				if not mission_display_name and item_data.mission_key then
+					mission_display_name = localize(item_data.mission_key)
+				end
+				if mission_display_name and mission_display_name ~= "" then
+					text = string.format("%s - %s", mission_display_name, text)
+				end
+			end
+			
 			-- Объединяем текст и значение
 			local display_text = text
 			if value and value ~= "" then
