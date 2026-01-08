@@ -330,7 +330,7 @@ local widget_definitions = {
 				offset = {
 					0,
 					-133,
-					100,
+					200,
 				},
 				color = get_hud_color("color_tint_main_1", 255),
 			},
