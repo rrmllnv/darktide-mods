@@ -15,20 +15,124 @@ commands.setup(mod)
 
 local ElementSettings = require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_overlay_settings")
 
+local function safe_read_stat(stat_name)
+	if not Managers or not Managers.stats or not Managers.stats.read_user_stat then
+		return 0
+	end
+
+	local success, value = pcall(function()
+		local result = Managers.stats:read_user_stat(1, stat_name)
+		return result and type(result) == "number" and result or 0
+	end)
+
+	return success and value or 0
+end
+
+local function format_number(number)
+	if not number or type(number) ~= "number" then
+		return "0"
+	end
+
+	if mod.format_number then
+		local success, result = pcall(function()
+			return mod.format_number(number)
+		end)
+
+		if success and result then
+			return result
+		end
+	end
+
+	return tostring(math.floor(number))
+end
+
+local function localize(key)
+	if key:match("^loc_") then
+		local success, result = pcall(function()
+			return Localize(key)
+		end)
+
+		if success and result and result ~= "" and result ~= key then
+			return result
+		end
+	end
+
+	local success, result = pcall(function()
+		return mod:localize(key)
+	end)
+
+	if success and result and result ~= "" then
+		return result
+	end
+
+	return key
+end
+
 local function setup_game_progress(tactical_overlay, ui_renderer)
 	local page_key = "game_progress"
+	local pt = mod:persistent_table("GlobalStat")
+	local selected_items = pt.selected_items or {}
+	
 	local configs = {
 		{
 			blueprint = "title",
 			text = mod:localize("tactical_overlay_game_progress"),
 		},
-		{
-			blueprint = "body",
-			text = "Тестовый текст для раздела игрового прогресса",
-		},
 	}
 	
+	-- Добавляем выбранные элементы
+	local has_selected = false
+	for element_id, item_data in pairs(selected_items) do
+		if item_data and item_data.text_key then
+			has_selected = true
+			local text = localize(item_data.text_key)
+			local value = ""
+			
+			-- Восстанавливаем значение из статистики
+			if item_data.stat_name and item_data.stat_name ~= "" then
+				local stat_value = safe_read_stat(item_data.stat_name)
+				value = format_number(stat_value)
+			end
+			
+			-- Определяем blueprint в зависимости от наличия description_key
+			local blueprint = "body"
+			if item_data.description_key and item_data.description_key ~= "" then
+				blueprint = "body_with_description"
+				local description = localize(item_data.description_key)
+				table.insert(configs, {
+					blueprint = blueprint,
+					text = text,
+					value = value,
+					description = description,
+				})
+			else
+				table.insert(configs, {
+					blueprint = blueprint,
+					text = text,
+					value = value,
+				})
+			end
+		end
+	end
+	
+	-- Если нет выбранных элементов, показываем заглушку
+	if not has_selected then
+		table.insert(configs, {
+			blueprint = "body",
+			text = "Выберите элементы в статистике для отображения здесь",
+		})
+	end
+	
 	tactical_overlay:_create_right_panel_widgets(page_key, configs, ui_renderer)
+end
+
+local function get_selected_items_hash(pt)
+	local selected_items = pt.selected_items or {}
+	local count = 0
+	for _ in pairs(selected_items) do
+		count = count + 1
+	end
+	return count
 end
 
 local function update_game_progress(tactical_overlay, dt, ui_renderer)
@@ -39,7 +143,31 @@ local function update_game_progress(tactical_overlay, dt, ui_renderer)
 	local page_key = "game_progress"
 	local has_entry = tactical_overlay._right_panel_entries and tactical_overlay._right_panel_entries[page_key] ~= nil
 	
+	-- Если entry еще не создано, создаем его (чтобы таб появился)
 	if not has_entry then
+		setup_game_progress(tactical_overlay, ui_renderer)
+		return
+	end
+	
+	-- Обновляем виджеты только если открыта страница game_progress
+	local current_key = tactical_overlay._right_panel_key
+	if current_key ~= page_key then
+		return
+	end
+	
+	local pt = mod:persistent_table("GlobalStat")
+	local current_hash = get_selected_items_hash(pt)
+	
+	-- Сохраняем хеш в tactical_overlay для отслеживания изменений
+	if not tactical_overlay._game_progress_items_hash then
+		tactical_overlay._game_progress_items_hash = current_hash
+		setup_game_progress(tactical_overlay, ui_renderer)
+		return
+	end
+	
+	-- Если хеш изменился, пересоздаем виджеты
+	if tactical_overlay._game_progress_items_hash ~= current_hash then
+		tactical_overlay._game_progress_items_hash = current_hash
 		setup_game_progress(tactical_overlay, ui_renderer)
 	end
 end

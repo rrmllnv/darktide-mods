@@ -71,7 +71,22 @@ Layout.create_stat_layout = function(self, mod, tab_modules, is_debug)
 		return {}
 	end
 
-	return tab_module.create_layout(safe_read_stat, localize, format_number) or {}
+	local constants = mod:io_dofile("GlobalStat/scripts/mods/GlobalStat/views/view_constants")
+	local tab_key = nil
+	if constants and constants.tabs_definitions and constants.tabs_definitions[tab_index] then
+		tab_key = constants.tabs_definitions[tab_index].key
+	end
+
+	local layout = tab_module.create_layout(safe_read_stat, localize, format_number) or {}
+	
+	-- Добавляем tab_key во все элементы layout
+	for _, element in ipairs(layout) do
+		if element.widget_type and (element.widget_type == "stat_line" or element.widget_type == "stat_line_with_description") then
+			element.tab_key = tab_key
+		end
+	end
+
+	return layout
 end
 
 return Layout

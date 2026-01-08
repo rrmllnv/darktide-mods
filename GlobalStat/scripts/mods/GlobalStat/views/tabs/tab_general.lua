@@ -15,30 +15,96 @@ TabGeneral.create_layout = function(safe_read_stat, localize, format_number)
     local companion_coherency_kills = safe_read_stat("adamant_team_companion_in_coherency_kills")
     local other_kills = total_kills - (renegade_kills + cultist_kills + chaos_kills + barrel_kills + poxburster_kills + companion_pounce_kills + companion_coherency_kills)
 
-    table.insert(layout, {widget_type = "stat_line", text = localize("stats_total_kills"), value = format_number(total_kills)})
+    table.insert(layout, {
+        widget_type = "stat_line",
+        text = localize("stats_total_kills"),
+        value = format_number(total_kills),
+        text_key = "stats_total_kills",
+        stat_name = "total_kills",
+    })
     table.insert(layout, {widget_type = "stat_line", text = "", value = ""})
-    table.insert(layout, {widget_type = "stat_line", text = localize("stats_renegade_kills"), value = format_number(renegade_kills)})
-    table.insert(layout, {widget_type = "stat_line", text = localize("stats_cultist_kills"), value = format_number(cultist_kills)})
-    table.insert(layout, {widget_type = "stat_line", text = localize("stats_chaos_kills"), value = format_number(chaos_kills)})
+    table.insert(layout, {
+        widget_type = "stat_line",
+        text = localize("stats_renegade_kills"),
+        value = format_number(renegade_kills),
+        text_key = "stats_renegade_kills",
+        stat_name = "total_renegade_kills",
+    })
+    table.insert(layout, {
+        widget_type = "stat_line",
+        text = localize("stats_cultist_kills"),
+        value = format_number(cultist_kills),
+        text_key = "stats_cultist_kills",
+        stat_name = "total_cultist_kills",
+    })
+    table.insert(layout, {
+        widget_type = "stat_line",
+        text = localize("stats_chaos_kills"),
+        value = format_number(chaos_kills),
+        text_key = "stats_chaos_kills",
+        stat_name = "total_chaos_kills",
+    })
     table.insert(layout, {widget_type = "stat_line", text = "", value = ""})
-    table.insert(layout, {widget_type = "stat_line", text = localize("stats_barrel_kills"), value = format_number(barrel_kills)})
-    table.insert(layout, {widget_type = "stat_line", text = localize("stats_poxburster_explosion_kills"), value = format_number(poxburster_kills)})
+    table.insert(layout, {
+        widget_type = "stat_line",
+        text = localize("stats_barrel_kills"),
+        value = format_number(barrel_kills),
+        text_key = "stats_barrel_kills",
+        stat_name = "enemies_killed_with_barrels",
+    })
+    table.insert(layout, {
+        widget_type = "stat_line",
+        text = localize("stats_poxburster_explosion_kills"),
+        value = format_number(poxburster_kills),
+        text_key = "stats_poxburster_explosion_kills",
+        stat_name = "enemies_killed_with_poxburster_explosion",
+    })
 
     if companion_pounce_kills > 0 then
-        table.insert(layout, {widget_type = "stat_line", text = localize("stats_companion_pounce_kills"), value = format_number(companion_pounce_kills)})
+        table.insert(layout, {
+            widget_type = "stat_line",
+            text = localize("stats_companion_pounce_kills"),
+            value = format_number(companion_pounce_kills),
+            text_key = "stats_companion_pounce_kills",
+            stat_name = "adamant_killed_enemies_pounced_by_companion",
+        })
     end
 
     if companion_coherency_kills > 0 then
-        table.insert(layout, {widget_type = "stat_line", text = localize("stats_companion_coherency_kills"), value = format_number(companion_coherency_kills)})
+        table.insert(layout, {
+            widget_type = "stat_line",
+            text = localize("stats_companion_coherency_kills"),
+            value = format_number(companion_coherency_kills),
+            text_key = "stats_companion_coherency_kills",
+            stat_name = "adamant_team_companion_in_coherency_kills",
+        })
     end
 
     if other_kills > 0 then
-        table.insert(layout, {widget_type = "stat_line", text = localize("stats_other_kills"), value = format_number(other_kills)})
+        table.insert(layout, {
+            widget_type = "stat_line",
+            text = localize("stats_other_kills"),
+            value = format_number(other_kills),
+            text_key = "stats_other_kills",
+            stat_name = nil,
+        })
     end
 
     table.insert(layout, {widget_type = "stat_line", text = "", value = ""})
-    table.insert(layout, {widget_type = "stat_line", text = localize("stats_player_rescues"), value = format_number(safe_read_stat("total_player_rescues"))})
-    table.insert(layout, {widget_type = "stat_line", text = localize("stats_player_assists"), value = format_number(safe_read_stat("total_player_assists"))})
+    table.insert(layout, {
+        widget_type = "stat_line",
+        text = localize("stats_player_rescues"),
+        value = format_number(safe_read_stat("total_player_rescues")),
+        text_key = "stats_player_rescues",
+        stat_name = "total_player_rescues",
+    })
+    table.insert(layout, {
+        widget_type = "stat_line",
+        text = localize("stats_player_assists"),
+        value = format_number(safe_read_stat("total_player_assists")),
+        text_key = "stats_player_assists",
+        stat_name = "total_player_assists",
+    })
     
     --table.insert(layout, {widget_type = "stat_line", text = "", value = ""})
     --table.insert(layout, {widget_type = "stat_line", text = localize("stats_sprint_dodges"), value = format_number(safe_read_stat("total_sprint_dodges"))})
