@@ -13,6 +13,24 @@ mod.version = "1.0.0"
 init.setup(mod, VIEW_NAME, view_templates, views, utilities)
 commands.setup(mod)
 
+-- Функции для работы с сохраненными данными через DMF Settings
+local function get_selected_data()
+	local selected_items = mod:get("globalstat_selected_items") or {}
+	local selected_items_order = mod:get("globalstat_selected_items_order") or {}
+	return selected_items, selected_items_order
+end
+
+local function save_selected_data(selected_items, selected_items_order)
+	mod:set("globalstat_selected_items", selected_items)
+	mod:set("globalstat_selected_items_order", selected_items_order)
+	
+	-- Принудительно сохраняем в файл
+	local dmf = get_mod("DMF")
+	if dmf and dmf.save_unsaved_settings_to_file then
+		dmf.save_unsaved_settings_to_file()
+	end
+end
+
 local ElementSettings = require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_overlay_settings")
 
 local function safe_read_stat(stat_name)
@@ -70,19 +88,21 @@ end
 
 local function setup_game_progress(tactical_overlay, ui_renderer)
 	local page_key = "game_progress"
-	local pt = mod:persistent_table("GlobalStat")
-	local selected_items = pt.selected_items or {}
+	local selected_items, selected_items_order = get_selected_data()
 	
 	local configs = {
-		{
-			blueprint = "title",
-			text = mod:localize("tactical_overlay_game_progress"),
-		},
+		-- {
+		-- 	blueprint = "title",
+		-- 	text = mod:localize("tactical_overlay_game_progress"),
+		-- },
 	}
 	
-	-- Добавляем выбранные элементы
+	-- Добавляем выбранные элементы в порядке выбора
 	local has_selected = false
-	for element_id, item_data in pairs(selected_items) do
+	
+	-- Итерируемся по порядку выбора
+	for _, element_id in ipairs(selected_items_order) do
+		local item_data = selected_items[element_id]
 		if item_data and item_data.text_key then
 			has_selected = true
 			local text = localize(item_data.text_key)
@@ -94,24 +114,25 @@ local function setup_game_progress(tactical_overlay, ui_renderer)
 				value = format_number(stat_value)
 			end
 			
+			-- Объединяем текст и значение
+			local display_text = text
+			if value and value ~= "" then
+				display_text = string.format("%s: %s", text, value)
+			end
+			
 			-- Определяем blueprint в зависимости от наличия description_key
 			local blueprint = "body"
-			if item_data.description_key and item_data.description_key ~= "" then
-				blueprint = "body_with_description"
-				local description = localize(item_data.description_key)
-				table.insert(configs, {
-					blueprint = blueprint,
-					text = text,
-					value = value,
-					description = description,
-				})
-			else
-				table.insert(configs, {
-					blueprint = blueprint,
-					text = text,
-					value = value,
-				})
-			end
+			-- Временно убрано: вывод описания
+			-- if item_data.description_key and item_data.description_key ~= "" then
+			-- 	local description = localize(item_data.description_key)
+			-- 	-- Для описания используем body, но добавляем описание в текст
+			-- 	display_text = string.format("%s\n%s", display_text, description)
+			-- end
+			
+			table.insert(configs, {
+				blueprint = blueprint,
+				text = display_text,
+			})
 		end
 	end
 	
@@ -126,8 +147,8 @@ local function setup_game_progress(tactical_overlay, ui_renderer)
 	tactical_overlay:_create_right_panel_widgets(page_key, configs, ui_renderer)
 end
 
-local function get_selected_items_hash(pt)
-	local selected_items = pt.selected_items or {}
+local function get_selected_items_hash()
+	local selected_items, _ = get_selected_data()
 	local count = 0
 	for _ in pairs(selected_items) do
 		count = count + 1

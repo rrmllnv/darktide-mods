@@ -114,11 +114,8 @@ blueprints.stat_line = {
 		widget.content.checked = false
 		
 		if widget.content.element_id and widget.content.element_id ~= "" then
-			local pt = mod:persistent_table("GlobalStat")
-			if not pt.checkbox_states then
-				pt.checkbox_states = {}
-			end
-			widget.content.checked = pt.checkbox_states[widget.content.element_id] or false
+			local checkbox_states = mod:get("globalstat_checkbox_states") or {}
+			widget.content.checked = checkbox_states[widget.content.element_id] or false
 		end
 		
 		local prefix = widget.content.checked and "✓ " or ""
@@ -136,28 +133,51 @@ blueprints.stat_line = {
 				content.checked = not content.checked
 				
 				if content.element_id and content.element_id ~= "" then
-					local pt = mod:persistent_table("GlobalStat")
-					if not pt.checkbox_states then
-						pt.checkbox_states = {}
-					end
-					pt.checkbox_states[content.element_id] = content.checked
+					local checkbox_states = mod:get("globalstat_checkbox_states") or {}
+					checkbox_states[content.element_id] = content.checked
+					mod:set("globalstat_checkbox_states", checkbox_states)
 					
 					-- Сохраняем полные данные выбранной строки
+					local selected_items = mod:get("globalstat_selected_items") or {}
+					local selected_items_order = mod:get("globalstat_selected_items_order") or {}
+					
 					if content.checked then
-						if not pt.selected_items then
-							pt.selected_items = {}
-						end
-						pt.selected_items[content.element_id] = {
+						selected_items[content.element_id] = {
 							text_key = content.text_key,
 							stat_name = content.stat_name,
 							description_key = content.description_key,
 							tab_key = content.tab_key,
 						}
+						-- Добавляем в порядок, если еще нет
+						local found = false
+						for _, id in ipairs(selected_items_order) do
+							if id == content.element_id then
+								found = true
+								break
+							end
+						end
+						if not found then
+							table.insert(selected_items_order, content.element_id)
+						end
 					else
 						-- Удаляем из выбранных при снятии отметки
-						if pt.selected_items then
-							pt.selected_items[content.element_id] = nil
+						selected_items[content.element_id] = nil
+						-- Удаляем из порядка
+						for i = #selected_items_order, 1, -1 do
+							if selected_items_order[i] == content.element_id then
+								table.remove(selected_items_order, i)
+								break
+							end
 						end
+					end
+					
+					mod:set("globalstat_selected_items", selected_items)
+					mod:set("globalstat_selected_items_order", selected_items_order)
+					
+					-- Принудительно сохраняем в файл
+					local dmf = get_mod("DMF")
+					if dmf and dmf.save_unsaved_settings_to_file then
+						dmf.save_unsaved_settings_to_file()
 					end
 				end
 				
@@ -288,11 +308,8 @@ blueprints.stat_line_with_description = {
 		widget.content.checked = false
 		
 		if widget.content.element_id and widget.content.element_id ~= "" then
-			local pt = mod:persistent_table("GlobalStat")
-			if not pt.checkbox_states then
-				pt.checkbox_states = {}
-			end
-			widget.content.checked = pt.checkbox_states[widget.content.element_id] or false
+			local checkbox_states = mod:get("globalstat_checkbox_states") or {}
+			widget.content.checked = checkbox_states[widget.content.element_id] or false
 		end
 		
 		local prefix = widget.content.checked and "✓ " or ""
@@ -310,28 +327,51 @@ blueprints.stat_line_with_description = {
 				content.checked = not content.checked
 				
 				if content.element_id and content.element_id ~= "" then
-					local pt = mod:persistent_table("GlobalStat")
-					if not pt.checkbox_states then
-						pt.checkbox_states = {}
-					end
-					pt.checkbox_states[content.element_id] = content.checked
+					local checkbox_states = mod:get("globalstat_checkbox_states") or {}
+					checkbox_states[content.element_id] = content.checked
+					mod:set("globalstat_checkbox_states", checkbox_states)
 					
 					-- Сохраняем полные данные выбранной строки
+					local selected_items = mod:get("globalstat_selected_items") or {}
+					local selected_items_order = mod:get("globalstat_selected_items_order") or {}
+					
 					if content.checked then
-						if not pt.selected_items then
-							pt.selected_items = {}
-						end
-						pt.selected_items[content.element_id] = {
+						selected_items[content.element_id] = {
 							text_key = content.text_key,
 							stat_name = content.stat_name,
 							description_key = content.description_key,
 							tab_key = content.tab_key,
 						}
+						-- Добавляем в порядок, если еще нет
+						local found = false
+						for _, id in ipairs(selected_items_order) do
+							if id == content.element_id then
+								found = true
+								break
+							end
+						end
+						if not found then
+							table.insert(selected_items_order, content.element_id)
+						end
 					else
 						-- Удаляем из выбранных при снятии отметки
-						if pt.selected_items then
-							pt.selected_items[content.element_id] = nil
+						selected_items[content.element_id] = nil
+						-- Удаляем из порядка
+						for i = #selected_items_order, 1, -1 do
+							if selected_items_order[i] == content.element_id then
+								table.remove(selected_items_order, i)
+								break
+							end
 						end
+					end
+					
+					mod:set("globalstat_selected_items", selected_items)
+					mod:set("globalstat_selected_items_order", selected_items_order)
+					
+					-- Принудительно сохраняем в файл
+					local dmf = get_mod("DMF")
+					if dmf and dmf.save_unsaved_settings_to_file then
+						dmf.save_unsaved_settings_to_file()
 					end
 				end
 				
