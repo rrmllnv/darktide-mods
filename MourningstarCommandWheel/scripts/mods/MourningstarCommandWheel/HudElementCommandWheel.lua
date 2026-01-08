@@ -115,6 +115,7 @@ HudElementCommandWheel.init = function(self, parent, draw_layer, start_scale)
 	self._wheel_context = {}
 	self._close_delay = nil
 	self._controller_stick_moved = false
+	self._exit_psychanium_blocked = false
 	
 
 	self._wheel_config = load_wheel_config()
@@ -199,6 +200,10 @@ end
 
 HudElementCommandWheel.update = function(self, dt, t, ui_renderer, render_settings, input_service)
 	HudElementCommandWheel.super.update(self, dt, t, ui_renderer, render_settings, input_service)
+	
+	if self._exit_psychanium_blocked and not is_in_psykhanium() then
+		self._exit_psychanium_blocked = false
+	end
 	
 	self:_update_active_progress(dt)
 	self:_update_widget_locations()
@@ -397,6 +402,7 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 		if self._close_delay <= 0 then
 			self._close_delay = nil
 			self:_pop_cursor()
+			self:_reset_hover_state()
 		end
 
 		return
@@ -414,7 +420,7 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 
 
 	local input_pressed = false
-	if is_in_valid_lvl() then
+	if is_in_valid_lvl() and not self._exit_psychanium_blocked then
 		input_pressed = mod:_is_command_wheel_key_pressed()
 	end
 	
@@ -426,7 +432,11 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 	elseif not input_pressed and start_time then
 		local hovered_entry, hovered_index = self:_is_wheel_entry_hovered(t)
 		if hovered_entry then
-			activate_option(hovered_entry.option)
+			local option = hovered_entry.option
+			if option and option.action == "exit_psychanium" then
+				self._exit_psychanium_blocked = true
+			end
+			activate_option(option)
 		end
 		self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
 	end
@@ -462,6 +472,9 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 	elseif not draw_wheel and self._wheel_active then
 		self._wheel_active = false
 		self._close_delay = InputDevice.gamepad_active and 0.15 or 0
+		if self._close_delay == 0 then
+			self:_reset_hover_state()
+		end
 	end
 
 	if not self._wheel_active then
@@ -583,6 +596,7 @@ HudElementCommandWheel._on_wheel_stop = function(self, t, ui_renderer, render_se
 	self._last_widget_hover_data.index = nil
 	self._last_widget_hover_data.t = nil
 	
+	self:_reset_hover_state()
 
 	mod.dragged_entry = nil
 	mod.dragged_index = nil
