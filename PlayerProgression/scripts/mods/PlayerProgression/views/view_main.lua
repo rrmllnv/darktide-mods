@@ -171,8 +171,24 @@ ViewMain._update_grid_content = function(self)
 end
 
 ViewMain._on_grid_layout_updated = function(self)
-	-- Вызывается после обновления грида (как в group_finder_view:3242-3263)
-	-- НЕ устанавливаем выбор автоматически - выбор устанавливается только при явном переходе на список
+	-- После перестроения грида подстраиваем выбор под тип навигации
+	if not self._stats_grid then
+		return
+	end
+
+	local using_cursor_navigation = Managers.ui:using_cursor_navigation()
+
+	if using_cursor_navigation then
+		-- Для мыши первый клик не должен снимать выбор
+		self._stats_grid:select_grid_index(nil)
+	else
+		-- Для геймпада оставляем первый элемент выделенным
+		if not self._stats_grid:selected_grid_index() then
+			self._stats_grid:select_first_index()
+		end
+	end
+
+	self:_update_tab_selection_visual()
 end
 
 ViewMain._create_stat_layout = function(self)
