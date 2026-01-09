@@ -85,15 +85,23 @@ ViewMain._setup_stats_grid = function(self)
 	self:_update_grid_content()
 end
 
-ViewMain._update_tab_selection = function(self)
+ViewMain._update_tab_selection_visual = function(self)
+	-- Обновляем визуальное выделение вкладок для геймпада
+	local InputDevice = require("scripts/managers/input/input_device")
+	local gamepad_active = InputDevice.gamepad_active
+
 	for i = 1, #tabs_definitions do
 		local button_widget = self._widgets_by_name["tab_button_" .. i]
-
 		if button_widget then
 			button_widget.content.hotspot.is_selected = (self._active_tab_index == i)
+			button_widget.content.hotspot.is_focused = gamepad_active and (self._active_tab_index == i)
 			button_widget.dirty = true
 		end
 	end
+end
+
+ViewMain._update_tab_selection = function(self)
+	self:_update_tab_selection_visual()
 end
 
 ViewMain._on_tab_pressed = function(self, index)
@@ -162,9 +170,52 @@ ViewMain.update = function(self, dt, t, input_service)
 
 	ViewMain.super.update(self, dt, t, input_service)
 
-	if input_service and input_service:get("back_released") then
-		if Managers and Managers.ui then
-			Managers.ui:close_view(self.view_name)
+	if input_service then
+		if input_service:get("back_released") then
+			if Managers and Managers.ui then
+				Managers.ui:close_view(self.view_name)
+			end
+		end
+
+		-- Обработка навигации по вкладкам с помощью геймпада
+		local InputDevice = require("scripts/managers/input/input_device")
+		if InputDevice.gamepad_active then
+			-- Навигация вверх/вниз для переключения вкладок
+			if input_service:get("navigate_up_continuous") then
+				if not self._navigate_up_cooldown or self._navigate_up_cooldown <= 0 then
+					if self._active_tab_index > 1 then
+						self._active_tab_index = self._active_tab_index - 1
+						self:_update_tab_selection()
+						self:_update_grid_content()
+						self._navigate_up_cooldown = 0.2
+					end
+				end
+			elseif input_service:get("navigate_down_continuous") then
+				if not self._navigate_down_cooldown or self._navigate_down_cooldown <= 0 then
+					if self._active_tab_index < #tabs_definitions then
+						self._active_tab_index = self._active_tab_index + 1
+						self:_update_tab_selection()
+						self:_update_grid_content()
+						self._navigate_down_cooldown = 0.2
+					end
+				end
+			end
+
+			-- Обновление кулдаунов для навигации
+			if self._navigate_up_cooldown then
+				self._navigate_up_cooldown = math.max(0, self._navigate_up_cooldown - dt)
+			end
+			if self._navigate_down_cooldown then
+				self._navigate_down_cooldown = math.max(0, self._navigate_down_cooldown - dt)
+			end
+
+			-- Подтверждение выбора вкладки
+			if input_service:get("gamepad_confirm_pressed") then
+				local button_widget = self._widgets_by_name["tab_button_" .. self._active_tab_index]
+				if button_widget and button_widget.content.hotspot.pressed_callback then
+					button_widget.content.hotspot.pressed_callback()
+				end
+			end
 		end
 	end
 end
