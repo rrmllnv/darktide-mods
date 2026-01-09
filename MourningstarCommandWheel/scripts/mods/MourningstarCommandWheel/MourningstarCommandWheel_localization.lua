@@ -279,4 +279,84 @@ return {
     en = "Select the button on PlayStation controller to open the command wheel.",
     ru = "Выберите кнопку на контроллере PlayStation для открытия колеса команд.",
   },
+  i18n_xbox_section = {
+    en = "Xbox",
+    ru = "Xbox",
+  },
+  xbox_controller_button = {
+    en = "Open Command Wheel",
+    ru = "Открыть колесо команд",
+  },
+  xbox_controller_button_default = {
+    en = "RB (Default)",
+    ru = "RB (По умолчанию)",
+  },
+  xbox_controller_button_left_shoulder = {
+    en = "LB",
+    ru = "LB",
+  },
+  xbox_controller_button_left_trigger = {
+    en = "LT",
+    ru = "LT",
+  },
+  xbox_controller_button_left_thumb = {
+    en = "LS",
+    ru = "LS",
+  },
+  xbox_controller_button_right_shoulder = {
+    en = "RB",
+    ru = "RB",
+  },
+  xbox_controller_button_right_trigger = {
+    en = "RT",
+    ru = "RT",
+  },
+  xbox_controller_button_right_thumb = {
+    en = "RS",
+    ru = "RS",
+  },
+  xbox_controller_button_y = {
+    en = "Y",
+    ru = "Y",
+  },
+  xbox_controller_button_x = {
+    en = "X",
+    ru = "X",
+  },
+  xbox_controller_button_a = {
+    en = "A",
+    ru = "A",
+  },
+  xbox_controller_button_b = {
+    en = "B",
+    ru = "B",
+  },
+  xbox_controller_button_d_up = {
+    en = "D-Pad Up",
+    ru = "Крестовина Вверх",
+  },
+  xbox_controller_button_d_down = {
+    en = "D-Pad Down",
+    ru = "Крестовина Вниз",
+  },
+  xbox_controller_button_d_left = {
+    en = "D-Pad Left",
+    ru = "Крестовина Влево",
+  },
+  xbox_controller_button_d_right = {
+    en = "D-Pad Right",
+    ru = "Крестовина Вправо",
+  },
+  xbox_controller_button_start = {
+    en = "Start",
+    ru = "Start",
+  },
+  xbox_controller_button_back = {
+    en = "Back",
+    ru = "Back",
+  },
+  xbox_controller_button_description = {
+    en = "Select the button on Xbox controller to open the command wheel.",
+    ru = "Выберите кнопку на контроллере Xbox для открытия колеса команд.",
+  },
 }
