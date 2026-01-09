@@ -163,7 +163,7 @@ mod._is_command_wheel_key_pressed = function(self)
 		local controller_key = nil
 		
 		if device_type == "xbox_controller" then
-			controller_key = "xbox_controller_left_trigger"
+			controller_key = "xbox_controller_right_bumper"
 		elseif device_type == "ps4_controller" then
 			controller_key = "ps4_controller_r1"
 		else
