@@ -29,8 +29,13 @@ blueprints.stat_line = {
 			change_function = function(content, style)
 				local hotspot = content.hotspot
 				local is_empty = (content.original_text == nil or content.original_text == "") and (content.value == nil or content.value == "")
-				local hover_progress = is_empty and 0 or (hotspot.anim_hover_progress or 0)
-				local alpha = 100 * hover_progress
+				-- Используем максимум из всех прогрессов для поддержки геймпада (как в group_finder_blueprints:515)
+				local progress = is_empty and 0 or math.max(
+					hotspot.anim_hover_progress or 0,
+					hotspot.anim_select_progress or 0,
+					hotspot.anim_focus_progress or 0
+				)
+				local alpha = 100 * progress
 				style.color[1] = alpha
 			end,
 		},
@@ -52,12 +57,17 @@ blueprints.stat_line = {
 				local is_empty = (content.original_text == nil or content.original_text == "") and (content.value == nil or content.value == "")
 				local default_color = style.default_color
 				local hover_color = style.hover_color
-				local hover_progress = is_empty and 0 or (hotspot.anim_hover_progress or 0)
+				-- Используем максимум из всех прогрессов для поддержки геймпада (как в group_finder_blueprints:515)
+				local progress = is_empty and 0 or math.max(
+					hotspot.anim_hover_progress or 0,
+					hotspot.anim_select_progress or 0,
+					hotspot.anim_focus_progress or 0
+				)
 				local color = style.text_color
 
-				color[2] = math.lerp(default_color[2], hover_color[2], hover_progress)
-				color[3] = math.lerp(default_color[3], hover_color[3], hover_progress)
-				color[4] = math.lerp(default_color[4], hover_color[4], hover_progress)
+				color[2] = math.lerp(default_color[2], hover_color[2], progress)
+				color[3] = math.lerp(default_color[3], hover_color[3], progress)
+				color[4] = math.lerp(default_color[4], hover_color[4], progress)
 				
 				if not is_empty then
 					local prefix = content.checked and "✓ " or ""
@@ -84,12 +94,17 @@ blueprints.stat_line = {
 				local is_empty = (content.original_text == nil or content.original_text == "") and (content.value == nil or content.value == "")
 				local default_color = style.default_color
 				local hover_color = style.hover_color
-				local hover_progress = is_empty and 0 or (hotspot.anim_hover_progress or 0)
+				-- Используем максимум из всех прогрессов для поддержки геймпада (как в group_finder_blueprints:515)
+				local progress = is_empty and 0 or math.max(
+					hotspot.anim_hover_progress or 0,
+					hotspot.anim_select_progress or 0,
+					hotspot.anim_focus_progress or 0
+				)
 				local color = style.text_color
 
-				color[2] = math.lerp(default_color[2], hover_color[2], hover_progress)
-				color[3] = math.lerp(default_color[3], hover_color[3], hover_progress)
-				color[4] = math.lerp(default_color[4], hover_color[4], hover_progress)
+				color[2] = math.lerp(default_color[2], hover_color[2], progress)
+				color[3] = math.lerp(default_color[3], hover_color[3], progress)
+				color[4] = math.lerp(default_color[4], hover_color[4], progress)
 			end,
 		},
 	},
@@ -138,8 +153,16 @@ blueprints.stat_line = {
 			local is_empty = (content.original_text == nil or content.original_text == "") and (content.value == nil or content.value == "")
 			
 			if not is_empty then
+				-- Сохраняем предыдущее состояние для проверки изменения
+				local previous_checked = content.checked
 				local mod = get_mod("PlayerProgression")
 				content.checked = not content.checked
+				
+				-- Если состояние не изменилось (возможно, уже обработано), пропускаем
+				if previous_checked == content.checked and not content._gamepad_pressed then
+					hotspot.on_pressed = false
+					return
+				end
 				
 				if content.element_id and content.element_id ~= "" then
 					local checkbox_states = mod:get("playerprogression_checkbox_states") or {}
@@ -224,8 +247,13 @@ blueprints.stat_line_with_description = {
 			},
 			change_function = function(content, style)
 				local hotspot = content.hotspot
-				local hover_progress = hotspot.anim_hover_progress or 0
-				local alpha = 100 * hover_progress
+				-- Используем максимум из всех прогрессов для поддержки геймпада (как в group_finder_blueprints:515)
+				local progress = math.max(
+					hotspot.anim_hover_progress or 0,
+					hotspot.anim_select_progress or 0,
+					hotspot.anim_focus_progress or 0
+				)
+				local alpha = 100 * progress
 				style.color[1] = alpha
 			end,
 		},
@@ -246,12 +274,17 @@ blueprints.stat_line_with_description = {
 				local hotspot = content.hotspot
 				local default_color = style.default_color
 				local hover_color = style.hover_color
-				local hover_progress = hotspot.anim_hover_progress or 0
+				-- Используем максимум из всех прогрессов для поддержки геймпада (как в group_finder_blueprints:515)
+				local progress = math.max(
+					hotspot.anim_hover_progress or 0,
+					hotspot.anim_select_progress or 0,
+					hotspot.anim_focus_progress or 0
+				)
 				local color = style.text_color
 
-				color[2] = math.lerp(default_color[2], hover_color[2], hover_progress)
-				color[3] = math.lerp(default_color[3], hover_color[3], hover_progress)
-				color[4] = math.lerp(default_color[4], hover_color[4], hover_progress)
+				color[2] = math.lerp(default_color[2], hover_color[2], progress)
+				color[3] = math.lerp(default_color[3], hover_color[3], progress)
+				color[4] = math.lerp(default_color[4], hover_color[4], progress)
 				
 				local prefix = content.checked and "✓ " or ""
 				local original_text = content.original_text or ""
@@ -275,12 +308,17 @@ blueprints.stat_line_with_description = {
 				local hotspot = content.hotspot
 				local default_color = style.default_color
 				local hover_color = style.hover_color
-				local hover_progress = hotspot.anim_hover_progress or 0
+				-- Используем максимум из всех прогрессов для поддержки геймпада (как в group_finder_blueprints:515)
+				local progress = math.max(
+					hotspot.anim_hover_progress or 0,
+					hotspot.anim_select_progress or 0,
+					hotspot.anim_focus_progress or 0
+				)
 				local color = style.text_color
 
-				color[2] = math.lerp(default_color[2], hover_color[2], hover_progress)
-				color[3] = math.lerp(default_color[3], hover_color[3], hover_progress)
-				color[4] = math.lerp(default_color[4], hover_color[4], hover_progress)
+				color[2] = math.lerp(default_color[2], hover_color[2], progress)
+				color[3] = math.lerp(default_color[3], hover_color[3], progress)
+				color[4] = math.lerp(default_color[4], hover_color[4], progress)
 			end,
 		},
 		{
@@ -343,8 +381,16 @@ blueprints.stat_line_with_description = {
 			local is_empty = (content.original_text == nil or content.original_text == "") and (content.value == nil or content.value == "")
 			
 			if not is_empty then
+				-- Сохраняем предыдущее состояние для проверки изменения
+				local previous_checked = content.checked
 				local mod = get_mod("PlayerProgression")
 				content.checked = not content.checked
+				
+				-- Если состояние не изменилось (возможно, уже обработано), пропускаем
+				if previous_checked == content.checked and not content._gamepad_pressed then
+					hotspot.on_pressed = false
+					return
+				end
 				
 				if content.element_id and content.element_id ~= "" then
 					local checkbox_states = mod:get("playerprogression_checkbox_states") or {}
@@ -452,12 +498,17 @@ if constants.DEBUG then
 					color = Color.terminal_background_selected(0, true),
 					offset = {0, 0, 0},
 				},
-				change_function = function(content, style)
-					local hotspot = content.hotspot
-					local hover_progress = hotspot.anim_hover_progress or 0
-					local alpha = 100 * hover_progress
-					style.color[1] = alpha
-				end,
+		change_function = function(content, style)
+			local hotspot = content.hotspot
+			-- Используем максимум из всех прогрессов для поддержки геймпада (как в group_finder_blueprints:515)
+			local progress = math.max(
+				hotspot.anim_hover_progress or 0,
+				hotspot.anim_select_progress or 0,
+				hotspot.anim_focus_progress or 0
+			)
+			local alpha = 100 * progress
+			style.color[1] = alpha
+		end,
 			},
 			{
 				pass_type = "text",
@@ -476,12 +527,17 @@ if constants.DEBUG then
 					local hotspot = content.hotspot
 					local default_color = style.default_color
 					local hover_color = style.hover_color
-					local hover_progress = hotspot.anim_hover_progress or 0
+					-- Используем максимум из всех прогрессов для поддержки геймпада (как в group_finder_blueprints:515)
+					local progress = math.max(
+						hotspot.anim_hover_progress or 0,
+						hotspot.anim_select_progress or 0,
+						hotspot.anim_focus_progress or 0
+					)
 					local color = style.text_color
 
-					color[2] = math.lerp(default_color[2], hover_color[2], hover_progress)
-					color[3] = math.lerp(default_color[3], hover_color[3], hover_progress)
-					color[4] = math.lerp(default_color[4], hover_color[4], hover_progress)
+					color[2] = math.lerp(default_color[2], hover_color[2], progress)
+					color[3] = math.lerp(default_color[3], hover_color[3], progress)
+					color[4] = math.lerp(default_color[4], hover_color[4], progress)
 				end,
 			},
 			{
@@ -501,12 +557,17 @@ if constants.DEBUG then
 					local hotspot = content.hotspot
 					local default_color = style.default_color
 					local hover_color = style.hover_color
-					local hover_progress = hotspot.anim_hover_progress or 0
+					-- Используем максимум из всех прогрессов для поддержки геймпада (как в group_finder_blueprints:515)
+					local progress = math.max(
+						hotspot.anim_hover_progress or 0,
+						hotspot.anim_select_progress or 0,
+						hotspot.anim_focus_progress or 0
+					)
 					local color = style.text_color
 
-					color[2] = math.lerp(default_color[2], hover_color[2], hover_progress)
-					color[3] = math.lerp(default_color[3], hover_color[3], hover_progress)
-					color[4] = math.lerp(default_color[4], hover_color[4], hover_progress)
+					color[2] = math.lerp(default_color[2], hover_color[2], progress)
+					color[3] = math.lerp(default_color[3], hover_color[3], progress)
+					color[4] = math.lerp(default_color[4], hover_color[4], progress)
 				end,
 			},
 		},
