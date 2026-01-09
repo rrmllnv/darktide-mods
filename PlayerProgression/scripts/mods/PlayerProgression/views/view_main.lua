@@ -83,6 +83,7 @@ ViewMain._setup_stats_grid = function(self)
 		hide_dividers = true,
 		hide_background = true,
 		enable_gamepad_scrolling = true,
+		use_select_on_focused = true,
 	}
 
 	local layer = 10
@@ -116,6 +117,24 @@ ViewMain._on_tab_pressed = function(self, index)
 	self._active_tab_index = index
 	self:_update_tab_selection()
 	self:_update_grid_content()
+end
+
+ViewMain._on_stat_item_pressed = function(self, element, widget_index)
+	-- Обработка нажатия на элемент списка (как в group_finder_view:1270-1288)
+	-- Callback вызывается автоматически при изменении выбора в гриде
+	-- Только для мыши переключаем выбор, для геймпада обработка в blueprint
+	local using_cursor_navigation = Managers.ui:using_cursor_navigation()
+	
+	if using_cursor_navigation then
+		-- При использовании курсора просто переключаем выбор
+		local stats_grid_selected = self._stats_grid:selected_grid_index()
+		if stats_grid_selected == widget_index then
+			self._stats_grid:select_grid_index(nil)
+		else
+			self._stats_grid:select_grid_index(widget_index)
+		end
+	end
+	-- Для геймпада ничего не делаем - обработка происходит в blueprint update при gamepad_confirm_pressed
 end
 
 ViewMain._update_title = function(self)
@@ -216,23 +235,7 @@ ViewMain._handle_input = function(self, input_service, dt, t)
 						self._navigate_left_cooldown = 0.2
 					end
 				end
-				
-				-- Подтверждение выбора элемента в списке
-				if input_service:get("gamepad_confirm_pressed") then
-					local grid_widgets = self._stats_grid:widgets()
-					if grid_widgets and grid_widgets[stats_grid_selected] then
-						local widget = grid_widgets[stats_grid_selected]
-						local content = widget.content
-						local hotspot = content.hotspot
-						if hotspot and not hotspot.on_pressed then
-							-- Устанавливаем флаг, чтобы blueprint не обрабатывал повторно
-							content._gamepad_pressed = true
-							-- Устанавливаем on_pressed для обработки в blueprint update
-							hotspot.on_pressed = true
-							widget.dirty = true
-						end
-					end
-				end
+				-- gamepad_confirm_pressed обрабатывается автоматически гридом через pressed_callback
 			else
 				-- Фокус на вкладках
 				-- Навигация по вкладкам

@@ -16,7 +16,7 @@ blueprints.stat_line = {
 			content_id = "hotspot",
 			pass_type = "hotspot",
 			content = {
-				use_is_focused = false,
+				use_is_focused = true,
 			},
 		},
 		{
@@ -125,6 +125,11 @@ blueprints.stat_line = {
 		widget.content.mission_key = element.mission_key
 		widget.content.mission_name = element.mission_name
 		
+		-- Инициализируем pressed_callback из element (как в group_finder_blueprints)
+		if element.pressed_callback then
+			widget.content.hotspot.pressed_callback = element.pressed_callback
+		end
+		
 		-- Создаем уникальный element_id с учетом tab_key только для непустых строк
 		widget.content.element_id = nil
 		if not is_empty then
@@ -149,20 +154,27 @@ blueprints.stat_line = {
 		local content = widget.content
 		local hotspot = content.hotspot
 		
-		if hotspot and hotspot.on_pressed then
+		-- Обрабатываем нажатия: мышь через on_pressed, геймпад через gamepad_confirm_pressed
+		-- При use_select_on_focused = true грид устанавливает is_focused, а не is_selected
+		local mouse_pressed = hotspot and hotspot.on_pressed
+		local gamepad_pressed = input_service and input_service:get("gamepad_confirm_pressed") and hotspot and (hotspot.is_focused or hotspot.is_selected)
+		local is_pressed = mouse_pressed or gamepad_pressed
+		
+		if is_pressed then
 			local is_empty = (content.original_text == nil or content.original_text == "") and (content.value == nil or content.value == "")
 			
 			if not is_empty then
-				-- Сохраняем предыдущее состояние для проверки изменения
-				local previous_checked = content.checked
+				-- Для геймпада проверяем, не обработано ли уже это нажатие
+				if gamepad_pressed then
+					-- Используем кулдаун вместо сравнения фреймов
+					if content._last_gamepad_press_time and (t - content._last_gamepad_press_time) < 0.2 then
+						return
+					end
+					content._last_gamepad_press_time = t
+				end
+				
 				local mod = get_mod("PlayerProgression")
 				content.checked = not content.checked
-				
-				-- Если состояние не изменилось (возможно, уже обработано), пропускаем
-				if previous_checked == content.checked and not content._gamepad_pressed then
-					hotspot.on_pressed = false
-					return
-				end
 				
 				if content.element_id and content.element_id ~= "" then
 					local checkbox_states = mod:get("playerprogression_checkbox_states") or {}
@@ -219,7 +231,10 @@ blueprints.stat_line = {
 				local original_text = content.original_text or ""
 				content.text = prefix .. original_text
 				
-				hotspot.on_pressed = false
+				-- Сбрасываем флаг мыши
+				if hotspot.on_pressed then
+					hotspot.on_pressed = false
+				end
 			end
 		end
 	end,
@@ -235,7 +250,7 @@ blueprints.stat_line_with_description = {
 			content_id = "hotspot",
 			pass_type = "hotspot",
 			content = {
-				use_is_focused = false,
+				use_is_focused = true,
 			},
 		},
 		{
@@ -377,20 +392,27 @@ blueprints.stat_line_with_description = {
 		local content = widget.content
 		local hotspot = content.hotspot
 		
-		if hotspot and hotspot.on_pressed then
+		-- Обрабатываем нажатия: мышь через on_pressed, геймпад через gamepad_confirm_pressed
+		-- При use_select_on_focused = true грид устанавливает is_focused, а не is_selected
+		local mouse_pressed = hotspot and hotspot.on_pressed
+		local gamepad_pressed = input_service and input_service:get("gamepad_confirm_pressed") and hotspot and (hotspot.is_focused or hotspot.is_selected)
+		local is_pressed = mouse_pressed or gamepad_pressed
+		
+		if is_pressed then
 			local is_empty = (content.original_text == nil or content.original_text == "") and (content.value == nil or content.value == "")
 			
 			if not is_empty then
-				-- Сохраняем предыдущее состояние для проверки изменения
-				local previous_checked = content.checked
+				-- Для геймпада проверяем, не обработано ли уже это нажатие
+				if gamepad_pressed then
+					-- Используем кулдаун вместо сравнения фреймов
+					if content._last_gamepad_press_time and (t - content._last_gamepad_press_time) < 0.2 then
+						return
+					end
+					content._last_gamepad_press_time = t
+				end
+				
 				local mod = get_mod("PlayerProgression")
 				content.checked = not content.checked
-				
-				-- Если состояние не изменилось (возможно, уже обработано), пропускаем
-				if previous_checked == content.checked and not content._gamepad_pressed then
-					hotspot.on_pressed = false
-					return
-				end
 				
 				if content.element_id and content.element_id ~= "" then
 					local checkbox_states = mod:get("playerprogression_checkbox_states") or {}
@@ -447,7 +469,10 @@ blueprints.stat_line_with_description = {
 				local original_text = content.original_text or ""
 				content.text = prefix .. original_text
 				
-				hotspot.on_pressed = false
+				-- Сбрасываем флаг мыши
+				if hotspot.on_pressed then
+					hotspot.on_pressed = false
+				end
 			end
 		end
 	end,
@@ -488,7 +513,7 @@ if constants.DEBUG then
 				content_id = "hotspot",
 				pass_type = "hotspot",
 				content = {
-					use_is_focused = false,
+					use_is_focused = true,
 				},
 			},
 			{
