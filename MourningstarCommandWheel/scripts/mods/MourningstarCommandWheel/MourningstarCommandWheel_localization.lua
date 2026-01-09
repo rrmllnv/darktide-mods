@@ -194,4 +194,89 @@ return {
     ["zh-cn"] = "打开组队查找界面。",
     ru = "Открывает меню поиска группы.",
   },
+  
+  i18n_gamepad_section = {
+    en = "Gamepad",
+    ru = "Геймпад",
+  },
+  i18n_playstation_section = {
+    en = "Sony Playstation",
+    ru = "Sony Playstation",
+  },
+  playstation_controller_button = {
+    en = "Open Command Wheel",
+    ru = "Открыть колесо команд",
+  },
+  playstation_controller_button_default = {
+    en = "R1 (Default)",
+    ru = "R1 (По умолчанию)",
+  },
+  playstation_controller_button_l1 = {
+    en = "L1",
+    ru = "L1",
+  },
+  playstation_controller_button_l2 = {
+    en = "L2",
+    ru = "L2",
+  },
+  playstation_controller_button_l3 = {
+    en = "L3",
+    ru = "L3",
+  },
+  playstation_controller_button_r1 = {
+    en = "R1",
+    ru = "R1",
+  },
+  playstation_controller_button_r2 = {
+    en = "R2",
+    ru = "R2",
+  },
+  playstation_controller_button_r3 = {
+    en = "R3",
+    ru = "R3",
+  },
+  playstation_controller_button_triangle = {
+    en = "Triangle",
+    ru = "Треугольник",
+  },
+  playstation_controller_button_circle = {
+    en = "Circle",
+    ru = "Круг",
+  },
+  playstation_controller_button_cross = {
+    en = "Cross",
+    ru = "Крестик",
+  },
+  playstation_controller_button_square = {
+    en = "Square",
+    ru = "Квадрат",
+  },
+  playstation_controller_button_d_up = {
+    en = "D-Pad Up",
+    ru = "Крестовина Вверх",
+  },
+  playstation_controller_button_d_down = {
+    en = "D-Pad Down",
+    ru = "Крестовина Вниз",
+  },
+  playstation_controller_button_d_left = {
+    en = "D-Pad Left",
+    ru = "Крестовина Влево",
+  },
+  playstation_controller_button_d_right = {
+    en = "D-Pad Right",
+    ru = "Крестовина Вправо",
+  },
+  playstation_controller_button_options = {
+    en = "Options",
+    ru = "Options",
+  },
+  playstation_controller_button_touch = {
+    en = "Touchpad",
+    ru = "Тачпад",
+  },
+  playstation_controller_button_description = {
+    en = "Select the button on PlayStation controller to open the command wheel.",
+    ru = "Выберите кнопку на контроллере PlayStation для открытия колеса команд.",
+  },
 }

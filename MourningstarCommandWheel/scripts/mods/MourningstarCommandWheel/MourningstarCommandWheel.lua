@@ -171,7 +171,12 @@ mod._is_command_wheel_key_pressed = function(self)
 		if device_type == "xbox_controller" then
 			controller_key = "xbox_controller_right_bumper"
 		elseif device_type == "ps4_controller" then
-			controller_key = "ps4_controller_r1"
+			local selected_button = mod:get("playstation_controller_button")
+			if selected_button == "default" or not selected_button then
+				controller_key = "ps4_controller_r1"
+			else
+				controller_key = selected_button
+			end
 		else
 			return false
 		end
@@ -300,7 +305,7 @@ mod:hook_safe("HudElementCommandWheel", "init", function(self, parent, draw_laye
 end)
 
 mod.on_setting_changed = function(setting_id)
-	if setting_id == "open_command_wheel_key" then
+	if setting_id == "open_command_wheel_key" or setting_id == "playstation_controller_button" then
 		mod._command_wheel_eval_func = nil
 	end
 end

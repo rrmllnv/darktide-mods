@@ -161,6 +161,46 @@ return {
           },
         },
       },
+      {
+        setting_id = "gamepad_supergroup",
+        type = "group",
+        title = "i18n_gamepad_section",
+        sub_widgets = {
+          {
+            setting_id = "playstation_group",
+            type = "group",
+            title = "i18n_playstation_section",
+            sub_widgets = {
+              {
+                setting_id = "playstation_controller_button",
+                type = "dropdown",
+                default_value = "default",
+                title = "playstation_controller_button",
+                tooltip_text = "playstation_controller_button_description",
+                options = {
+                  { text = "playstation_controller_button_default", value = "default" },
+                  { text = "playstation_controller_button_l1", value = "ps4_controller_l1" },
+                  { text = "playstation_controller_button_l2", value = "ps4_controller_l2" },
+                  { text = "playstation_controller_button_l3", value = "ps4_controller_l3" },
+                  { text = "playstation_controller_button_r1", value = "ps4_controller_r1" },
+                  { text = "playstation_controller_button_r2", value = "ps4_controller_r2" },
+                  { text = "playstation_controller_button_r3", value = "ps4_controller_r3" },
+                  { text = "playstation_controller_button_triangle", value = "ps4_controller_triangle" },
+                  { text = "playstation_controller_button_circle", value = "ps4_controller_circle" },
+                  { text = "playstation_controller_button_cross", value = "ps4_controller_cross" },
+                  { text = "playstation_controller_button_square", value = "ps4_controller_square" },
+                  { text = "playstation_controller_button_d_up", value = "ps4_controller_d_up" },
+                  { text = "playstation_controller_button_d_down", value = "ps4_controller_d_down" },
+                  { text = "playstation_controller_button_d_left", value = "ps4_controller_d_left" },
+                  { text = "playstation_controller_button_d_right", value = "ps4_controller_d_right" },
+                  { text = "playstation_controller_button_options", value = "ps4_controller_options" },
+                  { text = "playstation_controller_button_touch", value = "ps4_controller_touch" },
+                },
+              },
+            },
+          },
+        },
+      },
     }
   }
 }
