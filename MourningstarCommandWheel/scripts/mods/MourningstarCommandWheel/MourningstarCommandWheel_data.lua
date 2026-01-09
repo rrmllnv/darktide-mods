@@ -19,6 +19,13 @@ return {
             keybind_type    = "function_call",
             function_name   = "command_wheel_held",
           },
+          {
+            setting_id = "enable_in_psykhanium_wheel",
+            type = "checkbox",
+            default_value = true,
+            title = "enable_in_psykhanium_wheel",
+            tooltip_text = "enable_in_psykhanium_wheel_description",
+          },
         },
       },
       {

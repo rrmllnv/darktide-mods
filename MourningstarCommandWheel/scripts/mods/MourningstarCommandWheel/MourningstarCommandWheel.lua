@@ -149,6 +149,12 @@ end
 mod._command_wheel_eval_func = nil
 
 mod._is_command_wheel_key_pressed = function(self)
+	if is_in_psykhanium() then
+		if not mod:get("enable_in_psykhanium_wheel") then
+			return false
+		end
+	end
+	
 	local function check_controller_button()
 		if not InputDevice.gamepad_active then
 			return false

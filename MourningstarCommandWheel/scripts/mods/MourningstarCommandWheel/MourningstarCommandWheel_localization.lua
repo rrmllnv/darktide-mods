@@ -25,6 +25,16 @@ return {
     ["zh-cn"] = "允许在灵能室使用快捷键打开菜单。",
     ru = "Разрешить использование горячих клавиш для открытия меню в " .. Localize("loc_training_ground_view") .. "е.",
   },
+  enable_in_psykhanium_wheel = {
+    en = "Enable Command Wheel in the Psykhanium",
+    ["zh-cn"] = "在灵能室启用命令轮盘",
+    ru = "Включить колесо команд в " .. Localize("loc_training_ground_view") .. "е",
+  },
+  enable_in_psykhanium_wheel_description = {
+    en = "Allow using the command wheel in the Psykhanium (Training Grounds).",
+    ["zh-cn"] = "允许在灵能室使用命令轮盘。",
+    ru = "Разрешить использование колеса команд в " .. Localize("loc_training_ground_view") .. "е.",
+  },
   enable_toggle_view = {
     en = "Toggle View on Hotkey Press",
     ["zh-cn"] = "按热键切换视图",
