@@ -55,6 +55,10 @@ return {
 		en = "Toggle Stats Display",
 		ru = "Переключить отображение статистики",
 	},
+	playstation_controller_button_unassigned = {
+		en = "UNASSIGNED",
+		ru = "НЕ НАЗНАЧЕНО",
+	},
 	playstation_controller_button_default = {
 		en = "R1 (Default)",
 		ru = "R1 (По умолчанию)",
@@ -134,6 +138,10 @@ return {
 	xbox_controller_button = {
 		en = "Toggle Stats Display",
 		ru = "Переключить отображение статистики",
+	},
+	xbox_controller_button_unassigned = {
+		en = "UNASSIGNED",
+		ru = "НЕ НАЗНАЧЕНО",
 	},
 	xbox_controller_button_default = {
 		en = "RB (Default)",

@@ -43,11 +43,11 @@ return {
 							{
 								setting_id = "playstation_controller_button",
 								type = "dropdown",
-								default_value = "default",
+								default_value = "unassigned",
 								title = "playstation_controller_button",
 								tooltip_text = "playstation_controller_button_description",
 								options = {
-									{ text = "playstation_controller_button_default", value = "default" },
+									{ text = "playstation_controller_button_unassigned", value = "unassigned" },
 									{ text = "playstation_controller_button_l1", value = "ps4_controller_l1" },
 									{ text = "playstation_controller_button_l2", value = "ps4_controller_l2" },
 									{ text = "playstation_controller_button_l3", value = "ps4_controller_l3" },
@@ -76,11 +76,11 @@ return {
 							{
 								setting_id = "xbox_controller_button",
 								type = "dropdown",
-								default_value = "default",
+								default_value = "unassigned",
 								title = "xbox_controller_button",
 								tooltip_text = "xbox_controller_button_description",
 								options = {
-									{ text = "xbox_controller_button_default", value = "default" },
+									{ text = "xbox_controller_button_unassigned", value = "unassigned" },
 									{ text = "xbox_controller_button_left_shoulder", value = "xbox_controller_left_shoulder" },
 									{ text = "xbox_controller_button_left_trigger", value = "xbox_controller_left_trigger" },
 									{ text = "xbox_controller_button_left_thumb", value = "xbox_controller_left_thumb" },
