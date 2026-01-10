@@ -24,8 +24,8 @@ return {
 		ru = "Прогресс игрока",
 	},
 	group_system_settings = {
-		en = "System Settings",
-		ru = "Системные настройки",
+		en = " System Settings",
+		ru = " Системные настройки",
 	},
 	reset_selected_items = {
 		en = "Clear Selected Items",
@@ -36,16 +36,16 @@ return {
 		ru = "Выберите элементы в статистике для отображения здесь",
 	},
 	i18n_keybindings_section = {
-		en = "Keybindings",
-		ru = "Привязки клавиш",
+		en = " Keybindings",
+		ru = " Привязки клавиш",
 	},
 	i18n_hotkeys_section = {
 		en = "Hotkeys",
 		ru = "Горячие клавиши",
 	},
 	i18n_controller_section = {
-		en = "Controller",
-		ru = "Контроллер",
+		en = " Controller",
+		ru = " Контроллер",
 	},
 	i18n_playstation_section = {
 		en = "Sony Playstation",
