@@ -548,10 +548,6 @@ mod:hook(CLASS.StatsManager, "record_private", function(func, self, stat_name, p
 		if not hit_minion then
 			mod.player_shots_missed[account_id] = (mod.player_shots_missed[account_id] or 0) + 1
 		end
-		
-		if killing_blow and hit_weakspot then
-			mod.player_head_shot_kill[account_id] = (mod.player_head_shot_kill[account_id] or 0) + 1
-		end
 	end
 end)
 
@@ -615,6 +611,11 @@ function(self, damage_profile, attacked_unit, attacking_unit, attack_direction, 
                         mod.killstreak_kills_by_category = mod.killstreak_kills_by_category or {}
                         mod.killstreak_kills_by_category[account_id] = mod.killstreak_kills_by_category[account_id] or {}
                         mod.killstreak_kills_by_category[account_id][breed_name] = (mod.killstreak_kills_by_category[account_id][breed_name] or 0) + 1
+                    end
+                    
+                    if hit_weakspot and attack_type == "ranged" then
+                        mod.player_head_shot_kill = mod.player_head_shot_kill or {}
+                        mod.player_head_shot_kill[account_id] = (mod.player_head_shot_kill[account_id] or 0) + 1
                     end
                 end
                 
