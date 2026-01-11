@@ -39,6 +39,12 @@ init.setup = function(mod, VIEW_NAME, view_templates, views_module, utilities)
 	mod.on_all_mods_loaded = function()
 		views_module.register_views(mod, view_templates)
 		-- views_module.inject_system_view(mod, VIEW_NAME)
+		
+		-- Настраиваем хук для player_character_options_view
+		local player_character_options_hook = mod:io_dofile("PlayerProgression/scripts/mods/PlayerProgression/modules/player_character_options_hook")
+		if player_character_options_hook and player_character_options_hook.setup then
+			player_character_options_hook.setup(mod)
+		end
 	end
 
 	mod.on_setting_changed = function()

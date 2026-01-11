@@ -33,6 +33,7 @@ local views = mod:io_dofile("PlayerProgression/scripts/mods/PlayerProgression/mo
 local commands = mod:io_dofile("PlayerProgression/scripts/mods/PlayerProgression/modules/commands")
 local utilities = mod:io_dofile("PlayerProgression/scripts/mods/PlayerProgression/modules/utilities")
 local init = mod:io_dofile("PlayerProgression/scripts/mods/PlayerProgression/modules/init")
+local player_character_options_hook = mod:io_dofile("PlayerProgression/scripts/mods/PlayerProgression/modules/player_character_options_hook")
 
 local VIEW_NAME = "player_progress_stats_view"
 
