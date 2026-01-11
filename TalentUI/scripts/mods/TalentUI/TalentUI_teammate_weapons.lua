@@ -171,7 +171,18 @@ local function update_teammate_weapons(self, player, dt)
 				show_weapon_icon = mod:get("show_teammate_weapon_secondary_icon")
 			end
 			
-			if has_weapon and show_weapon_icon and not self._show_as_dead and not self._dead and not self._hogtied then
+			-- Проверяем состояние смерти в цикле и скрываем иконки явно
+			if self._show_as_dead or self._dead or self._hogtied then
+				if icon_widget and icon_widget.visible then
+					icon_widget.visible = false
+					icon_widget.dirty = true
+				end
+				local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
+				if text_widget and text_widget.visible then
+					text_widget.visible = false
+					text_widget.dirty = true
+				end
+			elseif has_weapon and show_weapon_icon then
 				local icon = teammate_weapons_data[data_key].icon
 				local needs_icon_update = false
 				
