@@ -162,15 +162,19 @@ ViewMain._update_grid_content = function(self)
 		return
 	end
 
+	-- Сохраняем выбранный индекс ДО обновления layout, чтобы знать, работал ли пользователь с гридом
+	local saved_selected_index = self._stats_grid:selected_grid_index()
+	
 	local layout = self:_create_stat_layout()
 	-- Callback вызывается после обновления грида (как в group_finder_view:3236-3238)
-	local cb_on_grid_layout_updated = callback(self, "_on_grid_layout_updated")
+	-- Передаем сохраненный индекс в callback
+	local cb_on_grid_layout_updated = callback(self, "_on_grid_layout_updated", saved_selected_index)
 	self._stats_grid:present_grid_layout(layout, blueprints, nil, nil, nil, nil, cb_on_grid_layout_updated)
 	-- Включаем навигацию грида после present_grid_layout (как в group_finder_view:3239)
 	self._stats_grid:set_handle_grid_navigation(true)
 end
 
-ViewMain._on_grid_layout_updated = function(self)
+ViewMain._on_grid_layout_updated = function(self, saved_selected_index)
 	-- После перестроения грида подстраиваем выбор под тип навигации
 	if not self._stats_grid then
 		return
@@ -182,9 +186,24 @@ ViewMain._on_grid_layout_updated = function(self)
 		-- Для мыши первый клик не должен снимать выбор
 		self._stats_grid:select_grid_index(nil)
 	else
-		-- Для геймпада оставляем первый элемент выделенным
-		if not self._stats_grid:selected_grid_index() then
-			self._stats_grid:select_first_index()
+		-- Для геймпада: если пользователь уже работал с гридом (saved_selected_index был установлен),
+		-- восстанавливаем выбор в гриде, чтобы фокус остался в гриде
+		-- Если saved_selected_index был nil, значит пользователь еще не переходил в грид,
+		-- и мы сбрасываем выбор, чтобы фокус оставался на вкладках
+		if saved_selected_index then
+			-- Пользователь уже работал с гридом - восстанавливаем выбор
+			-- Проверяем, что индекс валидный (не больше количества элементов)
+			local grid_widgets = self._stats_grid:widgets()
+			local max_index = grid_widgets and #grid_widgets or 0
+			if max_index > 0 then
+				-- Восстанавливаем выбор на том же индексе или на первом, если индекс больше количества элементов
+				local index_to_select = math.min(saved_selected_index, max_index)
+				self._stats_grid:select_grid_index(index_to_select)
+			end
+		else
+			-- Выбора не было - сбрасываем, чтобы фокус оставался на вкладках
+			-- Выбор в гриде устанавливается только при явном переходе вправо (как в group_finder_view:744-752)
+			self._stats_grid:select_grid_index(nil)
 		end
 	end
 
