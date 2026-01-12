@@ -38,14 +38,31 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_plague_ogryn_killed",
     })
     
-    -- Daemonhost (обычный + mutator)
-    local daemonhost = safe_read_stat("total_chaos_daemonhost_killed") + safe_read_stat("total_chaos_mutator_daemonhost_killed")
+    -- Plague Ogryn Sprayer
+    table.insert(layout, {
+        widget_type = "stat_line", 
+        text = localize("loc_breed_display_name_chaos_plage_ogryn") .. " (" .. localize("sprayer") .. ")", 
+        value = format_number(safe_read_stat("total_chaos_plague_ogryn_sprayer_killed")),
+        text_key = "loc_breed_display_name_chaos_plage_ogryn",
+        stat_name = "total_chaos_plague_ogryn_sprayer_killed",
+    })
+    
+    -- Daemonhost (обычный)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_daemonhost"), 
-        value = format_number(daemonhost),
+        value = format_number(safe_read_stat("total_chaos_daemonhost_killed")),
         text_key = "loc_breed_display_name_chaos_daemonhost",
-        stat_name = nil,
+        stat_name = "total_chaos_daemonhost_killed",
+    })
+    
+    -- Daemonhost (mutator)
+    table.insert(layout, {
+        widget_type = "stat_line", 
+        text = localize("loc_breed_display_name_chaos_daemonhost") .. " (" .. localize("mutator") .. ")", 
+        value = format_number(safe_read_stat("total_chaos_mutator_daemonhost_killed")),
+        text_key = "loc_breed_display_name_chaos_daemonhost",
+        stat_name = "total_chaos_mutator_daemonhost_killed",
     })
     
     -- Renegade Captains
@@ -204,35 +221,58 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_poxwalker_bomber_killed",
     })
     
-    -- Hound (обычный + mutator)
-    local hound = safe_read_stat("total_chaos_hound_killed") + safe_read_stat("total_chaos_hound_mutator_killed")
+    -- Hound (обычный)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_hound"), 
-        value = format_number(hound),
+        value = format_number(safe_read_stat("total_chaos_hound_killed")),
         text_key = "loc_breed_display_name_chaos_hound",
-        stat_name = nil,
+        stat_name = "total_chaos_hound_killed",
     })
     
-    -- Mutant (обычный + mutator)
-    local mutant = safe_read_stat("total_cultist_mutant_killed") + safe_read_stat("total_cultist_mutant_mutator_killed")
+    -- Hound (mutator)
+    table.insert(layout, {
+        widget_type = "stat_line", 
+        text = localize("loc_breed_display_name_chaos_hound") .. " (" .. localize("mutator") .. ")", 
+        value = format_number(safe_read_stat("total_chaos_hound_mutator_killed")),
+        text_key = "loc_breed_display_name_chaos_hound",
+        stat_name = "total_chaos_hound_mutator_killed",
+    })
+    
+    -- Mutant (обычный)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_cultist_mutant"), 
-        value = format_number(mutant),
+        value = format_number(safe_read_stat("total_cultist_mutant_killed")),
         text_key = "loc_breed_display_name_cultist_mutant",
-        stat_name = nil,
+        stat_name = "total_cultist_mutant_killed",
     })
     
-    -- Renegade Flamer (обычный + mutator)
-    local renegade_flamer = safe_read_stat("total_renegade_flamer_killed") + 
-                            safe_read_stat("total_renegade_flamer_mutator_killed")
+    -- Mutant (mutator)
+    table.insert(layout, {
+        widget_type = "stat_line", 
+        text = localize("loc_breed_display_name_cultist_mutant") .. " (" .. localize("mutator") .. ")", 
+        value = format_number(safe_read_stat("total_cultist_mutant_mutator_killed")),
+        text_key = "loc_breed_display_name_cultist_mutant",
+        stat_name = "total_cultist_mutant_mutator_killed",
+    })
+    
+    -- Renegade Flamer (обычный)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_renegade_flamer"), 
-        value = format_number(renegade_flamer),
+        value = format_number(safe_read_stat("total_renegade_flamer_killed")),
         text_key = "loc_breed_display_name_renegade_flamer",
-        stat_name = nil,
+        stat_name = "total_renegade_flamer_killed",
+    })
+    
+    -- Renegade Flamer (mutator)
+    table.insert(layout, {
+        widget_type = "stat_line", 
+        text = localize("loc_breed_display_name_renegade_flamer") .. " (" .. localize("mutator") .. ")", 
+        value = format_number(safe_read_stat("total_renegade_flamer_mutator_killed")),
+        text_key = "loc_breed_display_name_renegade_flamer",
+        stat_name = "total_renegade_flamer_mutator_killed",
     })
     
     -- Renegade Grenadier
@@ -328,6 +368,24 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         text_key = "loc_breed_display_name_cultist_assault",
         stat_name = "total_cultist_assault_killed",
     })
+    
+    -- Cultist Ritualist
+    table.insert(layout, {
+        widget_type = "stat_line", 
+        text = localize("loc_breed_display_name_cultist_ritualist"), 
+        value = format_number(safe_read_stat("total_cultist_ritualist_killed")),
+        text_key = "loc_breed_display_name_cultist_ritualist",
+        stat_name = "total_cultist_ritualist_killed",
+    })
+    
+    -- Cultist Ritualist (mutator)
+    table.insert(layout, {
+        widget_type = "stat_line", 
+        text = localize("loc_breed_display_name_cultist_ritualist") .. " (" .. localize("mutator") .. ")", 
+        value = format_number(safe_read_stat("total_chaos_mutator_ritualist_killed")),
+        text_key = "loc_breed_display_name_cultist_ritualist",
+        stat_name = "total_chaos_mutator_ritualist_killed",
+    })
 
     table.insert(layout, {widget_type = "stat_line", text = "", value = ""})
 
@@ -336,16 +394,40 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
     -- ============================
     table.insert(layout, {widget_type = "stat_header", text = localize("stats_horde")})
     
-    -- Poxwalker (все виды)
-    local poxwalker = safe_read_stat("total_chaos_poxwalker_killed") + 
-                      safe_read_stat("total_chaos_mutated_poxwalker_killed") + 
-                      safe_read_stat("total_chaos_lesser_mutated_poxwalker_killed")
+    -- Poxwalker (обычный)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_poxwalker"), 
-        value = format_number(poxwalker),
+        value = format_number(safe_read_stat("total_chaos_poxwalker_killed")),
         text_key = "loc_breed_display_name_chaos_poxwalker",
-        stat_name = nil,
+        stat_name = "total_chaos_poxwalker_killed",
+    })
+    
+    -- Poxwalker (mutated)
+    table.insert(layout, {
+        widget_type = "stat_line", 
+        text = localize("loc_breed_display_name_chaos_poxwalker") .. " (" .. localize("mutated") .. ")", 
+        value = format_number(safe_read_stat("total_chaos_mutated_poxwalker_killed")),
+        text_key = "loc_breed_display_name_chaos_poxwalker",
+        stat_name = "total_chaos_mutated_poxwalker_killed",
+    })
+    
+    -- Poxwalker (lesser mutated)
+    table.insert(layout, {
+        widget_type = "stat_line", 
+        text = localize("loc_breed_display_name_chaos_poxwalker") .. " (" .. localize("lesser_mutated") .. ")", 
+        value = format_number(safe_read_stat("total_chaos_lesser_mutated_poxwalker_killed")),
+        text_key = "loc_breed_display_name_chaos_poxwalker",
+        stat_name = "total_chaos_lesser_mutated_poxwalker_killed",
+    })
+    
+    -- Armored Infected
+    table.insert(layout, {
+        widget_type = "stat_line", 
+        text = localize("loc_chaos_armored_infected_breed_name"), 
+        value = format_number(safe_read_stat("total_chaos_armored_infected_killed")),
+        text_key = "loc_chaos_armored_infected_breed_name",
+        stat_name = "total_chaos_armored_infected_killed",
     })
     
     -- Newly Infected

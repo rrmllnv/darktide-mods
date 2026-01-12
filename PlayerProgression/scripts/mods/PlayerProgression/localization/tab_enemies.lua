@@ -93,5 +93,23 @@ return {
 		en = "Netgunner",
 		ru = "Нетганнер",
 	},
+	
+	-- Суффиксы для мутаторов
+	mutator = {
+		en = "Mutator",
+		ru = "Мутатор",
+	},
+	mutated = {
+		en = "Mutated",
+		ru = "Мутировавший",
+	},
+	lesser_mutated = {
+		en = "Lesser Mutated",
+		ru = "Меньше мутировавший",
+	},
+	sprayer = {
+		en = "Sprayer",
+		ru = "Распылитель",
+	},
 }
 
