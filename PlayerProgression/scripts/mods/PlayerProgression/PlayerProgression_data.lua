@@ -40,6 +40,13 @@ return {
 						title = "show_in_prologue",
 						tooltip_text = "show_in_prologue_description",
 					},
+					{
+						setting_id = "show_in_tactical_overlay",
+						type = "checkbox",
+						default_value = true,
+						title = "show_in_tactical_overlay",
+						tooltip_text = "show_in_tactical_overlay_description",
+					},
 				},
 			},
 			{

@@ -71,6 +71,14 @@ return {
 		en = "Enable statistics display in the prologue",
 		ru = "Включить отображение статистики в прологе",
 	},
+	show_in_tactical_overlay = {
+		en = "Show in Tactical Overlay",
+		ru = "Показывать в тактическом оверлее",
+	},
+	show_in_tactical_overlay_description = {
+		en = "Enable display of selected statistics in the tactical overlay (right panel)",
+		ru = "Включить отображение выбранной статистики в тактическом оверлее (правая панель)",
+	},
 	i18n_keybindings_section = {
 		en = " Keybindings",
 		ru = " Привязки клавиш",

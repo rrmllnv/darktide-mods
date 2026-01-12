@@ -64,6 +64,10 @@ local function localize(key)
 end
 
 local function setup_game_progress(tactical_overlay_instance, ui_renderer)
+	if not mod:get("show_in_tactical_overlay") then
+		return
+	end
+
 	local page_key = "game_progress"
 	local selected_items, selected_items_order = get_selected_data()
 	
@@ -136,6 +140,10 @@ local function update_game_progress(tactical_overlay_instance, dt, ui_renderer)
 	if not ui_renderer then
 		return
 	end
+
+	if not mod:get("show_in_tactical_overlay") then
+		return
+	end
 	
 	local page_key = "game_progress"
 	local has_entry = tactical_overlay_instance._right_panel_entries and tactical_overlay_instance._right_panel_entries[page_key] ~= nil
@@ -168,6 +176,10 @@ end
 tactical_overlay.setup = function()
 	mod:hook("HudElementTacticalOverlay", "init", function(func, self, parent, draw_layer, start_scale, optional_context)
 		local result = func(self, parent, draw_layer, start_scale, optional_context)
+		
+		if not mod:get("show_in_tactical_overlay") then
+			return result
+		end
 		
 		if not ElementSettings or not ElementSettings.right_panel_grids then
 			return result
@@ -202,6 +214,10 @@ tactical_overlay.setup = function()
 	mod:hook("HudElementTacticalOverlay", "_setup_right_panel_widgets", function(func, self)
 		func(self)
 		
+		if not mod:get("show_in_tactical_overlay") then
+			return
+		end
+		
 		if not ElementSettings.right_panel_order[4] then
 			ElementSettings.right_panel_order[4] = "game_progress"
 		end
@@ -209,6 +225,10 @@ tactical_overlay.setup = function()
 
 	mod:hook("HudElementTacticalOverlay", "_get_page", function(func, self, page_key)
 		local result = func(self, page_key)
+		
+		if not mod:get("show_in_tactical_overlay") then
+			return result
+		end
 		
 		if page_key == "game_progress" then
 			if not result then
@@ -235,6 +255,11 @@ tactical_overlay.setup = function()
 	end)
 
 	mod:hook("HudElementTacticalOverlay", "_update_right_tab_bar", function(func, self, ui_renderer)
+		if not mod:get("show_in_tactical_overlay") then
+			func(self, ui_renderer)
+			return
+		end
+		
 		if not ElementSettings.right_panel_order[4] then
 			ElementSettings.right_panel_order[4] = "game_progress"
 		end
