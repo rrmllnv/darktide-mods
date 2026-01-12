@@ -39,6 +39,14 @@ return {
 		en = " General Settings",
 		ru = " Общие настройки",
 	},
+	i18n_view_settings_section = {
+		en = "Display",
+		ru = "Отображение",
+	},
+	i18n_tactical_overlay_settings_section = {
+		en = "Tactical Overlay",
+		ru = "Тактический оверлей",
+	},
 	show_in_hub = {
 		en = "Show in Hub",
 		ru = "Показывать в хабе",
@@ -260,4 +268,3 @@ return {
 		ru = "Выберите кнопку на контроллере Xbox для переключения отображения статистики.",
 	},
 }
-
