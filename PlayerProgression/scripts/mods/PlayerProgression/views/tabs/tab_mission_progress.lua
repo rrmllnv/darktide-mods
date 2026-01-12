@@ -1,5 +1,3 @@
--- tab_mission_progress.lua - Вкладка "Прохождение миссий"
-
 local TabMissionProgress = {}
 
 TabMissionProgress.create_layout = function(safe_read_stat, localize, format_number)
@@ -19,7 +17,7 @@ TabMissionProgress.create_layout = function(safe_read_stat, localize, format_num
                 labels[#labels + 1] = {
                     suffix = tostring(i),
                     label = Localize(danger.display_name),
-                    text_key = danger.display_name, -- Сохраняем ключ локализации
+                    text_key = danger.display_name,
                 }
                 if #labels == 5 then
                     break
@@ -27,7 +25,6 @@ TabMissionProgress.create_layout = function(safe_read_stat, localize, format_num
             end
         end
 
-        -- Fallback, если что-то пошло не так
         if #labels == 0 then
             labels = {
                 {suffix = "1", label = localize("stats_difficulty_1"), text_key = "stats_difficulty_1"},
@@ -54,7 +51,6 @@ TabMissionProgress.create_layout = function(safe_read_stat, localize, format_num
     end
 
     for _, mission in ipairs(missions) do
-        -- Пропускаем тренировку и пустые категории
         if mission.category and mission.category.default ~= "training_grounds" and mission.name ~= "psykhanium" then
             local mission_name = safe_mission_name(mission)
             local has_any = false
@@ -73,10 +69,8 @@ TabMissionProgress.create_layout = function(safe_read_stat, localize, format_num
 
                     local status = (val > 0) and localize("mission_progress_done") or localize("mission_progress_not_done")
                     
-                    -- Используем text_key из diff (сохранен при создании labels)
                     local text_key = diff.text_key or ("stats_difficulty_" .. diff.suffix)
                     
-                    -- Сохраняем ключ локализации миссии или внутреннее имя
                     local mission_key = mission.local_variable or mission.name
 
                     table.insert(layout, {
@@ -86,8 +80,8 @@ TabMissionProgress.create_layout = function(safe_read_stat, localize, format_num
                         text_key = text_key,
                         stat_name = stat_name,
                         description_key = nil,
-                        mission_key = mission_key, -- Ключ локализации или имя миссии
-                        mission_name = mission_name, -- Локализованное название миссии для отображения
+                        mission_key = mission_key,
+                        mission_name = mission_name,
                     })
                 end
             end

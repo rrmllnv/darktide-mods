@@ -1,13 +1,8 @@
--- tab_missions.lua - Вкладка "Миссии"
 
 local TabMissions = {}
 
 TabMissions.create_layout = function(safe_read_stat, localize, format_number)
     local layout = {}
-    
-    -- ============================
-    -- ОСНОВНЫЕ МИССИИ
-    -- ============================
     table.insert(layout, {widget_type = "stat_header", text = localize("stats_missions_main")})
     table.insert(layout, {
         widget_type = "stat_line_with_description",
@@ -66,9 +61,6 @@ TabMissions.create_layout = function(safe_read_stat, localize, format_number)
     
     table.insert(layout, {widget_type = "stat_line", text = "", value = ""})
     
-    -- ============================
-    -- БЕЗУПРЕЧНЫЕ МИССИИ (FLAWLESS)
-    -- ============================
     table.insert(layout, {widget_type = "stat_header", text = localize("stats_flawless_header")})
     table.insert(layout, {
         widget_type = "stat_line_with_description", 
@@ -127,9 +119,6 @@ TabMissions.create_layout = function(safe_read_stat, localize, format_number)
     
     table.insert(layout, {widget_type = "stat_line", text = "", value = ""})
     
-    -- ============================
-    -- HAVOC
-    -- ============================
     table.insert(layout, {widget_type = "stat_header", text = localize("stats_havoc_header")})
     table.insert(layout, {
         widget_type = "stat_line_with_description",
@@ -150,7 +139,6 @@ TabMissions.create_layout = function(safe_read_stat, localize, format_number)
         description_key = "description_havoc_win_assisted",
     })
     
-    -- Havoc ранг (проверяем от высшего к низшему)
     local havoc_rank = 0
     for i = 8, 1, -1 do
         if safe_read_stat("havoc_rank_reached_0" .. i) > 0 then
@@ -173,9 +161,6 @@ TabMissions.create_layout = function(safe_read_stat, localize, format_number)
     
     table.insert(layout, {widget_type = "stat_line", text = "", value = ""})
     
-    -- ============================
-    -- TWINS МИССИИ
-    -- ============================
     table.insert(layout, {widget_type = "stat_header", text = localize("stats_twins_header")})
     table.insert(layout, {
         widget_type = "stat_line_with_description",
@@ -225,12 +210,8 @@ TabMissions.create_layout = function(safe_read_stat, localize, format_number)
     
     table.insert(layout, {widget_type = "stat_line", text = "", value = ""})
     
-    -- ============================
-    -- МИССИИ ПО ЗОНАМ
-    -- ============================
     table.insert(layout, {widget_type = "stat_header", text = localize("stats_zones_header")})
     
-    -- Список зон (только те где есть миссии, без hub/training_grounds/prologue)
     local zones = {
         {key = "dust", loc_key = "loc_zone_dust"},
         {key = "entertainment", loc_key = "loc_zone_entertainment"},
@@ -241,7 +222,6 @@ TabMissions.create_layout = function(safe_read_stat, localize, format_number)
         {key = "void", loc_key = "loc_zone_void"},
         {key = "watertown", loc_key = "loc_zone_watertown"},
         {key = "horde", loc_key = "loc_horde_mission_breifing_zone"},
-        -- Новые зоны
         {key = "hourglass", loc_key = "loc_zone_name_hourglass_short"},
         {key = "carnival", loc_key = "loc_zone_name_carnival_short"},
     }

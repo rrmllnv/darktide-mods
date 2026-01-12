@@ -25,7 +25,6 @@ return {
 		ru = "Наивысший Havoc ранг",
 	},
 
-	-- Миссии - дополнительные
 	stats_missions_main = {
 		en = "MAIN MISSIONS",
 		ru = "ОСНОВНЫЕ МИССИИ",
@@ -103,7 +102,6 @@ return {
 		ru = "ЗОНЫ",
 	},
 
-	-- Описания для Flawless миссий
 	description_flawless_missions = {
 		en = "Difficulty 3+, no deaths or downs (player)",
 		ru = "Сложность 3+, без смертей и падений (игрок)",
@@ -129,7 +127,6 @@ return {
 		ru = "Havoc ранг 35+, без смертей и падений команды",
 	},
 
-	-- Описания для основных миссий
 	description_missions = {
 		en = "All won missions",
 		ru = "Все выигранные миссии",
@@ -155,7 +152,6 @@ return {
 		ru = "Миссии с активными обстоятельствами",
 	},
 
-	-- Описания для Havoc
 	description_havoc_win_assisted = {
 		en = "Havoc wins where you weren't order owner",
 		ru = "Победы Havoc где вы не владелец заказа",
@@ -165,7 +161,6 @@ return {
 		ru = "Наивысший достигнутый ранг Havoc",
 	},
 
-	-- Описания для Twins миссий
 	description_mission_twins = {
 		en = "Twins missions at max difficulty",
 		ru = "Миссии Twins на максимальной сложности",
@@ -187,13 +182,11 @@ return {
 		ru = "Мины не активированы во время Twins",
 	},
 
-	-- Описания для зон
 	description_zone_missions = {
 		en = "Missions completed in this zone",
 		ru = "Миссии завершенные в этой зоне",
 	},
 
-	-- Миссии по картам и сложностям
 	stats_missions_by_map = {
 		en = "MISSIONS BY MAP & DIFFICULTY",
 		ru = "МИССИИ ПО КАРТАМ И СЛОЖНОСТЯМ",

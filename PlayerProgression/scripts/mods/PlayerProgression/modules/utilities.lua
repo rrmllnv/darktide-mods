@@ -1,6 +1,5 @@
 local utilities = {}
 
--- Форматирование числа с разделителем тысяч
 utilities.format_number = function(number)
 	local num = math.floor(number)
 	if num < 1000 then
