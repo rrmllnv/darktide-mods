@@ -170,6 +170,18 @@ local function update_game_progress(tactical_overlay_instance, dt, ui_renderer)
 	if tactical_overlay_instance._game_progress_items_hash ~= current_hash then
 		tactical_overlay_instance._game_progress_items_hash = current_hash
 		setup_game_progress(tactical_overlay_instance, ui_renderer)
+		return
+	end
+	
+	if not tactical_overlay_instance._game_progress_update_timer then
+		tactical_overlay_instance._game_progress_update_timer = 0
+	end
+	
+	tactical_overlay_instance._game_progress_update_timer = tactical_overlay_instance._game_progress_update_timer + dt
+	
+	if tactical_overlay_instance._game_progress_update_timer >= 1.0 then
+		tactical_overlay_instance._game_progress_update_timer = 0
+		setup_game_progress(tactical_overlay_instance, ui_renderer)
 	end
 end
 
