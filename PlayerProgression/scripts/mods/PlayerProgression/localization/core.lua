@@ -35,6 +35,42 @@ return {
 		en = "Select items in statistics to display here",
 		ru = "Выберите элементы в статистике для отображения здесь",
 	},
+	i18n_general_settings_section = {
+		en = " General Settings",
+		ru = " Общие настройки",
+	},
+	show_in_hub = {
+		en = "Show in Hub",
+		ru = "Показывать в хабе",
+	},
+	show_in_hub_description = {
+		en = "Enable statistics display in the hub",
+		ru = "Включить отображение статистики в хабе",
+	},
+	show_in_mission = {
+		en = "Show in Mission",
+		ru = "Показывать на миссии",
+	},
+	show_in_mission_description = {
+		en = "Enable statistics display during missions",
+		ru = "Включить отображение статистики во время миссий",
+	},
+	show_in_psykhanium = {
+		en = "Show in Psykhanium",
+		ru = "Показывать в псайканиуме",
+	},
+	show_in_psykhanium_description = {
+		en = "Enable statistics display in the Psykhanium",
+		ru = "Включить отображение статистики в псайканиуме",
+	},
+	show_in_prologue = {
+		en = "Show in Prologue",
+		ru = "Показывать в прологе",
+	},
+	show_in_prologue_description = {
+		en = "Enable statistics display in the prologue",
+		ru = "Включить отображение статистики в прологе",
+	},
 	i18n_keybindings_section = {
 		en = " Keybindings",
 		ru = " Привязки клавиш",

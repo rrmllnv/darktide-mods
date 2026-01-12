@@ -8,6 +8,41 @@ return {
 	options = {
 		widgets = {
 			{
+				setting_id = "general_settings_supergroup",
+				type = "group",
+				title = "i18n_general_settings_section",
+				sub_widgets = {
+					{
+						setting_id = "show_in_hub",
+						type = "checkbox",
+						default_value = true,
+						title = "show_in_hub",
+						tooltip_text = "show_in_hub_description",
+					},
+					{
+						setting_id = "show_in_mission",
+						type = "checkbox",
+						default_value = true,
+						title = "show_in_mission",
+						tooltip_text = "show_in_mission_description",
+					},
+					{
+						setting_id = "show_in_psykhanium",
+						type = "checkbox",
+						default_value = true,
+						title = "show_in_psykhanium",
+						tooltip_text = "show_in_psykhanium_description",
+					},
+					{
+						setting_id = "show_in_prologue",
+						type = "checkbox",
+						default_value = true,
+						title = "show_in_prologue",
+						tooltip_text = "show_in_prologue_description",
+					},
+				},
+			},
+			{
 				setting_id = "keybindings_supergroup",
 				type = "group",
 				title = "i18n_keybindings_section",
