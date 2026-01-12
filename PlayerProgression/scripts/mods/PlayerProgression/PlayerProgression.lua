@@ -36,7 +36,7 @@ local tactical_overlay = mod:io_dofile("PlayerProgression/scripts/mods/PlayerPro
 
 local VIEW_NAME = "player_progress_stats_view"
 
-mod.version = "1.0.0"
+mod.version = "2.0.0"
 
 init.setup(mod, VIEW_NAME, view_templates, views, utilities)
 commands.setup(mod)
