@@ -13,7 +13,11 @@ TabGeneral.create_layout = function(safe_read_stat, localize, format_number)
     local poxburster_kills = safe_read_stat("enemies_killed_with_poxburster_explosion")
     local companion_pounce_kills = safe_read_stat("adamant_killed_enemies_pounced_by_companion")
     local companion_coherency_kills = safe_read_stat("adamant_team_companion_in_coherency_kills")
-    local other_kills = total_kills - (renegade_kills + cultist_kills + chaos_kills + barrel_kills + poxburster_kills + companion_pounce_kills + companion_coherency_kills)
+    local red_stimm_kills = safe_read_stat("total_kills_gained_while_using_red_stimm")
+    local blue_stimm_kills = safe_read_stat("total_kills_gained_while_using_blue_stimm")
+    local grenadier_killed_before_attack = safe_read_stat("grenadier_killed_before_attack_occurred")
+    local flamer_killed_before_attack = safe_read_stat("flamer_killed_before_attack_occurred")
+    local other_kills = total_kills - (renegade_kills + cultist_kills + chaos_kills + barrel_kills + poxburster_kills + companion_pounce_kills + companion_coherency_kills + red_stimm_kills + blue_stimm_kills + grenadier_killed_before_attack + flamer_killed_before_attack)
 
     table.insert(layout, {
         widget_type = "stat_line",
@@ -77,6 +81,46 @@ TabGeneral.create_layout = function(safe_read_stat, localize, format_number)
             value = format_number(companion_coherency_kills),
             text_key = "stats_companion_coherency_kills",
             stat_name = "adamant_team_companion_in_coherency_kills",
+        })
+    end
+
+    if red_stimm_kills > 0 then
+        table.insert(layout, {
+            widget_type = "stat_line",
+            text = localize("stats_red_stimm_kills"),
+            value = format_number(red_stimm_kills),
+            text_key = "stats_red_stimm_kills",
+            stat_name = "total_kills_gained_while_using_red_stimm",
+        })
+    end
+
+    if blue_stimm_kills > 0 then
+        table.insert(layout, {
+            widget_type = "stat_line",
+            text = localize("stats_blue_stimm_kills"),
+            value = format_number(blue_stimm_kills),
+            text_key = "stats_blue_stimm_kills",
+            stat_name = "total_kills_gained_while_using_blue_stimm",
+        })
+    end
+
+    if grenadier_killed_before_attack > 0 then
+        table.insert(layout, {
+            widget_type = "stat_line",
+            text = localize("stats_grenadier_killed_before_attack"),
+            value = format_number(grenadier_killed_before_attack),
+            text_key = "stats_grenadier_killed_before_attack",
+            stat_name = "grenadier_killed_before_attack_occurred",
+        })
+    end
+
+    if flamer_killed_before_attack > 0 then
+        table.insert(layout, {
+            widget_type = "stat_line",
+            text = localize("stats_flamer_killed_before_attack"),
+            value = format_number(flamer_killed_before_attack),
+            text_key = "stats_flamer_killed_before_attack",
+            stat_name = "flamer_killed_before_attack_occurred",
         })
     end
 

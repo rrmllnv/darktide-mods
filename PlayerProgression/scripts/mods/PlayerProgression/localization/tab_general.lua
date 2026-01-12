@@ -38,6 +38,22 @@ return {
 		en = "Team kills with cybermastiff in coherency",
 		ru = "Командных убийств с кибермастифом в сплоченности",
 	},
+	stats_red_stimm_kills = {
+		en = "Kills with Red Stim",
+		ru = "Убийств с красным стимом",
+	},
+	stats_blue_stimm_kills = {
+		en = "Kills with Blue Stim",
+		ru = "Убийств с синим стимом",
+	},
+	stats_grenadier_killed_before_attack = {
+		en = "Grenadiers Killed Before Attack",
+		ru = "Гренадеров убито до атаки",
+	},
+	stats_flamer_killed_before_attack = {
+		en = "Flamers Killed Before Attack",
+		ru = "Фламеров убито до атаки",
+	},
 	stats_other_kills = {
 		en = "Other kills",
 		ru = "Прочие убийства",
