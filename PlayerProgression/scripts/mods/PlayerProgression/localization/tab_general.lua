@@ -54,6 +54,50 @@ return {
 		en = "Flamers Killed Before Attack",
 		ru = "Фламеров убито до атаки",
 	},
+	stats_electrocuted_kills = {
+		en = "Electrocuted Enemies Killed",
+		ru = "Убийств пораженных током врагов",
+	},
+	stats_stance_kills = {
+		en = "Kills During Hunt Stance",
+		ru = "Убийств во время стойки охоты",
+	},
+	stats_melee_terminus_kills = {
+		en = "Melee Kills with Terminus Warrant",
+		ru = "Ближних убийств с Terminus Warrant",
+	},
+	stats_ranged_terminus_kills = {
+		en = "Ranged Kills with Terminus Warrant",
+		ru = "Дальних убийств с Terminus Warrant",
+	},
+	stats_kill_climbing = {
+		en = "Kills While Climbing",
+		ru = "Убийств во время лазания",
+	},
+	stats_kills_during_max_focus_fire = {
+		en = "Kills During Max Focus Fire",
+		ru = "Убийств при максимальном Focus Fire",
+	},
+	stats_veteran_krak_grenade_kills = {
+		en = "Veteran Krak Grenade Kills",
+		ru = "Убийств гранатой Krak (Veteran)",
+	},
+	stats_ogryn_heavy_hitter_kills = {
+		en = "Ogryn Heavy Hitter Kills",
+		ru = "Убийств Heavy Hitter (Ogryn)",
+	},
+	stats_broker_missile_kills = {
+		en = "Broker Missile Launcher Kills",
+		ru = "Убийств ракетницей (Broker)",
+	},
+	stats_broker_focus_kills = {
+		en = "Broker Focus Mode Kills",
+		ru = "Убийств в режиме Focus (Broker)",
+	},
+	stats_broker_stimm_heavy_kills = {
+		en = "Broker Stimm Heavy Attack Kills",
+		ru = "Убийств тяжелыми атаками со стимом (Broker)",
+	},
 	stats_other_kills = {
 		en = "Other kills",
 		ru = "Прочие убийства",
