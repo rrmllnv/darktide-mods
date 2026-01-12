@@ -36,8 +36,8 @@ return {
 		ru = "Выберите элементы в статистике для отображения здесь",
 	},
 	i18n_general_settings_section = {
-		en = " General Settings",
-		ru = " Общие настройки",
+		en = " General Settings",
+		ru = " Общие настройки",
 	},
 	show_in_hub = {
 		en = "Show in Hub",
