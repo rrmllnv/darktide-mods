@@ -22,12 +22,12 @@ init.setup = function(mod, VIEW_NAME, view_templates, views_module, utilities)
 			return false
 		end
 
-		return game_mode_name ~= "hub" and game_mode_name ~= "prologue_hub" and game_mode_name ~= "training_grounds"
+		return game_mode_name ~= "hub" and game_mode_name ~= "prologue_hub" and game_mode_name ~= "training_grounds" and game_mode_name ~= "shooting_range"
 	end
 
 	mod._is_in_psykhanium = function()
 		local game_mode_name = mod._get_game_mode_name()
-		return game_mode_name == "training_grounds"
+		return game_mode_name == "training_grounds" or game_mode_name == "shooting_range"
 	end
 
 	mod._is_in_prologue = function()
