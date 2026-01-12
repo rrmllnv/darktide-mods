@@ -4,7 +4,6 @@ return {
 		ru = "Враги",
 	},
 
-	-- Враги - Боссы
 	stats_bosses = {
 		en = "BOSS KILLS",
 		ru = "Убийств боссов",
@@ -26,7 +25,6 @@ return {
 		ru = "Демонхост",
 	},
 
-	-- Враги - Элиты
 	stats_elites = {
 		en = "ELITE KILLS",
 		ru = "Убийств элит",
@@ -58,13 +56,11 @@ return {
 		ru = "Убийств специалистов",
 	},
 
-	-- Враги - Орда
 	stats_horde = {
 		en = "HORDE KILLS",
 		ru = "Убийств орды",
 	},
 
-	-- Враги - Roamers
 	stats_roamers = {
 		en = "ROAMER KILLS",
 		ru = "Убийств бродяг",
@@ -94,7 +90,6 @@ return {
 		ru = "Нетганнер",
 	},
 	
-	-- Суффиксы для мутаторов
 	mutator = {
 		en = "Mutator",
 		ru = "Мутатор",

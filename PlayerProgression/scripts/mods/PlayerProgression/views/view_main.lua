@@ -41,7 +41,6 @@ ViewMain.on_enter = function(self)
 	self:_setup_stats_grid()
 	self._active_tab_index = 1
 	
-	-- Инициализация как в group_finder_view - выбор снимается, но handle_grid_navigation остается включенным
 	if self._stats_grid then
 		self._stats_grid:select_grid_index(nil)
 	end
@@ -93,7 +92,6 @@ ViewMain._setup_stats_grid = function(self)
 end
 
 ViewMain._update_tab_selection_visual = function(self)
-	-- Обновляем визуальное выделение вкладок для геймпада
 	local InputDevice = require("scripts/managers/input/input_device")
 	local gamepad_active = InputDevice.gamepad_active
 	local stats_grid_selected = self._stats_grid and self._stats_grid:selected_grid_index()
@@ -102,7 +100,6 @@ ViewMain._update_tab_selection_visual = function(self)
 		local button_widget = self._widgets_by_name["tab_button_" .. i]
 		if button_widget then
 			button_widget.content.hotspot.is_selected = (self._active_tab_index == i)
-			-- Вкладка в фокусе только если геймпад активен, нет выбранного элемента в гриде, и это активная вкладка
 			button_widget.content.hotspot.is_focused = gamepad_active and not stats_grid_selected and (self._active_tab_index == i)
 			button_widget.dirty = true
 		end
@@ -120,13 +117,9 @@ ViewMain._on_tab_pressed = function(self, index)
 end
 
 ViewMain._on_stat_item_pressed = function(self, element, widget_index)
-	-- Обработка нажатия на элемент списка (как в group_finder_view:1270-1288)
-	-- Callback вызывается автоматически при изменении выбора в гриде
-	-- Только для мыши переключаем выбор, для геймпада обработка в blueprint
 	local using_cursor_navigation = Managers.ui:using_cursor_navigation()
 	
 	if using_cursor_navigation then
-		-- При использовании курсора просто переключаем выбор
 		local stats_grid_selected = self._stats_grid:selected_grid_index()
 		if stats_grid_selected == widget_index then
 			self._stats_grid:select_grid_index(nil)
@@ -134,7 +127,6 @@ ViewMain._on_stat_item_pressed = function(self, element, widget_index)
 			self._stats_grid:select_grid_index(widget_index)
 		end
 	end
-	-- Для геймпада ничего не делаем - обработка происходит в blueprint update при gamepad_confirm_pressed
 end
 
 ViewMain._update_title = function(self)
@@ -162,20 +154,15 @@ ViewMain._update_grid_content = function(self)
 		return
 	end
 
-	-- Сохраняем выбранный индекс ДО обновления layout, чтобы знать, работал ли пользователь с гридом
 	local saved_selected_index = self._stats_grid:selected_grid_index()
 	
 	local layout = self:_create_stat_layout()
-	-- Callback вызывается после обновления грида (как в group_finder_view:3236-3238)
-	-- Передаем сохраненный индекс в callback
 	local cb_on_grid_layout_updated = callback(self, "_on_grid_layout_updated", saved_selected_index)
 	self._stats_grid:present_grid_layout(layout, blueprints, nil, nil, nil, nil, cb_on_grid_layout_updated)
-	-- Включаем навигацию грида после present_grid_layout (как в group_finder_view:3239)
 	self._stats_grid:set_handle_grid_navigation(true)
 end
 
 ViewMain._on_grid_layout_updated = function(self, saved_selected_index)
-	-- После перестроения грида подстраиваем выбор под тип навигации
 	if not self._stats_grid then
 		return
 	end
@@ -183,26 +170,16 @@ ViewMain._on_grid_layout_updated = function(self, saved_selected_index)
 	local using_cursor_navigation = Managers.ui:using_cursor_navigation()
 
 	if using_cursor_navigation then
-		-- Для мыши первый клик не должен снимать выбор
 		self._stats_grid:select_grid_index(nil)
 	else
-		-- Для геймпада: если пользователь уже работал с гридом (saved_selected_index был установлен),
-		-- восстанавливаем выбор в гриде, чтобы фокус остался в гриде
-		-- Если saved_selected_index был nil, значит пользователь еще не переходил в грид,
-		-- и мы сбрасываем выбор, чтобы фокус оставался на вкладках
 		if saved_selected_index then
-			-- Пользователь уже работал с гридом - восстанавливаем выбор
-			-- Проверяем, что индекс валидный (не больше количества элементов)
 			local grid_widgets = self._stats_grid:widgets()
 			local max_index = grid_widgets and #grid_widgets or 0
 			if max_index > 0 then
-				-- Восстанавливаем выбор на том же индексе или на первом, если индекс больше количества элементов
 				local index_to_select = math.min(saved_selected_index, max_index)
 				self._stats_grid:select_grid_index(index_to_select)
 			end
 		else
-			-- Выбора не было - сбрасываем, чтобы фокус оставался на вкладках
-			-- Выбор в гриде устанавливается только при явном переходе вправо (как в group_finder_view:744-752)
 			self._stats_grid:select_grid_index(nil)
 		end
 	end
@@ -235,7 +212,6 @@ end
 ViewMain.update = function(self, dt, t, input_service)
 	if Managers and Managers.ui and Managers.ui:view_instance("dmf_options_view") then
 		Managers.ui:close_view(self.view_name)
-
 		return
 	end
 
@@ -250,7 +226,6 @@ ViewMain._handle_input = function(self, input_service, dt, t)
 			end
 		end
 
-		-- Обработка навигации с помощью геймпада (как в group_finder_view:696-752)
 		local using_cursor_navigation = Managers.ui:using_cursor_navigation()
 		
 		if not using_cursor_navigation then
@@ -260,20 +235,14 @@ ViewMain._handle_input = function(self, input_service, dt, t)
 
 			local stats_grid_selected = self._stats_grid:selected_grid_index()
 			
-			-- Переключение фокуса между панелью вкладок и гридом (как в group_finder_view:744-752)
 			if stats_grid_selected then
-				-- Фокус на гриде - переход обратно на вкладки при нажатии влево
 				if input_service:get("navigate_left_continuous") then
 					if not self._navigate_left_cooldown or self._navigate_left_cooldown <= 0 then
-						-- Снимаем выбор с грида (как в group_finder_view:750)
 						self._stats_grid:select_grid_index(nil)
 						self._navigate_left_cooldown = 0.2
 					end
 				end
-				-- gamepad_confirm_pressed обрабатывается автоматически гридом через pressed_callback
 			else
-				-- Фокус на вкладках
-				-- Навигация по вкладкам
 				if input_service:get("navigate_up_continuous") then
 					if not self._navigate_up_cooldown or self._navigate_up_cooldown <= 0 then
 						if self._active_tab_index > 1 then
@@ -294,19 +263,17 @@ ViewMain._handle_input = function(self, input_service, dt, t)
 					end
 				end
 
-				-- Переход на грид при нажатии вправо (как в group_finder_view:745-747)
+				
 				if input_service:get("navigate_right_continuous") then
 					if not self._navigate_right_cooldown or self._navigate_right_cooldown <= 0 then
 						local grid_widgets = self._stats_grid:widgets()
 						if grid_widgets and #grid_widgets > 0 then
-							-- Устанавливаем выбор на первый элемент (как в group_finder_view:747)
 							self._stats_grid:select_first_index()
 							self._navigate_right_cooldown = 0.2
 						end
 					end
 				end
 
-				-- Подтверждение выбора вкладки
 				if input_service:get("gamepad_confirm_pressed") then
 					local button_widget = self._widgets_by_name["tab_button_" .. self._active_tab_index]
 					if button_widget and button_widget.content.hotspot.pressed_callback then
@@ -315,7 +282,6 @@ ViewMain._handle_input = function(self, input_service, dt, t)
 				end
 			end
 
-			-- Обновление кулдаунов
 			if self._navigate_up_cooldown then
 				self._navigate_up_cooldown = math.max(0, self._navigate_up_cooldown - dt)
 			end

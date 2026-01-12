@@ -2,7 +2,6 @@ local mod = get_mod("PlayerProgression")
 
 local InputDevice = require("scripts/managers/input/input_device")
 
--- Функция для поиска устройства по ключу (из MourningstarCommandWheel_utils)
 local function find_device_for_key(key, supported_devices)
 	if not key or not supported_devices then
 		return nil
@@ -42,7 +41,6 @@ mod.version = "1.0.0"
 init.setup(mod, VIEW_NAME, view_templates, views, utilities)
 commands.setup(mod)
 
--- Функции для работы с сохраненными данными через DMF Settings
 local function get_selected_data()
 	local selected_items = mod:get("playerprogression_selected_items") or {}
 	local selected_items_order = mod:get("playerprogression_selected_items_order") or {}
@@ -53,7 +51,6 @@ local function save_selected_data(selected_items, selected_items_order)
 	mod:set("playerprogression_selected_items", selected_items)
 	mod:set("playerprogression_selected_items_order", selected_items_order)
 	
-	-- Принудительно сохраняем в файл
 	local dmf = get_mod("DMF")
 	if dmf and dmf.save_unsaved_settings_to_file then
 		dmf.save_unsaved_settings_to_file()
@@ -119,17 +116,10 @@ local function setup_game_progress(tactical_overlay, ui_renderer)
 	local page_key = "game_progress"
 	local selected_items, selected_items_order = get_selected_data()
 	
-	local configs = {
-		-- {
-		-- 	blueprint = "title",
-		-- 	text = mod:localize("tactical_overlay_player_progression"),
-		-- },
-	}
+	local configs = {}
 	
-	-- Добавляем выбранные элементы в порядке выбора
 	local has_selected = false
 	
-	-- Итерируемся по порядку выбора
 	for _, element_id in ipairs(selected_items_order) do
 		local item_data = selected_items[element_id]
 		if item_data and item_data.text_key then
@@ -137,21 +127,16 @@ local function setup_game_progress(tactical_overlay, ui_renderer)
 			local text = localize(item_data.text_key)
 			local value = ""
 			
-			-- Восстанавливаем значение из статистики
 			if item_data.stat_name and item_data.stat_name ~= "" then
 				local stat_value = safe_read_stat(item_data.stat_name)
 				
-				-- Если это элемент миссии, преобразуем значение в статус
 				if item_data.mission_key or item_data.mission_name then
-					-- Для миссий: 1 = пройдено, 0 = не пройдено
 					value = (stat_value and stat_value > 0) and localize("mission_progress_done") or localize("mission_progress_not_done")
 				else
-					-- Для остальных элементов - обычное форматирование числа
 					value = format_number(stat_value)
 				end
 			end
 			
-			-- Добавляем название миссии, если есть
 			if item_data.mission_key or item_data.mission_name then
 				local mission_display_name = item_data.mission_name
 				if not mission_display_name and item_data.mission_key then
@@ -162,20 +147,16 @@ local function setup_game_progress(tactical_overlay, ui_renderer)
 				end
 			end
 			
-			-- Объединяем текст и значение с цветовым форматированием
 			local display_text = text
 			if value and value ~= "" then
-				-- Применяем светлый цвет к значению
 				local colored_value = string.format("{#color(255,255,255)}%s", value)
 				display_text = string.format("%s: %s", text, colored_value)
 			end
 			
-			-- Определяем blueprint в зависимости от наличия description_key
 			local blueprint = "body"
-			-- Временно убрано: вывод описания
+
 			-- if item_data.description_key and item_data.description_key ~= "" then
 			-- 	local description = localize(item_data.description_key)
-			-- 	-- Для описания используем body, но добавляем описание в текст
 			-- 	display_text = string.format("%s\n%s", display_text, description)
 			-- end
 			
@@ -186,7 +167,6 @@ local function setup_game_progress(tactical_overlay, ui_renderer)
 		end
 	end
 	
-	-- Если нет выбранных элементов, показываем заглушку
 	if not has_selected then
 		table.insert(configs, {
 			blueprint = "body",
@@ -214,13 +194,11 @@ local function update_game_progress(tactical_overlay, dt, ui_renderer)
 	local page_key = "game_progress"
 	local has_entry = tactical_overlay._right_panel_entries and tactical_overlay._right_panel_entries[page_key] ~= nil
 	
-	-- Если entry еще не создано, создаем его (чтобы таб появился)
 	if not has_entry then
 		setup_game_progress(tactical_overlay, ui_renderer)
 		return
 	end
 	
-	-- Обновляем виджеты только если открыта страница game_progress
 	local current_key = tactical_overlay._right_panel_key
 	if current_key ~= page_key then
 		return
@@ -229,14 +207,12 @@ local function update_game_progress(tactical_overlay, dt, ui_renderer)
 	local pt = mod:persistent_table("PlayerProgression")
 	local current_hash = get_selected_items_hash(pt)
 	
-	-- Сохраняем хеш в tactical_overlay для отслеживания изменений
 	if not tactical_overlay._game_progress_items_hash then
 		tactical_overlay._game_progress_items_hash = current_hash
 		setup_game_progress(tactical_overlay, ui_renderer)
 		return
 	end
 	
-	-- Если хеш изменился, пересоздаем виджеты
 	if tactical_overlay._game_progress_items_hash ~= current_hash then
 		tactical_overlay._game_progress_items_hash = current_hash
 		setup_game_progress(tactical_overlay, ui_renderer)
@@ -289,7 +265,6 @@ mod:hook("HudElementTacticalOverlay", "_get_page", function(func, self, page_key
 	
 	if page_key == "game_progress" then
 		if not result then
-			-- Если настройки не найдены, создаем их
 			result = {
 				index = 4,
 				loc_key = "tactical_overlay_player_progression",
@@ -299,13 +274,11 @@ mod:hook("HudElementTacticalOverlay", "_get_page", function(func, self, page_key
 				},
 			}
 			
-			-- Сохраняем в grid_overrides для последующих вызовов
 			if not self._grid_overrides then
 				self._grid_overrides = {}
 			end
 			self._grid_overrides["game_progress"] = result
 		else
-			-- Обновляем локализованный заголовок
 			local localized_title = mod:localize("tactical_overlay_player_progression")
 			result.loc_key = localized_title
 		end
@@ -340,10 +313,8 @@ mod:hook("HudElementTacticalOverlay", "update", function(func, self, dt, t, ui_r
 	return result
 end)
 
--- Переменная для отслеживания предыдущего состояния кнопки контроллера
 mod._controller_button_was_held = false
 
--- Функция проверки нажатия кнопки контроллера (из MourningstarCommandWheel)
 mod._is_controller_button_held = function(self)
 	if not InputDevice.gamepad_active then
 		return false
@@ -385,19 +356,15 @@ mod._is_controller_button_held = function(self)
 	return false
 end
 
--- Хук для проверки нажатия кнопки контроллера и открытия окна
 mod:hook("UIHud", "update", function(func, self, dt, t, input_service)
 	local result = func(self, dt, t, input_service)
 	
-	-- Проверяем удержание кнопки контроллера
 	local controller_held = mod:_is_controller_button_held()
 	
-	-- Вызываем toggle_stats_display только при переходе из false в true (однократное нажатие)
 	if controller_held and not mod._controller_button_was_held then
 		mod.toggle_stats_display()
 	end
 	
-	-- Обновляем состояние для следующего кадра
 	mod._controller_button_was_held = controller_held
 	
 	return result
@@ -409,19 +376,16 @@ function mod.on_setting_changed(setting_id)
 			mod:notify("Selected items cleared")
 			mod:set("reset_selected_items", 0)
 			
-			-- Очищаем выбранные элементы
 			mod:set("playerprogression_selected_items", {})
 			mod:set("playerprogression_selected_items_order", {})
 			mod:set("playerprogression_checkbox_states", {})
 			
-			-- Принудительно сохраняем в файл
 			local dmf = get_mod("DMF")
 			if dmf and dmf.save_unsaved_settings_to_file then
 				dmf.save_unsaved_settings_to_file()
 			end
 		end
 	elseif setting_id == "playstation_controller_button" or setting_id == "xbox_controller_button" then
-		-- Сбрасываем состояние кнопки при изменении настроек контроллера
 		mod._controller_button_was_held = false
 	end
 end

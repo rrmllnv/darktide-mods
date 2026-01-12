@@ -79,11 +79,9 @@ Layout.create_stat_layout = function(self, mod, tab_modules, is_debug)
 
 	local layout = tab_module.create_layout(safe_read_stat, localize, format_number) or {}
 	
-	-- Добавляем tab_key и pressed_callback во все элементы layout
 	for i, element in ipairs(layout) do
 		if element.widget_type and (element.widget_type == "stat_line" or element.widget_type == "stat_line_with_description") then
 			element.tab_key = tab_key
-			-- Добавляем pressed_callback для обработки нажатий (как в group_finder_view:3336)
 			element.pressed_callback = callback(self, "_on_stat_item_pressed", element, i)
 		end
 	end

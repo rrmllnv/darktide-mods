@@ -1,11 +1,9 @@
 return {
-	-- Табы
 	tab_general = {
 		en = "General",
 		ru = "Общее",
 	},
 
-	-- Общие показатели
 	stats_total_kills = {
 		en = "Total Kills",
 		ru = "Всего убийств",

@@ -1,5 +1,3 @@
--- tab_general.lua - Вкладка "Общее"
-
 local TabGeneral = {}
 
 TabGeneral.create_layout = function(safe_read_stat, localize, format_number)

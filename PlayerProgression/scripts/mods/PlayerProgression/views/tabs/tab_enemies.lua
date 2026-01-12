@@ -1,17 +1,10 @@
--- tab_enemies.lua - Вкладка "Враги"
--- Полный список врагов с категоризацией на основе исходников игры
-
 local TabEnemies = {}
 
 TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
     local layout = {}
     
-    -- ============================
-    -- БОССЫ (is_boss = true)
-    -- ============================
     table.insert(layout, {widget_type = "stat_header", text = localize("stats_bosses")})
     
-    -- Beast of Nurgle
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_beast_of_nurgle"), 
@@ -20,7 +13,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_beast_of_nurgle_killed",
     })
     
-    -- Chaos Spawn
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_spawn"), 
@@ -29,7 +21,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_spawn_killed",
     })
     
-    -- Plague Ogryn
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_plage_ogryn"), 
@@ -38,7 +29,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_plague_ogryn_killed",
     })
     
-    -- Plague Ogryn Sprayer
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_plage_ogryn") .. " (" .. localize("sprayer") .. ")", 
@@ -47,7 +37,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_plague_ogryn_sprayer_killed",
     })
     
-    -- Daemonhost (обычный)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_daemonhost"), 
@@ -56,7 +45,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_daemonhost_killed",
     })
     
-    -- Daemonhost (mutator)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_daemonhost") .. " (" .. localize("mutator") .. ")", 
@@ -65,7 +53,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_mutator_daemonhost_killed",
     })
     
-    -- Renegade Captains
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_renegade_captain"), 
@@ -90,7 +77,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_renegade_twin_captain_two_killed",
     })
     
-    -- Cultist Captain
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_cultist_captain"), 
@@ -101,12 +87,8 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
     
     table.insert(layout, {widget_type = "stat_line", text = "", value = ""})
     
-    -- ============================
-    -- 🛡️ ЭЛИТЫ (tags.elite = true)
-    -- ============================
     table.insert(layout, {widget_type = "stat_header", text = localize("stats_elites")})
     
-    -- Chaos Ogryn Elites
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_ogryn_gunner"), 
@@ -131,7 +113,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_ogryn_bulwark_killed",
     })
     
-    -- Renegade Elites
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_renegade_shocktrooper"), 
@@ -180,7 +161,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_renegade_berzerker_killed",
     })
     
-    -- Cultist Elites
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_cultist_shocktrooper"), 
@@ -207,12 +187,8 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
     
     table.insert(layout, {widget_type = "stat_line", text = "", value = ""})
     
-    -- ============================
-    -- ⚡ СПЕЦИАЛИСТЫ (tags.special = true)
-    -- ============================
     table.insert(layout, {widget_type = "stat_header", text = localize("stats_specials")})
     
-    -- Poxburster
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_poxwalker_bomber"), 
@@ -221,7 +197,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_poxwalker_bomber_killed",
     })
     
-    -- Hound (обычный)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_hound"), 
@@ -230,7 +205,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_hound_killed",
     })
     
-    -- Hound (mutator)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_hound") .. " (" .. localize("mutator") .. ")", 
@@ -239,7 +213,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_hound_mutator_killed",
     })
     
-    -- Mutant (обычный)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_cultist_mutant"), 
@@ -248,7 +221,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_cultist_mutant_killed",
     })
     
-    -- Mutant (mutator)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_cultist_mutant") .. " (" .. localize("mutator") .. ")", 
@@ -257,7 +229,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_cultist_mutant_mutator_killed",
     })
     
-    -- Renegade Flamer (обычный)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_renegade_flamer"), 
@@ -266,7 +237,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_renegade_flamer_killed",
     })
     
-    -- Renegade Flamer (mutator)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_renegade_flamer") .. " (" .. localize("mutator") .. ")", 
@@ -275,7 +245,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_renegade_flamer_mutator_killed",
     })
     
-    -- Renegade Grenadier
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_renegade_grenadier"), 
@@ -284,7 +253,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_renegade_grenadier_killed",
     })
         
-    -- Sniper
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_renegade_sniper"), 
@@ -293,7 +261,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_renegade_sniper_killed",
     })
     
-    -- Netgunner
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_renegade_netgunner"), 
@@ -302,7 +269,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_renegade_netgunner_killed",
     })
 
-    -- Cultist Flamer
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_cultist_flamer"), 
@@ -311,7 +277,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_cultist_flamer_killed",
     })
 
-    -- Cultist Grenadier
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_cultist_grenadier"), 
@@ -322,12 +287,8 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
     
     table.insert(layout, {widget_type = "stat_line", text = "", value = ""})
     
-    -- ============================
-    -- 👥 ROAMERS (базовые враги)
-    -- ============================
     table.insert(layout, {widget_type = "stat_header", text = localize("stats_roamers")})
     
-    -- Renegade Roamers
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_renegade_rifleman"), 
@@ -352,7 +313,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_renegade_assault_killed",
     })
     
-    -- Cultist Roamers
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_cultist_melee"), 
@@ -369,7 +329,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_cultist_assault_killed",
     })
     
-    -- Cultist Ritualist
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_cultist_ritualist"), 
@@ -378,7 +337,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_cultist_ritualist_killed",
     })
     
-    -- Cultist Ritualist (mutator)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_cultist_ritualist") .. " (" .. localize("mutator") .. ")", 
@@ -389,12 +347,8 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
 
     table.insert(layout, {widget_type = "stat_line", text = "", value = ""})
 
-    -- ============================
-    -- 🧟 ОРДА (tags.horde = true)
-    -- ============================
     table.insert(layout, {widget_type = "stat_header", text = localize("stats_horde")})
     
-    -- Poxwalker (обычный)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_poxwalker"), 
@@ -403,7 +357,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_poxwalker_killed",
     })
     
-    -- Poxwalker (mutated)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_poxwalker") .. " (" .. localize("mutated") .. ")", 
@@ -412,7 +365,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_mutated_poxwalker_killed",
     })
     
-    -- Poxwalker (lesser mutated)
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_poxwalker") .. " (" .. localize("lesser_mutated") .. ")", 
@@ -421,7 +373,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_lesser_mutated_poxwalker_killed",
     })
     
-    -- Armored Infected
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_chaos_armored_infected_breed_name"), 
@@ -430,7 +381,6 @@ TabEnemies.create_layout = function(safe_read_stat, localize, format_number)
         stat_name = "total_chaos_armored_infected_killed",
     })
     
-    -- Newly Infected
     table.insert(layout, {
         widget_type = "stat_line", 
         text = localize("loc_breed_display_name_chaos_newly_infected"), 
