@@ -38,9 +38,9 @@ local function clipboard_copy(text, message_count)
 	clipboard.put(text)
 	
 	if message_count and message_count > 1 then
-		mod:notify(mod:localize("messages_copied") .. message_count)
+		mod:notify(mod:localize("i18n_messages_copied") .. message_count)
 	else
-		mod:notify(mod:localize("message_copied"))
+		mod:notify(mod:localize("i18n_message_copied"))
 	end
 	
 	return true
