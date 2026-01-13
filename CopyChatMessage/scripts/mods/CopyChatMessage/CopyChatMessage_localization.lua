@@ -29,12 +29,12 @@ return {
 		ru = "Сколько последних сообщений копировать при нажатии горячей клавиши",
 		["zh-cn"] = "按下快捷键时要复制的最后几条消息",
 	},
-	msg_copied = {
+	message_copied = {
 		en = "Message copied to clipboard",
 		ru = "Сообщение скопировано в буфер обмена",
 		["zh-cn"] = "消息已复制到剪贴板",
 	},
-	msgs_copied = {
+	messages_copied = {
 		en = "Messages copied to clipboard: ",
 		ru = "Скопировано сообщений: ",
 		["zh-cn"] = "已复制消息到剪贴板: ",
