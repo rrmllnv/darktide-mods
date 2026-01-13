@@ -21,7 +21,7 @@ return {
 				type = "numeric",
 				title = "i18n_messages_count_title",
 				tooltip_text = "i18n_messages_count_tooltip",
-				default_value = 1,
+				default_value = 5,
 				range = {1, 40},
 			},
 			{
