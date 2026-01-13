@@ -1,7 +1,7 @@
 local mod = get_mod("TalentUI")
 
 local SETTINGS = {
-	show_abilities_for_bots = false,
+	show_abilities_for_bots = true,
 
 	local_cooldown_font_size = 40,
 
@@ -95,12 +95,12 @@ local SETTINGS = {
 	teammate_weapon_ammo_text_offset_y = 5,
 	
 	teammate_weapon_position_presets = {
-		coherency_side = {
+		default = {
 			icon_width = 70,
 			icon_height = 26,
-			vertical_offset = 20,
-			horizontal_offset = 325,
-			orientation = "vertical",
+			vertical_offset = 15,
+			horizontal_offset = 160,
+			orientation = "horizontal",
 			spacing = 0,
 			show_ammo = true,
 			text_alignment = "bottom",
@@ -108,12 +108,12 @@ local SETTINGS = {
 			ammo_text_offset_x = 60,
 			ammo_text_offset_y = 5,
 		},
-		default = {
+		coherency_side = {
 			icon_width = 70,
 			icon_height = 26,
-			vertical_offset = 15,
-			horizontal_offset = 160,
-			orientation = "horizontal",
+			vertical_offset = 20,
+			horizontal_offset = 325,
+			orientation = "vertical",
 			spacing = 0,
 			show_ammo = true,
 			text_alignment = "bottom",
@@ -140,6 +140,19 @@ local SETTINGS = {
 			vertical_offset = 56,
 			horizontal_offset = 110,
 			orientation = "horizontal",
+			spacing = 0,
+			show_ammo = true,
+			text_alignment = "bottom",
+			ammo_font_size = 12,
+			ammo_text_offset_x = 60,
+			ammo_text_offset_y = 5,
+		},
+		numeric_ui = {
+			icon_width = 70,
+			icon_height = 26,
+			vertical_offset = 20,
+			horizontal_offset = 350,
+			orientation = "vertical",
 			spacing = 0,
 			show_ammo = true,
 			text_alignment = "bottom",

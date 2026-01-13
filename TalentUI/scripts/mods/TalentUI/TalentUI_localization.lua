@@ -203,6 +203,10 @@ return {
 		en = "Below Health",
 		ru = "Под здоровьем",
 	},
+	weapon_preset_numeric_ui = {
+		en = "NumericUI",
+		ru = "NumericUI",
+	},
 	teammate_weapon_orientation = {
 		en = "Orientation",
 		ru = "Ориентация",
