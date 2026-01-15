@@ -83,6 +83,36 @@ local function get_sound_options()
 	return table.clone(sound_options)
 end
 
+local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
+local hud_body_font_settings = UIFontSettings.hud_body or {}
+
+local font_type_options = {
+	{
+		text = "font_option_machine_medium",
+		value = "machine_medium",
+	},
+	{
+		text = "font_option_proxima_nova_bold",
+		value = "proxima_nova_bold",
+	},
+	{
+		text = "font_option_proxima_nova_medium",
+		value = "proxima_nova_medium",
+	},
+	{
+		text = "font_option_itc_novarese_medium",
+		value = "itc_novarese_medium",
+	},
+	{
+		text = "font_option_itc_novarese_bold",
+		value = "itc_novarese_bold",
+	},
+}
+
+local function get_font_type_options()
+	return table.clone(font_type_options)
+end
+
 return {
 	name = mod:localize("mod_name"),
 	description = mod:localize("mod_description"),
@@ -268,6 +298,24 @@ return {
 								},
 							},
 						},
+					},
+				},
+			},
+			{
+				setting_id = "fonts_group",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "font_type",
+						type = "dropdown",
+						default_value = "machine_medium",
+						options = get_font_type_options(),
+					},
+					{
+						setting_id = "font_size",
+						type = "numeric",
+						default_value = 30,
+						range = {20, 50},
 					},
 				},
 			},

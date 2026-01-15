@@ -39,6 +39,8 @@ local settings_cache = {
 	notification_text_color = NOTIFICATION_TEXT_DEFAULT,
 	enable_ready_sound = false,
 	ready_sound_event = STIMM_READY_SOUND_EVENT_DEFAULT,
+	font_type = "machine_medium",
+	font_size = 30,
 }
 
 local function resolve_color_from_setting_value(value, fallback)
@@ -73,6 +75,8 @@ local function refresh_settings()
 	settings_cache.notification_text_color = resolve_color_from_setting_value(mod:get("notification_text_color"), NOTIFICATION_TEXT_DEFAULT)
 	settings_cache.enable_ready_sound = mod:get("enable_ready_sound") == true
 	settings_cache.ready_sound_event = mod:get("ready_sound_event") or STIMM_READY_SOUND_EVENT_DEFAULT
+	settings_cache.font_type = mod:get("font_type") or "machine_medium"
+	settings_cache.font_size = mod:get("font_size") or 30
 end
 
 refresh_settings()
@@ -376,8 +380,8 @@ local add_definitions = function(definitions)
 	definitions.widget_definitions = definitions.widget_definitions or {}
 
 	local stimm_timer_text_style = table.clone(UIFontSettings.hud_body)
-	stimm_timer_text_style.font_type = "machine_medium"
-	stimm_timer_text_style.font_size = 30
+	stimm_timer_text_style.font_type = settings_cache.font_type
+	stimm_timer_text_style.font_size = settings_cache.font_size
 	stimm_timer_text_style.drop_shadow = true
 	stimm_timer_text_style.text_horizontal_alignment = "right"
 	stimm_timer_text_style.text_vertical_alignment = "center"
@@ -675,9 +679,15 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 		text_color[4] = display_color[4]
 	end
 
-	local height_offset = self._height_offset or 0
-	if text_style.offset[2] ~= height_offset then
-		text_style.offset[2] = height_offset
+	local font_type = settings_cache.font_type
+	local font_size = settings_cache.font_size
+
+	if text_style.font_type ~= font_type then
+		text_style.font_type = font_type
+	end
+
+	if text_style.font_size ~= font_size then
+		text_style.font_size = font_size
 	end
 
 	widget.dirty = true

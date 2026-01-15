@@ -34,6 +34,10 @@ local localizations = {
 		en = "Notification Color",
 		ru = "Цвет уведомления",
 	},
+	fonts_group = {
+		en = " FONTS",
+		ru = " ШРИФТЫ",
+	},
 	sounds_group = {
 		en = " SOUNDS",
 		ru = " ЗВУКИ",
@@ -183,6 +187,34 @@ local localizations = {
 	default_notification_background_option = {
 		en = "Default (notification background)",
 		ru = "По умолчанию (фон уведомления)",
+	},
+	font_type = {
+		en = "Font type",
+		ru = "Тип шрифта",
+	},
+	font_size = {
+		en = "Font size",
+		ru = "Размер шрифта",
+	},
+	font_option_machine_medium = {
+		en = "Machine Medium",
+		ru = "Machine Medium",
+	},
+	font_option_proxima_nova_bold = {
+		en = "Proxima Nova Bold",
+		ru = "Proxima Nova Bold",
+	},
+	font_option_proxima_nova_medium = {
+		en = "Proxima Nova Medium",
+		ru = "Proxima Nova Medium",
+	},
+	font_option_itc_novarese_medium = {
+		en = "ITC Novarese Medium",
+		ru = "ITC Novarese Medium",
+	},
+	font_option_itc_novarese_bold = {
+		en = "ITC Novarese Bold",
+		ru = "ITC Novarese Bold",
 	},
 	enable_ready_sound = {
 		en = "Enable ready sound",
