@@ -80,14 +80,7 @@ local sound_options = {
 }
 
 local function get_sound_options()
-	local localized_options = {}
-	for _, option in ipairs(sound_options) do
-		table.insert(localized_options, {
-			text = mod:localize(option.text),
-			value = option.value,
-		})
-	end
-	return localized_options
+	return table.clone(sound_options)
 end
 
 return {
