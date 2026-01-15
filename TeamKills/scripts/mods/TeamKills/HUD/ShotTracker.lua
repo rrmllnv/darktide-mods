@@ -3,15 +3,23 @@ local mod = get_mod("TeamKills")
 local Text = require("scripts/utilities/ui/text")
 local UIWorkspaceSettings = require("scripts/settings/ui/ui_workspace_settings")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
+local UISettings = require("scripts/settings/ui/ui_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local HudElementTeamPanelHandlerSettings = require("scripts/ui/hud/elements/team_panel_handler/hud_element_team_panel_handler_settings")
 local HudElementTeamPlayerPanelSettings = require("scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_settings")
 
+local function get_icon_material(icon_key, fallback_path)
+	if UISettings and UISettings.weapon_action_type_icons and UISettings.weapon_action_type_icons[icon_key] then
+		return UISettings.weapon_action_type_icons[icon_key]
+	end
+	return fallback_path
+end
+
 local icons = {
-	shots_fired = "content/ui/materials/icons/weapons/actions/special_bullet",
-	shots_missed = "content/ui/materials/icons/weapons/actions/smiter",
-	head_shot_kill = "content/ui/materials/icons/weapons/actions/ads",
+	shots_fired = get_icon_material("special_bullet", "content/ui/materials/icons/weapons/actions/special_bullet"),
+	shots_missed = get_icon_material("smiter", "content/ui/materials/icons/weapons/actions/smiter"),
+	head_shot_kill = get_icon_material("ads", "content/ui/materials/icons/weapons/actions/ads"),
 }
 
 local hud_body_font_settings = UIFontSettings.hud_body or {}
@@ -44,14 +52,6 @@ end
 local function is_material_available(material_path)
 	if not material_path or material_path == "" or type(material_path) ~= "string" then
 		return false
-	end
-	
-	local success, resource_package = pcall(function()
-		return Application.resource_package(material_path)
-	end)
-	
-	if success and resource_package then
-		return true
 	end
 	
 	return true
@@ -376,6 +376,21 @@ ShotTracker.init = function(self, parent, draw_layer, start_scale)
 		widget_definitions = widget_definitions,
 	})
 	self.is_in_hub = mod._is_in_hub()
+	
+	local package_manager = Managers.package
+	if package_manager then
+		local packages_to_load = {
+			"packages/ui/hud/player_weapon/player_weapon",
+			"packages/ui/views/inventory_view/inventory_view",
+			"packages/ui/views/inventory_weapons_view/inventory_weapons_view",
+		}
+		
+		for _, package_path in ipairs(packages_to_load) do
+			if not package_manager:has_loaded(package_path) and not package_manager:is_loading(package_path) then
+				package_manager:load(package_path, "TeamKills", nil, true)
+			end
+		end
+	end
 end
 
 ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_service)
@@ -402,6 +417,30 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 		return
 	end
 	
+	local package_manager = Managers.package
+	local packages_loaded = true
+	if package_manager then
+		local required_package = "packages/ui/hud/player_weapon/player_weapon"
+		packages_loaded = package_manager:has_loaded(required_package)
+	end
+	
+	local function can_use_material(material_path)
+		if not packages_loaded or not material_path or material_path == "" then
+			return false
+		end
+		
+		local success, material = pcall(function()
+			return ui_renderer:create_material(material_path, false)
+		end)
+		
+		if success and material then
+			ui_renderer:destroy_material(material, false)
+			return true
+		end
+		
+		return false
+	end
+	
 	local shots_fired = mod.player_shots_fired and mod.player_shots_fired[local_account_id] or 0
 	local shots_missed = mod.player_shots_missed and mod.player_shots_missed[local_account_id] or 0
 	local head_shot_kill = mod.player_head_shot_kill and mod.player_head_shot_kill[local_account_id] or 0
@@ -417,7 +456,7 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 	local current_x = BORDER_PADDING
 	
 	if show_shots_fired then
-		if is_material_available(icons.shots_fired) then
+		if can_use_material(icons.shots_fired) then
 			widget.content.icon_shots_fired = icons.shots_fired
 			widget.style.icon_shots_fired.color = UIHudSettings.color_tint_main_2
 		else
@@ -436,7 +475,7 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 	end
 	
 	if show_shots_missed then
-		if is_material_available(icons.shots_missed) then
+		if can_use_material(icons.shots_missed) then
 			widget.content.icon_shots_missed = icons.shots_missed
 			widget.style.icon_shots_missed.color = UIHudSettings.color_tint_main_2
 		else
@@ -455,7 +494,7 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 	end
 	
 	if show_head_shot_kill then
-		if is_material_available(icons.head_shot_kill) then
+		if can_use_material(icons.head_shot_kill) then
 			widget.content.icon_head_shot_kill = icons.head_shot_kill
 			widget.style.icon_head_shot_kill.color = UIHudSettings.color_tint_main_2
 		else
@@ -493,7 +532,27 @@ ShotTracker.draw = function(self, dt, t, ui_renderer, render_settings, input_ser
 		return
 	end
 
-	ShotTracker.super.draw(self, dt, t, ui_renderer, render_settings, input_service)
+	local content = widget.content
+	if content.icon_shots_fired and not is_material_available(content.icon_shots_fired) then
+		content.icon_shots_fired = nil
+	end
+	if content.icon_shots_missed and not is_material_available(content.icon_shots_missed) then
+		content.icon_shots_missed = nil
+	end
+	if content.icon_head_shot_kill and not is_material_available(content.icon_head_shot_kill) then
+		content.icon_head_shot_kill = nil
+	end
+
+	local success, err = pcall(function()
+		ShotTracker.super.draw(self, dt, t, ui_renderer, render_settings, input_service)
+	end)
+	
+	if not success then
+		--mod:error("Error drawing ShotTracker: %s", tostring(err))
+		content.icon_shots_fired = nil
+		content.icon_shots_missed = nil
+		content.icon_head_shot_kill = nil
+	end
 end
 
 return ShotTracker
