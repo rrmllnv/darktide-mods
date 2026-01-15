@@ -499,7 +499,7 @@ local function play_sound_event(event_name)
 end
 
 mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_renderer, render_settings, input_service)
-	if self._slot_name ~= STIMM_SLOT_NAME then
+	if not self._slot_name or self._slot_name ~= STIMM_SLOT_NAME then
 		return
 	end
 
