@@ -18,6 +18,10 @@ local localizations = {
 		en = "Colors",
 		ru = "Цвета",
 	},
+	sounds_group = {
+		en = "Sounds",
+		ru = "Звуки",
+	},
 
 	-- Настройки
 	show_active = {
@@ -163,6 +167,74 @@ local localizations = {
 	default_notification_background_option = {
 		en = "Default (notification background)",
 		ru = "По умолчанию (фон уведомления)",
+	},
+	enable_ready_sound = {
+		en = "Enable ready sound",
+		ru = "Включить звук готовности",
+	},
+	enable_ready_sound_tooltip = {
+		en = "Play a sound when the stimm syringe becomes ready to use.",
+		ru = "Воспроизводить звук когда стим становится готовым к использованию.",
+	},
+	ready_sound_event = {
+		en = "Ready sound",
+		ru = "Звук готовности",
+	},
+	sound_option_hud_coherency_on = {
+		en = "HUD coherency on",
+		ru = "HUD когерентность включена",
+	},
+	sound_option_hud_coherency_off = {
+		en = "HUD coherency off",
+		ru = "HUD когерентность выключена",
+	},
+	sound_option_hud_heal = {
+		en = "HUD heal",
+		ru = "HUD лечение",
+	},
+	sound_option_hud_health_station = {
+		en = "HUD health station",
+		ru = "HUD станция здоровья",
+	},
+	sound_option_ammo_refill = {
+		en = "Ammo refill",
+		ru = "Пополнение боеприпасов",
+	},
+	sound_option_grenade_refill = {
+		en = "Grenade refill",
+		ru = "Пополнение гранат",
+	},
+	sound_option_pick_up_ammo = {
+		en = "Pick up ammo",
+		ru = "Подобрать боеприпасы",
+	},
+	sound_option_dodge_melee_success = {
+		en = "Dodge melee success",
+		ru = "Успешное уклонение от ближнего боя",
+	},
+	sound_option_dodge_ranged_success = {
+		en = "Dodge ranged success",
+		ru = "Успешное уклонение от дальнего боя",
+	},
+	sound_option_backstab_indicator_melee = {
+		en = "Backstab indicator melee",
+		ru = "Индикатор удара в спину (ближний бой)",
+	},
+	sound_option_backstab_indicator_ranged = {
+		en = "Backstab indicator ranged",
+		ru = "Индикатор удара в спину (дальний бой)",
+	},
+	sound_option_indicator_crit = {
+		en = "Indicator crit",
+		ru = "Индикатор крита",
+	},
+	sound_option_indicator_weakspot = {
+		en = "Indicator weakspot",
+		ru = "Индикатор слабого места",
+	},
+	sound_option_heal_self_confirmation = {
+		en = "Heal self confirmation",
+		ru = "Подтверждение самолечения",
 	},
 }
 

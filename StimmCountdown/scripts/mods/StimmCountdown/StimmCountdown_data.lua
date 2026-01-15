@@ -20,6 +20,76 @@ local function get_color_options()
 	return table.clone(color_options)
 end
 
+local sound_options = {
+	{
+		text = "sound_option_hud_coherency_on",
+		value = "wwise/events/ui/play_hud_coherency_on",
+	},
+	{
+		text = "sound_option_hud_coherency_off",
+		value = "wwise/events/ui/play_hud_coherency_off",
+	},
+	{
+		text = "sound_option_hud_heal",
+		value = "wwise/events/ui/play_hud_heal_2d",
+	},
+	{
+		text = "sound_option_hud_health_station",
+		value = "wwise/events/ui/play_hud_health_station_2d",
+	},
+	{
+		text = "sound_option_ammo_refill",
+		value = "wwise/events/player/play_horde_mode_buff_ammo_refill",
+	},
+	{
+		text = "sound_option_grenade_refill",
+		value = "wwise/events/player/play_horde_mode_buff_grenade_refill",
+	},
+	{
+		text = "sound_option_pick_up_ammo",
+		value = "wwise/events/player/play_pick_up_ammo_01",
+	},
+	{
+		text = "sound_option_dodge_melee_success",
+		value = "wwise/events/player/play_player_dodge_melee_success",
+	},
+	{
+		text = "sound_option_dodge_ranged_success",
+		value = "wwise/events/player/play_player_dodge_ranged_success",
+	},
+	{
+		text = "sound_option_backstab_indicator_melee",
+		value = "wwise/events/player/play_backstab_indicator_melee",
+	},
+	{
+		text = "sound_option_backstab_indicator_ranged",
+		value = "wwise/events/player/play_backstab_indicator_ranged",
+	},
+	{
+		text = "sound_option_indicator_crit",
+		value = "wwise/events/weapon/play_indicator_crit",
+	},
+	{
+		text = "sound_option_indicator_weakspot",
+		value = "wwise/events/weapon/play_indicator_weakspot",
+	},
+	{
+		text = "sound_option_heal_self_confirmation",
+		value = "wwise/events/weapon/play_horde_mode_heal_self_confirmation",
+	},
+}
+
+local function get_sound_options()
+	local localized_options = {}
+	for _, option in ipairs(sound_options) do
+		table.insert(localized_options, {
+			text = mod:localize(option.text),
+			value = option.value,
+		})
+	end
+	return localized_options
+end
+
 return {
 	name = mod:localize("mod_name"),
 	description = mod:localize("mod_description"),
@@ -181,6 +251,27 @@ return {
 								end,
 							},
 						},
+					},
+				},
+			},
+			{
+				setting_id = "sounds_group",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "enable_ready_sound",
+						type = "checkbox",
+						default_value = false,
+						tooltip = "enable_ready_sound_tooltip",
+					},
+					{
+						setting_id = "ready_sound_event",
+						type = "dropdown",
+						default_value = "wwise/events/ui/play_hud_coherency_on",
+						options = get_sound_options(),
+						disabled = function()
+							return mod:get("enable_ready_sound") ~= true
+						end,
 					},
 				},
 			},

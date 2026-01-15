@@ -8,7 +8,7 @@ local STIMM_BUFF_NAME = "syringe_broker_buff"
 local STIMM_SLOT_NAME = "slot_pocketable_small"
 local STIMM_ABILITY_TYPE = "pocketable_ability"
 local STIMM_ICON_MATERIAL = "content/ui/materials/icons/pocketables/hud/syringe_broker"
-local STIMM_READY_SOUND_EVENT = "wwise/events/ui/play_hud_coherency_on"
+local STIMM_READY_SOUND_EVENT_DEFAULT = "wwise/events/ui/play_hud_coherency_on"
 
 local ACTIVE_COLOR = UIHudSettings.color_tint_main_1
 local COOLDOWN_COLOR = UIHudSettings.color_tint_alert_2
@@ -37,6 +37,8 @@ local settings_cache = {
 	notification_icon_color = NOTIFICATION_ICON_DEFAULT,
 	notification_background_color = NOTIFICATION_BACKGROUND_DEFAULT,
 	notification_text_color = NOTIFICATION_TEXT_DEFAULT,
+	enable_ready_sound = false,
+	ready_sound_event = STIMM_READY_SOUND_EVENT_DEFAULT,
 }
 
 local function resolve_color_from_setting_value(value, fallback)
@@ -69,6 +71,8 @@ local function refresh_settings()
 	settings_cache.notification_icon_color = resolve_color_from_setting_value(mod:get("notification_icon_color"), NOTIFICATION_ICON_DEFAULT)
 	settings_cache.notification_background_color = resolve_color_from_setting_value(mod:get("notification_background_color"), NOTIFICATION_BACKGROUND_DEFAULT)
 	settings_cache.notification_text_color = resolve_color_from_setting_value(mod:get("notification_text_color"), NOTIFICATION_TEXT_DEFAULT)
+	settings_cache.enable_ready_sound = mod:get("enable_ready_sound") == true
+	settings_cache.ready_sound_event = mod:get("ready_sound_event") or STIMM_READY_SOUND_EVENT_DEFAULT
 end
 
 refresh_settings()
@@ -537,6 +541,8 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 	local notification_icon_color = settings_cache.notification_icon_color
 	local notification_background_color = settings_cache.notification_background_color
 	local notification_text_color = settings_cache.notification_text_color
+	local enable_ready_sound = settings_cache.enable_ready_sound
+	local ready_sound_event = settings_cache.ready_sound_event
 	local icon_color_to_apply = nil
 	local line_color_to_apply = nil
 	local bg_color_to_apply = nil
@@ -604,8 +610,8 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 		end
 	elseif self._stimmcountdown_was_on_cooldown then
 		self._stimmcountdown_was_on_cooldown = false
-		if is_ready then
-			play_sound_event(STIMM_READY_SOUND_EVENT)
+		if is_ready and enable_ready_sound then
+			play_sound_event(ready_sound_event)
 		end
 	end
 
