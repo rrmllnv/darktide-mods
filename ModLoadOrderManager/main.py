@@ -15,11 +15,12 @@ from typing import List, Tuple
 
 class ModEntry:
     """Класс для представления записи мода"""
-    def __init__(self, name: str, enabled: bool, original_line: str, is_new: bool = False):
+    def __init__(self, name: str, enabled: bool, original_line: str, is_new: bool = False, order_index: int = 0):
         self.name = name
         self.enabled = enabled
         self.original_line = original_line
         self.is_new = is_new  # Флаг для новых модов, найденных при сканировании
+        self.order_index = order_index  # Порядковый номер из файла (для сортировки по умолчанию)
 
 
 class ModLoadOrderManager:
@@ -39,6 +40,7 @@ class ModLoadOrderManager:
         self.mod_entries: List[ModEntry] = []
         self.filtered_mod_entries: List[ModEntry] = []
         self.selected_mod_name: str = ""
+        self.sort_type: str = "name"  # Тип сортировки: "name", "status", "new_first"
         
         # Создание интерфейса
         self.create_widgets()
@@ -78,6 +80,15 @@ class ModLoadOrderManager:
         # Кнопки управления
         button_frame = ttk.Frame(header_frame)
         button_frame.pack(side=tk.RIGHT)
+        
+        # Сортировка
+        ttk.Label(button_frame, text="Сортировка:", font=("Arial", 8)).pack(side=tk.LEFT, padx=(0, 2))
+        self.sort_var = tk.StringVar(value="По порядку файла")
+        sort_combo = ttk.Combobox(button_frame, textvariable=self.sort_var, width=15, state="readonly")
+        sort_combo['values'] = ("По порядку файла", "По имени", "По статусу", "Новые сначала")
+        sort_combo['state'] = 'readonly'
+        sort_combo.bind("<<ComboboxSelected>>", self.on_sort_change)
+        sort_combo.pack(side=tk.LEFT, padx=2)
         
         ttk.Button(button_frame, text="Включить все", command=self.enable_all).pack(side=tk.LEFT, padx=2)
         ttk.Button(button_frame, text="Выключить все", command=self.disable_all).pack(side=tk.LEFT, padx=2)
@@ -244,17 +255,18 @@ class ModLoadOrderManager:
                     continue
                 
                 # Обработка модов
+                mod_index = len(self.mod_entries)  # Порядковый номер мода в файле
                 if stripped.startswith("--"):
                     # Закомментированный мод (начинается с --, но без пробела или с именем мода)
                     mod_name = stripped[2:].strip()
                     # Проверяем, что это действительно имя мода (содержит буквы/цифры)
                     if mod_name and any(c.isalnum() for c in mod_name):
-                        self.mod_entries.append(ModEntry(mod_name, False, stripped))
+                        self.mod_entries.append(ModEntry(mod_name, False, stripped, order_index=mod_index))
                 else:
                     # Активный мод (не начинается с --)
                     mod_name = stripped.strip()
                     if mod_name:  # Проверяем, что строка не пустая
-                        self.mod_entries.append(ModEntry(mod_name, True, stripped))
+                        self.mod_entries.append(ModEntry(mod_name, True, stripped, order_index=mod_index))
             
             # Сканирование папки модов для поиска новых модов
             self.scan_mods_directory()
@@ -304,12 +316,15 @@ class ModLoadOrderManager:
                         new_mods.append(item)
             
             # Добавляем новые моды в конец списка (выключенными по умолчанию)
-            for mod_name in sorted(new_mods):
+            # Новые моды получают большой order_index, чтобы быть в конце при сортировке по умолчанию
+            base_index = len(self.mod_entries) + 1000  # Большой индекс для новых модов
+            for idx, mod_name in enumerate(sorted(new_mods)):
                 self.mod_entries.append(ModEntry(
                     name=mod_name,
                     enabled=False,  # Новые моды по умолчанию выключены
                     original_line=f"--{mod_name}",  # По умолчанию закомментированы
-                    is_new=True
+                    is_new=True,
+                    order_index=base_index + idx  # Порядок для новых модов
                 ))
             
         except Exception as e:
@@ -347,12 +362,15 @@ class ModLoadOrderManager:
         # Фильтрация модов
         if filter_text:
             filter_lower = filter_text.lower()
-            self.filtered_mod_entries = [
+            filtered = [
                 mod for mod in self.mod_entries 
                 if filter_lower in mod.name.lower()
             ]
         else:
-            self.filtered_mod_entries = self.mod_entries.copy()
+            filtered = self.mod_entries.copy()
+        
+        # Сортировка модов
+        self.filtered_mod_entries = self.sort_mods(filtered)
         
         # Получаем цвет фона для фреймов (используем тот же, что и для canvas)
         style = ttk.Style()
@@ -417,6 +435,31 @@ class ModLoadOrderManager:
         
         # Обновление статистики
         self.update_statistics()
+    
+    def sort_mods(self, mods: List[ModEntry]) -> List[ModEntry]:
+        """Сортировка списка модов по выбранному критерию"""
+        sort_type = self.sort_var.get() if hasattr(self, 'sort_var') else "По порядку файла"
+        
+        if sort_type == "По порядку файла":
+            # Сортировка в порядке из файла (по order_index)
+            return sorted(mods, key=lambda m: m.order_index)
+        elif sort_type == "По имени":
+            # Сортировка по имени (алфавитно)
+            return sorted(mods, key=lambda m: m.name.lower())
+        elif sort_type == "По статусу":
+            # Сортировка по статусу: сначала включенные, потом выключенные
+            return sorted(mods, key=lambda m: (not m.enabled, m.name.lower()))
+        elif sort_type == "Новые сначала":
+            # Сортировка: сначала новые моды, потом остальные (по имени)
+            return sorted(mods, key=lambda m: (not m.is_new, m.name.lower()))
+        else:
+            # По умолчанию - в порядке из файла (по order_index)
+            return sorted(mods, key=lambda m: m.order_index)
+    
+    def on_sort_change(self, event=None):
+        """Обработка изменения типа сортировки"""
+        search_text = self.search_var.get() if hasattr(self, 'search_var') else ""
+        self.update_mod_list(filter_text=search_text)
     
     def on_checkbox_change(self, mod_name: str):
         """Обработка изменения состояния чекбокса"""
