@@ -8,6 +8,7 @@ local STIMM_BUFF_NAME = "syringe_broker_buff"
 local STIMM_SLOT_NAME = "slot_pocketable_small"
 local STIMM_ABILITY_TYPE = "pocketable_ability"
 local STIMM_ICON_MATERIAL = "content/ui/materials/icons/pocketables/hud/syringe_broker"
+local STIMM_READY_SOUND_EVENT = "wwise/events/ui/play_hud_coherency_on"
 
 local ACTIVE_COLOR = UIHudSettings.color_tint_main_1
 local COOLDOWN_COLOR = UIHudSettings.color_tint_alert_2
@@ -432,6 +433,30 @@ local function get_buff_remaining_time(buff_extension, buff_template_name)
 	return timer
 end
 
+local function play_sound_event(event_name)
+	if not event_name or event_name == "" then
+		return false
+	end
+
+	local world_manager = Managers.world
+	if not world_manager or not world_manager.world then
+		return false
+	end
+
+	local world = world_manager:world("level_world")
+	if not world or not world_manager.wwise_world then
+		return false
+	end
+
+	local wwise_world = world_manager:wwise_world(world)
+	if not wwise_world then
+		return false
+	end
+
+	WwiseWorld.trigger_resource_event(wwise_world, event_name)
+	return true
+end
+
 mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_renderer, render_settings, input_service)
 	if self._slot_name ~= STIMM_SLOT_NAME then
 		return
@@ -570,6 +595,17 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 				bg_color_to_apply = cooldown_icon_color
 			end
 			should_show = true
+		end
+	end
+
+	if has_cooldown then
+		if not self._stimmcountdown_was_on_cooldown then
+			self._stimmcountdown_was_on_cooldown = true
+		end
+	elseif self._stimmcountdown_was_on_cooldown then
+		self._stimmcountdown_was_on_cooldown = false
+		if is_ready then
+			play_sound_event(STIMM_READY_SOUND_EVENT)
 		end
 	end
 
