@@ -690,6 +690,11 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 		text_style.font_size = font_size
 	end
 
+	local height_offset = self._height_offset or 0
+	if text_style.offset[2] ~= height_offset then
+		text_style.offset[2] = height_offset
+	end
+
 	widget.dirty = true
 end)
 
