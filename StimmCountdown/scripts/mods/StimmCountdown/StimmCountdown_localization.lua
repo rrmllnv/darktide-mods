@@ -240,6 +240,7 @@ local localizations = {
 		en = "HUD coherency off",
 		ru = "HUD когерентность выключена",
 	},
+
 	sound_option_hud_heal = {
 		en = "HUD heal",
 		ru = "HUD лечение",
@@ -287,6 +288,10 @@ local localizations = {
 	sound_option_heal_self_confirmation = {
 		en = "Heal self confirmation",
 		ru = "Подтверждение самолечения",
+	},
+	sound_option_syringe_healed_by_ally = {
+		en = "Syringe healed by ally",
+		ru = "Лечение стимулятором союзника",
 	},
 	reset_color_settings = {
 		en = "Reset color settings",

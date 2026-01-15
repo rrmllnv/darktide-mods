@@ -46,24 +46,12 @@ local sound_options = {
 		value = "wwise/events/player/play_horde_mode_buff_grenade_refill",
 	},
 	{
-		text = "sound_option_pick_up_ammo",
-		value = "wwise/events/player/play_pick_up_ammo_01",
-	},
-	{
 		text = "sound_option_dodge_melee_success",
 		value = "wwise/events/player/play_player_dodge_melee_success",
 	},
 	{
 		text = "sound_option_dodge_ranged_success",
 		value = "wwise/events/player/play_player_dodge_ranged_success",
-	},
-	{
-		text = "sound_option_backstab_indicator_melee",
-		value = "wwise/events/player/play_backstab_indicator_melee",
-	},
-	{
-		text = "sound_option_backstab_indicator_ranged",
-		value = "wwise/events/player/play_backstab_indicator_ranged",
 	},
 	{
 		text = "sound_option_indicator_crit",
@@ -76,6 +64,10 @@ local sound_options = {
 	{
 		text = "sound_option_heal_self_confirmation",
 		value = "wwise/events/weapon/play_horde_mode_heal_self_confirmation",
+	},
+	{
+		text = "sound_option_syringe_healed_by_ally",
+		value = "wwise/events/player/play_syringe_healed_by_ally",
 	},
 }
 

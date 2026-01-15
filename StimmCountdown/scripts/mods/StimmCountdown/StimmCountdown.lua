@@ -474,9 +474,14 @@ local function get_buff_remaining_time(buff_extension, buff_template_name)
 	return timer
 end
 
-local function play_sound_event(event_name)
+local function play_sound_event(event_name, ui_element)
 	if not event_name or event_name == "" then
 		return false
+	end
+
+	if ui_element and ui_element._play_sound then
+		ui_element:_play_sound(event_name)
+		return true
 	end
 
 	local world_manager = Managers.world
@@ -648,7 +653,7 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 	elseif self._stimmcountdown_was_on_cooldown then
 		self._stimmcountdown_was_on_cooldown = false
 		if is_ready and enable_ready_sound then
-			play_sound_event(ready_sound_event)
+			play_sound_event(ready_sound_event, self)
 		end
 	end
 
