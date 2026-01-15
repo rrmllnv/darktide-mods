@@ -429,16 +429,7 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 			return false
 		end
 		
-		local success, material = pcall(function()
-			return ui_renderer:create_material(material_path, false)
-		end)
-		
-		if success and material then
-			ui_renderer:destroy_material(material, false)
-			return true
-		end
-		
-		return false
+		return true
 	end
 	
 	local shots_fired = mod.player_shots_fired and mod.player_shots_fired[local_account_id] or 0
@@ -533,15 +524,6 @@ ShotTracker.draw = function(self, dt, t, ui_renderer, render_settings, input_ser
 	end
 
 	local content = widget.content
-	if content.icon_shots_fired and not is_material_available(content.icon_shots_fired) then
-		content.icon_shots_fired = nil
-	end
-	if content.icon_shots_missed and not is_material_available(content.icon_shots_missed) then
-		content.icon_shots_missed = nil
-	end
-	if content.icon_head_shot_kill and not is_material_available(content.icon_head_shot_kill) then
-		content.icon_head_shot_kill = nil
-	end
 
 	local success, err = pcall(function()
 		ShotTracker.super.draw(self, dt, t, ui_renderer, render_settings, input_service)
