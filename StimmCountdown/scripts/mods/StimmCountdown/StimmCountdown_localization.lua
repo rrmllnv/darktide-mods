@@ -11,16 +11,32 @@ local localizations = {
 	},
 
 	display_group = {
-		en = " Display",
-		ru = "Отображение",
+		en = " DISPLAY",
+		ru = " ОТОБРАЖЕНИЕ",
 	},
 	colors_group = {
-		en = " Colors",
-		ru = " Цвета",
+		en = " COLORS",
+		ru = " ЦВЕТА",
+	},
+	ready_timer_color_group = {
+		en = "Ready Timer Color",
+		ru = "Цвет таймера готовности",
+	},
+	active_timer_color_group = {
+		en = "Active Timer Color",
+		ru = "Цвет таймера активности",
+	},
+	cooldown_timer_color_group = {
+		en = "Cooldown Timer Color",
+		ru = "Цвет таймера перезарядки",
+	},
+	notification_color_group = {
+		en = "Notification Color",
+		ru = "Цвет уведомления",
 	},
 	sounds_group = {
-		en = " Sounds",
-		ru = " Звуки",
+		en = " SOUNDS",
+		ru = " ЗВУКИ",
 	},
 
 	-- Настройки
