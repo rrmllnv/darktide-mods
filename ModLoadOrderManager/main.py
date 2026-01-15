@@ -29,7 +29,7 @@ class ModLoadOrderManager:
     def __init__(self, root):
         self.root = root
         self.root.title("Mod Load Order Manager")
-        self.root.geometry("900x900")
+        self.root.geometry("980x900")
         
         # Путь к файлу mod_load_order.txt
         self.default_path = r"C:\Program Files (x86)\Steam\steamapps\common\Warhammer 40,000 DARKTIDE\mods\mod_load_order.txt"
@@ -155,7 +155,7 @@ class ModLoadOrderManager:
         
         # ========== БЛОК ИНФОРМАЦИИ ==========
         right_panel = ttk.LabelFrame(right_container, text="Информация", padding="10")
-        right_panel.configure(width=400)
+        right_panel.configure(width=300)
         right_panel.pack_propagate(False)  # Предотвращаем автоматическое изменение размера
         right_panel.pack(fill=tk.BOTH, expand=True)  # Занимает оставшееся пространство
         
@@ -184,7 +184,22 @@ class ModLoadOrderManager:
         
         self.selected_mod_var = tk.StringVar(value="Нет выбора")
         mod_info_label = ttk.Label(info_frame, textvariable=self.selected_mod_var, font=("Arial", 8), wraplength=220, justify=tk.LEFT)
-        mod_info_label.pack(anchor=tk.W, fill=tk.X)
+        mod_info_label.pack(anchor=tk.W, fill=tk.X, pady=(0, 10))
+        
+        # Кнопки для ручной сортировки
+        sort_buttons_frame = ttk.Frame(info_frame)
+        sort_buttons_frame.pack(fill=tk.X, pady=(0, 5))
+        
+        ttk.Label(sort_buttons_frame, text="Порядок в файле:", font=("Arial", 9, "bold")).pack(anchor=tk.W, pady=(0, 5))
+        
+        buttons_row = ttk.Frame(sort_buttons_frame)
+        buttons_row.pack(fill=tk.X)
+        
+        self.move_up_button = ttk.Button(buttons_row, text="↑ Вверх", command=self.move_mod_up, state=tk.DISABLED)
+        self.move_up_button.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 2))
+        
+        self.move_down_button = ttk.Button(buttons_row, text="↓ Вниз", command=self.move_mod_down, state=tk.DISABLED)
+        self.move_down_button.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(2, 0))
         
         # Фрейм для кнопок сохранения
         save_frame = ttk.Frame(self.root, padding="10")
@@ -460,6 +475,8 @@ class ModLoadOrderManager:
         """Обработка изменения типа сортировки"""
         search_text = self.search_var.get() if hasattr(self, 'search_var') else ""
         self.update_mod_list(filter_text=search_text)
+        # Обновляем состояние кнопок перемещения
+        self.update_move_buttons_state()
     
     def on_checkbox_change(self, mod_name: str):
         """Обработка изменения состояния чекбокса"""
@@ -510,8 +527,16 @@ class ModLoadOrderManager:
             if mod_entry.is_new:
                 info_text += "\n⚠ Новый мод (не был в файле)"
             self.selected_mod_var.set(info_text)
+            
+            # Обновляем состояние кнопок перемещения
+            self.update_move_buttons_state()
         else:
             self.selected_mod_var.set("Нет выбора")
+            # Отключаем кнопки, если мод не выбран
+            if hasattr(self, 'move_up_button'):
+                self.move_up_button.configure(state=tk.DISABLED)
+            if hasattr(self, 'move_down_button'):
+                self.move_down_button.configure(state=tk.DISABLED)
     
     def update_frame_highlight(self, frame, is_selected):
         """Обновление визуального выделения фрейма мода"""
@@ -548,6 +573,94 @@ class ModLoadOrderManager:
         self.stats_total_var.set(f"Всего модов: {total}")
         self.stats_enabled_var.set(f"Включено: {enabled}")
         self.stats_disabled_var.set(f"Выключено: {disabled}")
+    
+    def update_move_buttons_state(self):
+        """Обновление состояния кнопок перемещения мода"""
+        # Проверяем, активна ли сортировка "По порядку файла"
+        current_sort = self.sort_var.get() if hasattr(self, 'sort_var') else "По порядку файла"
+        
+        if not self.selected_mod_name or current_sort != "По порядку файла":
+            # Отключаем кнопки, если мод не выбран или выбрана другая сортировка
+            if hasattr(self, 'move_up_button'):
+                self.move_up_button.configure(state=tk.DISABLED)
+            if hasattr(self, 'move_down_button'):
+                self.move_down_button.configure(state=tk.DISABLED)
+            return
+        
+        # Для ручной сортировки работаем с исходным порядком (order_index)
+        # Сортируем по order_index для определения позиции
+        sorted_mods = sorted(self.mod_entries, key=lambda m: m.order_index)
+        mod_index = next((i for i, m in enumerate(sorted_mods) if m.name == self.selected_mod_name), -1)
+        
+        if mod_index == -1:
+            # Мод не найден
+            if hasattr(self, 'move_up_button'):
+                self.move_up_button.configure(state=tk.DISABLED)
+            if hasattr(self, 'move_down_button'):
+                self.move_down_button.configure(state=tk.DISABLED)
+            return
+        
+        # Включаем/отключаем кнопки в зависимости от позиции
+        if hasattr(self, 'move_up_button'):
+            self.move_up_button.configure(state=tk.NORMAL if mod_index > 0 else tk.DISABLED)
+        if hasattr(self, 'move_down_button'):
+            self.move_down_button.configure(state=tk.NORMAL if mod_index < len(sorted_mods) - 1 else tk.DISABLED)
+    
+    def move_mod_up(self):
+        """Перемещение выбранного мода вверх в списке"""
+        if not self.selected_mod_name:
+            return
+        
+        # Находим мод в списке
+        mod_entry = next((m for m in self.mod_entries if m.name == self.selected_mod_name), None)
+        if not mod_entry:
+            return
+        
+        # Сортируем по order_index для определения позиции
+        sorted_mods = sorted(self.mod_entries, key=lambda m: m.order_index)
+        current_index = next((i for i, m in enumerate(sorted_mods) if m.name == self.selected_mod_name), -1)
+        
+        if current_index <= 0:
+            return  # Уже вверху
+        
+        # Меняем местами order_index с предыдущим модом
+        prev_mod = sorted_mods[current_index - 1]
+        mod_entry.order_index, prev_mod.order_index = prev_mod.order_index, mod_entry.order_index
+        
+        # Обновляем список с учетом новой сортировки
+        search_text = self.search_var.get() if hasattr(self, 'search_var') else ""
+        self.update_mod_list(filter_text=search_text)
+        
+        # Обновляем состояние кнопок
+        self.update_move_buttons_state()
+    
+    def move_mod_down(self):
+        """Перемещение выбранного мода вниз в списке"""
+        if not self.selected_mod_name:
+            return
+        
+        # Находим мод в списке
+        mod_entry = next((m for m in self.mod_entries if m.name == self.selected_mod_name), None)
+        if not mod_entry:
+            return
+        
+        # Сортируем по order_index для определения позиции
+        sorted_mods = sorted(self.mod_entries, key=lambda m: m.order_index)
+        current_index = next((i for i, m in enumerate(sorted_mods) if m.name == self.selected_mod_name), -1)
+        
+        if current_index < 0 or current_index >= len(sorted_mods) - 1:
+            return  # Уже внизу
+        
+        # Меняем местами order_index со следующим модом
+        next_mod = sorted_mods[current_index + 1]
+        mod_entry.order_index, next_mod.order_index = next_mod.order_index, mod_entry.order_index
+        
+        # Обновляем список с учетом новой сортировки
+        search_text = self.search_var.get() if hasattr(self, 'search_var') else ""
+        self.update_mod_list(filter_text=search_text)
+        
+        # Обновляем состояние кнопок
+        self.update_move_buttons_state()
     
     def on_search_change(self, *args):
         """Обработка изменения текста поиска"""
@@ -592,8 +705,11 @@ class ModLoadOrderManager:
             # Добавляем заголовок
             content_lines.extend(self.header_lines)
             
-            # Добавляем моды
-            for mod_entry in self.mod_entries:
+            # Сортируем моды по order_index перед сохранением
+            sorted_mods = sorted(self.mod_entries, key=lambda m: m.order_index)
+            
+            # Добавляем моды в порядке из order_index
+            for mod_entry in sorted_mods:
                 # Обновляем статус из чекбоксов
                 if mod_entry.name in self.checkbox_vars:
                     mod_entry.enabled = self.checkbox_vars[mod_entry.name].get()
