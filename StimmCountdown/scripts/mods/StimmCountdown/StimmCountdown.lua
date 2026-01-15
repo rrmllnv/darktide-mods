@@ -8,7 +8,7 @@ local STIMM_BUFF_NAME = "syringe_broker_buff"
 local STIMM_SLOT_NAME = "slot_pocketable_small"
 local STIMM_ABILITY_TYPE = "pocketable_ability"
 local STIMM_ICON_MATERIAL = "content/ui/materials/icons/pocketables/hud/syringe_broker"
-local STIMM_READY_SOUND_EVENT_DEFAULT = "wwise/events/ui/play_hud_coherency_on"
+local STIMM_READY_SOUND_EVENT_DEFAULT = "wwise/events/ui/play_hud_heal_2d"
 
 local ACTIVE_COLOR = UIHudSettings.color_tint_main_1
 local COOLDOWN_COLOR = UIHudSettings.color_tint_alert_2
@@ -107,12 +107,12 @@ mod.on_setting_changed = function(setting_id)
 			mod:set("font_type", "machine_medium")
 			mod:set("font_size", 30)
 		end
-	elseif setting_id == "reset_sound_settings" then
+		elseif setting_id == "reset_sound_settings" then
 		if mod:get("reset_sound_settings") == 1 then
 			mod:notify(mod:localize("reset_sound_settings"))
 			mod:set("reset_sound_settings", 0)
 			mod:set("enable_ready_sound", false)
-			mod:set("ready_sound_event", "wwise/events/ui/play_hud_coherency_on")
+			mod:set("ready_sound_event", STIMM_READY_SOUND_EVENT_DEFAULT)
 		end
 	end
 	refresh_settings()

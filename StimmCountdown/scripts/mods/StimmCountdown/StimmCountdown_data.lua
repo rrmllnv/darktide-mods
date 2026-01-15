@@ -22,20 +22,20 @@ end
 
 local sound_options = {
 	{
-		text = "sound_option_hud_coherency_on",
-		value = "wwise/events/ui/play_hud_coherency_on",
-	},
-	{
-		text = "sound_option_hud_coherency_off",
-		value = "wwise/events/ui/play_hud_coherency_off",
-	},
-	{
 		text = "sound_option_hud_heal",
 		value = "wwise/events/ui/play_hud_heal_2d",
 	},
 	{
 		text = "sound_option_hud_health_station",
 		value = "wwise/events/ui/play_hud_health_station_2d",
+	},
+	{
+		text = "sound_option_hud_coherency_on",
+		value = "wwise/events/ui/play_hud_coherency_on",
+	},
+	{
+		text = "sound_option_hud_coherency_off",
+		value = "wwise/events/ui/play_hud_coherency_off",
 	},
 	{
 		text = "sound_option_ammo_refill",
@@ -330,9 +330,9 @@ return {
 						tooltip = "enable_ready_sound_tooltip",
 					},
 					{
-						setting_id = "ready_sound_event",
-						type = "dropdown",
-						default_value = "wwise/events/ui/play_hud_coherency_on",
+					setting_id = "ready_sound_event",
+					type = "dropdown",
+					default_value = "wwise/events/ui/play_hud_heal_2d",
 						options = get_sound_options(),
 						disabled = function()
 							return mod:get("enable_ready_sound") ~= true
