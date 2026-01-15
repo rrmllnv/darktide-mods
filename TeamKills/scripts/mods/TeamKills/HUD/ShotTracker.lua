@@ -41,6 +41,22 @@ local function get_opacity_alpha()
 	return math.floor((opacity / 100) * 255)
 end
 
+local function is_material_available(material_path)
+	if not material_path or material_path == "" or type(material_path) ~= "string" then
+		return false
+	end
+	
+	local success, resource_package = pcall(function()
+		return Application.resource_package(material_path)
+	end)
+	
+	if success and resource_package then
+		return true
+	end
+	
+	return true
+end
+
 local function hide_shot_tracker_widget(widget)
 	widget.content.visible = false
 	widget.content.text_shots_fired = ""
@@ -210,7 +226,10 @@ local widget_definitions = {
 						return false
 					end
 					local show_shots_fired = mod:get("opt_show_shots_fired") ~= false
-					return show_shots_fired and content.icon_shots_fired ~= nil
+					if not show_shots_fired or not content.icon_shots_fired then
+						return false
+					end
+					return is_material_available(content.icon_shots_fired)
 				end,
 			},
 			{
@@ -260,7 +279,10 @@ local widget_definitions = {
 						return false
 					end
 					local show_shots_missed = mod:get("opt_show_shots_missed") ~= false
-					return show_shots_missed and content.icon_shots_missed ~= nil
+					if not show_shots_missed or not content.icon_shots_missed then
+						return false
+					end
+					return is_material_available(content.icon_shots_missed)
 				end,
 			},
 			{
@@ -310,7 +332,10 @@ local widget_definitions = {
 						return false
 					end
 					local show_head_shot_kill = mod:get("opt_show_head_shot_kill") ~= false
-					return show_head_shot_kill and content.icon_head_shot_kill ~= nil
+					if not show_head_shot_kill or not content.icon_head_shot_kill then
+						return false
+					end
+					return is_material_available(content.icon_head_shot_kill)
 				end,
 			},
 			{
@@ -392,8 +417,12 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 	local current_x = BORDER_PADDING
 	
 	if show_shots_fired then
-		widget.content.icon_shots_fired = icons.shots_fired
-		widget.style.icon_shots_fired.color = UIHudSettings.color_tint_main_2
+		if is_material_available(icons.shots_fired) then
+			widget.content.icon_shots_fired = icons.shots_fired
+			widget.style.icon_shots_fired.color = UIHudSettings.color_tint_main_2
+		else
+			widget.content.icon_shots_fired = nil
+		end
 		widget.content.text_shots_fired = tostring(shots_fired)
 		styles.icon_shots_fired.size[1] = icon_size
 		styles.icon_shots_fired.size[2] = icon_size
@@ -407,8 +436,12 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 	end
 	
 	if show_shots_missed then
-		widget.content.icon_shots_missed = icons.shots_missed
-		widget.style.icon_shots_missed.color = UIHudSettings.color_tint_main_2
+		if is_material_available(icons.shots_missed) then
+			widget.content.icon_shots_missed = icons.shots_missed
+			widget.style.icon_shots_missed.color = UIHudSettings.color_tint_main_2
+		else
+			widget.content.icon_shots_missed = nil
+		end
 		widget.content.text_shots_missed = tostring(shots_missed)
 		styles.icon_shots_missed.size[1] = icon_size
 		styles.icon_shots_missed.size[2] = icon_size
@@ -422,8 +455,12 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 	end
 	
 	if show_head_shot_kill then
-		widget.content.icon_head_shot_kill = icons.head_shot_kill
-		widget.style.icon_head_shot_kill.color = UIHudSettings.color_tint_main_2
+		if is_material_available(icons.head_shot_kill) then
+			widget.content.icon_head_shot_kill = icons.head_shot_kill
+			widget.style.icon_head_shot_kill.color = UIHudSettings.color_tint_main_2
+		else
+			widget.content.icon_head_shot_kill = nil
+		end
 		widget.content.text_head_shot_kill = tostring(head_shot_kill)
 		styles.icon_head_shot_kill.size[1] = icon_size
 		styles.icon_head_shot_kill.size[2] = icon_size
