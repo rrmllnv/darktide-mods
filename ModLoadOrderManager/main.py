@@ -354,13 +354,20 @@ class ModLoadOrderManager:
         else:
             self.filtered_mod_entries = self.mod_entries.copy()
         
+        # Получаем цвет фона для фреймов (используем тот же, что и для canvas)
+        style = ttk.Style()
+        frame_bg_color = style.lookup("TFrame", "background")
+        if not frame_bg_color:
+            frame_bg_color = "SystemButtonFace"
+        
         # Создание чекбоксов для каждого мода
         self.checkbox_vars = {}
         for i, mod_entry in enumerate(self.filtered_mod_entries):
             var = tk.BooleanVar(value=mod_entry.enabled)
             self.checkbox_vars[mod_entry.name] = var
             
-            frame = ttk.Frame(self.scrollable_frame)
+            # Используем обычный Frame вместо ttk для лучшего контроля выделения
+            frame = tk.Frame(self.scrollable_frame, bg=frame_bg_color)
             frame.pack(fill=tk.X, padx=5, pady=2)
             
             # Чекбокс с обработкой клика для выбора
@@ -403,10 +410,10 @@ class ModLoadOrderManager:
             # Сохраняем ссылку на переменную для обновления
             mod_entry.status_var = status_text
             mod_entry.status_label = status_label
+            mod_entry.frame = frame  # Сохраняем ссылку на фрейм для выделения
             
-            # Выделение выбранного мода (визуально через цвет фона)
-            if mod_entry.name == self.selected_mod_name:
-                frame.configure(relief=tk.SUNKEN, borderwidth=1)
+            # Выделение выбранного мода
+            self.update_frame_highlight(frame, mod_entry.name == self.selected_mod_name)
         
         # Обновление статистики
         self.update_statistics()
@@ -432,7 +439,14 @@ class ModLoadOrderManager:
     
     def select_mod(self, mod_name: str):
         """Выбор мода для отображения информации"""
+        # Снимаем выделение с предыдущего мода
+        if self.selected_mod_name:
+            prev_mod = next((m for m in self.mod_entries if m.name == self.selected_mod_name), None)
+            if prev_mod and hasattr(prev_mod, 'frame'):
+                self.update_frame_highlight(prev_mod.frame, False)
+        
         self.selected_mod_name = mod_name
+        
         # Ищем мод в основном списке
         mod_entry = next((m for m in self.mod_entries if m.name == mod_name), None)
         if mod_entry:
@@ -444,6 +458,10 @@ class ModLoadOrderManager:
             else:
                 actual_enabled = mod_entry.enabled
             
+            # Выделяем выбранный мод
+            if hasattr(mod_entry, 'frame'):
+                self.update_frame_highlight(mod_entry.frame, True)
+            
             status = "Включен" if actual_enabled else "Выключен"
             info_text = f"{mod_name}\nСтатус: {status}"
             if mod_entry.is_new:
@@ -451,6 +469,32 @@ class ModLoadOrderManager:
             self.selected_mod_var.set(info_text)
         else:
             self.selected_mod_var.set("Нет выбора")
+    
+    def update_frame_highlight(self, frame, is_selected):
+        """Обновление визуального выделения фрейма мода"""
+        # Получаем цвет фона по умолчанию
+        style = ttk.Style()
+        default_bg = style.lookup("TFrame", "background")
+        if not default_bg:
+            default_bg = "SystemButtonFace"
+        
+        if is_selected:
+            # Выделение: рамка и цвет фона
+            frame.configure(
+                relief=tk.SOLID, 
+                borderwidth=2, 
+                highlightbackground="#2196F3",  # Синяя рамка
+                highlightthickness=2,
+                bg="#E3F2FD"  # Светло-синий фон
+            )
+        else:
+            # Снимаем выделение
+            frame.configure(
+                relief=tk.FLAT, 
+                borderwidth=0, 
+                highlightthickness=0, 
+                bg=default_bg
+            )
     
     def update_statistics(self):
         """Обновление статистики в правой панели"""
