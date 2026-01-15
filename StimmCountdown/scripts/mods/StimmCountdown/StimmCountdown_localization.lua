@@ -11,16 +11,16 @@ local localizations = {
 	},
 
 	display_group = {
-		en = "Display",
-		ru = "Отображение",
+		en = " Display",
+		ru = "Отображение",
 	},
 	colors_group = {
-		en = "Colors",
-		ru = "Цвета",
+		en = " Colors",
+		ru = " Цвета",
 	},
 	sounds_group = {
-		en = "Sounds",
-		ru = "Звуки",
+		en = " Sounds",
+		ru = " Звуки",
 	},
 
 	-- Настройки
