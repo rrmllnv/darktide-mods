@@ -43,7 +43,11 @@ local localizations = {
 		ru = " ЗВУКИ",
 	},
 
-	-- Настройки
+	system_settings_group = {
+		en = " SYSTEM SETTINGS",
+		ru = " СИСТЕМНЫЕ НАСТРОЙКИ",
+	},
+
 	show_active = {
 		en = "Show Active Timer",
 		ru = "Показывать таймер действия",
@@ -283,6 +287,18 @@ local localizations = {
 	sound_option_heal_self_confirmation = {
 		en = "Heal self confirmation",
 		ru = "Подтверждение самолечения",
+	},
+	reset_color_settings = {
+		en = "Reset color settings",
+		ru = "Сбросить настройки цвета",
+	},
+	reset_font_settings = {
+		en = "Reset font settings",
+		ru = "Сбросить настройки шрифта",
+	},
+	reset_sound_settings = {
+		en = "Reset sound settings",
+		ru = "Сбросить настройки звука",
 	},
 }
 

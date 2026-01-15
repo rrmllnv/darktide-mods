@@ -81,7 +81,40 @@ end
 
 refresh_settings()
 
-mod.on_setting_changed = function()
+mod.on_setting_changed = function(setting_id)
+	if setting_id == "reset_color_settings" then
+		if mod:get("reset_color_settings") == 1 then
+			mod:notify(mod:localize("reset_color_settings"))
+			mod:set("reset_color_settings", 0)
+			mod:set("enable_ready_color_override", false)
+			mod:set("ready_icon_color", "ui_hud_green_light")
+			mod:set("enable_active_color_override", false)
+			mod:set("active_countdown_color", "ui_terminal_highlight")
+			mod:set("active_icon_color", "ui_terminal_highlight")
+			mod:set("enable_cooldown_color_override", false)
+			mod:set("cooldown_countdown_color", "ui_interaction_critical")
+			mod:set("cooldown_icon_color", "ui_interaction_critical")
+			mod:set("enable_notification_color_override", false)
+			mod:set("notification_text_color", "terminal_text_body")
+			mod:set("notification_icon_color", "terminal_text_body")
+			mod:set("notification_background_color", "terminal_grid_background")
+			mod:set("notification_line_color", "terminal_corner_selected")
+		end
+	elseif setting_id == "reset_font_settings" then
+		if mod:get("reset_font_settings") == 1 then
+			mod:notify(mod:localize("reset_font_settings"))
+			mod:set("reset_font_settings", 0)
+			mod:set("font_type", "machine_medium")
+			mod:set("font_size", 30)
+		end
+	elseif setting_id == "reset_sound_settings" then
+		if mod:get("reset_sound_settings") == 1 then
+			mod:notify(mod:localize("reset_sound_settings"))
+			mod:set("reset_sound_settings", 0)
+			mod:set("enable_ready_sound", false)
+			mod:set("ready_sound_event", "wwise/events/ui/play_hud_coherency_on")
+		end
+	end
 	refresh_settings()
 end
 

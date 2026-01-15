@@ -340,6 +340,39 @@ return {
 					},
 				},
 			},
+			{
+				setting_id = "system_settings_group",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "reset_color_settings",
+						type = "dropdown",
+						default_value = 0,
+						options = {
+							{ text = "", value = 0 },
+							{ text = "reset_color_settings", value = 1 },
+						},
+					},
+					{
+						setting_id = "reset_font_settings",
+						type = "dropdown",
+						default_value = 0,
+						options = {
+							{ text = "", value = 0 },
+							{ text = "reset_font_settings", value = 1 },
+						},
+					},
+					{
+						setting_id = "reset_sound_settings",
+						type = "dropdown",
+						default_value = 0,
+						options = {
+							{ text = "", value = 0 },
+							{ text = "reset_sound_settings", value = 1 },
+						},
+					},
+				},
+			},
 		},
 	},
 }
