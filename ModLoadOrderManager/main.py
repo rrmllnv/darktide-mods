@@ -6,11 +6,12 @@ Mod Load Order Manager
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, messagebox, filedialog, simpledialog
 import os
 import re
+import json
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 
 class ModEntry:
@@ -42,11 +43,60 @@ class ModLoadOrderManager:
         self.selected_mod_name: str = ""
         self.sort_type: str = "name"  # Тип сортировки: "name", "status", "new_first"
         
+        # Система профилей (инициализируем перед вызовом init_profiles_directory)
+        self.saved_state: dict = None  # Сохраненное состояние перед переключением
+        self.profiles_dir = None  # Путь к папке профилей
+        
+        # Инициализация папки профилей
+        self.init_profiles_directory()
+        
         # Создание интерфейса
         self.create_widgets()
         
         # Загрузка файла при старте
         self.load_file()
+    
+    def init_profiles_directory(self):
+        """Инициализация папки для профилей"""
+        # Проверяем, что атрибут существует и папка уже инициализирована
+        if hasattr(self, 'profiles_dir') and self.profiles_dir and os.path.exists(self.profiles_dir):
+            return  # Уже инициализирована
+        
+        try:
+            # Определяем путь к папке профилей на основе пути к файлу mod_load_order.txt
+            # Используем default_path для определения базовой директории
+            mods_dir = os.path.dirname(self.default_path)
+            if not mods_dir:
+                raise ValueError("Не удалось определить директорию модов")
+            
+            self.profiles_dir = os.path.join(mods_dir, "ModLoadOrderManager_profiles")
+            
+            # Создаем папку, если её нет
+            if not os.path.exists(self.profiles_dir):
+                try:
+                    os.makedirs(self.profiles_dir, exist_ok=True)
+                except (PermissionError, OSError) as e:
+                    # Если нет прав, используем папку рядом с программой
+                    script_dir = os.path.dirname(os.path.abspath(__file__))
+                    if script_dir:
+                        self.profiles_dir = os.path.join(script_dir, "profiles")
+                        os.makedirs(self.profiles_dir, exist_ok=True)
+                    else:
+                        raise
+        except Exception as e:
+            # Если не удалось создать в папке модов, используем папку рядом с программой
+            try:
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                if script_dir:
+                    self.profiles_dir = os.path.join(script_dir, "profiles")
+                    os.makedirs(self.profiles_dir, exist_ok=True)
+                else:
+                    # Последняя попытка - текущая директория
+                    self.profiles_dir = os.path.join(os.getcwd(), "profiles")
+                    os.makedirs(self.profiles_dir, exist_ok=True)
+            except Exception as e2:
+                self.profiles_dir = None
+                print(f"Не удалось создать папку для профилей: {e2}")
     
     def create_widgets(self):
         """Создание элементов интерфейса"""
@@ -188,7 +238,7 @@ class ModLoadOrderManager:
         
         # Кнопки для ручной сортировки
         sort_buttons_frame = ttk.Frame(info_frame)
-        sort_buttons_frame.pack(fill=tk.X, pady=(0, 5))
+        sort_buttons_frame.pack(fill=tk.X, pady=(0, 10))
         
         ttk.Label(sort_buttons_frame, text="Порядок в файле:", font=("Arial", 9, "bold")).pack(anchor=tk.W, pady=(0, 5))
         
@@ -200,6 +250,59 @@ class ModLoadOrderManager:
         
         self.move_down_button = ttk.Button(buttons_row, text="↓ Вниз", command=self.move_mod_down, state=tk.DISABLED)
         self.move_down_button.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(2, 0))
+        
+        # Разделитель
+        ttk.Separator(info_frame, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=10)
+        
+        # Быстрое переключение
+        quick_switch_frame = ttk.Frame(info_frame)
+        quick_switch_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        ttk.Label(quick_switch_frame, text="Быстрое переключение:", font=("Arial", 9, "bold")).pack(anchor=tk.W, pady=(0, 5))
+        
+        self.only_this_mod_button = ttk.Button(quick_switch_frame, text="Только этот мод", command=self.enable_only_this_mod, state=tk.DISABLED)
+        self.only_this_mod_button.pack(fill=tk.X, pady=(0, 2))
+        
+        self.restore_state_button = ttk.Button(quick_switch_frame, text="Вернуть все", command=self.restore_saved_state, state=tk.DISABLED)
+        self.restore_state_button.pack(fill=tk.X)
+        
+        # Разделитель
+        ttk.Separator(info_frame, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=10)
+        
+        # Профили
+        profiles_frame = ttk.Frame(info_frame)
+        profiles_frame.pack(fill=tk.BOTH, expand=True)
+        
+        ttk.Label(profiles_frame, text="Профили:", font=("Arial", 9, "bold")).pack(anchor=tk.W, pady=(0, 5))
+        
+        # Список профилей
+        profiles_list_frame = ttk.Frame(profiles_frame)
+        profiles_list_frame.pack(fill=tk.BOTH, expand=True)
+        
+        self.profiles_listbox = tk.Listbox(profiles_list_frame, height=4, font=("Arial", 8))
+        self.profiles_listbox.pack(fill=tk.BOTH, expand=True, pady=(0, 5))
+        self.profiles_listbox.bind("<<ListboxSelect>>", self.on_profile_select)
+        
+        # Кнопки управления профилями
+        profile_buttons_frame = ttk.Frame(profiles_frame)
+        profile_buttons_frame.pack(fill=tk.X)
+        
+        # Первая строка кнопок
+        buttons_row1 = ttk.Frame(profile_buttons_frame)
+        buttons_row1.pack(fill=tk.X, pady=(0, 2))
+        
+        ttk.Button(buttons_row1, text="Сохранить", command=self.save_current_profile).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 2))
+        ttk.Button(buttons_row1, text="Загрузить", command=self.load_selected_profile).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
+        
+        # Вторая строка кнопок
+        buttons_row2 = ttk.Frame(profile_buttons_frame)
+        buttons_row2.pack(fill=tk.X)
+        
+        ttk.Button(buttons_row2, text="Переименовать", command=self.rename_selected_profile).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 2))
+        ttk.Button(buttons_row2, text="Удалить", command=self.delete_selected_profile).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(2, 0))
+        
+        # Обновляем список профилей
+        self.refresh_profiles_list()
         
         # Фрейм для кнопок сохранения
         save_frame = ttk.Frame(self.root, padding="10")
@@ -530,6 +633,8 @@ class ModLoadOrderManager:
             
             # Обновляем состояние кнопок перемещения
             self.update_move_buttons_state()
+            # Обновляем состояние кнопки "Только этот мод"
+            self.update_quick_switch_buttons()
         else:
             self.selected_mod_var.set("Нет выбора")
             # Отключаем кнопки, если мод не выбран
@@ -537,6 +642,8 @@ class ModLoadOrderManager:
                 self.move_up_button.configure(state=tk.DISABLED)
             if hasattr(self, 'move_down_button'):
                 self.move_down_button.configure(state=tk.DISABLED)
+            if hasattr(self, 'only_this_mod_button'):
+                self.only_this_mod_button.configure(state=tk.DISABLED)
     
     def update_frame_highlight(self, frame, is_selected):
         """Обновление визуального выделения фрейма мода"""
@@ -736,6 +843,257 @@ class ModLoadOrderManager:
         except Exception as e:
             messagebox.showerror("Ошибка", f"Не удалось сохранить файл:\n{str(e)}")
             self.status_var.set(f"Ошибка сохранения: {str(e)}")
+    
+    def save_current_state(self) -> Dict:
+        """Сохранение текущего состояния всех модов"""
+        state = {}
+        for mod_entry in self.mod_entries:
+            # Получаем актуальное состояние из чекбоксов
+            if hasattr(self, 'checkbox_vars') and mod_entry.name in self.checkbox_vars:
+                enabled = self.checkbox_vars[mod_entry.name].get()
+            else:
+                enabled = mod_entry.enabled
+            state[mod_entry.name] = enabled
+        return state
+    
+    def restore_state(self, state: Dict):
+        """Восстановление состояния модов из словаря"""
+        if not state:
+            return
+        
+        for mod_entry in self.mod_entries:
+            if mod_entry.name in state:
+                mod_entry.enabled = state[mod_entry.name]
+                # Обновляем чекбоксы
+                if hasattr(self, 'checkbox_vars') and mod_entry.name in self.checkbox_vars:
+                    self.checkbox_vars[mod_entry.name].set(state[mod_entry.name])
+        
+        # Обновляем интерфейс
+        search_text = self.search_var.get() if hasattr(self, 'search_var') else ""
+        self.update_mod_list(filter_text=search_text)
+        self.update_statistics()
+    
+    def enable_only_this_mod(self):
+        """Включить только выбранный мод, сохранив текущее состояние"""
+        if not self.selected_mod_name:
+            return
+        
+        # Сохраняем текущее состояние
+        self.saved_state = self.save_current_state()
+        
+        # Отключаем все моды
+        for mod_entry in self.mod_entries:
+            mod_entry.enabled = False
+            if hasattr(self, 'checkbox_vars') and mod_entry.name in self.checkbox_vars:
+                self.checkbox_vars[mod_entry.name].set(False)
+        
+        # Включаем только выбранный мод
+        mod_entry = next((m for m in self.mod_entries if m.name == self.selected_mod_name), None)
+        if mod_entry:
+            mod_entry.enabled = True
+            if hasattr(self, 'checkbox_vars') and mod_entry.name in self.checkbox_vars:
+                self.checkbox_vars[mod_entry.name].set(True)
+        
+        # Обновляем интерфейс
+        search_text = self.search_var.get() if hasattr(self, 'search_var') else ""
+        self.update_mod_list(filter_text=search_text)
+        self.update_statistics()
+        
+        # Обновляем состояние кнопок
+        self.update_quick_switch_buttons()
+        
+        messagebox.showinfo("Готово", f"Включен только мод: {self.selected_mod_name}\nИспользуйте 'Вернуть все' для восстановления.")
+    
+    def restore_saved_state(self):
+        """Восстановление сохраненного состояния"""
+        if not self.saved_state:
+            messagebox.showwarning("Предупреждение", "Нет сохраненного состояния для восстановления")
+            return
+        
+        self.restore_state(self.saved_state)
+        self.saved_state = None
+        
+        # Обновляем состояние кнопок
+        self.update_quick_switch_buttons()
+        
+        messagebox.showinfo("Готово", "Состояние модов восстановлено")
+    
+    def update_quick_switch_buttons(self):
+        """Обновление состояния кнопок быстрого переключения"""
+        if hasattr(self, 'only_this_mod_button'):
+            self.only_this_mod_button.configure(state=tk.NORMAL if self.selected_mod_name else tk.DISABLED)
+        
+        if hasattr(self, 'restore_state_button'):
+            self.restore_state_button.configure(state=tk.NORMAL if self.saved_state else tk.DISABLED)
+    
+    def refresh_profiles_list(self):
+        """Обновление списка профилей"""
+        if not hasattr(self, 'profiles_listbox'):
+            return
+        
+        # Проверяем и инициализируем папку профилей, если нужно
+        if not self.profiles_dir:
+            self.init_profiles_directory()
+        
+        self.profiles_listbox.delete(0, tk.END)
+        
+        if not self.profiles_dir:
+            return
+        
+        try:
+            if os.path.exists(self.profiles_dir):
+                for filename in os.listdir(self.profiles_dir):
+                    if filename.endswith('.json'):
+                        profile_name = filename[:-5]  # Убираем .json
+                        self.profiles_listbox.insert(tk.END, profile_name)
+        except Exception as e:
+            pass
+    
+    def save_current_profile(self):
+        """Сохранение текущего состояния как профиля"""
+        # Проверяем и инициализируем папку профилей, если нужно
+        if not self.profiles_dir:
+            self.init_profiles_directory()
+        
+        if not self.profiles_dir:
+            messagebox.showerror("Ошибка", "Не удалось определить папку для профилей")
+            return
+        
+        profile_name = simpledialog.askstring("Сохранить профиль", "Введите имя профиля:")
+        if not profile_name:
+            return
+        
+        # Очищаем имя от недопустимых символов
+        profile_name = "".join(c for c in profile_name if c.isalnum() or c in (' ', '-', '_')).strip()
+        if not profile_name:
+            messagebox.showerror("Ошибка", "Недопустимое имя профиля")
+            return
+        
+        try:
+            state = self.save_current_state()
+            profile_path = os.path.join(self.profiles_dir, f"{profile_name}.json")
+            
+            # Убеждаемся, что папка существует
+            if not os.path.exists(self.profiles_dir):
+                os.makedirs(self.profiles_dir)
+            
+            with open(profile_path, 'w', encoding='utf-8') as f:
+                json.dump(state, f, indent=2, ensure_ascii=False)
+            
+            self.refresh_profiles_list()
+            messagebox.showinfo("Успех", f"Профиль '{profile_name}' сохранен")
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось сохранить профиль:\n{str(e)}")
+    
+    def load_selected_profile(self):
+        """Загрузка выбранного профиля"""
+        # Проверяем и инициализируем папку профилей, если нужно
+        if not self.profiles_dir:
+            self.init_profiles_directory()
+        
+        if not self.profiles_dir:
+            messagebox.showerror("Ошибка", "Не удалось определить папку для профилей")
+            return
+        
+        selection = self.profiles_listbox.curselection()
+        if not selection:
+            messagebox.showwarning("Предупреждение", "Выберите профиль из списка")
+            return
+        
+        profile_name = self.profiles_listbox.get(selection[0])
+        profile_path = os.path.join(self.profiles_dir, f"{profile_name}.json")
+        
+        try:
+            with open(profile_path, 'r', encoding='utf-8') as f:
+                state = json.load(f)
+            
+            self.restore_state(state)
+            messagebox.showinfo("Успех", f"Профиль '{profile_name}' загружен")
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось загрузить профиль:\n{str(e)}")
+    
+    def rename_selected_profile(self):
+        """Переименование выбранного профиля"""
+        # Проверяем и инициализируем папку профилей, если нужно
+        if not self.profiles_dir:
+            self.init_profiles_directory()
+        
+        if not self.profiles_dir:
+            messagebox.showerror("Ошибка", "Не удалось определить папку для профилей")
+            return
+        
+        selection = self.profiles_listbox.curselection()
+        if not selection:
+            messagebox.showwarning("Предупреждение", "Выберите профиль из списка")
+            return
+        
+        old_profile_name = self.profiles_listbox.get(selection[0])
+        
+        # Запрашиваем новое имя
+        new_profile_name = simpledialog.askstring("Переименовать профиль", f"Введите новое имя для профиля '{old_profile_name}':", initialvalue=old_profile_name)
+        if not new_profile_name:
+            return
+        
+        # Очищаем имя от недопустимых символов
+        new_profile_name = "".join(c for c in new_profile_name if c.isalnum() or c in (' ', '-', '_')).strip()
+        if not new_profile_name:
+            messagebox.showerror("Ошибка", "Недопустимое имя профиля")
+            return
+        
+        # Проверяем, что новое имя отличается от старого
+        if new_profile_name == old_profile_name:
+            return
+        
+        # Проверяем, что профиль с таким именем не существует
+        new_profile_path = os.path.join(self.profiles_dir, f"{new_profile_name}.json")
+        if os.path.exists(new_profile_path):
+            messagebox.showerror("Ошибка", f"Профиль с именем '{new_profile_name}' уже существует")
+            return
+        
+        try:
+            old_profile_path = os.path.join(self.profiles_dir, f"{old_profile_name}.json")
+            if os.path.exists(old_profile_path):
+                # Переименовываем файл
+                os.rename(old_profile_path, new_profile_path)
+                self.refresh_profiles_list()
+                messagebox.showinfo("Успех", f"Профиль '{old_profile_name}' переименован в '{new_profile_name}'")
+            else:
+                messagebox.showerror("Ошибка", f"Файл профиля '{old_profile_name}' не найден")
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось переименовать профиль:\n{str(e)}")
+    
+    def delete_selected_profile(self):
+        """Удаление выбранного профиля"""
+        # Проверяем и инициализируем папку профилей, если нужно
+        if not self.profiles_dir:
+            self.init_profiles_directory()
+        
+        if not self.profiles_dir:
+            messagebox.showerror("Ошибка", "Не удалось определить папку для профилей")
+            return
+        
+        selection = self.profiles_listbox.curselection()
+        if not selection:
+            messagebox.showwarning("Предупреждение", "Выберите профиль из списка")
+            return
+        
+        profile_name = self.profiles_listbox.get(selection[0])
+        
+        if not messagebox.askyesno("Подтверждение", f"Удалить профиль '{profile_name}'?"):
+            return
+        
+        try:
+            profile_path = os.path.join(self.profiles_dir, f"{profile_name}.json")
+            if os.path.exists(profile_path):
+                os.remove(profile_path)
+                self.refresh_profiles_list()
+                messagebox.showinfo("Успех", f"Профиль '{profile_name}' удален")
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось удалить профиль:\n{str(e)}")
+    
+    def on_profile_select(self, event=None):
+        """Обработка выбора профиля в списке"""
+        pass  # Можно добавить предпросмотр профиля
 
 
 def main():
