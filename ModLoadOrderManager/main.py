@@ -28,7 +28,7 @@ class ModLoadOrderManager:
     def __init__(self, root):
         self.root = root
         self.root.title("Mod Load Order Manager")
-        self.root.geometry("700x900")
+        self.root.geometry("900x900")
         
         # Путь к файлу mod_load_order.txt
         self.default_path = r"C:\Program Files (x86)\Steam\steamapps\common\Warhammer 40,000 DARKTIDE\mods\mod_load_order.txt"
@@ -121,10 +121,32 @@ class ModLoadOrderManager:
         # Привязка колесика мыши
         self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
         
-        # ========== ПРАВАЯ ПАНЕЛЬ: Информация и статистика ==========
-        right_panel = ttk.LabelFrame(main_container, text="Информация", padding="10")
-        right_panel.pack(side=tk.RIGHT, fill=tk.BOTH, padx=(5, 0))
+        # ========== ПРАВАЯ СТОРОНА: Контейнер для поиска и информации ==========
+        right_container = ttk.Frame(main_container)
+        right_container.pack(side=tk.RIGHT, fill=tk.BOTH, padx=(5, 0))
+        
+        # ========== БЛОК ПОИСКА ==========
+        search_panel = ttk.LabelFrame(right_container, text="Поиск", padding="10")
+        search_panel.pack(fill=tk.X, pady=(0, 5))
+        
+        # Поиск/фильтр
+        search_frame = ttk.Frame(search_panel)
+        search_frame.pack(fill=tk.X)
+        
+        ttk.Label(search_frame, text="Поиск мода:", font=("Arial", 9, "bold")).pack(anchor=tk.W, pady=(0, 5))
+        
+        self.search_var = tk.StringVar()
+        self.search_var.trace("w", self.on_search_change)
+        search_entry = ttk.Entry(search_frame, textvariable=self.search_var)
+        search_entry.pack(fill=tk.X, pady=(0, 5))
+        
+        ttk.Button(search_frame, text="Очистить", command=self.clear_search).pack(fill=tk.X)
+        
+        # ========== БЛОК ИНФОРМАЦИИ ==========
+        right_panel = ttk.LabelFrame(right_container, text="Информация", padding="10")
         right_panel.configure(width=400)
+        right_panel.pack_propagate(False)  # Предотвращаем автоматическое изменение размера
+        right_panel.pack(fill=tk.BOTH, expand=True)  # Занимает оставшееся пространство
         
         # Статистика
         stats_frame = ttk.Frame(right_panel)
@@ -152,22 +174,6 @@ class ModLoadOrderManager:
         self.selected_mod_var = tk.StringVar(value="Нет выбора")
         mod_info_label = ttk.Label(info_frame, textvariable=self.selected_mod_var, font=("Arial", 8), wraplength=220, justify=tk.LEFT)
         mod_info_label.pack(anchor=tk.W, fill=tk.X)
-        
-        # Разделитель
-        ttk.Separator(right_panel, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=10)
-        
-        # Поиск/фильтр
-        search_frame = ttk.Frame(right_panel)
-        search_frame.pack(fill=tk.X, pady=(0, 5))
-        
-        ttk.Label(search_frame, text="Поиск мода:", font=("Arial", 9, "bold")).pack(anchor=tk.W, pady=(0, 5))
-        
-        self.search_var = tk.StringVar()
-        self.search_var.trace("w", self.on_search_change)
-        search_entry = ttk.Entry(search_frame, textvariable=self.search_var)
-        search_entry.pack(fill=tk.X, pady=(0, 5))
-        
-        ttk.Button(search_frame, text="Очистить", command=self.clear_search).pack(fill=tk.X)
         
         # Фрейм для кнопок сохранения
         save_frame = ttk.Frame(self.root, padding="10")
