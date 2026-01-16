@@ -1,9 +1,0 @@
-# Mod Load Order Manager - Requirements
-# Tkinter обычно входит в стандартную установку Python
-# Если Tkinter отсутствует, установите его через системный пакетный менеджер
-
-# Для Windows: Tkinter обычно уже установлен
-# Для Linux: sudo apt-get install python3-tk (Ubuntu/Debian)
-# Для macOS: Tkinter обычно уже установлен
-
-# Дополнительные зависимости не требуются для базовой функциональности
