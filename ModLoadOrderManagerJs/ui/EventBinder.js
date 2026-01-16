@@ -33,19 +33,8 @@ export class EventBinder {
             this.callbacks.onHideUnusedModsChange(this.elements.hideUnusedModsCheckbox.checked);
         });
         
-        // Удаление мода
-        this.elements.deleteModBtn.addEventListener('click', () => this.callbacks.deleteSelectedMod());
-        
         // Создание симлинка
         this.elements.createSymlinkBtn.addEventListener('click', () => this.callbacks.createSymlinkForMod());
-        
-        // Перемещение модов
-        this.elements.moveUpBtn.addEventListener('click', () => this.callbacks.moveModUp());
-        this.elements.moveDownBtn.addEventListener('click', () => this.callbacks.moveModDown());
-        
-        // Быстрое переключение
-        this.elements.onlyThisModBtn.addEventListener('click', () => this.callbacks.enableOnlyThisMod());
-        this.elements.restoreStateBtn.addEventListener('click', () => this.callbacks.restoreSavedState());
         
         // Профили
         this.elements.newProfileBtn.addEventListener('click', () => this.callbacks.saveCurrentProfile());

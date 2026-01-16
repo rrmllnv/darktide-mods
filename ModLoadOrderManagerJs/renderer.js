@@ -60,12 +60,7 @@ class ModLoadOrderManager {
             hideNewModsCheckbox: document.getElementById('hide-new-mods-checkbox'),
             hideUnusedModsCheckbox: document.getElementById('hide-unused-mods-checkbox'),
             selectedModInfo: document.getElementById('selected-mod-info'),
-            deleteModBtn: document.getElementById('delete-mod-btn'),
             createSymlinkBtn: document.getElementById('create-symlink-btn'),
-            moveUpBtn: document.getElementById('move-up-btn'),
-            moveDownBtn: document.getElementById('move-down-btn'),
-            onlyThisModBtn: document.getElementById('only-this-mod-btn'),
-            restoreStateBtn: document.getElementById('restore-state-btn'),
             profilesList: document.getElementById('profiles-list'),
             newProfileBtn: document.getElementById('new-profile-btn'),
             overwriteProfileBtn: document.getElementById('overwrite-profile-btn'),
@@ -153,12 +148,7 @@ class ModLoadOrderManager {
                 const searchText = this.elements.searchInput.value;
                 this.updateModList(searchText);
             },
-            deleteSelectedMod: () => this.deleteSelectedMod(),
             createSymlinkForMod: () => this.createSymlinkForMod(),
-            moveModUp: () => this.moveModUp(),
-            moveModDown: () => this.moveModDown(),
-            enableOnlyThisMod: () => this.enableOnlyThisMod(),
-            restoreSavedState: () => this.restoreSavedState(),
             saveCurrentProfile: () => this.saveCurrentProfile(),
             overwriteSelectedProfile: () => this.overwriteSelectedProfile(),
             loadSelectedProfile: () => this.loadSelectedProfile(),
@@ -304,7 +294,6 @@ class ModLoadOrderManager {
     onSortChange() {
         const searchText = this.elements.searchInput.value;
         this.updateModList(searchText);
-        this.updateMoveButtonsState();
     }
     
     onCheckboxChange(modName) {
@@ -382,9 +371,6 @@ class ModLoadOrderManager {
             this.selectedModName = '';
         }
         
-        this.updateMoveButtonsState();
-        this.updateQuickSwitchButtons();
-        this.updateDeleteButtonState();
         this.updateBulkActionsPanel();
     }
     
@@ -411,45 +397,6 @@ class ModLoadOrderManager {
         this.elements.selectedModInfo.textContent = 'Нет выбора';
     }
     
-    updateDeleteButtonState() {
-        this.elements.deleteModBtn.disabled = !this.selectedModName;
-    }
-    
-    deleteSelectedMod() {
-        if (!this.selectedModName) {
-            return;
-        }
-        
-        if (!confirm(`Удалить мод '${this.selectedModName}' из списка?\n\nМод будет удален из файла при сохранении.`)) {
-            return;
-        }
-        
-        const modIndex = this.modEntries.findIndex(m => m.name === this.selectedModName);
-        if (modIndex === -1) {
-            return;
-        }
-        
-        this.modEntries.splice(modIndex, 1);
-        
-        // Обновляем ссылку на modEntries в рендерере
-        if (this.modListRenderer) {
-            this.modListRenderer.modEntries = this.modEntries;
-        }
-        
-        this.selectedModName = '';
-        this.elements.selectedModInfo.textContent = 'Нет выбора';
-        
-        const searchText = this.elements.searchInput.value;
-        this.updateModList(searchText);
-        this.updateStatistics();
-        
-        this.elements.moveUpBtn.disabled = true;
-        this.elements.moveDownBtn.disabled = true;
-        this.elements.onlyThisModBtn.disabled = true;
-        this.elements.deleteModBtn.disabled = true;
-        
-        this.setStatus(`Мод удален из списка. Не забудьте сохранить файл.`);
-    }
     
     async createSymlinkForMod() {
         const modsDir = this.filePath.substring(0, this.filePath.lastIndexOf('\\'));
@@ -507,77 +454,6 @@ class ModLoadOrderManager {
         this.statusManager.updateStatistics(this.modEntries);
     }
     
-    updateMoveButtonsState() {
-        const currentSort = this.elements.sortSelect.value;
-        
-        if (!this.selectedModName || currentSort !== 'По порядку файла') {
-            this.elements.moveUpBtn.disabled = true;
-            this.elements.moveDownBtn.disabled = true;
-            return;
-        }
-        
-        const sortedMods = [...this.modEntries].sort((a, b) => a.orderIndex - b.orderIndex);
-        const modIndex = sortedMods.findIndex(m => m.name === this.selectedModName);
-        
-        if (modIndex === -1) {
-            this.elements.moveUpBtn.disabled = true;
-            this.elements.moveDownBtn.disabled = true;
-            return;
-        }
-        
-        this.elements.moveUpBtn.disabled = modIndex <= 0;
-        this.elements.moveDownBtn.disabled = modIndex >= sortedMods.length - 1;
-    }
-    
-    moveModUp() {
-        if (!this.selectedModName) {
-            return;
-        }
-        
-        const modEntry = this.modEntries.find(m => m.name === this.selectedModName);
-        if (!modEntry) {
-            return;
-        }
-        
-        const sortedMods = [...this.modEntries].sort((a, b) => a.orderIndex - b.orderIndex);
-        const currentIndex = sortedMods.findIndex(m => m.name === this.selectedModName);
-        
-        if (currentIndex <= 0) {
-            return;
-        }
-        
-        const prevMod = sortedMods[currentIndex - 1];
-        [modEntry.orderIndex, prevMod.orderIndex] = [prevMod.orderIndex, modEntry.orderIndex];
-        
-        const searchText = this.elements.searchInput.value;
-        this.updateModList(searchText);
-        this.updateMoveButtonsState();
-    }
-    
-    moveModDown() {
-        if (!this.selectedModName) {
-            return;
-        }
-        
-        const modEntry = this.modEntries.find(m => m.name === this.selectedModName);
-        if (!modEntry) {
-            return;
-        }
-        
-        const sortedMods = [...this.modEntries].sort((a, b) => a.orderIndex - b.orderIndex);
-        const currentIndex = sortedMods.findIndex(m => m.name === this.selectedModName);
-        
-        if (currentIndex < 0 || currentIndex >= sortedMods.length - 1) {
-            return;
-        }
-        
-        const nextMod = sortedMods[currentIndex + 1];
-        [modEntry.orderIndex, nextMod.orderIndex] = [nextMod.orderIndex, modEntry.orderIndex];
-        
-        const searchText = this.elements.searchInput.value;
-        this.updateModList(searchText);
-        this.updateMoveButtonsState();
-    }
     
     onSearchChange() {
         const searchText = this.elements.searchInput.value;
@@ -648,56 +524,6 @@ class ModLoadOrderManager {
         const searchText = this.elements.searchInput.value;
         this.updateModList(searchText);
         this.updateStatistics();
-    }
-    
-    enableOnlyThisMod() {
-        if (!this.selectedModName) {
-            return;
-        }
-        
-        this.savedState = this.saveCurrentState();
-        
-        for (const modEntry of this.modEntries) {
-            modEntry.enabled = false;
-            if (modEntry.checkbox) {
-                modEntry.checkbox.checked = false;
-            }
-        }
-        
-        const modEntry = this.modEntries.find(m => m.name === this.selectedModName);
-        if (modEntry) {
-            modEntry.enabled = true;
-            if (modEntry.checkbox) {
-                modEntry.checkbox.checked = true;
-            }
-        }
-        
-        const searchText = this.elements.searchInput.value;
-        this.updateModList(searchText);
-        this.updateStatistics();
-        
-        this.updateQuickSwitchButtons();
-        
-        alert(`Включен только мод: ${this.selectedModName}\nИспользуйте 'Вернуть все' для восстановления.`);
-    }
-    
-    restoreSavedState() {
-        if (!this.savedState) {
-            alert('Нет сохраненного состояния для восстановления');
-            return;
-        }
-        
-        this.restoreState(this.savedState);
-        this.savedState = null;
-        
-        this.updateQuickSwitchButtons();
-        
-        alert('Состояние модов восстановлено');
-    }
-    
-    updateQuickSwitchButtons() {
-        this.elements.onlyThisModBtn.disabled = !this.selectedModName;
-        this.elements.restoreStateBtn.disabled = !this.savedState;
     }
     
     async refreshProfilesList() {
@@ -942,10 +768,11 @@ class ModLoadOrderManager {
         }
         
         const count = this.selectedModNames.size;
-        if (count > 1) {
+        if (count >= 1) {
             this.elements.bulkActionsPanel.style.display = 'block';
             if (this.elements.bulkSelectionCount) {
-                this.elements.bulkSelectionCount.textContent = `${count} модов выбрано`;
+                const modText = count === 1 ? 'мод' : count < 5 ? 'мода' : 'модов';
+                this.elements.bulkSelectionCount.textContent = `${count} ${modText} выбрано`;
             }
         } else {
             this.elements.bulkActionsPanel.style.display = 'none';

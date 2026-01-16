@@ -5,11 +5,12 @@ import { DragDropManager } from './DragDropManager.js';
 export class ModListRenderer {
     constructor(elements, modEntries, callbacks) {
         this.elements = elements;
-        this._modEntries = modEntries; // Используем приватное поле напрямую
+        // Обеспечиваем, что modEntries всегда является массивом
+        this._modEntries = Array.isArray(modEntries) ? modEntries : [];
         this.callbacks = callbacks; // { onCheckboxChange, onModSelect, onDrop }
         this.filteredModEntries = [];
         this.dragDropManager = new DragDropManager(
-            modEntries,
+            this._modEntries,
             elements.modsList,
             callbacks.onDrop
         );
@@ -17,10 +18,11 @@ export class ModListRenderer {
     
     // Обновление ссылки на массив модов
     set modEntries(value) {
-        this._modEntries = value;
+        // Обеспечиваем, что value всегда является массивом
+        this._modEntries = Array.isArray(value) ? value : [];
         // Обновляем ссылку в DragDropManager
         if (this.dragDropManager) {
-            this.dragDropManager.updateModEntries(value);
+            this.dragDropManager.updateModEntries(this._modEntries);
         }
     }
     
@@ -29,7 +31,18 @@ export class ModListRenderer {
     }
     
     // Обновление списка модов
-    updateModList(filterText = null, hideNewMods = false, hideUnusedMods = false, selectedModName = '', selectedModNames = new Set()) {
+    updateModList(filterText = null, hideNewMods = false, hideUnusedMods = false, selectedModName = '', selectedModNames = null) {
+        // Обеспечиваем, что selectedModNames всегда является Set
+        if (!selectedModNames || !(selectedModNames instanceof Set)) {
+            selectedModNames = new Set();
+        }
+        
+        // Проверяем, что _modEntries является массивом
+        if (!Array.isArray(this._modEntries)) {
+            console.error('_modEntries is not an array:', this._modEntries);
+            this._modEntries = [];
+        }
+        
         // Очистка существующих виджетов
         this.elements.modsList.innerHTML = '';
         
@@ -43,10 +56,10 @@ export class ModListRenderer {
         if (filterText) {
             const filterLower = filterText.toLowerCase();
             filtered = this._modEntries.filter(mod => 
-                mod.name.toLowerCase().includes(filterLower)
+                mod && mod.name && mod.name.toLowerCase().includes(filterLower)
             );
         } else {
-            filtered = [...this._modEntries];
+            filtered = [...this._modEntries].filter(mod => mod && mod.name);
         }
         
         // Фильтрация новых модов, если включен чекбокс
@@ -64,10 +77,21 @@ export class ModListRenderer {
         this.filteredModEntries = Sorter.sortMods(filtered, currentSort);
         
         // Создание элементов для каждого мода
+        if (!this.elements.modsList) {
+            console.error('modsList element not found');
+            return;
+        }
+        
         this.filteredModEntries.forEach((modEntry, index) => {
+            if (!modEntry || !modEntry.name) {
+                console.warn('Invalid modEntry at index', index, modEntry);
+                return;
+            }
             const isSelected = selectedModNames.has(modEntry.name) || modEntry.name === selectedModName;
             const modItem = this.createModItem(modEntry, selectedModName, currentSort, index, isSelected);
-            this.elements.modsList.appendChild(modItem);
+            if (modItem) {
+                this.elements.modsList.appendChild(modItem);
+            }
         });
     }
     
