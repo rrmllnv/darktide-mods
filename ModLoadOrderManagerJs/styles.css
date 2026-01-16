@@ -190,7 +190,8 @@ body {
     border-radius: 3px;
 }
 
-.hide-new-mods-frame {
+.hide-new-mods-frame,
+.hide-unused-mods-frame {
     margin-top: 8px;
 }
 

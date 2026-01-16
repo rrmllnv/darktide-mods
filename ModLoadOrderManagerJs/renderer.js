@@ -23,6 +23,7 @@ class ModLoadOrderManager {
         this.selectedModName = '';
         this.sortType = 'По порядку файла';
         this.hideNewMods = false; // Флаг для скрытия новых модов
+        this.hideUnusedMods = false; // Флаг для скрытия не используемых модов
         
         // Система профилей
         this.savedState = null; // Сохраненное состояние перед переключением
@@ -49,6 +50,7 @@ class ModLoadOrderManager {
             searchInput: document.getElementById('search-input'),
             clearSearchBtn: document.getElementById('clear-search-btn'),
             hideNewModsCheckbox: document.getElementById('hide-new-mods-checkbox'),
+            hideUnusedModsCheckbox: document.getElementById('hide-unused-mods-checkbox'),
             statsTotal: document.getElementById('stats-total'),
             statsEnabled: document.getElementById('stats-enabled'),
             statsDisabled: document.getElementById('stats-disabled'),
@@ -138,6 +140,13 @@ class ModLoadOrderManager {
         // Скрытие новых модов
         this.elements.hideNewModsCheckbox.addEventListener('change', () => {
             this.hideNewMods = this.elements.hideNewModsCheckbox.checked;
+            const searchText = this.elements.searchInput.value;
+            this.updateModList(searchText);
+        });
+        
+        // Скрытие не используемых модов
+        this.elements.hideUnusedModsCheckbox.addEventListener('change', () => {
+            this.hideUnusedMods = this.elements.hideUnusedModsCheckbox.checked;
             const searchText = this.elements.searchInput.value;
             this.updateModList(searchText);
         });
@@ -516,6 +525,11 @@ class ModLoadOrderManager {
         // Фильтрация новых модов, если включен чекбокс
         if (this.hideNewMods) {
             filtered = filtered.filter(mod => !mod.isNew);
+        }
+        
+        // Фильтрация не используемых модов (выключенных), если включен чекбокс
+        if (this.hideUnusedMods) {
+            filtered = filtered.filter(mod => mod.enabled);
         }
         
         // Сортировка модов
