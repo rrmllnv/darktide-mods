@@ -1,7 +1,7 @@
 {
   "name": "darktide-mod-load-order-manager",
   "version": "1.0.0",
-  "description": "Программа для управления порядком загрузки модов Warhammer 40,000: Darktide",
+  "description": "Load order manager for Warhammer 40,000: Darktide mods",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
