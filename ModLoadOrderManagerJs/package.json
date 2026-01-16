@@ -15,8 +15,12 @@
     "mods",
     "manager"
   ],
-  "author": "",
+  "author": "Rifat Mullaianov",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rrmllnv/darktide-mods.git"
+  },
   "devDependencies": {
     "electron": "^27.0.0",
     "electron-builder": "^26.4.0"
@@ -28,12 +32,15 @@
       "output": "dist"
     },
     "files": [
-      "main.js",
-      "preload.js",
-      "index.html",
-      "renderer.js",
-      "styles.css",
-      "package.json"
+      "**/*",
+      "!node_modules/**/*",
+      "!dist/**/*",
+      "!.git/**/*",
+      "!*.bat",
+      "!*.md",
+      "!README*",
+      "!.gitignore",
+      "!.gitattributes"
     ],
     "win": {
       "target": [
@@ -49,13 +56,15 @@
             "x64"
           ]
         }
-      ]
+      ],
+      "artifactName": "${productName}.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "artifactName": "${productName} Setup.${ext}"
     }
   }
 }
