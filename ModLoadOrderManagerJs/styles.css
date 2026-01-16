@@ -354,6 +354,11 @@ body {
     border: 1px solid #ccc;
     border-radius: 3px;
     font-size: 8pt;
+    padding: 0;
+}
+
+.profiles-list option {
+    padding: 5px;
 }
 
 .profile-buttons {
