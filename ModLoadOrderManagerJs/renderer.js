@@ -51,6 +51,7 @@ class ModLoadOrderManager {
             statsEnabled: document.getElementById('stats-enabled'),
             statsDisabled: document.getElementById('stats-disabled'),
             selectedModInfo: document.getElementById('selected-mod-info'),
+            deleteModBtn: document.getElementById('delete-mod-btn'),
             moveUpBtn: document.getElementById('move-up-btn'),
             moveDownBtn: document.getElementById('move-down-btn'),
             onlyThisModBtn: document.getElementById('only-this-mod-btn'),
@@ -129,6 +130,9 @@ class ModLoadOrderManager {
         // Поиск
         this.elements.searchInput.addEventListener('input', () => this.onSearchChange());
         this.elements.clearSearchBtn.addEventListener('click', () => this.clearSearch());
+        
+        // Удаление мода
+        this.elements.deleteModBtn.addEventListener('click', () => this.deleteSelectedMod());
         
         // Перемещение модов
         this.elements.moveUpBtn.addEventListener('click', () => this.moveModUp());
@@ -585,13 +589,58 @@ class ModLoadOrderManager {
             this.updateMoveButtonsState();
             // Обновляем состояние кнопки "Только этот мод"
             this.updateQuickSwitchButtons();
+            // Обновляем состояние кнопки удаления
+            this.updateDeleteButtonState();
         } else {
             this.elements.selectedModInfo.textContent = 'Нет выбора';
             // Отключаем кнопки, если мод не выбран
             this.elements.moveUpBtn.disabled = true;
             this.elements.moveDownBtn.disabled = true;
             this.elements.onlyThisModBtn.disabled = true;
+            this.elements.deleteModBtn.disabled = true;
         }
+    }
+    
+    updateDeleteButtonState() {
+        // Кнопка удаления доступна только если выбран мод
+        this.elements.deleteModBtn.disabled = !this.selectedModName;
+    }
+    
+    deleteSelectedMod() {
+        if (!this.selectedModName) {
+            return;
+        }
+        
+        // Подтверждение удаления
+        if (!confirm(`Удалить мод '${this.selectedModName}' из списка?\n\nМод будет удален из файла при сохранении.`)) {
+            return;
+        }
+        
+        // Находим индекс мода в списке
+        const modIndex = this.modEntries.findIndex(m => m.name === this.selectedModName);
+        if (modIndex === -1) {
+            return;
+        }
+        
+        // Удаляем мод из списка
+        this.modEntries.splice(modIndex, 1);
+        
+        // Сбрасываем выбранный мод
+        this.selectedModName = '';
+        this.elements.selectedModInfo.textContent = 'Нет выбора';
+        
+        // Обновляем интерфейс
+        const searchText = this.elements.searchInput.value;
+        this.updateModList(searchText);
+        this.updateStatistics();
+        
+        // Отключаем кнопки
+        this.elements.moveUpBtn.disabled = true;
+        this.elements.moveDownBtn.disabled = true;
+        this.elements.onlyThisModBtn.disabled = true;
+        this.elements.deleteModBtn.disabled = true;
+        
+        this.setStatus(`Мод удален из списка. Не забудьте сохранить файл.`);
     }
     
     updateStatistics() {

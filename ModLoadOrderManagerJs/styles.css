@@ -235,6 +235,10 @@ body {
     line-height: 1.4;
 }
 
+.delete-mod-frame {
+    margin-bottom: 10px;
+}
+
 .sort-buttons-frame,
 .quick-switch-frame,
 .profiles-frame {
