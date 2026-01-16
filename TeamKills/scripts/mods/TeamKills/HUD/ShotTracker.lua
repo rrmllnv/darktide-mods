@@ -3,24 +3,13 @@ local mod = get_mod("TeamKills")
 local Text = require("scripts/utilities/ui/text")
 local UIWorkspaceSettings = require("scripts/settings/ui/ui_workspace_settings")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
-local UISettings = require("scripts/settings/ui/ui_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local HudElementTeamPanelHandlerSettings = require("scripts/ui/hud/elements/team_panel_handler/hud_element_team_panel_handler_settings")
-local HudElementTeamPlayerPanelSettings = require("scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_settings")
 
-local function get_icon_material(icon_key, fallback_path)
-	if UISettings and UISettings.weapon_action_type_icons and UISettings.weapon_action_type_icons[icon_key] then
-		return UISettings.weapon_action_type_icons[icon_key]
-	end
-	return fallback_path
-end
-
-local icons = {
-	shots_fired = get_icon_material("special_bullet", "content/ui/materials/icons/weapons/actions/special_bullet"),
-	shots_missed = get_icon_material("smiter", "content/ui/materials/icons/weapons/actions/smiter"),
-	head_shot_kill = get_icon_material("ads", "content/ui/materials/icons/weapons/actions/ads"),
-}
+local icon_shots_fired = "\u{E026}"
+local icon_shots_missed = "\u{E027}"
+local icon_head_shot_kill = "\u{E044}"
 
 local hud_body_font_settings = UIFontSettings.hud_body or {}
 local panel_size = HudElementTeamPanelHandlerSettings.panel_size
@@ -31,12 +20,12 @@ end
 
 local function get_icon_size()
 	local font_size = get_font_size()
-	return math.floor(font_size * 1.25)
+	return math.floor(font_size * 0.8)
 end
 
 local function get_icon_spacing()
 	local font_size = get_font_size()
-	return math.floor(font_size * 0.3)
+	return math.floor(font_size * 0.9)
 end
 
 local function get_default_panel_height()
@@ -49,22 +38,14 @@ local function get_opacity_alpha()
 	return math.floor((opacity / 100) * 255)
 end
 
-local function is_material_available(material_path)
-	if not material_path or material_path == "" or type(material_path) ~= "string" then
-		return false
-	end
-	
-	return true
-end
-
 local function hide_shot_tracker_widget(widget)
 	widget.content.visible = false
 	widget.content.text_shots_fired = ""
 	widget.content.text_shots_missed = ""
 	widget.content.text_head_shot_kill = ""
-	widget.content.icon_shots_fired = nil
-	widget.content.icon_shots_missed = nil
-	widget.content.icon_head_shot_kill = nil
+	widget.content.icon_shots_fired = ""
+	widget.content.icon_shots_missed = ""
+	widget.content.icon_head_shot_kill = ""
 end
 
 local team_kills_width = panel_size[1]
@@ -124,16 +105,25 @@ local function apply_panel_height(self, panel_height)
 	end
 	
 	local icon_shots_fired_style = styles.icon_shots_fired
-	if icon_shots_fired_style and icon_shots_fired_style.color then
-		icon_shots_fired_style.color[1] = alpha
+	if icon_shots_fired_style then
+		icon_shots_fired_style.font_size = font_size
+		if icon_shots_fired_style.text_color then
+			icon_shots_fired_style.text_color[1] = alpha
+		end
 	end
 	local icon_shots_missed_style = styles.icon_shots_missed
-	if icon_shots_missed_style and icon_shots_missed_style.color then
-		icon_shots_missed_style.color[1] = alpha
+	if icon_shots_missed_style then
+		icon_shots_missed_style.font_size = font_size
+		if icon_shots_missed_style.text_color then
+			icon_shots_missed_style.text_color[1] = alpha
+		end
 	end
 	local icon_head_shot_kill_style = styles.icon_head_shot_kill
-	if icon_head_shot_kill_style and icon_head_shot_kill_style.color then
-		icon_head_shot_kill_style.color[1] = alpha
+	if icon_head_shot_kill_style then
+		icon_head_shot_kill_style.font_size = font_size
+		if icon_head_shot_kill_style.text_color then
+			icon_head_shot_kill_style.text_color[1] = alpha
+		end
 	end
 
 	widget.dirty = true
@@ -205,20 +195,20 @@ local widget_definitions = {
 	ShotTrackerWidget = UIWidget.create_definition(
 		{
 			{
-				pass_type = "texture",
+				pass_type = "text",
 				style_id = "icon_shots_fired",
 				value_id = "icon_shots_fired",
 				style = {
-					size = {
-						get_icon_size(),
-						get_icon_size(),
-					},
+					font_size = get_icon_size(),
+					text_vertical_alignment = "top",
+					text_horizontal_alignment = "left",
+					font_type = hud_body_font_settings.font_type or "machine_medium",
+					text_color = UIHudSettings.color_tint_main_2,
 					offset = {
 						BORDER_PADDING,
 						BORDER_PADDING + 2,
 						3,
 					},
-					color = UIHudSettings.color_tint_main_2,
 				},
 				visibility_function = function (content, style)
 					local show_tracker = mod:get("opt_show_shot_tracker")
@@ -226,10 +216,7 @@ local widget_definitions = {
 						return false
 					end
 					local show_shots_fired = mod:get("opt_show_shots_fired") ~= false
-					if not show_shots_fired or not content.icon_shots_fired then
-						return false
-					end
-					return is_material_available(content.icon_shots_fired)
+					return show_shots_fired and content.icon_shots_fired ~= nil and content.icon_shots_fired ~= ""
 				end,
 			},
 			{
@@ -258,20 +245,20 @@ local widget_definitions = {
 				end,
 			},
 			{
-				pass_type = "texture",
+				pass_type = "text",
 				style_id = "icon_shots_missed",
 				value_id = "icon_shots_missed",
 				style = {
-					size = {
-						get_icon_size(),
-						get_icon_size(),
-					},
+					font_size = get_icon_size(),
+					text_vertical_alignment = "top",
+					text_horizontal_alignment = "left",
+					font_type = hud_body_font_settings.font_type or "machine_medium",
+					text_color = UIHudSettings.color_tint_main_2,
 					offset = {
 						BORDER_PADDING,
 						BORDER_PADDING + 2,
 						3,
 					},
-					color = UIHudSettings.color_tint_main_2,
 				},
 				visibility_function = function (content, style)
 					local show_tracker = mod:get("opt_show_shot_tracker")
@@ -279,10 +266,7 @@ local widget_definitions = {
 						return false
 					end
 					local show_shots_missed = mod:get("opt_show_shots_missed") ~= false
-					if not show_shots_missed or not content.icon_shots_missed then
-						return false
-					end
-					return is_material_available(content.icon_shots_missed)
+					return show_shots_missed and content.icon_shots_missed ~= nil and content.icon_shots_missed ~= ""
 				end,
 			},
 			{
@@ -311,20 +295,20 @@ local widget_definitions = {
 				end,
 			},
 			{
-				pass_type = "texture",
+				pass_type = "text",
 				style_id = "icon_head_shot_kill",
 				value_id = "icon_head_shot_kill",
 				style = {
-					size = {
-						get_icon_size(),
-						get_icon_size(),
-					},
+					font_size = get_icon_size(),
+					text_vertical_alignment = "top",
+					text_horizontal_alignment = "left",
+					font_type = hud_body_font_settings.font_type or "machine_medium",
+					text_color = UIHudSettings.color_tint_main_2,
 					offset = {
 						BORDER_PADDING,
 						BORDER_PADDING + 2,
 						3,
 					},
-					color = UIHudSettings.color_tint_main_2,
 				},
 				visibility_function = function (content, style)
 					local show_tracker = mod:get("opt_show_shot_tracker")
@@ -332,10 +316,7 @@ local widget_definitions = {
 						return false
 					end
 					local show_head_shot_kill = mod:get("opt_show_head_shot_kill") ~= false
-					if not show_head_shot_kill or not content.icon_head_shot_kill then
-						return false
-					end
-					return is_material_available(content.icon_head_shot_kill)
+					return show_head_shot_kill and content.icon_head_shot_kill ~= nil and content.icon_head_shot_kill ~= ""
 				end,
 			},
 			{
@@ -376,21 +357,6 @@ ShotTracker.init = function(self, parent, draw_layer, start_scale)
 		widget_definitions = widget_definitions,
 	})
 	self.is_in_hub = mod._is_in_hub()
-	
-	local package_manager = Managers.package
-	if package_manager then
-		local packages_to_load = {
-			"packages/ui/hud/player_weapon/player_weapon",
-			"packages/ui/views/inventory_view/inventory_view",
-			"packages/ui/views/inventory_weapons_view/inventory_weapons_view",
-		}
-		
-		for _, package_path in ipairs(packages_to_load) do
-			if not package_manager:has_loaded(package_path) and not package_manager:is_loading(package_path) then
-				package_manager:load(package_path, "TeamKills", nil, true)
-			end
-		end
-	end
 end
 
 ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_service)
@@ -417,21 +383,6 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 		return
 	end
 	
-	local package_manager = Managers.package
-	local packages_loaded = true
-	if package_manager then
-		local required_package = "packages/ui/hud/player_weapon/player_weapon"
-		packages_loaded = package_manager:has_loaded(required_package)
-	end
-	
-	local function can_use_material(material_path)
-		if not packages_loaded or not material_path or material_path == "" then
-			return false
-		end
-		
-		return true
-	end
-	
 	local shots_fired = mod.player_shots_fired and mod.player_shots_fired[local_account_id] or 0
 	local shots_missed = mod.player_shots_missed and mod.player_shots_missed[local_account_id] or 0
 	local head_shot_kill = mod.player_head_shot_kill and mod.player_head_shot_kill[local_account_id] or 0
@@ -447,57 +398,39 @@ ShotTracker.update = function(self, dt, t, ui_renderer, render_settings, input_s
 	local current_x = BORDER_PADDING
 	
 	if show_shots_fired then
-		if can_use_material(icons.shots_fired) then
-			widget.content.icon_shots_fired = icons.shots_fired
-			widget.style.icon_shots_fired.color = UIHudSettings.color_tint_main_2
-		else
-			widget.content.icon_shots_fired = nil
-		end
+		widget.content.icon_shots_fired = icon_shots_fired
 		widget.content.text_shots_fired = tostring(shots_fired)
-		styles.icon_shots_fired.size[1] = icon_size
-		styles.icon_shots_fired.size[2] = icon_size
+		styles.icon_shots_fired.font_size = icon_size
 		styles.icon_shots_fired.offset[1] = current_x
 		styles.text_shots_fired.offset[1] = current_x + icon_size + 4
 		local text_width, _ = Text.text_size(ui_renderer, widget.content.text_shots_fired, styles.text_shots_fired)
 		current_x = current_x + icon_size + 4 + text_width + icon_spacing
 	else
-		widget.content.icon_shots_fired = nil
+		widget.content.icon_shots_fired = ""
 		widget.content.text_shots_fired = ""
 	end
 	
 	if show_shots_missed then
-		if can_use_material(icons.shots_missed) then
-			widget.content.icon_shots_missed = icons.shots_missed
-			widget.style.icon_shots_missed.color = UIHudSettings.color_tint_main_2
-		else
-			widget.content.icon_shots_missed = nil
-		end
+		widget.content.icon_shots_missed = icon_shots_missed
 		widget.content.text_shots_missed = tostring(shots_missed)
-		styles.icon_shots_missed.size[1] = icon_size
-		styles.icon_shots_missed.size[2] = icon_size
+		styles.icon_shots_missed.font_size = icon_size
 		styles.icon_shots_missed.offset[1] = current_x
 		styles.text_shots_missed.offset[1] = current_x + icon_size + 4
 		local text_width, _ = Text.text_size(ui_renderer, widget.content.text_shots_missed, styles.text_shots_missed)
 		current_x = current_x + icon_size + 4 + text_width + icon_spacing
 	else
-		widget.content.icon_shots_missed = nil
+		widget.content.icon_shots_missed = ""
 		widget.content.text_shots_missed = ""
 	end
 	
 	if show_head_shot_kill then
-		if can_use_material(icons.head_shot_kill) then
-			widget.content.icon_head_shot_kill = icons.head_shot_kill
-			widget.style.icon_head_shot_kill.color = UIHudSettings.color_tint_main_2
-		else
-			widget.content.icon_head_shot_kill = nil
-		end
+		widget.content.icon_head_shot_kill = icon_head_shot_kill
 		widget.content.text_head_shot_kill = tostring(head_shot_kill)
-		styles.icon_head_shot_kill.size[1] = icon_size
-		styles.icon_head_shot_kill.size[2] = icon_size
+		styles.icon_head_shot_kill.font_size = icon_size
 		styles.icon_head_shot_kill.offset[1] = current_x
 		styles.text_head_shot_kill.offset[1] = current_x + icon_size + 4
 	else
-		widget.content.icon_head_shot_kill = nil
+		widget.content.icon_head_shot_kill = ""
 		widget.content.text_head_shot_kill = ""
 	end
 	
@@ -531,9 +464,9 @@ ShotTracker.draw = function(self, dt, t, ui_renderer, render_settings, input_ser
 	
 	if not success then
 		--mod:error("Error drawing ShotTracker: %s", tostring(err))
-		content.icon_shots_fired = nil
-		content.icon_shots_missed = nil
-		content.icon_head_shot_kill = nil
+		content.icon_shots_fired = ""
+		content.icon_shots_missed = ""
+		content.icon_head_shot_kill = ""
 	end
 end
 
