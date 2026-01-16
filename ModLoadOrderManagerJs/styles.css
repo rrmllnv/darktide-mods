@@ -369,6 +369,26 @@ body {
 .btn-full {
     width: 100%;
     margin-bottom: 2px;
+    padding: 5px 15px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.btn-full:hover {
+    background-color: #e0e0e0;
+}
+
+.btn-full:active {
+    background-color: #d0d0d0;
+}
+
+.btn-full:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .profiles-list {
