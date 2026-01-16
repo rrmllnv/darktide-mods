@@ -239,6 +239,10 @@ body {
     margin-bottom: 10px;
 }
 
+.symlink-frame {
+    margin-bottom: 10px;
+}
+
 .sort-buttons-frame,
 .quick-switch-frame,
 .profiles-frame {

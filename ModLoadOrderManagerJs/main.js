@@ -1,7 +1,9 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
-const { existsSync, readdirSync, statSync } = require('fs');
+const { existsSync, readdirSync, statSync, symlink } = require('fs');
+const { promisify } = require('util');
+const symlinkAsync = promisify(symlink);
 
 // Путь к файлу mod_load_order.txt по умолчанию
 const DEFAULT_PATH = 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Warhammer 40,000 DARKTIDE\\mods\\mod_load_order.txt';
@@ -244,4 +246,70 @@ ipcMain.handle('rename-profile', async (event, profilesDir, oldName, newName) =>
   } catch (error) {
     return { success: false, error: error.message };
   }
+});
+
+// Создать символическую ссылку
+ipcMain.handle('create-symlink', async (event, linkPath, targetPath) => {
+  try {
+    // Проверяем, существует ли уже симлинк или папка
+    if (existsSync(linkPath)) {
+      // Проверяем, является ли это симлинком
+      try {
+        const stats = await fs.lstat(linkPath);
+        if (stats.isSymbolicLink()) {
+          return { success: false, error: 'Символическая ссылка уже существует' };
+        } else {
+          return { success: false, error: 'Папка или файл с таким именем уже существует' };
+        }
+      } catch (e) {
+        return { success: false, error: 'Папка или файл с таким именем уже существует' };
+      }
+    }
+    
+    // Проверяем, существует ли целевая папка
+    if (!existsSync(targetPath)) {
+      return { success: false, error: 'Целевая папка не существует' };
+    }
+    
+    // Создаем символическую ссылку
+    // На Windows нужно использовать 'junction' для директорий или 'dir' для символических ссылок
+    // 'dir' работает только с правами администратора или в Developer Mode
+    const linkType = process.platform === 'win32' ? 'junction' : 'dir';
+    
+    try {
+      await symlinkAsync(targetPath, linkPath, linkType);
+      return { success: true };
+    } catch (error) {
+      // Если не получилось создать junction, пробуем dir (требует прав администратора)
+      if (process.platform === 'win32' && linkType === 'junction') {
+        try {
+          await symlinkAsync(targetPath, linkPath, 'dir');
+          return { success: true };
+        } catch (e) {
+          return { 
+            success: false, 
+            error: `Не удалось создать символическую ссылку. Возможно, нужны права администратора или включен Developer Mode. Ошибка: ${e.message}` 
+          };
+        }
+      }
+      throw error;
+    }
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Выбрать папку через диалог
+ipcMain.handle('select-folder', async (event, defaultPath) => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Выберите папку с модом',
+    defaultPath: defaultPath,
+    properties: ['openDirectory']
+  });
+
+  if (result.canceled) {
+    return { success: false, canceled: true };
+  }
+
+  return { success: true, folderPath: result.filePaths[0] };
 });

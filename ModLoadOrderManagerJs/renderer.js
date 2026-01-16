@@ -52,6 +52,7 @@ class ModLoadOrderManager {
             statsDisabled: document.getElementById('stats-disabled'),
             selectedModInfo: document.getElementById('selected-mod-info'),
             deleteModBtn: document.getElementById('delete-mod-btn'),
+            createSymlinkBtn: document.getElementById('create-symlink-btn'),
             moveUpBtn: document.getElementById('move-up-btn'),
             moveDownBtn: document.getElementById('move-down-btn'),
             onlyThisModBtn: document.getElementById('only-this-mod-btn'),
@@ -134,6 +135,9 @@ class ModLoadOrderManager {
         
         // Удаление мода
         this.elements.deleteModBtn.addEventListener('click', () => this.deleteSelectedMod());
+        
+        // Создание симлинка
+        this.elements.createSymlinkBtn.addEventListener('click', () => this.createSymlinkForMod());
         
         // Перемещение модов
         this.elements.moveUpBtn.addEventListener('click', () => this.moveModUp());
@@ -643,6 +647,67 @@ class ModLoadOrderManager {
         this.elements.deleteModBtn.disabled = true;
         
         this.setStatus(`Мод удален из списка. Не забудьте сохранить файл.`);
+    }
+    
+    async createSymlinkForMod() {
+        // Определяем путь к папке модов (где находится mod_load_order.txt)
+        const modsDir = this.filePath.substring(0, this.filePath.lastIndexOf('\\'));
+        if (!modsDir) {
+            alert('Не удалось определить папку модов');
+            return;
+        }
+        
+        // Запрашиваем путь к исходной папке мода
+        const result = await window.electronAPI.selectFolder('');
+        if (!result.success || result.canceled) {
+            return;
+        }
+        
+        const targetPath = result.folderPath;
+        
+        // Проверяем, что целевая папка существует
+        const targetExists = await window.electronAPI.fileExists(targetPath);
+        if (!targetExists) {
+            alert('Выбранная папка не существует');
+            return;
+        }
+        
+        // Получаем имя папки из пути (последняя часть пути)
+        const pathParts = targetPath.split('\\');
+        const defaultModName = pathParts[pathParts.length - 1];
+        
+        // Запрашиваем имя мода через модальное окно
+        this.showModal('Введите имя мода для симлинка:', defaultModName, async (modName) => {
+            if (!modName || !modName.trim()) {
+                return;
+            }
+            
+            const cleanModName = modName.trim();
+            
+            // Путь для симлинка (в папке модов с именем мода)
+            const linkPath = modsDir + '\\' + cleanModName;
+            
+            // Подтверждение
+            if (!confirm(`Создать символическую ссылку?\n\nИз: ${targetPath}\nВ: ${linkPath}\n\nИмя: ${cleanModName}`)) {
+                return;
+            }
+            
+            try {
+                const symlinkResult = await window.electronAPI.createSymlink(linkPath, targetPath);
+                if (!symlinkResult.success) {
+                    alert(`Не удалось создать символическую ссылку:\n${symlinkResult.error}`);
+                    return;
+                }
+                
+                alert(`Символическая ссылка успешно создана!\n\n${linkPath} -> ${targetPath}`);
+                this.setStatus(`Символическая ссылка создана: ${cleanModName}`);
+                
+                // Обновляем список модов (сканируем папку)
+                await this.scanAndUpdate();
+            } catch (error) {
+                alert(`Ошибка при создании символической ссылки:\n${error.message}`);
+            }
+        });
     }
     
     updateStatistics() {
