@@ -39,9 +39,6 @@
     "appId": "com.modloadordermanager.app",
     "productName": "Darktide Mod Load Order Manager",
     "compression": "maximum",
-    "removePackageScripts": false,
-    "removePackageKeywords": false,
-    "removePackageAuthor": false,
     "directories": {
       "output": "dist"
     },
@@ -71,9 +68,8 @@
           ]
         }
       ],
-      "icon": "icons/darktide-icon.png",
+      "icon": "icons/darktide-icon.ico",
       "requestedExecutionLevel": "asInvoker",
-      "publisherName": "Rifat Mullaianov",
       "artifactName": "${productName}.${ext}"
     },
     "nsis": {
@@ -81,15 +77,10 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "installerIcon": "icons/darktide-icon.png",
-      "uninstallerIcon": "icons/darktide-icon.png",
-      "installerHeaderIcon": "icons/darktide-icon.png",
-      "installerSidebar": "icons/darktide-icon.png",
+      "installerIcon": "icons/darktide-icon.ico",
+      "uninstallerIcon": "icons/darktide-icon.ico",
+      "installerHeaderIcon": "icons/darktide-icon.ico",
       "license": "LICENSE.txt",
-      "warningsAsErrors": false,
-      "menuCategory": "Games",
-      "shortcutName": "Darktide Mod Load Order Manager",
-      "deleteAppDataOnUninstall": false,
       "artifactName": "${productName} Setup.${ext}"
     }
   }
