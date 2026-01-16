@@ -768,14 +768,37 @@ class ModLoadOrderManager {
         }
         
         const count = this.selectedModNames.size;
-        if (count >= 1) {
-            this.elements.bulkActionsPanel.style.display = 'block';
-            if (this.elements.bulkSelectionCount) {
+        const hasSelection = count >= 1;
+        
+        // Обновляем текст счетчика
+        if (this.elements.bulkSelectionCount) {
+            if (count === 0) {
+                this.elements.bulkSelectionCount.textContent = 'Нет выбранных модов';
+            } else {
                 const modText = count === 1 ? 'мод' : count < 5 ? 'мода' : 'модов';
                 this.elements.bulkSelectionCount.textContent = `${count} ${modText} выбрано`;
             }
+        }
+        
+        // Делаем кнопки активными/неактивными в зависимости от выбора
+        if (this.elements.bulkEnableBtn) {
+            this.elements.bulkEnableBtn.disabled = !hasSelection;
+        }
+        if (this.elements.bulkDisableBtn) {
+            this.elements.bulkDisableBtn.disabled = !hasSelection;
+        }
+        if (this.elements.bulkDeleteBtn) {
+            this.elements.bulkDeleteBtn.disabled = !hasSelection;
+        }
+        if (this.elements.bulkClearSelectionBtn) {
+            this.elements.bulkClearSelectionBtn.disabled = !hasSelection;
+        }
+        
+        // Добавляем/убираем класс для визуального отображения неактивного состояния
+        if (hasSelection) {
+            this.elements.bulkActionsPanel.classList.remove('disabled');
         } else {
-            this.elements.bulkActionsPanel.style.display = 'none';
+            this.elements.bulkActionsPanel.classList.add('disabled');
         }
     }
     
