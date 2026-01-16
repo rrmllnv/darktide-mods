@@ -19,10 +19,14 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     },
-    title: 'Mod Load Order Manager'
+    title: 'Mod Load Order Manager',
+    autoHideMenuBar: true // Скрываем стандартное меню Electron
   });
 
   mainWindow.loadFile('index.html');
+
+  // Полностью скрываем меню
+  mainWindow.setMenuBarVisibility(false);
 
   // Открываем DevTools в режиме разработки
   if (process.argv.includes('--dev')) {
