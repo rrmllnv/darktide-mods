@@ -1,5 +1,5 @@
 {
-  "name": "mod-load-order-manager",
+  "name": "darktide-mod-load-order-manager",
   "version": "1.0.0",
   "description": "Программа для управления порядком загрузки модов Warhammer 40,000: Darktide",
   "main": "main.js",
@@ -23,7 +23,7 @@
   },
   "build": {
     "appId": "com.modloadordermanager.app",
-    "productName": "Mod Load Order Manager",
+    "productName": "Darktide Mod Load Order Manager",
     "directories": {
       "output": "dist"
     },
