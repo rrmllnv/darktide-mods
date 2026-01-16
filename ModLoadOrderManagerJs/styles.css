@@ -86,9 +86,27 @@ body {
 }
 
 .sort-combo {
-    width: 150px;
-    padding: 2px;
+    width: 160px;
+    padding: 8px;
     margin-right: 2px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background-color 0.2s;
+    min-height: 35px;
+    box-sizing: border-box;
+}
+
+.sort-combo:hover {
+    background-color: #e0e0e0;
+}
+
+.sort-combo:focus {
+    outline: 2px solid #0078d4;
+    outline-offset: -2px;
+    border-color: #0078d4;
 }
 
 .btn-small {
