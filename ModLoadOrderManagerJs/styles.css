@@ -120,6 +120,20 @@ body {
     border: 2px solid #2196F3;
 }
 
+.mod-item[draggable="true"] {
+    cursor: move;
+}
+
+.mod-item.dragging {
+    opacity: 0.5;
+    background-color: #e0e0e0;
+}
+
+.mod-item.drag-over {
+    border-top: 3px solid #2196F3;
+    background-color: #f0f8ff;
+}
+
 .mod-item input[type="checkbox"] {
     margin-right: 5px;
 }
