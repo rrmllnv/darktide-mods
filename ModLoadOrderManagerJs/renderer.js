@@ -297,7 +297,7 @@ class ModLoadOrderManager {
             parts.push(`Найдено новых модов: ${scanResult.added}`);
         }
         if (scanResult.removed > 0) {
-            parts.push(`Удалено несуществующих модов: ${scanResult.removed}`);
+            parts.push(`Удалено не найденных модов: ${scanResult.removed}`);
         }
         if (scanResult.deleted > 0) {
             parts.push(`Помечено как удаленные: ${scanResult.deleted}`);
