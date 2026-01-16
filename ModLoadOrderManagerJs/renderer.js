@@ -63,8 +63,16 @@ class ModLoadOrderManager {
             deleteProfileBtn: document.getElementById('delete-profile-btn'),
             saveBtn: document.getElementById('save-btn'),
             cancelBtn: document.getElementById('cancel-btn'),
-            statusText: document.getElementById('status-text')
+            statusText: document.getElementById('status-text'),
+            profileDialog: document.getElementById('profile-dialog'),
+            modalTitle: document.getElementById('modal-title'),
+            profileNameInput: document.getElementById('profile-name-input'),
+            modalOkBtn: document.getElementById('modal-ok-btn'),
+            modalCancelBtn: document.getElementById('modal-cancel-btn')
         };
+        
+        // Переменная для хранения callback функции модального окна
+        this.modalCallback = null;
         
         // Получаем путь по умолчанию
         this.defaultPath = await window.electronAPI.getDefaultPath();
@@ -140,6 +148,86 @@ class ModLoadOrderManager {
         // Сохранение
         this.elements.saveBtn.addEventListener('click', () => this.saveFile());
         this.elements.cancelBtn.addEventListener('click', () => this.loadFile());
+        
+        // Модальное окно
+        this.elements.modalOkBtn.addEventListener('click', () => this.handleModalOk());
+        this.elements.modalCancelBtn.addEventListener('click', () => this.handleModalCancel());
+        this.elements.profileNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.handleModalOk();
+            } else if (e.key === 'Escape') {
+                this.handleModalCancel();
+            }
+        });
+        
+        // Закрытие модального окна при клике вне его
+        this.elements.profileDialog.addEventListener('click', (e) => {
+            // Закрываем только если клик был по фону, а не по содержимому
+            if (e.target === this.elements.profileDialog) {
+                this.handleModalCancel();
+            }
+        });
+        
+        // Предотвращаем закрытие при клике на содержимое модального окна
+        const modalContent = this.elements.profileDialog.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+    }
+    
+    showModal(title, defaultValue = '', callback) {
+        this.elements.modalTitle.textContent = title;
+        this.modalCallback = callback;
+        
+        // Убеждаемся, что поле доступно и очищено
+        this.elements.profileNameInput.disabled = false;
+        this.elements.profileNameInput.readOnly = false;
+        this.elements.profileNameInput.value = '';
+        
+        // Показываем модальное окно
+        this.elements.profileDialog.classList.add('show');
+        
+        // Устанавливаем значение и фокус после показа модального окна
+        // Используем requestAnimationFrame для гарантии, что DOM обновлен
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                this.elements.profileNameInput.value = defaultValue || '';
+                // Фокус на поле ввода и выделение текста
+                this.elements.profileNameInput.focus();
+                this.elements.profileNameInput.select();
+                
+                // Дополнительная проверка - если фокус не установился, пробуем еще раз
+                if (document.activeElement !== this.elements.profileNameInput) {
+                    setTimeout(() => {
+                        this.elements.profileNameInput.focus();
+                        this.elements.profileNameInput.select();
+                    }, 100);
+                }
+            });
+        });
+    }
+    
+    hideModal() {
+        this.elements.profileDialog.classList.remove('show');
+        this.elements.profileNameInput.value = '';
+        this.modalCallback = null;
+    }
+    
+    handleModalOk() {
+        const value = this.elements.profileNameInput.value.trim();
+        if (this.modalCallback) {
+            this.modalCallback(value);
+        }
+        this.hideModal();
+    }
+    
+    handleModalCancel() {
+        if (this.modalCallback) {
+            this.modalCallback(null);
+        }
+        this.hideModal();
     }
     
     async browseFile() {
@@ -824,32 +912,33 @@ class ModLoadOrderManager {
             return;
         }
         
-        const profileName = prompt('Введите имя профиля:');
-        if (!profileName) {
-            return;
-        }
-        
-        // Очищаем имя от недопустимых символов
-        const cleanName = profileName.replace(/[^a-zA-Z0-9\s\-_]/g, '').trim();
-        if (!cleanName) {
-            alert('Недопустимое имя профиля');
-            return;
-        }
-        
-        try {
-            const state = this.saveCurrentState();
-            const result = await window.electronAPI.saveProfile(this.profilesDir, cleanName, state);
-            
-            if (!result.success) {
-                alert(`Не удалось сохранить профиль:\n${result.error}`);
+        this.showModal('Введите имя профиля:', '', async (profileName) => {
+            if (!profileName) {
                 return;
             }
             
-            await this.refreshProfilesList();
-            alert(`Профиль '${cleanName}' сохранен`);
-        } catch (error) {
-            alert(`Не удалось сохранить профиль:\n${error.message}`);
-        }
+            // Очищаем имя от недопустимых символов
+            const cleanName = profileName.replace(/[^a-zA-Z0-9\s\-_]/g, '').trim();
+            if (!cleanName) {
+                alert('Недопустимое имя профиля');
+                return;
+            }
+            
+            try {
+                const state = this.saveCurrentState();
+                const result = await window.electronAPI.saveProfile(this.profilesDir, cleanName, state);
+                
+                if (!result.success) {
+                    alert(`Не удалось сохранить профиль:\n${result.error}`);
+                    return;
+                }
+                
+                await this.refreshProfilesList();
+                alert(`Профиль '${cleanName}' сохранен`);
+            } catch (error) {
+                alert(`Не удалось сохранить профиль:\n${error.message}`);
+            }
+        });
     }
     
     async loadSelectedProfile() {
@@ -902,36 +991,37 @@ class ModLoadOrderManager {
         
         const oldProfileName = this.elements.profilesList.options[selectedIndex].value;
         
-        // Запрашиваем новое имя
-        const newProfileName = prompt(`Введите новое имя для профиля '${oldProfileName}':`, oldProfileName);
-        if (!newProfileName) {
-            return;
-        }
-        
-        // Очищаем имя от недопустимых символов
-        const cleanName = newProfileName.replace(/[^a-zA-Z0-9\s\-_]/g, '').trim();
-        if (!cleanName) {
-            alert('Недопустимое имя профиля');
-            return;
-        }
-        
-        // Проверяем, что новое имя отличается от старого
-        if (cleanName === oldProfileName) {
-            return;
-        }
-        
-        try {
-            const result = await window.electronAPI.renameProfile(this.profilesDir, oldProfileName, cleanName);
-            if (!result.success) {
-                alert(`Не удалось переименовать профиль:\n${result.error}`);
+        // Показываем модальное окно с текущим именем
+        this.showModal(`Введите новое имя для профиля '${oldProfileName}':`, oldProfileName, async (newProfileName) => {
+            if (!newProfileName) {
                 return;
             }
             
-            await this.refreshProfilesList();
-            alert(`Профиль '${oldProfileName}' переименован в '${cleanName}'`);
-        } catch (error) {
-            alert(`Не удалось переименовать профиль:\n${error.message}`);
-        }
+            // Очищаем имя от недопустимых символов
+            const cleanName = newProfileName.replace(/[^a-zA-Z0-9\s\-_]/g, '').trim();
+            if (!cleanName) {
+                alert('Недопустимое имя профиля');
+                return;
+            }
+            
+            // Проверяем, что новое имя отличается от старого
+            if (cleanName === oldProfileName) {
+                return;
+            }
+            
+            try {
+                const result = await window.electronAPI.renameProfile(this.profilesDir, oldProfileName, cleanName);
+                if (!result.success) {
+                    alert(`Не удалось переименовать профиль:\n${result.error}`);
+                    return;
+                }
+                
+                await this.refreshProfilesList();
+                alert(`Профиль '${oldProfileName}' переименован в '${cleanName}'`);
+            } catch (error) {
+                alert(`Не удалось переименовать профиль:\n${error.message}`);
+            }
+        });
     }
     
     async overwriteSelectedProfile() {

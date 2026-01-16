@@ -125,6 +125,22 @@
         <span id="status-text">Готов</span>
     </div>
 
+    <!-- Модальное окно для ввода имени профиля -->
+    <div id="profile-dialog" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="modal-title" class="modal-title">Введите имя профиля</span>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="profile-name-input" class="modal-input" placeholder="Имя профиля..." autocomplete="off" />
+            </div>
+            <div class="modal-footer">
+                <button id="modal-ok-btn" class="btn btn-primary">OK</button>
+                <button id="modal-cancel-btn" class="btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+
     <script src="renderer.js"></script>
 </body>
 </html>
