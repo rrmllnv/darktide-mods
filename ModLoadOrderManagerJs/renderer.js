@@ -291,12 +291,23 @@ class ModLoadOrderManager {
         
         // Показываем результат
         let message = '';
-        if (scanResult.added > 0 && scanResult.removed > 0) {
-            message = `Найдено новых модов: ${scanResult.added}\nУдалено несуществующих модов: ${scanResult.removed}`;
-        } else if (scanResult.added > 0) {
-            message = `Найдено новых модов: ${scanResult.added}`;
-        } else if (scanResult.removed > 0) {
-            message = `Удалено несуществующих модов: ${scanResult.removed}`;
+        const parts = [];
+        
+        if (scanResult.added > 0) {
+            parts.push(`Найдено новых модов: ${scanResult.added}`);
+        }
+        if (scanResult.removed > 0) {
+            parts.push(`Удалено несуществующих модов: ${scanResult.removed}`);
+        }
+        if (scanResult.deleted > 0) {
+            parts.push(`Помечено как удаленные: ${scanResult.deleted}`);
+        }
+        if (scanResult.restored > 0) {
+            parts.push(`Восстановлено модов: ${scanResult.restored}`);
+        }
+        
+        if (parts.length > 0) {
+            message = parts.join('\n');
         } else {
             message = 'Изменений не обнаружено';
         }

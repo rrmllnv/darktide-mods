@@ -28,7 +28,7 @@ export class ModScanService {
             const result = await window.electronAPI.scanModsDirectory(modsDir);
             if (!result.success) {
                 this.setStatus(`Предупреждение: не удалось просканировать папку модов: ${result.error}`);
-                return { added: 0, removed: 0, selectedModName };
+                return { added: 0, removed: 0, deleted: 0, restored: 0, selectedModName };
             }
             
             // Получаем список модов из файловой системы
@@ -37,15 +37,27 @@ export class ModScanService {
             // Удаляем моды с флагом isNew, которых больше нет в файловой системе
             const modsToRemove = [];
             let newSelectedModName = selectedModName;
+            let deletedCount = 0; // Счетчик модов, помеченных как deleted
+            let restoredCount = 0; // Счетчик модов, у которых снят флаг deleted (папка появилась)
             
             // Проверяем все моды из файла на наличие папок
             for (const mod of modEntries) {
+                const wasDeleted = mod.isDeleted; // Сохраняем предыдущее состояние
+                
                 // Если мод не новый (есть в файле), но его папки нет в файловой системе
                 if (!mod.isNew && !fileSystemMods.has(mod.name)) {
+                    if (!wasDeleted) {
+                        // Мод только что помечен как deleted
+                        deletedCount++;
+                    }
                     mod.isDeleted = true; // Помечаем как удаленный
                 } else if (mod.isDeleted && fileSystemMods.has(mod.name)) {
                     // Если папка появилась снова - снимаем флаг
                     mod.isDeleted = false;
+                    if (wasDeleted) {
+                        // Флаг был снят (папка восстановлена)
+                        restoredCount++;
+                    }
                 }
                 
                 // Если мод помечен как новый, но его нет в файловой системе - удаляем
@@ -83,12 +95,18 @@ export class ModScanService {
                 ));
             });
             
-            return { added: newMods.length, removed: modsToRemove.length, selectedModName: newSelectedModName };
+            return { 
+                added: newMods.length, 
+                removed: modsToRemove.length, 
+                deleted: deletedCount,
+                restored: restoredCount,
+                selectedModName: newSelectedModName 
+            };
             
         } catch (error) {
             // Не показываем ошибку пользователю, просто логируем в статус
             this.setStatus(`Предупреждение: не удалось просканировать папку модов: ${error.message}`);
-            return { added: 0, removed: 0, selectedModName };
+            return { added: 0, removed: 0, deleted: 0, restored: 0, selectedModName };
         }
     }
 }
