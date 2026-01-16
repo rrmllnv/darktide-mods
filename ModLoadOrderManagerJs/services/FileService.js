@@ -66,13 +66,13 @@ export class FileService {
                 const modName = stripped.substring(2).trim();
                 // Проверяем, что это действительно имя мода (содержит буквы/цифры)
                 if (modName && /[a-zA-Z0-9]/.test(modName)) {
-                    modEntries.push(new ModEntry(modName, false, stripped, false, modIndex));
+                    modEntries.push(new ModEntry(modName, false, stripped, false, modIndex, false, false));
                 }
             } else {
                 // Активный мод (не начинается с --)
                 const modName = stripped.trim();
                 if (modName) { // Проверяем, что строка не пустая
-                    modEntries.push(new ModEntry(modName, true, stripped, false, modIndex));
+                    modEntries.push(new ModEntry(modName, true, stripped, false, modIndex, false, false));
                 }
             }
         }

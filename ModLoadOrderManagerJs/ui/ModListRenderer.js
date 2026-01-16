@@ -140,6 +140,14 @@ export class ModListRenderer {
             deletedLabel.textContent = '[DELETED]';
         }
         
+        // Метка "SYMLINK" для модов-симлинков
+        let symlinkLabel = null;
+        if (modEntry.isSymlink) {
+            symlinkLabel = document.createElement('span');
+            symlinkLabel.className = 'mod-symlink-label';
+            symlinkLabel.textContent = '[SYMLINK]';
+        }
+        
         // Индикатор статуса
         const status = document.createElement('span');
         status.className = `mod-status ${modEntry.enabled ? 'enabled' : 'disabled'}`;
@@ -162,11 +170,16 @@ export class ModListRenderer {
         // Сборка элемента
         modItem.appendChild(checkbox);
         modItem.appendChild(modName);
-        if (newLabel) {
-            modItem.appendChild(newLabel);
+        
+        
+        if (symlinkLabel) {
+            modItem.appendChild(symlinkLabel);
         }
         if (deletedLabel) {
             modItem.appendChild(deletedLabel);
+        }
+        if (newLabel) {
+            modItem.appendChild(newLabel);
         }
         modItem.appendChild(status);
         

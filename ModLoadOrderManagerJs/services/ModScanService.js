@@ -33,6 +33,7 @@ export class ModScanService {
             
             // Получаем список модов из файловой системы
             const fileSystemMods = new Set(result.mods);
+            const symlinkMods = result.symlinks || new Map(); // Карта симлинков
             
             // Удаляем моды с флагом isNew, которых больше нет в файловой системе
             const modsToRemove = [];
@@ -51,6 +52,7 @@ export class ModScanService {
                         deletedCount++;
                     }
                     mod.isDeleted = true; // Помечаем как удаленный
+                    mod.isSymlink = false; // Если папки нет, симлинк тоже не может быть
                 } else if (mod.isDeleted && fileSystemMods.has(mod.name)) {
                     // Если папка появилась снова - снимаем флаг
                     mod.isDeleted = false;
@@ -58,6 +60,11 @@ export class ModScanService {
                         // Флаг был снят (папка восстановлена)
                         restoredCount++;
                     }
+                }
+                
+                // Обновляем флаг isSymlink для существующих модов
+                if (fileSystemMods.has(mod.name)) {
+                    mod.isSymlink = symlinkMods.get(mod.name) || false;
                 }
                 
                 // Если мод помечен как новый, но его нет в файловой системе - удаляем
@@ -86,12 +93,15 @@ export class ModScanService {
             // Новые моды получают большой orderIndex, чтобы быть в конце при сортировке по умолчанию
             const baseIndex = modEntries.length + 1000; // Большой индекс для новых модов
             newMods.sort().forEach((modName, idx) => {
+                const isSymlink = symlinkMods.get(modName) || false;
                 modEntries.push(new ModEntry(
                     modName,
                     false, // Новые моды по умолчанию выключены
                     `--${modName}`, // По умолчанию закомментированы
                     true, // Флаг нового мода
-                    baseIndex + idx // Порядок для новых модов
+                    baseIndex + idx, // Порядок для новых модов
+                    false, // isDeleted
+                    isSymlink // Флаг симлинка
                 ));
             });
             

@@ -87,7 +87,9 @@ export class ProfileService {
                     enabled,
                     enabled ? modName : `--${modName}`,
                     false, // НЕ новый мод, так как он из профиля
-                    index // Порядок из профиля
+                    index, // Порядок из профиля
+                    false, // isDeleted
+                    false // isSymlink (из профиля не знаем, определится при сканировании)
                 ));
             }
         });

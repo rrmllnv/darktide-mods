@@ -114,21 +114,23 @@ ipcMain.handle('scan-mods-directory', async (event, modsDir) => {
 
     const items = readdirSync(modsDir);
     const newMods = [];
+    const symlinkMods = new Map(); // Карта: имя мода -> является ли симлинком
 
     for (const item of items) {
       const itemPath = path.join(modsDir, item);
       
       // Используем lstatSync для проверки симлинков (не следует по ссылкам)
       const stats = lstatSync(itemPath);
+      const isSymlink = stats.isSymbolicLink();
       
       // Пропускаем файлы, ищем только папки (включая симлинки на папки)
-      if (!stats.isDirectory() && !stats.isSymbolicLink()) {
+      if (!stats.isDirectory() && !isSymlink) {
         continue;
       }
       
       // Проверяем, является ли это симлинком
       // Если симлинк, проверяем, указывает ли он на папку
-      if (stats.isSymbolicLink()) {
+      if (isSymlink) {
         try {
           // Проверяем, на что указывает симлинк
           const targetStats = statSync(itemPath);
@@ -150,10 +152,11 @@ ipcMain.handle('scan-mods-directory', async (event, modsDir) => {
       const modFile = path.join(itemPath, `${item}.mod`);
       if (existsSync(modFile)) {
         newMods.push(item);
+        symlinkMods.set(item, isSymlink);
       }
     }
 
-    return { success: true, mods: newMods.sort() };
+    return { success: true, mods: newMods.sort(), symlinks: symlinkMods };
   } catch (error) {
     return { success: false, error: error.message };
   }

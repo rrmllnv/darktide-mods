@@ -195,7 +195,14 @@ body {
     color: red;
     font-weight: bold;
     font-size: 7pt;
-    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.mod-symlink-label {
+    color: purple;
+    font-weight: bold;
+    font-size: 7pt;
+    margin-right: 5px;
 }
 
 .mod-status {
