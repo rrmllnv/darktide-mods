@@ -291,15 +291,21 @@ class ModLoadOrderManager:
         buttons_row1 = ttk.Frame(profile_buttons_frame)
         buttons_row1.pack(fill=tk.X, pady=(0, 2))
         
-        ttk.Button(buttons_row1, text="Сохранить", command=self.save_current_profile).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 2))
-        ttk.Button(buttons_row1, text="Загрузить", command=self.load_selected_profile).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
+        ttk.Button(buttons_row1, text="Новый", command=self.save_current_profile).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 2))
+        ttk.Button(buttons_row1, text="Перезаписать", command=self.overwrite_selected_profile).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
         
-        # Вторая строка кнопок
-        buttons_row2 = ttk.Frame(profile_buttons_frame)
-        buttons_row2.pack(fill=tk.X)
+        # Вторая строка кнопок (загрузка)
+        buttons_row2_load = ttk.Frame(profile_buttons_frame)
+        buttons_row2_load.pack(fill=tk.X, pady=(0, 2))
         
-        ttk.Button(buttons_row2, text="Переименовать", command=self.rename_selected_profile).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 2))
-        ttk.Button(buttons_row2, text="Удалить", command=self.delete_selected_profile).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(2, 0))
+        ttk.Button(buttons_row2_load, text="Загрузить", command=self.load_selected_profile).pack(side=tk.LEFT, fill=tk.X, expand=True)
+        
+        # Третья строка кнопок
+        buttons_row3 = ttk.Frame(profile_buttons_frame)
+        buttons_row3.pack(fill=tk.X)
+        
+        ttk.Button(buttons_row3, text="Переименовать", command=self.rename_selected_profile).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 2))
+        ttk.Button(buttons_row3, text="Удалить", command=self.delete_selected_profile).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(2, 0))
         
         # Обновляем список профилей
         self.refresh_profiles_list()
@@ -1061,6 +1067,41 @@ class ModLoadOrderManager:
                 messagebox.showerror("Ошибка", f"Файл профиля '{old_profile_name}' не найден")
         except Exception as e:
             messagebox.showerror("Ошибка", f"Не удалось переименовать профиль:\n{str(e)}")
+    
+    def overwrite_selected_profile(self):
+        """Перезапись выбранного профиля текущим состоянием"""
+        # Проверяем и инициализируем папку профилей, если нужно
+        if not self.profiles_dir:
+            self.init_profiles_directory()
+        
+        if not self.profiles_dir:
+            messagebox.showerror("Ошибка", "Не удалось определить папку для профилей")
+            return
+        
+        selection = self.profiles_listbox.curselection()
+        if not selection:
+            messagebox.showwarning("Предупреждение", "Выберите профиль из списка для перезаписи")
+            return
+        
+        profile_name = self.profiles_listbox.get(selection[0])
+        
+        if not messagebox.askyesno("Подтверждение", f"Перезаписать профиль '{profile_name}' текущим состоянием?"):
+            return
+        
+        try:
+            state = self.save_current_state()
+            profile_path = os.path.join(self.profiles_dir, f"{profile_name}.json")
+            
+            # Убеждаемся, что папка существует
+            if not os.path.exists(self.profiles_dir):
+                os.makedirs(self.profiles_dir)
+            
+            with open(profile_path, 'w', encoding='utf-8') as f:
+                json.dump(state, f, indent=2, ensure_ascii=False)
+            
+            messagebox.showinfo("Успех", f"Профиль '{profile_name}' перезаписан")
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось перезаписать профиль:\n{str(e)}")
     
     def delete_selected_profile(self):
         """Удаление выбранного профиля"""
