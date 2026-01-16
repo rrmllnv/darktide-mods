@@ -109,6 +109,9 @@ body {
     border-radius: 3px;
     cursor: pointer;
     transition: background-color 0.2s;
+    height: 28px;
+    box-sizing: border-box;
+    border: 2px solid white;
 }
 
 .mod-item:hover {
@@ -127,11 +130,16 @@ body {
 .mod-item.dragging {
     opacity: 0.5;
     background-color: #e0e0e0;
+    border: 2px solid white;
 }
 
 .mod-item.drag-over {
     border-top: 3px solid #2196F3;
+    border-left: 2px solid white;
+    border-right: 2px solid white;
+    border-bottom: 2px solid white;
     background-color: #f0f8ff;
+    height: 28px;
 }
 
 .mod-item input[type="checkbox"] {
