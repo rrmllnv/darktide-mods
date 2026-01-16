@@ -520,6 +520,13 @@ class ModLoadOrderManager {
         const result = this.profileService.restoreState(state, this.modEntries);
         this.modEntries = result.modEntries;
         
+        // Очищаем все старые ссылки на DOM элементы, чтобы они не мешали
+        this.modEntries.forEach(modEntry => {
+            modEntry.checkbox = null;
+            modEntry.statusElement = null;
+            modEntry.modItem = null;
+        });
+        
         // Обновляем ссылку на modEntries в рендерере
         if (this.modListRenderer) {
             this.modListRenderer.modEntries = this.modEntries;

@@ -90,6 +90,9 @@ export class ProfileService {
             if (!modEntry.isNew) {
                 modEntry.isNew = true;
             }
+            // Сбрасываем состояние enabled для модов, которых нет в профиле
+            // Они должны быть выключены, так как их нет в загруженном профиле
+            modEntry.enabled = false;
             // Добавляем в конец с большим orderIndex
             modEntry.orderIndex = maxOrderIndex + 1000 + restoredMods.length;
             restoredMods.push(modEntry);
