@@ -1,0 +1,21 @@
+{
+  "name": "mod-load-order-manager",
+  "version": "1.0.0",
+  "description": "Программа для управления порядком загрузки модов Warhammer 40,000: Darktide",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "keywords": [
+    "darktide",
+    "mods",
+    "manager"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^26.4.0"
+  }
+}

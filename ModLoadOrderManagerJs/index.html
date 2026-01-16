@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mod Load Order Manager</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Фрейм для пути к файлу -->
+    <div class="path-frame">
+        <label>Файл:</label>
+        <input type="text" id="path-input" class="path-input" />
+        <button id="browse-btn" class="btn">Обзор...</button>
+        <button id="load-btn" class="btn">Загрузить</button>
+    </div>
+
+    <!-- Основной контейнер -->
+    <div class="main-container">
+        <!-- Левая панель: Список модов -->
+        <div class="left-panel">
+            <!-- Заголовок списка -->
+            <div class="header-frame">
+                <label class="header-label">Список модов:</label>
+                <div class="button-frame">
+                    <label class="sort-label">Сортировка:</label>
+                    <select id="sort-select" class="sort-combo">
+                        <option value="По порядку файла">По порядку файла</option>
+                        <option value="По имени">По имени</option>
+                        <option value="По статусу">По статусу</option>
+                        <option value="Новые сначала">Новые сначала</option>
+                    </select>
+                    <button id="enable-all-btn" class="btn-small">Включить все</button>
+                    <button id="disable-all-btn" class="btn-small">Выключить все</button>
+                    <button id="scan-btn" class="btn-small">Обновить список</button>
+                </div>
+            </div>
+
+            <!-- Скроллируемый список модов -->
+            <div class="canvas-frame">
+                <div id="mods-list" class="mods-list"></div>
+            </div>
+        </div>
+
+        <!-- Правая панель: Поиск и информация -->
+        <div class="right-container">
+            <!-- Блок поиска -->
+            <div class="search-panel">
+                <div class="panel-title">Поиск</div>
+                <label class="search-label">Поиск мода:</label>
+                <input type="text" id="search-input" class="search-input" placeholder="Введите название мода..." />
+                <button id="clear-search-btn" class="btn">Очистить</button>
+            </div>
+
+            <!-- Блок информации -->
+            <div class="info-panel">
+                <div class="panel-title">Информация</div>
+                
+                <!-- Статистика -->
+                <div class="stats-frame">
+                    <label class="section-label">Статистика:</label>
+                    <div id="stats-total" class="stat-item">Всего модов: 0</div>
+                    <div id="stats-enabled" class="stat-item stat-enabled">Включено: 0</div>
+                    <div id="stats-disabled" class="stat-item stat-disabled">Выключено: 0</div>
+                </div>
+
+                <div class="separator"></div>
+
+                <!-- Информация о выбранном моде -->
+                <div class="info-frame">
+                    <label class="section-label">Выбранный мод:</label>
+                    <div id="selected-mod-info" class="mod-info">Нет выбора</div>
+
+                    <!-- Кнопки для ручной сортировки -->
+                    <div class="sort-buttons-frame">
+                        <label class="section-label">Порядок в файле:</label>
+                        <div class="buttons-row">
+                            <button id="move-up-btn" class="btn-half" disabled>↑ Вверх</button>
+                            <button id="move-down-btn" class="btn-half" disabled>↓ Вниз</button>
+                        </div>
+                    </div>
+
+                    <div class="separator"></div>
+
+                    <!-- Быстрое переключение -->
+                    <div class="quick-switch-frame">
+                        <label class="section-label">Быстрое переключение:</label>
+                        <button id="only-this-mod-btn" class="btn-full" disabled>Только этот мод</button>
+                        <button id="restore-state-btn" class="btn-full" disabled>Вернуть все</button>
+                    </div>
+
+                    <div class="separator"></div>
+
+                    <!-- Профили -->
+                    <div class="profiles-frame">
+                        <label class="section-label">Профили:</label>
+                        <select id="profiles-list" class="profiles-list" size="4"></select>
+                        <div class="profile-buttons">
+                            <div class="buttons-row">
+                                <button id="new-profile-btn" class="btn-third">Новый</button>
+                                <button id="overwrite-profile-btn" class="btn-third">Перезаписать</button>
+                            </div>
+                            <div class="buttons-row">
+                                <button id="load-profile-btn" class="btn-full">Загрузить</button>
+                            </div>
+                            <div class="buttons-row">
+                                <button id="rename-profile-btn" class="btn-half">Переименовать</button>
+                                <button id="delete-profile-btn" class="btn-half">Удалить</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Фрейм для кнопок сохранения -->
+    <div class="save-frame">
+        <button id="save-btn" class="btn btn-primary">Сохранить</button>
+        <button id="cancel-btn" class="btn">Отменить изменения</button>
+    </div>
+
+    <!-- Статус бар -->
+    <div class="status-bar">
+        <span id="status-text">Готов</span>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

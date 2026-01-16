@@ -1,0 +1,345 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 13px;
+    background-color: #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Фрейм для пути к файлу */
+.path-frame {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #d0d0d0;
+    gap: 5px;
+}
+
+.path-frame label {
+    margin-right: 5px;
+}
+
+.path-input {
+    flex: 1;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+/* Основной контейнер */
+.main-container {
+    display: flex;
+    flex: 1;
+    padding: 10px;
+    gap: 10px;
+    overflow: hidden;
+}
+
+/* Левая панель */
+.left-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.header-frame {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.header-label {
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+.button-frame {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.sort-label {
+    font-size: 8pt;
+    margin-right: 2px;
+}
+
+.sort-combo {
+    width: 150px;
+    padding: 2px;
+    margin-right: 2px;
+}
+
+.btn-small {
+    padding: 3px 8px;
+    font-size: 11px;
+    margin-left: 2px;
+}
+
+/* Скроллируемый список модов */
+.canvas-frame {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: 1px solid #ccc;
+    background-color: #ffffff;
+    border-radius: 3px;
+}
+
+.mods-list {
+    padding: 5px;
+}
+
+.mod-item {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    margin: 2px 0;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.mod-item:hover {
+    background-color: #f5f5f5;
+}
+
+.mod-item.selected {
+    background-color: #E3F2FD;
+    border: 2px solid #2196F3;
+}
+
+.mod-item input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+.mod-name {
+    flex: 1;
+    margin-right: 5px;
+}
+
+.mod-new-label {
+    color: blue;
+    font-weight: bold;
+    font-size: 7pt;
+    margin-right: 5px;
+}
+
+.mod-status {
+    margin-left: 5px;
+    font-weight: bold;
+}
+
+.mod-status.enabled {
+    color: green;
+}
+
+.mod-status.disabled {
+    color: red;
+}
+
+/* Правая панель */
+.right-container {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.search-panel,
+.info-panel {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 10px;
+}
+
+.search-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-title {
+    font-weight: bold;
+    font-size: 9pt;
+    margin-bottom: 10px;
+}
+
+.search-label {
+    font-weight: bold;
+    font-size: 9pt;
+    margin-bottom: 5px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 5px;
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.info-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.stats-frame,
+.info-frame {
+    display: flex;
+    flex-direction: column;
+}
+
+.section-label {
+    font-weight: bold;
+    font-size: 9pt;
+    margin-bottom: 5px;
+}
+
+.stat-item {
+    font-size: 8pt;
+    margin: 2px 0;
+}
+
+.stat-enabled {
+    color: green;
+}
+
+.stat-disabled {
+    color: red;
+}
+
+.separator {
+    height: 1px;
+    background-color: #d0d0d0;
+    margin: 10px 0;
+}
+
+.mod-info {
+    font-size: 8pt;
+    margin-bottom: 10px;
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+
+.sort-buttons-frame,
+.quick-switch-frame,
+.profiles-frame {
+    margin-bottom: 10px;
+}
+
+.buttons-row {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 2px;
+}
+
+.btn-half {
+    flex: 1;
+}
+
+.btn-third {
+    flex: 1;
+}
+
+.btn-full {
+    width: 100%;
+    margin-bottom: 2px;
+}
+
+.profiles-list {
+    width: 100%;
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-size: 8pt;
+}
+
+.profile-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Кнопки */
+.btn {
+    padding: 5px 15px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.btn:hover {
+    background-color: #e0e0e0;
+}
+
+.btn:active {
+    background-color: #d0d0d0;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background-color: #0078d4;
+    color: white;
+    border-color: #0078d4;
+}
+
+.btn-primary:hover {
+    background-color: #0063b1;
+}
+
+/* Фрейм для кнопок сохранения */
+.save-frame {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px;
+    background-color: #ffffff;
+    border-top: 1px solid #d0d0d0;
+    gap: 5px;
+}
+
+/* Статус бар */
+.status-bar {
+    padding: 5px 10px;
+    background-color: #e0e0e0;
+    border-top: 1px solid #ccc;
+    font-size: 11px;
+}
+
+/* Скроллбар */
+.canvas-frame::-webkit-scrollbar {
+    width: 12px;
+}
+
+.canvas-frame::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.canvas-frame::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 6px;
+}
+
+.canvas-frame::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
