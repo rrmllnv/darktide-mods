@@ -18,7 +18,9 @@ class ModLoadOrderManager {
         // Данные
         this.headerLines = [];
         this.modEntries = [];
-        this.selectedModName = '';
+        this.selectedModName = ''; // Одиночный выбор (для совместимости)
+        this.selectedModNames = new Set(); // Множественный выбор
+        this.lastSelectedModIndex = -1; // Для Shift+Click
         this.hideNewMods = false;
         this.hideUnusedMods = false;
         
@@ -78,7 +80,13 @@ class ModLoadOrderManager {
             modalTitle: document.getElementById('modal-title'),
             profileNameInput: document.getElementById('profile-name-input'),
             modalOkBtn: document.getElementById('modal-ok-btn'),
-            modalCancelBtn: document.getElementById('modal-cancel-btn')
+            modalCancelBtn: document.getElementById('modal-cancel-btn'),
+            bulkActionsPanel: document.getElementById('bulk-actions-panel'),
+            bulkEnableBtn: document.getElementById('bulk-enable-btn'),
+            bulkDisableBtn: document.getElementById('bulk-disable-btn'),
+            bulkDeleteBtn: document.getElementById('bulk-delete-btn'),
+            bulkClearSelectionBtn: document.getElementById('bulk-clear-selection-btn'),
+            bulkSelectionCount: document.getElementById('bulk-selection-count')
         };
         
         // Получаем путь по умолчанию
@@ -103,13 +111,27 @@ class ModLoadOrderManager {
             this.modEntries,
             {
                 onCheckboxChange: (modName) => this.onCheckboxChange(modName),
-                onModSelect: (modName) => this.selectMod(modName),
+                onModSelect: (modName, ctrlKey, shiftKey) => this.selectMod(modName, ctrlKey, shiftKey),
                 onDrop: () => {
                     const searchText = this.elements.searchInput.value;
                     this.updateModList(searchText);
-                }
+                },
+                getSelectedMods: () => Array.from(this.selectedModNames),
+                getLastSelectedIndex: () => this.lastSelectedModIndex,
+                setLastSelectedIndex: (index) => { this.lastSelectedModIndex = index; }
             }
         );
+        
+        // Обработка клика вне списка для очистки выбора
+        document.addEventListener('click', (e) => {
+            // Если клик не по элементу мода и не по чекбоксу
+            if (!e.target.closest('.mod-item') && !e.target.closest('#mods-list')) {
+                // Очищаем выбор только если не кликнули по кнопкам массовых действий
+                if (!e.target.closest('#bulk-actions-panel') && !e.target.closest('.btn-icon')) {
+                    this.clearSelection();
+                }
+            }
+        });
         
         // Привязка событий
         this.eventBinder = new EventBinder(this.elements, {
@@ -143,7 +165,11 @@ class ModLoadOrderManager {
             reloadFile: () => this.reloadFile(),
             renameSelectedProfile: () => this.renameSelectedProfile(),
             deleteSelectedProfile: () => this.deleteSelectedProfile(),
-            saveFile: () => this.saveFile()
+            saveFile: () => this.saveFile(),
+            bulkEnable: () => this.bulkEnable(),
+            bulkDisable: () => this.bulkDisable(),
+            bulkDelete: () => this.bulkDelete(),
+            bulkClearSelection: () => this.clearSelection()
         });
         
         // Загрузка файла при старте
@@ -211,6 +237,7 @@ class ModLoadOrderManager {
             }
             
             // Обновление интерфейса
+            this.clearSelection(); // Очищаем выбор при загрузке файла
             this.updateModList();
             this.updateStatistics();
             
@@ -230,6 +257,16 @@ class ModLoadOrderManager {
         // Обновляем ссылку на modEntries в рендерере после сканирования
         if (this.modListRenderer) {
             this.modListRenderer.modEntries = this.modEntries;
+        }
+        
+        // Очищаем выбор удаленных модов
+        if (scanResult.removed > 0) {
+            const currentSelected = Array.from(this.selectedModNames);
+            currentSelected.forEach(modName => {
+                if (!this.modEntries.find(m => m.name === modName)) {
+                    this.selectedModNames.delete(modName);
+                }
+            });
         }
         
         // Обновляем интерфейс
@@ -257,9 +294,11 @@ class ModLoadOrderManager {
             filterText,
             this.hideNewMods,
             this.hideUnusedMods,
-            this.selectedModName
+            this.selectedModName,
+            this.selectedModNames
         );
         this.updateStatistics();
+        this.updateBulkActionsPanel();
     }
     
     onSortChange() {
@@ -282,39 +321,94 @@ class ModLoadOrderManager {
         }
     }
     
-    selectMod(modName) {
-        if (this.selectedModName) {
-            const prevMod = this.modEntries.find(m => m.name === this.selectedModName);
-            if (prevMod && prevMod.modItem) {
-                prevMod.modItem.classList.remove('selected');
+    selectMod(modName, ctrlKey = false, shiftKey = false) {
+        // Получаем индекс текущего мода в отфильтрованном списке
+        const filteredMods = this.modListRenderer.filteredModEntries || [];
+        const currentIndex = filteredMods.findIndex(m => m.name === modName);
+        
+        if (shiftKey && this.lastSelectedModIndex !== -1) {
+            // Shift+Click - выбираем диапазон
+            const startIndex = Math.min(this.lastSelectedModIndex, currentIndex);
+            const endIndex = Math.max(this.lastSelectedModIndex, currentIndex);
+            
+            for (let i = startIndex; i <= endIndex; i++) {
+                if (filteredMods[i]) {
+                    this.selectedModNames.add(filteredMods[i].name);
+                }
+            }
+        } else if (ctrlKey) {
+            // Ctrl+Click - переключаем выбор
+            if (this.selectedModNames.has(modName)) {
+                this.selectedModNames.delete(modName);
+            } else {
+                this.selectedModNames.add(modName);
+            }
+        } else {
+            // Обычный клик - одиночный выбор
+            this.selectedModNames.clear();
+            this.selectedModNames.add(modName);
+            this.selectedModName = modName; // Для совместимости
+        }
+        
+        // Обновляем lastSelectedModIndex
+        if (currentIndex !== -1) {
+            this.lastSelectedModIndex = currentIndex;
+            if (this.modListRenderer.callbacks.setLastSelectedIndex) {
+                this.modListRenderer.callbacks.setLastSelectedIndex(currentIndex);
             }
         }
         
-        this.selectedModName = modName;
+        // Обновляем визуальное выделение
+        this.updateModListSelection();
         
-        const modEntry = this.modEntries.find(m => m.name === modName);
-        if (modEntry) {
-            if (modEntry.modItem) {
-                modEntry.modItem.classList.add('selected');
+        // Обновляем информацию о выбранном моде (для одиночного выбора)
+        if (this.selectedModNames.size === 1) {
+            const singleMod = Array.from(this.selectedModNames)[0];
+            const modEntry = this.modEntries.find(m => m.name === singleMod);
+            if (modEntry) {
+                const status = modEntry.enabled ? 'Включен' : 'Выключен';
+                let infoText = `${singleMod}\nСтатус: ${status}`;
+                if (modEntry.isNew) {
+                    infoText += '\n⚠ Новый мод (не был в файле)';
+                }
+                this.elements.selectedModInfo.textContent = infoText;
+                this.selectedModName = singleMod;
             }
-            
-            const status = modEntry.enabled ? 'Включен' : 'Выключен';
-            let infoText = `${modName}\nСтатус: ${status}`;
-            if (modEntry.isNew) {
-                infoText += '\n⚠ Новый мод (не был в файле)';
-            }
-            this.elements.selectedModInfo.textContent = infoText;
-            
-            this.updateMoveButtonsState();
-            this.updateQuickSwitchButtons();
-            this.updateDeleteButtonState();
+        } else if (this.selectedModNames.size > 1) {
+            this.elements.selectedModInfo.textContent = `Выбрано модов: ${this.selectedModNames.size}`;
+            this.selectedModName = '';
         } else {
             this.elements.selectedModInfo.textContent = 'Нет выбора';
-            this.elements.moveUpBtn.disabled = true;
-            this.elements.moveDownBtn.disabled = true;
-            this.elements.onlyThisModBtn.disabled = true;
-            this.elements.deleteModBtn.disabled = true;
+            this.selectedModName = '';
         }
+        
+        this.updateMoveButtonsState();
+        this.updateQuickSwitchButtons();
+        this.updateDeleteButtonState();
+        this.updateBulkActionsPanel();
+    }
+    
+    // Обновление визуального выделения выбранных модов
+    updateModListSelection() {
+        this.modEntries.forEach(modEntry => {
+            if (modEntry.modItem) {
+                if (this.selectedModNames.has(modEntry.name)) {
+                    modEntry.modItem.classList.add('selected');
+                } else {
+                    modEntry.modItem.classList.remove('selected');
+                }
+            }
+        });
+    }
+    
+    // Очистка множественного выбора
+    clearSelection() {
+        this.selectedModNames.clear();
+        this.selectedModName = '';
+        this.lastSelectedModIndex = -1;
+        this.updateModListSelection();
+        this.updateBulkActionsPanel();
+        this.elements.selectedModInfo.textContent = 'Нет выбора';
     }
     
     updateDeleteButtonState() {
@@ -839,6 +933,108 @@ class ModLoadOrderManager {
     
     setStatus(message) {
         this.statusManager.setStatus(message);
+    }
+    
+    // Обновление панели массовых действий
+    updateBulkActionsPanel() {
+        if (!this.elements.bulkActionsPanel) {
+            return;
+        }
+        
+        const count = this.selectedModNames.size;
+        if (count > 1) {
+            this.elements.bulkActionsPanel.style.display = 'block';
+            if (this.elements.bulkSelectionCount) {
+                this.elements.bulkSelectionCount.textContent = `${count} модов выбрано`;
+            }
+        } else {
+            this.elements.bulkActionsPanel.style.display = 'none';
+        }
+    }
+    
+    // Массовое включение выбранных модов
+    bulkEnable() {
+        const selected = Array.from(this.selectedModNames);
+        if (selected.length === 0) {
+            return;
+        }
+        
+        selected.forEach(modName => {
+            const modEntry = this.modEntries.find(m => m.name === modName);
+            if (modEntry) {
+                modEntry.enabled = true;
+                if (modEntry.checkbox) {
+                    modEntry.checkbox.checked = true;
+                }
+                if (modEntry.statusElement) {
+                    modEntry.statusElement.textContent = '✓';
+                    modEntry.statusElement.className = 'mod-status enabled';
+                }
+            }
+        });
+        
+        this.updateStatistics();
+        this.setStatus(`Включено модов: ${selected.length}`);
+    }
+    
+    // Массовое выключение выбранных модов
+    bulkDisable() {
+        const selected = Array.from(this.selectedModNames);
+        if (selected.length === 0) {
+            return;
+        }
+        
+        selected.forEach(modName => {
+            const modEntry = this.modEntries.find(m => m.name === modName);
+            if (modEntry) {
+                modEntry.enabled = false;
+                if (modEntry.checkbox) {
+                    modEntry.checkbox.checked = false;
+                }
+                if (modEntry.statusElement) {
+                    modEntry.statusElement.textContent = '✗';
+                    modEntry.statusElement.className = 'mod-status disabled';
+                }
+            }
+        });
+        
+        this.updateStatistics();
+        this.setStatus(`Выключено модов: ${selected.length}`);
+    }
+    
+    // Массовое удаление выбранных модов
+    bulkDelete() {
+        const selected = Array.from(this.selectedModNames);
+        if (selected.length === 0) {
+            return;
+        }
+        
+        if (!confirm(`Удалить ${selected.length} выбранных модов из списка?\n\nМоды будут удалены из файла при сохранении.`)) {
+            return;
+        }
+        
+        // Удаляем моды из списка
+        selected.forEach(modName => {
+            const modIndex = this.modEntries.findIndex(m => m.name === modName);
+            if (modIndex !== -1) {
+                this.modEntries.splice(modIndex, 1);
+            }
+        });
+        
+        // Обновляем ссылку в рендерере
+        if (this.modListRenderer) {
+            this.modListRenderer.modEntries = this.modEntries;
+        }
+        
+        // Очищаем выбор
+        this.clearSelection();
+        
+        // Обновляем интерфейс
+        const searchText = this.elements.searchInput.value;
+        this.updateModList(searchText);
+        this.updateStatistics();
+        
+        this.setStatus(`Удалено модов: ${selected.length}. Не забудьте сохранить файл.`);
     }
 }
 

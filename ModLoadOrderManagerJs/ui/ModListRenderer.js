@@ -29,7 +29,7 @@ export class ModListRenderer {
     }
     
     // Обновление списка модов
-    updateModList(filterText = null, hideNewMods = false, hideUnusedMods = false, selectedModName = '') {
+    updateModList(filterText = null, hideNewMods = false, hideUnusedMods = false, selectedModName = '', selectedModNames = new Set()) {
         // Очистка существующих виджетов
         this.elements.modsList.innerHTML = '';
         
@@ -65,16 +65,17 @@ export class ModListRenderer {
         
         // Создание элементов для каждого мода
         this.filteredModEntries.forEach((modEntry, index) => {
-            const modItem = this.createModItem(modEntry, selectedModName, currentSort, index);
+            const isSelected = selectedModNames.has(modEntry.name) || modEntry.name === selectedModName;
+            const modItem = this.createModItem(modEntry, selectedModName, currentSort, index, isSelected);
             this.elements.modsList.appendChild(modItem);
         });
     }
     
     // Создание элемента мода
-    createModItem(modEntry, selectedModName, currentSort, index) {
+    createModItem(modEntry, selectedModName, currentSort, index, isSelected = false) {
         const modItem = document.createElement('div');
         modItem.className = 'mod-item';
-        if (modEntry.name === selectedModName) {
+        if (isSelected) {
             modItem.classList.add('selected');
         }
         
@@ -111,7 +112,9 @@ export class ModListRenderer {
         modItem.addEventListener('click', (e) => {
             if (e.target !== checkbox && !modItem.classList.contains('dragging')) {
                 if (this.callbacks.onModSelect) {
-                    this.callbacks.onModSelect(modEntry.name);
+                    const ctrlKey = e.ctrlKey || e.metaKey; // Поддержка Cmd на Mac
+                    const shiftKey = e.shiftKey;
+                    this.callbacks.onModSelect(modEntry.name, ctrlKey, shiftKey);
                 }
             }
         });

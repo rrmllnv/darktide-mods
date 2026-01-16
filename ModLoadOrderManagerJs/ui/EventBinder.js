@@ -58,5 +58,19 @@ export class EventBinder {
         // Сохранение
         this.elements.saveBtn.addEventListener('click', () => this.callbacks.saveFile());
         this.elements.cancelBtn.addEventListener('click', () => this.callbacks.loadFile());
+        
+        // Массовые действия
+        if (this.elements.bulkEnableBtn) {
+            this.elements.bulkEnableBtn.addEventListener('click', () => this.callbacks.bulkEnable());
+        }
+        if (this.elements.bulkDisableBtn) {
+            this.elements.bulkDisableBtn.addEventListener('click', () => this.callbacks.bulkDisable());
+        }
+        if (this.elements.bulkDeleteBtn) {
+            this.elements.bulkDeleteBtn.addEventListener('click', () => this.callbacks.bulkDelete());
+        }
+        if (this.elements.bulkClearSelectionBtn) {
+            this.elements.bulkClearSelectionBtn.addEventListener('click', () => this.callbacks.bulkClearSelection());
+        }
     }
 }
