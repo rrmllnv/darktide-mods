@@ -8,8 +8,11 @@ export class ProfileService {
     
     // Сохранение текущего состояния в формат профиля
     saveState(modEntries) {
+        // Фильтруем моды с флагом isNew - они не должны сохраняться в профиль
+        const modsToSave = modEntries.filter(modEntry => !modEntry.isNew);
+        
         // Сортируем моды по orderIndex для сохранения правильного порядка
-        const sortedMods = [...modEntries].sort((a, b) => a.orderIndex - b.orderIndex);
+        const sortedMods = [...modsToSave].sort((a, b) => a.orderIndex - b.orderIndex);
         
         const state = {
             _order: [], // Массив имен модов в порядке из файла

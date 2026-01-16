@@ -516,13 +516,16 @@ body {
     height: 100%;
     overflow: auto;
     background-color: rgba(0, 0, 0, 0.4);
-    pointer-events: auto;
+    /* Фон НЕ блокирует клики - только визуальный эффект */
+    pointer-events: none;
 }
 
 .modal.show {
     display: flex;
     align-items: center;
     justify-content: center;
+    /* Фон НЕ принимает клики - только содержимое */
+    pointer-events: none;
 }
 
 .modal-content {
@@ -533,9 +536,15 @@ body {
     border-radius: 5px;
     width: 400px;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-    pointer-events: auto;
     position: relative;
     z-index: 1001;
+    /* Содержимое всегда доступно */
+    pointer-events: auto;
+}
+
+/* Все элементы внутри modal-content должны быть доступны */
+.modal-content * {
+    pointer-events: auto;
 }
 
 .modal-header {
@@ -562,10 +571,19 @@ body {
     font-size: 13px;
     box-sizing: border-box;
     background-color: #fff;
+    /* УБИРАЕМ ВСЕ БЛОКИРОВКИ - ПОЛЕ ДОЛЖНО БЫТЬ ВСЕГДА ДОСТУПНО */
     pointer-events: auto !important;
     cursor: text !important;
     user-select: auto !important;
     -webkit-user-select: auto !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 1002 !important;
+    /* Явно разрешаем все действия */
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
 }
 
 .modal-input:focus {

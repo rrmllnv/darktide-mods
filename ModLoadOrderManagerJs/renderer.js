@@ -120,6 +120,17 @@ class ModLoadOrderManager {
         
         // Обработка клика вне списка для очистки выбора
         document.addEventListener('click', (e) => {
+            // ИСКЛЮЧАЕМ модальное окно - оно не должно мешать
+            // Проверяем и сам элемент, и его родителей
+            if (e.target.closest('#profile-dialog') || 
+                e.target.closest('.modal') || 
+                e.target.closest('.modal-content') ||
+                e.target.closest('.modal-body') ||
+                e.target.closest('.modal-footer') ||
+                e.target.closest('.modal-header')) {
+                return; // Не обрабатываем клики по модальному окну
+            }
+            
             // Если клик не по элементу мода и не по чекбоксу
             if (!e.target.closest('.mod-item') && !e.target.closest('#mods-list')) {
                 // Очищаем выбор только если не кликнули по кнопкам массовых действий
@@ -504,11 +515,13 @@ class ModLoadOrderManager {
         const result = this.profileService.restoreState(state, this.modEntries);
         this.modEntries = result.modEntries;
         
-        for (const modEntry of this.modEntries) {
-            if (modEntry.checkbox) {
-                modEntry.checkbox.checked = modEntry.enabled;
-            }
+        // Обновляем ссылку на modEntries в рендерере
+        if (this.modListRenderer) {
+            this.modListRenderer.modEntries = this.modEntries;
         }
+        
+        // Очищаем выбор при восстановлении состояния
+        this.clearSelection();
         
         const searchText = this.elements.searchInput.value;
         this.updateModList(searchText);
@@ -558,7 +571,9 @@ class ModLoadOrderManager {
             
             const cleanName = profileName.replace(/[^a-zA-Z0-9\s\-_]/g, '').trim();
             if (!cleanName) {
-                alert('Недопустимое имя профиля');
+                setTimeout(() => {
+                    alert('Недопустимое имя профиля');
+                }, 100);
                 return;
             }
             
@@ -567,14 +582,20 @@ class ModLoadOrderManager {
                 const result = await this.profileService.saveProfile(cleanName, state);
                 
                 if (!result.success) {
-                    alert(`Не удалось сохранить профиль:\n${result.error}`);
+                    setTimeout(() => {
+                        alert(`Не удалось сохранить профиль:\n${result.error}`);
+                    }, 100);
                     return;
                 }
                 
                 await this.refreshProfilesList();
-                alert(`Профиль '${cleanName}' сохранен`);
+                setTimeout(() => {
+                    alert(`Профиль '${cleanName}' сохранен`);
+                }, 100);
             } catch (error) {
-                alert(`Не удалось сохранить профиль:\n${error.message}`);
+                setTimeout(() => {
+                    alert(`Не удалось сохранить профиль:\n${error.message}`);
+                }, 100);
             }
         });
     }
@@ -606,15 +627,42 @@ class ModLoadOrderManager {
             
             this.restoreState(result.state);
             
-            await this.modScanService.scanModsDirectory(this.modEntries, this.selectedModName);
+            // Обновляем ссылку на modEntries в рендерере после восстановления
+            if (this.modListRenderer) {
+                this.modListRenderer.modEntries = this.modEntries;
+            }
+            
+            // Сканируем папку модов после загрузки профиля
+            const scanResult = await this.modScanService.scanModsDirectory(this.modEntries, this.selectedModName);
+            this.selectedModName = scanResult.selectedModName;
+            
+            // Обновляем ссылку на modEntries в рендерере после сканирования
+            if (this.modListRenderer) {
+                this.modListRenderer.modEntries = this.modEntries;
+            }
+            
+            // Очищаем выбор удаленных модов
+            if (scanResult.removed > 0) {
+                const currentSelected = Array.from(this.selectedModNames);
+                currentSelected.forEach(modName => {
+                    if (!this.modEntries.find(m => m.name === modName)) {
+                        this.selectedModNames.delete(modName);
+                    }
+                });
+            }
             
             const searchText = this.elements.searchInput.value;
             this.updateModList(searchText);
             this.updateStatistics();
             
-            alert(`Профиль '${profileName}' загружен`);
+            // Используем setTimeout чтобы alert не блокировал модальное окно
+            setTimeout(() => {
+                alert(`Профиль '${profileName}' загружен`);
+            }, 100);
         } catch (error) {
-            alert(`Не удалось загрузить профиль:\n${error.message}`);
+            setTimeout(() => {
+                alert(`Не удалось загрузить профиль:\n${error.message}`);
+            }, 100);
         }
     }
     
@@ -650,7 +698,9 @@ class ModLoadOrderManager {
             
             const cleanName = newProfileName.replace(/[^a-zA-Z0-9\s\-_]/g, '').trim();
             if (!cleanName) {
-                alert('Недопустимое имя профиля');
+                setTimeout(() => {
+                    alert('Недопустимое имя профиля');
+                }, 100);
                 return;
             }
             
@@ -661,14 +711,20 @@ class ModLoadOrderManager {
             try {
                 const result = await this.profileService.renameProfile(oldProfileName, cleanName);
                 if (!result.success) {
-                    alert(`Не удалось переименовать профиль:\n${result.error}`);
+                    setTimeout(() => {
+                        alert(`Не удалось переименовать профиль:\n${result.error}`);
+                    }, 100);
                     return;
                 }
                 
                 await this.refreshProfilesList();
-                alert(`Профиль '${oldProfileName}' переименован в '${cleanName}'`);
+                setTimeout(() => {
+                    alert(`Профиль '${oldProfileName}' переименован в '${cleanName}'`);
+                }, 100);
             } catch (error) {
-                alert(`Не удалось переименовать профиль:\n${error.message}`);
+                setTimeout(() => {
+                    alert(`Не удалось переименовать профиль:\n${error.message}`);
+                }, 100);
             }
         });
     }
@@ -704,9 +760,13 @@ class ModLoadOrderManager {
                 return;
             }
             
-            alert(`Профиль '${profileName}' перезаписан`);
+            setTimeout(() => {
+                alert(`Профиль '${profileName}' перезаписан`);
+            }, 100);
         } catch (error) {
-            alert(`Не удалось перезаписать профиль:\n${error.message}`);
+            setTimeout(() => {
+                alert(`Не удалось перезаписать профиль:\n${error.message}`);
+            }, 100);
         }
     }
     
@@ -740,9 +800,13 @@ class ModLoadOrderManager {
             }
             
             await this.refreshProfilesList();
-            alert(`Профиль '${profileName}' удален`);
+            setTimeout(() => {
+                alert(`Профиль '${profileName}' удален`);
+            }, 100);
         } catch (error) {
-            alert(`Не удалось удалить профиль:\n${error.message}`);
+            setTimeout(() => {
+                alert(`Не удалось удалить профиль:\n${error.message}`);
+            }, 100);
         }
     }
     
