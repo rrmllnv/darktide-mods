@@ -924,28 +924,8 @@ class ModLoadOrderManager {
         }
         
         try {
-            // Подготовка содержимого
-            const contentLines = [];
-            
-            // Добавляем заголовок
-            contentLines.push(...this.headerLines);
-            
             // Сортируем моды по orderIndex перед сохранением
             const sortedMods = [...this.modEntries].sort((a, b) => a.orderIndex - b.orderIndex);
-            
-            // Добавляем моды в порядке из orderIndex
-            for (const modEntry of sortedMods) {
-                // Сбрасываем флаг "новый" после сохранения
-                if (modEntry.isNew) {
-                    modEntry.isNew = false;
-                }
-                
-                if (modEntry.enabled) {
-                    contentLines.push(modEntry.name + '\n');
-                } else {
-                    contentLines.push('--' + modEntry.name + '\n');
-                }
-            }
             
             // Сохранение файла (сохраняем заголовок как есть, моды добавляем с \n)
             let content = '';
@@ -955,6 +935,16 @@ class ModLoadOrderManager {
             }
             // Моды добавляем с \n
             for (const modEntry of sortedMods) {
+                // Пропускаем новые моды, которые не включены (не выбраны галочкой)
+                if (modEntry.isNew && !modEntry.enabled) {
+                    continue; // Не сохраняем в файл
+                }
+                
+                // Сбрасываем флаг "новый" только для модов, которые сохраняются в файл
+                if (modEntry.isNew) {
+                    modEntry.isNew = false;
+                }
+                
                 if (modEntry.enabled) {
                     content += modEntry.name + '\n';
                 } else {
