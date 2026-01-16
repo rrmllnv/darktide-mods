@@ -10,10 +10,12 @@ export class ModalManager {
         // Привязка событий модального окна
         this.elements.modalOkBtn.addEventListener('click', () => this.handleModalOk());
         this.elements.modalCancelBtn.addEventListener('click', () => this.handleModalCancel());
-        this.elements.profileNameInput.addEventListener('keypress', (e) => {
+        this.elements.profileNameInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault();
                 this.handleModalOk();
             } else if (e.key === 'Escape') {
+                e.preventDefault();
                 this.handleModalCancel();
             }
         });
@@ -33,69 +35,53 @@ export class ModalManager {
                 e.stopPropagation();
             });
         }
+        
+        // Предотвращаем блокировку ввода - останавливаем распространение событий на поле ввода
+        this.elements.profileNameInput.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+        });
+        
+        this.elements.profileNameInput.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
+        this.elements.profileNameInput.addEventListener('focus', (e) => {
+            e.stopPropagation();
+        });
     }
     
     showModal(title, defaultValue = '', callback) {
         this.elements.modalTitle.textContent = title;
         this.modalCallback = callback;
         
-        // Убеждаемся, что поле доступно и очищено
-        this.elements.profileNameInput.disabled = false;
-        this.elements.profileNameInput.readOnly = false;
-        this.elements.profileNameInput.value = defaultValue || '';
+        // Полностью очищаем все атрибуты и стили, которые могут блокировать
+        const input = this.elements.profileNameInput;
         
-        // Убираем любые атрибуты, которые могут блокировать ввод
-        this.elements.profileNameInput.removeAttribute('readonly');
-        this.elements.profileNameInput.removeAttribute('disabled');
-        this.elements.profileNameInput.style.pointerEvents = 'auto';
-        this.elements.profileNameInput.style.cursor = 'text';
+        // Удаляем все блокирующие атрибуты
+        input.removeAttribute('disabled');
+        input.removeAttribute('readonly');
+        input.removeAttribute('tabindex');
+        
+        // Очищаем все inline стили, которые могут блокировать
+        input.style.pointerEvents = '';
+        input.style.cursor = '';
+        input.style.opacity = '';
+        input.style.userSelect = '';
+        input.style.webkitUserSelect = '';
+        
+        // Устанавливаем значение
+        input.value = defaultValue || '';
         
         // Показываем модальное окно
         this.elements.profileDialog.classList.add('show');
         
-        // Функция для установки фокуса
-        const setFocus = () => {
-            try {
-                // Убеждаемся, что поле доступно
-                this.elements.profileNameInput.disabled = false;
-                this.elements.profileNameInput.readOnly = false;
-                
-                // Устанавливаем фокус
-                this.elements.profileNameInput.focus();
-                
-                // Если есть значение по умолчанию, выделяем его
-                if (defaultValue) {
-                    this.elements.profileNameInput.select();
-                }
-                
-                // Проверяем, что фокус установился
-                if (document.activeElement !== this.elements.profileNameInput) {
-                    // Пробуем через небольшой таймаут
-                    setTimeout(() => {
-                        this.elements.profileNameInput.focus();
-                        if (defaultValue) {
-                            this.elements.profileNameInput.select();
-                        }
-                    }, 50);
-                }
-            } catch (e) {
-                console.error('Ошибка установки фокуса:', e);
+        // Простая установка фокуса без лишних проверок
+        setTimeout(() => {
+            input.focus();
+            if (defaultValue) {
+                input.select();
             }
-        };
-        
-        // Используем несколько попыток для гарантии фокуса
-        // Первая попытка через requestAnimationFrame
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                setFocus();
-            });
-        });
-        
-        // Вторая попытка через setTimeout
-        setTimeout(setFocus, 100);
-        
-        // Третья попытка через больший таймаут (на случай если что-то блокирует)
-        setTimeout(setFocus, 200);
+        }, 10);
     }
     
     hideModal() {

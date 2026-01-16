@@ -485,6 +485,7 @@ body {
     height: 100%;
     overflow: auto;
     background-color: rgba(0, 0, 0, 0.4);
+    pointer-events: auto;
 }
 
 .modal.show {
@@ -530,8 +531,10 @@ body {
     font-size: 13px;
     box-sizing: border-box;
     background-color: #fff;
-    pointer-events: auto;
-    cursor: text;
+    pointer-events: auto !important;
+    cursor: text !important;
+    user-select: auto !important;
+    -webkit-user-select: auto !important;
 }
 
 .modal-input:focus {
