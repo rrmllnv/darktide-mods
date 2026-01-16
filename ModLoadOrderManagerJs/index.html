@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mod Load Order Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -111,19 +112,33 @@
                         <label class="section-label">Профили:</label>
                         <select id="profiles-list" class="profiles-list" size="4"></select>
                         <div class="profile-buttons">
-                            <div class="buttons-row">
-                                <button id="new-profile-btn" class="btn-third">Новый</button>
-                                <button id="overwrite-profile-btn" class="btn-third">Перезаписать</button>
+                            <div class="profile-buttons-grid">
+                                <div class="profile-column">
+                                    <button id="new-profile-btn" class="btn-icon" title="Новый профиль">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <button id="load-profile-btn" class="btn-icon" title="Загрузить профиль">
+                                        <i class="fas fa-folder-open"></i>
+                                    </button>
+                                </div>
+                                <div class="profile-column">
+                                    <button id="overwrite-profile-btn" class="btn-icon" title="Перезаписать профиль">
+                                        <i class="fas fa-save"></i>
+                                    </button>
+                                    <button id="rename-profile-btn" class="btn-icon" title="Переименовать профиль">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                                <div class="profile-column">
+                                    <button id="delete-profile-btn" class="btn-icon" title="Удалить профиль">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="buttons-row">
-                                <button id="load-profile-btn" class="btn-full">Загрузить</button>
-                            </div>
-                            <div class="buttons-row">
-                                <button id="rename-profile-btn" class="btn-half">Переименовать</button>
-                                <button id="delete-profile-btn" class="btn-half">Удалить</button>
-                            </div>
-                            <div class="buttons-row">
-                                <button id="reload-file-btn" class="btn-full">Вернуть к файлу</button>
+                                <button id="reload-file-btn" class="btn-full">
+                                    <i class="fas fa-undo"></i> Вернуть к файлу
+                                </button>
                             </div>
                         </div>
                     </div>

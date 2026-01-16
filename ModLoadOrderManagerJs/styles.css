@@ -279,7 +279,52 @@ body {
 .profile-buttons {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 8px;
+}
+
+.profile-buttons-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 5px;
+}
+
+.profile-column {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.btn-icon {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 35px;
+}
+
+.btn-icon:hover {
+    background-color: #e0e0e0;
+}
+
+.btn-icon:active {
+    background-color: #d0d0d0;
+}
+
+.btn-icon:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-icon i {
+    font-size: 16px;
+    color: #333;
 }
 
 /* Кнопки */
