@@ -75,6 +75,10 @@ class ModLoadOrderManager {
             profileNameInput: document.getElementById('profile-name-input'),
             modalOkBtn: document.getElementById('modal-ok-btn'),
             modalCancelBtn: document.getElementById('modal-cancel-btn'),
+            messageDialog: document.getElementById('message-dialog'),
+            messageTitle: document.getElementById('message-title'),
+            messageText: document.getElementById('message-text'),
+            messageOkBtn: document.getElementById('message-ok-btn'),
             bulkActionsPanel: document.getElementById('bulk-actions-panel'),
             bulkSelectEnabledBtn: document.getElementById('bulk-select-enabled-btn'),
             bulkSelectDisabledBtn: document.getElementById('bulk-select-disabled-btn'),
@@ -249,7 +253,7 @@ class ModLoadOrderManager {
             await this.initProfilesDirectory();
             
         } catch (error) {
-            alert(`Не удалось загрузить файл:\n${error.message}`);
+            await this.showMessage('Ошибка', `Не удалось загрузить файл:\n${error.message}`);
             this.setStatus(`Ошибка: ${error.message}`);
         }
     }
@@ -290,7 +294,7 @@ class ModLoadOrderManager {
             message = 'Изменений не обнаружено';
         }
         
-        alert(message);
+        this.showMessage('Информация', message);
     }
     
     updateModList(filterText = null) {
@@ -401,7 +405,7 @@ class ModLoadOrderManager {
     async createSymlinkForMod() {
         const modsDir = this.filePath.substring(0, this.filePath.lastIndexOf('\\'));
         if (!modsDir) {
-            alert('Не удалось определить папку модов');
+            await this.showMessage('Ошибка', 'Не удалось определить папку модов');
             return;
         }
         
@@ -414,7 +418,7 @@ class ModLoadOrderManager {
         
         const targetExists = await window.electronAPI.fileExists(targetPath);
         if (!targetExists) {
-            alert('Выбранная папка не существует');
+            await this.showMessage('Ошибка', 'Выбранная папка не существует');
             return;
         }
         
@@ -429,23 +433,24 @@ class ModLoadOrderManager {
             const cleanModName = modName.trim();
             const linkPath = modsDir + '\\' + cleanModName;
             
-            if (!confirm(`Создать символическую ссылку?\n\nИз: ${targetPath}\nВ: ${linkPath}\n\nИмя: ${cleanModName}`)) {
+            const confirmed = await this.showConfirm(`Создать символическую ссылку?\n\nИз: ${targetPath}\nВ: ${linkPath}\n\nИмя: ${cleanModName}`);
+            if (!confirmed) {
                 return;
             }
             
             try {
                 const symlinkResult = await window.electronAPI.createSymlink(linkPath, targetPath);
                 if (!symlinkResult.success) {
-                    alert(`Не удалось создать символическую ссылку:\n${symlinkResult.error}`);
+                    await this.showMessage('Ошибка', `Не удалось создать символическую ссылку:\n${symlinkResult.error}`);
                     return;
                 }
                 
-                alert(`Символическая ссылка успешно создана!\n\n${linkPath} -> ${targetPath}`);
+                await this.showMessage('Успех', `Символическая ссылка успешно создана!\n\n${linkPath} -> ${targetPath}`);
                 this.setStatus(`Символическая ссылка создана: ${cleanModName}`);
                 
                 await this.scanAndUpdate();
             } catch (error) {
-                alert(`Ошибка при создании символической ссылки:\n${error.message}`);
+                await this.showMessage('Ошибка', `Ошибка при создании символической ссылки:\n${error.message}`);
             }
         });
     }
@@ -489,20 +494,20 @@ class ModLoadOrderManager {
     
     async saveFile() {
         if (this.modEntries.length === 0) {
-            alert('Нет модов для сохранения');
+            await this.showMessage('Ошибка', 'Нет модов для сохранения');
             return;
         }
         
         try {
             await this.fileService.saveFile(this.filePath, this.headerLines, this.modEntries);
             
-            alert('Файл успешно сохранен!');
+            await this.showMessage('Успех', 'Файл успешно сохранен!');
             this.setStatus('Файл сохранен');
             
             await this.loadFile();
             
         } catch (error) {
-            alert(`Не удалось сохранить файл:\n${error.message}`);
+            await this.showMessage('Ошибка', `Не удалось сохранить файл:\n${error.message}`);
             this.setStatus(`Ошибка сохранения: ${error.message}`);
         }
     }
@@ -560,7 +565,7 @@ class ModLoadOrderManager {
         }
         
         if (!this.profilesDir) {
-            alert('Не удалось определить папку для профилей');
+            await this.showMessage('Ошибка', 'Не удалось определить папку для профилей');
             return;
         }
         
@@ -571,9 +576,7 @@ class ModLoadOrderManager {
             
             const cleanName = profileName.replace(/[^a-zA-Z0-9\s\-_]/g, '').trim();
             if (!cleanName) {
-                setTimeout(() => {
-                    alert('Недопустимое имя профиля');
-                }, 100);
+                await this.showMessage('Ошибка', 'Недопустимое имя профиля');
                 return;
             }
             
@@ -582,20 +585,14 @@ class ModLoadOrderManager {
                 const result = await this.profileService.saveProfile(cleanName, state);
                 
                 if (!result.success) {
-                    setTimeout(() => {
-                        alert(`Не удалось сохранить профиль:\n${result.error}`);
-                    }, 100);
+                    await this.showMessage('Ошибка', `Не удалось сохранить профиль:\n${result.error}`);
                     return;
                 }
                 
                 await this.refreshProfilesList();
-                setTimeout(() => {
-                    alert(`Профиль '${cleanName}' сохранен`);
-                }, 100);
+                await this.showMessage('Успех', `Профиль '${cleanName}' сохранен`);
             } catch (error) {
-                setTimeout(() => {
-                    alert(`Не удалось сохранить профиль:\n${error.message}`);
-                }, 100);
+                await this.showMessage('Ошибка', `Не удалось сохранить профиль:\n${error.message}`);
             }
         });
     }
@@ -606,13 +603,13 @@ class ModLoadOrderManager {
         }
         
         if (!this.profilesDir) {
-            alert('Не удалось определить папку для профилей');
+            await this.showMessage('Ошибка', 'Не удалось определить папку для профилей');
             return;
         }
         
         const selectedIndex = this.elements.profilesList.selectedIndex;
         if (selectedIndex === -1) {
-            alert('Выберите профиль из списка');
+            await this.showMessage('Ошибка', 'Выберите профиль из списка');
             return;
         }
         
@@ -621,7 +618,7 @@ class ModLoadOrderManager {
         try {
             const result = await this.profileService.loadProfile(profileName);
             if (!result.success) {
-                alert(`Не удалось загрузить профиль:\n${result.error}`);
+                await this.showMessage('Ошибка', `Не удалось загрузить профиль:\n${result.error}`);
                 return;
             }
             
@@ -655,19 +652,15 @@ class ModLoadOrderManager {
             this.updateModList(searchText);
             this.updateStatistics();
             
-            // Используем setTimeout чтобы alert не блокировал модальное окно
-            setTimeout(() => {
-                alert(`Профиль '${profileName}' загружен`);
-            }, 100);
+            await this.showMessage('Успех', `Профиль '${profileName}' загружен`);
         } catch (error) {
-            setTimeout(() => {
-                alert(`Не удалось загрузить профиль:\n${error.message}`);
-            }, 100);
+            await this.showMessage('Ошибка', `Не удалось загрузить профиль:\n${error.message}`);
         }
     }
     
     async reloadFile() {
-        if (confirm('Вернуться к исходному состоянию файла?\n\nВсе несохраненные изменения будут потеряны.')) {
+        const confirmed = await this.showConfirm('Вернуться к исходному состоянию файла?\n\nВсе несохраненные изменения будут потеряны.');
+        if (confirmed) {
             await this.loadFile();
             this.setStatus('Файл перезагружен. Состояние восстановлено из файла.');
         }
@@ -679,13 +672,13 @@ class ModLoadOrderManager {
         }
         
         if (!this.profilesDir) {
-            alert('Не удалось определить папку для профилей');
+            await this.showMessage('Ошибка', 'Не удалось определить папку для профилей');
             return;
         }
         
         const selectedIndex = this.elements.profilesList.selectedIndex;
         if (selectedIndex === -1) {
-            alert('Выберите профиль из списка');
+            await this.showMessage('Ошибка', 'Выберите профиль из списка');
             return;
         }
         
@@ -698,9 +691,7 @@ class ModLoadOrderManager {
             
             const cleanName = newProfileName.replace(/[^a-zA-Z0-9\s\-_]/g, '').trim();
             if (!cleanName) {
-                setTimeout(() => {
-                    alert('Недопустимое имя профиля');
-                }, 100);
+                await this.showMessage('Ошибка', 'Недопустимое имя профиля');
                 return;
             }
             
@@ -711,20 +702,14 @@ class ModLoadOrderManager {
             try {
                 const result = await this.profileService.renameProfile(oldProfileName, cleanName);
                 if (!result.success) {
-                    setTimeout(() => {
-                        alert(`Не удалось переименовать профиль:\n${result.error}`);
-                    }, 100);
+                    await this.showMessage('Ошибка', `Не удалось переименовать профиль:\n${result.error}`);
                     return;
                 }
                 
                 await this.refreshProfilesList();
-                setTimeout(() => {
-                    alert(`Профиль '${oldProfileName}' переименован в '${cleanName}'`);
-                }, 100);
+                await this.showMessage('Успех', `Профиль '${oldProfileName}' переименован в '${cleanName}'`);
             } catch (error) {
-                setTimeout(() => {
-                    alert(`Не удалось переименовать профиль:\n${error.message}`);
-                }, 100);
+                await this.showMessage('Ошибка', `Не удалось переименовать профиль:\n${error.message}`);
             }
         });
     }
@@ -735,19 +720,20 @@ class ModLoadOrderManager {
         }
         
         if (!this.profilesDir) {
-            alert('Не удалось определить папку для профилей');
+            await this.showMessage('Ошибка', 'Не удалось определить папку для профилей');
             return;
         }
         
         const selectedIndex = this.elements.profilesList.selectedIndex;
         if (selectedIndex === -1) {
-            alert('Выберите профиль из списка для перезаписи');
+            await this.showMessage('Ошибка', 'Выберите профиль из списка для перезаписи');
             return;
         }
         
         const profileName = this.elements.profilesList.options[selectedIndex].value;
         
-        if (!confirm(`Перезаписать профиль '${profileName}' текущим состоянием?`)) {
+        const confirmed = await this.showConfirm(`Перезаписать профиль '${profileName}' текущим состоянием?`);
+        if (!confirmed) {
             return;
         }
         
@@ -756,17 +742,13 @@ class ModLoadOrderManager {
             const result = await this.profileService.saveProfile(profileName, state);
             
             if (!result.success) {
-                alert(`Не удалось перезаписать профиль:\n${result.error}`);
+                await this.showMessage('Ошибка', `Не удалось перезаписать профиль:\n${result.error}`);
                 return;
             }
             
-            setTimeout(() => {
-                alert(`Профиль '${profileName}' перезаписан`);
-            }, 100);
+            await this.showMessage('Успех', `Профиль '${profileName}' перезаписан`);
         } catch (error) {
-            setTimeout(() => {
-                alert(`Не удалось перезаписать профиль:\n${error.message}`);
-            }, 100);
+            await this.showMessage('Ошибка', `Не удалось перезаписать профиль:\n${error.message}`);
         }
     }
     
@@ -776,42 +758,114 @@ class ModLoadOrderManager {
         }
         
         if (!this.profilesDir) {
-            alert('Не удалось определить папку для профилей');
+            await this.showMessage('Ошибка', 'Не удалось определить папку для профилей');
             return;
         }
         
         const selectedIndex = this.elements.profilesList.selectedIndex;
         if (selectedIndex === -1) {
-            alert('Выберите профиль из списка');
+            await this.showMessage('Ошибка', 'Выберите профиль из списка');
             return;
         }
         
         const profileName = this.elements.profilesList.options[selectedIndex].value;
         
-        if (!confirm(`Удалить профиль '${profileName}'?`)) {
+        const confirmed = await this.showConfirm(`Удалить профиль '${profileName}'?`);
+        if (!confirmed) {
             return;
         }
         
         try {
             const result = await this.profileService.deleteProfile(profileName);
             if (!result.success) {
-                alert(`Не удалось удалить профиль:\n${result.error}`);
+                await this.showMessage('Ошибка', `Не удалось удалить профиль:\n${result.error}`);
                 return;
             }
             
             await this.refreshProfilesList();
-            setTimeout(() => {
-                alert(`Профиль '${profileName}' удален`);
-            }, 100);
+            await this.showMessage('Успех', `Профиль '${profileName}' удален`);
         } catch (error) {
-            setTimeout(() => {
-                alert(`Не удалось удалить профиль:\n${error.message}`);
-            }, 100);
+            await this.showMessage('Ошибка', `Не удалось удалить профиль:\n${error.message}`);
         }
     }
     
     setStatus(message) {
         this.statusManager.setStatus(message);
+    }
+    
+    // Показ сообщения в модальном окне вместо alert
+    showMessage(title, message) {
+        return new Promise((resolve) => {
+            // Восстанавливаем кнопку OK на случай, если она была заменена
+            const footer = this.elements.messageDialog.querySelector('.modal-footer');
+            if (!footer.querySelector('#message-ok-btn')) {
+                footer.innerHTML = '<button id="message-ok-btn" class="btn btn-primary">OK</button>';
+                this.elements.messageOkBtn = document.getElementById('message-ok-btn');
+            } else {
+                // Обновляем ссылку на кнопку, если она уже есть
+                this.elements.messageOkBtn = document.getElementById('message-ok-btn');
+            }
+            
+            this.elements.messageTitle.textContent = title || 'Сообщение';
+            this.elements.messageText.textContent = message;
+            this.elements.messageDialog.classList.add('show');
+            
+            // Удаляем старые обработчики, если есть
+            const newOkBtn = this.elements.messageOkBtn.cloneNode(true);
+            this.elements.messageOkBtn.parentNode.replaceChild(newOkBtn, this.elements.messageOkBtn);
+            this.elements.messageOkBtn = newOkBtn;
+            
+            const handleOk = () => {
+                this.elements.messageDialog.classList.remove('show');
+                this.elements.messageOkBtn.removeEventListener('click', handleOk);
+                resolve();
+            };
+            
+            this.elements.messageOkBtn.addEventListener('click', handleOk);
+        });
+    }
+    
+    // Показ подтверждения в модальном окне вместо confirm
+    showConfirm(message) {
+        return new Promise((resolve) => {
+            this.elements.messageTitle.textContent = 'Подтверждение';
+            this.elements.messageText.textContent = message;
+            
+            // Заменяем кнопку OK на две кнопки Да/Нет
+            const footer = this.elements.messageDialog.querySelector('.modal-footer');
+            footer.innerHTML = `
+                <button id="confirm-yes-btn" class="btn btn-primary">Да</button>
+                <button id="confirm-no-btn" class="btn">Нет</button>
+            `;
+            
+            this.elements.messageDialog.classList.add('show');
+            
+            const yesBtn = document.getElementById('confirm-yes-btn');
+            const noBtn = document.getElementById('confirm-no-btn');
+            
+            const handleYes = () => {
+                this.elements.messageDialog.classList.remove('show');
+                // Восстанавливаем кнопку OK
+                footer.innerHTML = '<button id="message-ok-btn" class="btn btn-primary">OK</button>';
+                this.elements.messageOkBtn = document.getElementById('message-ok-btn');
+                yesBtn.removeEventListener('click', handleYes);
+                noBtn.removeEventListener('click', handleNo);
+                resolve(true);
+            };
+            
+            const handleNo = () => {
+                this.elements.messageDialog.classList.remove('show');
+                // Восстанавливаем кнопку OK
+                footer.innerHTML = '<button id="message-ok-btn" class="btn btn-primary">OK</button>';
+                this.elements.messageOkBtn = document.getElementById('message-ok-btn');
+                yesBtn.removeEventListener('click', handleYes);
+                noBtn.removeEventListener('click', handleNo);
+                resolve(false);
+            };
+            
+            yesBtn.addEventListener('click', handleYes);
+            noBtn.addEventListener('click', handleNo);
+        });
     }
     
     // Обновление панели массовых действий
@@ -942,13 +996,14 @@ class ModLoadOrderManager {
     }
     
     // Массовое удаление выбранных модов
-    bulkDelete() {
+    async bulkDelete() {
         const selected = Array.from(this.selectedModNames);
         if (selected.length === 0) {
             return;
         }
         
-        if (!confirm(`Удалить ${selected.length} выбранных модов из списка?\n\nМоды будут удалены из файла при сохранении.`)) {
+        const confirmed = await this.showConfirm(`Удалить ${selected.length} выбранных модов из списка?\n\nМоды будут удалены из файла при сохранении.`);
+        if (!confirmed) {
             return;
         }
         

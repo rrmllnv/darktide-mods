@@ -547,6 +547,17 @@ body {
     pointer-events: auto;
 }
 
+/* Модальное окно для сообщений */
+.modal-content-message {
+    width: 450px;
+}
+
+.message-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.5;
+}
+
 .modal-header {
     padding: 15px;
     background-color: #f0f0f0;
