@@ -203,29 +203,60 @@ class ModLoadOrderManager {
         // Убеждаемся, что поле доступно и очищено
         this.elements.profileNameInput.disabled = false;
         this.elements.profileNameInput.readOnly = false;
-        this.elements.profileNameInput.value = '';
+        this.elements.profileNameInput.value = defaultValue || '';
+        
+        // Убираем любые атрибуты, которые могут блокировать ввод
+        this.elements.profileNameInput.removeAttribute('readonly');
+        this.elements.profileNameInput.removeAttribute('disabled');
+        this.elements.profileNameInput.style.pointerEvents = 'auto';
+        this.elements.profileNameInput.style.cursor = 'text';
         
         // Показываем модальное окно
         this.elements.profileDialog.classList.add('show');
         
-        // Устанавливаем значение и фокус после показа модального окна
-        // Используем requestAnimationFrame для гарантии, что DOM обновлен
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                this.elements.profileNameInput.value = defaultValue || '';
-                // Фокус на поле ввода и выделение текста
-                this.elements.profileNameInput.focus();
-                this.elements.profileNameInput.select();
+        // Функция для установки фокуса
+        const setFocus = () => {
+            try {
+                // Убеждаемся, что поле доступно
+                this.elements.profileNameInput.disabled = false;
+                this.elements.profileNameInput.readOnly = false;
                 
-                // Дополнительная проверка - если фокус не установился, пробуем еще раз
+                // Устанавливаем фокус
+                this.elements.profileNameInput.focus();
+                
+                // Если есть значение по умолчанию, выделяем его
+                if (defaultValue) {
+                    this.elements.profileNameInput.select();
+                }
+                
+                // Проверяем, что фокус установился
                 if (document.activeElement !== this.elements.profileNameInput) {
+                    // Пробуем через небольшой таймаут
                     setTimeout(() => {
                         this.elements.profileNameInput.focus();
-                        this.elements.profileNameInput.select();
-                    }, 100);
+                        if (defaultValue) {
+                            this.elements.profileNameInput.select();
+                        }
+                    }, 50);
                 }
+            } catch (e) {
+                console.error('Ошибка установки фокуса:', e);
+            }
+        };
+        
+        // Используем несколько попыток для гарантии фокуса
+        // Первая попытка через requestAnimationFrame
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                setFocus();
             });
         });
+        
+        // Вторая попытка через setTimeout
+        setTimeout(setFocus, 100);
+        
+        // Третья попытка через больший таймаут (на случай если что-то блокирует)
+        setTimeout(setFocus, 200);
     }
     
     hideModal() {
@@ -952,10 +983,19 @@ class ModLoadOrderManager {
     }
     
     saveCurrentState() {
-        const state = {};
-        for (const modEntry of this.modEntries) {
-            state[modEntry.name] = modEntry.enabled;
+        // Сортируем моды по orderIndex для сохранения правильного порядка
+        const sortedMods = [...this.modEntries].sort((a, b) => a.orderIndex - b.orderIndex);
+        
+        const state = {
+            _order: [], // Массив имен модов в порядке из файла
+            _mods: {}   // Объект с состоянием каждого мода
+        };
+        
+        for (const modEntry of sortedMods) {
+            state._order.push(modEntry.name);
+            state._mods[modEntry.name] = modEntry.enabled;
         }
+        
         return state;
     }
     
@@ -964,42 +1004,75 @@ class ModLoadOrderManager {
             return;
         }
         
-        // Получаем список имен модов из профиля
-        const profileModNames = new Set(Object.keys(state));
+        // Поддержка старого формата профиля (без порядка)
+        let profileOrder = [];
+        let profileMods = {};
         
-        // Обновляем существующие моды и снимаем флаг NEW, если мод есть в профиле
-        for (const modEntry of this.modEntries) {
-            if (modEntry.name in state) {
-                modEntry.enabled = state[modEntry.name];
-                // Снимаем флаг NEW, если мод есть в профиле (значит он не новый)
-                if (modEntry.isNew && profileModNames.has(modEntry.name)) {
-                    modEntry.isNew = false;
-                }
-                // Обновляем чекбоксы
-                if (modEntry.checkbox) {
-                    modEntry.checkbox.checked = state[modEntry.name];
-                }
-            }
+        if (state._order && state._mods) {
+            // Новый формат с порядком
+            profileOrder = state._order;
+            profileMods = state._mods;
+        } else {
+            // Старый формат (только состояние) - создаем порядок из ключей
+            profileOrder = Object.keys(state);
+            profileMods = state;
         }
         
-        // Добавляем моды из профиля, которых нет в текущем списке
-        // Эти моды не должны быть помечены как NEW, так как они из сохраненного профиля
-        const existingModNames = new Set(this.modEntries.map(mod => mod.name));
-        const baseIndex = this.modEntries.length + 1000;
-        let addedCount = 0;
+        // Получаем список имен модов из профиля
+        const profileModNames = new Set(profileOrder);
         
-        for (const [modName, enabled] of Object.entries(state)) {
-            if (!existingModNames.has(modName)) {
+        // Создаем карту существующих модов для быстрого доступа
+        const existingModsMap = new Map();
+        for (const modEntry of this.modEntries) {
+            existingModsMap.set(modEntry.name, modEntry);
+        }
+        
+        // Восстанавливаем порядок и состояние модов из профиля
+        const restoredMods = [];
+        const maxOrderIndex = Math.max(...this.modEntries.map(m => m.orderIndex), 0);
+        
+        // Проходим по порядку из профиля
+        profileOrder.forEach((modName, index) => {
+            const enabled = profileMods[modName];
+            const existingMod = existingModsMap.get(modName);
+            
+            if (existingMod) {
+                // Мод существует - обновляем его состояние и порядок
+                existingMod.enabled = enabled;
+                existingMod.orderIndex = index; // Восстанавливаем порядок из профиля
+                existingMod.isNew = false; // Снимаем флаг NEW
+                restoredMods.push(existingMod);
+                existingModsMap.delete(modName); // Убираем из карты, чтобы не обработать повторно
+            } else {
                 // Мод есть в профиле, но отсутствует в текущем списке - добавляем его
-                // НЕ помечаем как NEW, так как он из профиля
-                this.modEntries.push(new ModEntry(
+                restoredMods.push(new ModEntry(
                     modName,
                     enabled,
                     enabled ? modName : `--${modName}`,
                     false, // НЕ новый мод, так как он из профиля
-                    baseIndex + addedCount
+                    index // Порядок из профиля
                 ));
-                addedCount++;
+            }
+        });
+        
+        // Обрабатываем моды, которых нет в профиле
+        for (const [modName, modEntry] of existingModsMap) {
+            // Мод НЕТ в профиле - помечаем как новый
+            if (!modEntry.isNew) {
+                modEntry.isNew = true;
+            }
+            // Добавляем в конец с большим orderIndex
+            modEntry.orderIndex = maxOrderIndex + 1000 + restoredMods.length;
+            restoredMods.push(modEntry);
+        }
+        
+        // Обновляем список модов
+        this.modEntries = restoredMods;
+        
+        // Обновляем чекбоксы
+        for (const modEntry of this.modEntries) {
+            if (modEntry.checkbox) {
+                modEntry.checkbox.checked = modEntry.enabled;
             }
         }
         
@@ -1155,7 +1228,17 @@ class ModLoadOrderManager {
                 return;
             }
             
+            // Восстанавливаем состояние из профиля
             this.restoreState(result.state);
+            
+            // Обновляем список модов (сканируем папку для поиска новых модов)
+            await this.scanModsDirectory();
+            
+            // Обновляем интерфейс
+            const searchText = this.elements.searchInput.value;
+            this.updateModList(searchText);
+            this.updateStatistics();
+            
             alert(`Профиль '${profileName}' загружен`);
         } catch (error) {
             alert(`Не удалось загрузить профиль:\n${error.message}`);
