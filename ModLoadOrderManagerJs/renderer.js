@@ -77,6 +77,8 @@ class ModLoadOrderManager {
             modalOkBtn: document.getElementById('modal-ok-btn'),
             modalCancelBtn: document.getElementById('modal-cancel-btn'),
             bulkActionsPanel: document.getElementById('bulk-actions-panel'),
+            bulkSelectEnabledBtn: document.getElementById('bulk-select-enabled-btn'),
+            bulkSelectDisabledBtn: document.getElementById('bulk-select-disabled-btn'),
             bulkEnableBtn: document.getElementById('bulk-enable-btn'),
             bulkDisableBtn: document.getElementById('bulk-disable-btn'),
             bulkDeleteBtn: document.getElementById('bulk-delete-btn'),
@@ -156,6 +158,8 @@ class ModLoadOrderManager {
             renameSelectedProfile: () => this.renameSelectedProfile(),
             deleteSelectedProfile: () => this.deleteSelectedProfile(),
             saveFile: () => this.saveFile(),
+            bulkSelectEnabled: () => this.bulkSelectEnabled(),
+            bulkSelectDisabled: () => this.bulkSelectDisabled(),
             bulkEnable: () => this.bulkEnable(),
             bulkDisable: () => this.bulkDisable(),
             bulkDelete: () => this.bulkDelete(),
@@ -800,6 +804,58 @@ class ModLoadOrderManager {
         } else {
             this.elements.bulkActionsPanel.classList.add('disabled');
         }
+    }
+    
+    // Выделить все включенные моды
+    bulkSelectEnabled() {
+        this.selectedModNames.clear();
+        this.selectedModName = '';
+        this.lastSelectedModIndex = -1;
+        
+        this.modEntries.forEach(modEntry => {
+            if (modEntry.enabled) {
+                this.selectedModNames.add(modEntry.name);
+            }
+        });
+        
+        // Обновляем визуальное выделение
+        this.updateModListSelection();
+        
+        // Обновляем информацию
+        const count = this.selectedModNames.size;
+        if (count > 0) {
+            this.elements.selectedModInfo.textContent = `Выбрано модов: ${count}`;
+        } else {
+            this.elements.selectedModInfo.textContent = 'Нет включенных модов';
+        }
+        
+        this.updateBulkActionsPanel();
+    }
+    
+    // Выделить все выключенные моды
+    bulkSelectDisabled() {
+        this.selectedModNames.clear();
+        this.selectedModName = '';
+        this.lastSelectedModIndex = -1;
+        
+        this.modEntries.forEach(modEntry => {
+            if (!modEntry.enabled) {
+                this.selectedModNames.add(modEntry.name);
+            }
+        });
+        
+        // Обновляем визуальное выделение
+        this.updateModListSelection();
+        
+        // Обновляем информацию
+        const count = this.selectedModNames.size;
+        if (count > 0) {
+            this.elements.selectedModInfo.textContent = `Выбрано модов: ${count}`;
+        } else {
+            this.elements.selectedModInfo.textContent = 'Нет выключенных модов';
+        }
+        
+        this.updateBulkActionsPanel();
     }
     
     // Массовое включение выбранных модов

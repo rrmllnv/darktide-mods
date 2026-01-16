@@ -76,6 +76,10 @@ body {
     padding: 5px 10px;
 }
 
+.selection-buttons-frame {
+    margin-top: 5px;
+}
+
 .sort-label {
     font-size: 8pt;
     margin-right: 2px;

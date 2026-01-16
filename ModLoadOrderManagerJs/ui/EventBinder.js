@@ -19,6 +19,14 @@ export class EventBinder {
         this.elements.disableAllBtn.addEventListener('click', () => this.callbacks.disableAll());
         this.elements.scanBtn.addEventListener('click', () => this.callbacks.scanAndUpdate());
         
+        // Выделение модов
+        if (this.elements.bulkSelectEnabledBtn) {
+            this.elements.bulkSelectEnabledBtn.addEventListener('click', () => this.callbacks.bulkSelectEnabled());
+        }
+        if (this.elements.bulkSelectDisabledBtn) {
+            this.elements.bulkSelectDisabledBtn.addEventListener('click', () => this.callbacks.bulkSelectDisabled());
+        }
+        
         // Поиск
         this.elements.searchInput.addEventListener('input', () => this.callbacks.onSearchChange());
         this.elements.clearSearchBtn.addEventListener('click', () => this.callbacks.clearSearch());
