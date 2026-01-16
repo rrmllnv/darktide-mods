@@ -59,7 +59,6 @@ class ModLoadOrderManager {
             clearSearchBtn: document.getElementById('clear-search-btn'),
             hideNewModsCheckbox: document.getElementById('hide-new-mods-checkbox'),
             hideUnusedModsCheckbox: document.getElementById('hide-unused-mods-checkbox'),
-            selectedModInfo: document.getElementById('selected-mod-info'),
             createSymlinkBtn: document.getElementById('create-symlink-btn'),
             profilesList: document.getElementById('profiles-list'),
             newProfileBtn: document.getElementById('new-profile-btn'),
@@ -357,21 +356,8 @@ class ModLoadOrderManager {
         // Обновляем информацию о выбранном моде (для одиночного выбора)
         if (this.selectedModNames.size === 1) {
             const singleMod = Array.from(this.selectedModNames)[0];
-            const modEntry = this.modEntries.find(m => m.name === singleMod);
-            if (modEntry) {
-                const status = modEntry.enabled ? 'Включен' : 'Выключен';
-                let infoText = `${singleMod}\nСтатус: ${status}`;
-                if (modEntry.isNew) {
-                    infoText += '\n⚠ Новый мод (не был в файле)';
-                }
-                this.elements.selectedModInfo.textContent = infoText;
-                this.selectedModName = singleMod;
-            }
-        } else if (this.selectedModNames.size > 1) {
-            this.elements.selectedModInfo.textContent = `Выбрано модов: ${this.selectedModNames.size}`;
-            this.selectedModName = '';
+            this.selectedModName = singleMod;
         } else {
-            this.elements.selectedModInfo.textContent = 'Нет выбора';
             this.selectedModName = '';
         }
         
@@ -398,7 +384,6 @@ class ModLoadOrderManager {
         this.lastSelectedModIndex = -1;
         this.updateModListSelection();
         this.updateBulkActionsPanel();
-        this.elements.selectedModInfo.textContent = 'Нет выбора';
     }
     
     
@@ -821,14 +806,6 @@ class ModLoadOrderManager {
         // Обновляем визуальное выделение
         this.updateModListSelection();
         
-        // Обновляем информацию
-        const count = this.selectedModNames.size;
-        if (count > 0) {
-            this.elements.selectedModInfo.textContent = `Выбрано модов: ${count}`;
-        } else {
-            this.elements.selectedModInfo.textContent = 'Нет включенных модов';
-        }
-        
         this.updateBulkActionsPanel();
     }
     
@@ -846,14 +823,6 @@ class ModLoadOrderManager {
         
         // Обновляем визуальное выделение
         this.updateModListSelection();
-        
-        // Обновляем информацию
-        const count = this.selectedModNames.size;
-        if (count > 0) {
-            this.elements.selectedModInfo.textContent = `Выбрано модов: ${count}`;
-        } else {
-            this.elements.selectedModInfo.textContent = 'Нет выключенных модов';
-        }
         
         this.updateBulkActionsPanel();
     }
