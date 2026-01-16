@@ -23,7 +23,7 @@ function createWindow() {
     autoHideMenuBar: true // Скрываем стандартное меню Electron
   });
 
-  mainWindow.loadFile('index.html');
+  mainWindow.loadFile('app/index.html');
 
   // Полностью скрываем меню
   mainWindow.setMenuBarVisibility(false);
