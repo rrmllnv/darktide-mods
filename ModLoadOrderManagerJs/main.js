@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
-const { existsSync, readdirSync, statSync, symlink } = require('fs');
+const { existsSync, readdirSync, statSync, lstatSync, symlink } = require('fs');
 const { promisify } = require('util');
 const symlinkAsync = promisify(symlink);
 
@@ -118,9 +118,27 @@ ipcMain.handle('scan-mods-directory', async (event, modsDir) => {
     for (const item of items) {
       const itemPath = path.join(modsDir, item);
       
-      // Пропускаем файлы, ищем только папки
-      if (!statSync(itemPath).isDirectory()) {
+      // Используем lstatSync для проверки симлинков (не следует по ссылкам)
+      const stats = lstatSync(itemPath);
+      
+      // Пропускаем файлы, ищем только папки (включая симлинки на папки)
+      if (!stats.isDirectory() && !stats.isSymbolicLink()) {
         continue;
+      }
+      
+      // Проверяем, является ли это симлинком
+      // Если симлинк, проверяем, указывает ли он на папку
+      if (stats.isSymbolicLink()) {
+        try {
+          // Проверяем, на что указывает симлинк
+          const targetStats = statSync(itemPath);
+          if (!targetStats.isDirectory()) {
+            continue; // Симлинк указывает не на папку
+          }
+        } catch (e) {
+          // Симлинк указывает на несуществующий путь - пропускаем
+          continue;
+        }
       }
 
       // Пропускаем служебные папки
