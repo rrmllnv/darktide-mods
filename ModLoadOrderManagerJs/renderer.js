@@ -1,12 +1,12 @@
 // Импорты модулей
-import { ModEntry } from './models/ModEntry.js';
-import { FileService } from './services/FileService.js';
-import { ProfileService } from './services/ProfileService.js';
-import { ModScanService } from './services/ModScanService.js';
-import { ModalManager } from './ui/ModalManager.js';
-import { ModListRenderer } from './ui/ModListRenderer.js';
-import { EventBinder } from './ui/EventBinder.js';
-import { StatusManager } from './utils/StatusManager.js';
+import { ModEntry } from './app/models/ModEntry.js';
+import { FileService } from './app/services/FileService.js';
+import { ProfileService } from './app/services/ProfileService.js';
+import { ModScanService } from './app/services/ModScanService.js';
+import { ModalManager } from './app/ui/ModalManager.js';
+import { ModListRenderer } from './app/ui/ModListRenderer.js';
+import { EventBinder } from './app/ui/EventBinder.js';
+import { StatusManager } from './app/utils/StatusManager.js';
 
 // Главный класс приложения
 class ModLoadOrderManager {

@@ -68,7 +68,7 @@
           ]
         }
       ],
-      "icon": "icons/darktide-icon.ico",
+      "icon": "app/icons/darktide-icon.ico",
       "requestedExecutionLevel": "asInvoker",
       "artifactName": "${productName}.${ext}"
     },
@@ -77,9 +77,9 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "installerIcon": "icons/darktide-icon.ico",
-      "uninstallerIcon": "icons/darktide-icon.ico",
-      "installerHeaderIcon": "icons/darktide-icon.ico",
+      "installerIcon": "app/icons/darktide-icon.ico",
+      "uninstallerIcon": "app/icons/darktide-icon.ico",
+      "installerHeaderIcon": "app/icons/darktide-icon.ico",
       "license": "LICENSE.txt",
       "artifactName": "${productName} Setup.${ext}"
     }

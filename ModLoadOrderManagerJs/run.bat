@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul 2>&1
 cd /d "%~dp0"
-echo Starting Mod Load Order Manager (JavaScript)...
+echo Starting Darktide Mod Load Order Manager (JavaScript)...
 
 REM Check if node_modules exists
 if not exist "node_modules" (

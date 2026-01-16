@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul 2>&1
 cd /d "%~dp0"
-echo Building Mod Load Order Manager for Windows...
+echo Building Darktide Mod Load Order Manager for Windows...
 
 REM Check if node_modules exists
 if not exist "node_modules" (
