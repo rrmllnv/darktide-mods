@@ -60,6 +60,7 @@ class ModLoadOrderManager {
             newProfileBtn: document.getElementById('new-profile-btn'),
             overwriteProfileBtn: document.getElementById('overwrite-profile-btn'),
             loadProfileBtn: document.getElementById('load-profile-btn'),
+            reloadFileBtn: document.getElementById('reload-file-btn'),
             renameProfileBtn: document.getElementById('rename-profile-btn'),
             deleteProfileBtn: document.getElementById('delete-profile-btn'),
             saveBtn: document.getElementById('save-btn'),
@@ -146,6 +147,7 @@ class ModLoadOrderManager {
         this.elements.newProfileBtn.addEventListener('click', () => this.saveCurrentProfile());
         this.elements.overwriteProfileBtn.addEventListener('click', () => this.overwriteSelectedProfile());
         this.elements.loadProfileBtn.addEventListener('click', () => this.loadSelectedProfile());
+        this.elements.reloadFileBtn.addEventListener('click', () => this.reloadFile());
         this.elements.renameProfileBtn.addEventListener('click', () => this.renameSelectedProfile());
         this.elements.deleteProfileBtn.addEventListener('click', () => this.deleteSelectedProfile());
         
@@ -853,13 +855,42 @@ class ModLoadOrderManager {
             return;
         }
         
+        // Получаем список имен модов из профиля
+        const profileModNames = new Set(Object.keys(state));
+        
+        // Обновляем существующие моды и снимаем флаг NEW, если мод есть в профиле
         for (const modEntry of this.modEntries) {
             if (modEntry.name in state) {
                 modEntry.enabled = state[modEntry.name];
+                // Снимаем флаг NEW, если мод есть в профиле (значит он не новый)
+                if (modEntry.isNew && profileModNames.has(modEntry.name)) {
+                    modEntry.isNew = false;
+                }
                 // Обновляем чекбоксы
                 if (modEntry.checkbox) {
                     modEntry.checkbox.checked = state[modEntry.name];
                 }
+            }
+        }
+        
+        // Добавляем моды из профиля, которых нет в текущем списке
+        // Эти моды не должны быть помечены как NEW, так как они из сохраненного профиля
+        const existingModNames = new Set(this.modEntries.map(mod => mod.name));
+        const baseIndex = this.modEntries.length + 1000;
+        let addedCount = 0;
+        
+        for (const [modName, enabled] of Object.entries(state)) {
+            if (!existingModNames.has(modName)) {
+                // Мод есть в профиле, но отсутствует в текущем списке - добавляем его
+                // НЕ помечаем как NEW, так как он из профиля
+                this.modEntries.push(new ModEntry(
+                    modName,
+                    enabled,
+                    enabled ? modName : `--${modName}`,
+                    false, // НЕ новый мод, так как он из профиля
+                    baseIndex + addedCount
+                ));
+                addedCount++;
             }
         }
         
@@ -1019,6 +1050,14 @@ class ModLoadOrderManager {
             alert(`Профиль '${profileName}' загружен`);
         } catch (error) {
             alert(`Не удалось загрузить профиль:\n${error.message}`);
+        }
+    }
+    
+    async reloadFile() {
+        // Подтверждение, если были изменения
+        if (confirm('Вернуться к исходному состоянию файла?\n\nВсе несохраненные изменения будут потеряны.')) {
+            await this.loadFile();
+            this.setStatus('Файл перезагружен. Состояние восстановлено из файла.');
         }
     }
     
