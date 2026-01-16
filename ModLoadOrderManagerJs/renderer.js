@@ -22,6 +22,7 @@ class ModLoadOrderManager {
         this.filteredModEntries = [];
         this.selectedModName = '';
         this.sortType = 'По порядку файла';
+        this.hideNewMods = false; // Флаг для скрытия новых модов
         
         // Система профилей
         this.savedState = null; // Сохраненное состояние перед переключением
@@ -47,6 +48,7 @@ class ModLoadOrderManager {
             modsList: document.getElementById('mods-list'),
             searchInput: document.getElementById('search-input'),
             clearSearchBtn: document.getElementById('clear-search-btn'),
+            hideNewModsCheckbox: document.getElementById('hide-new-mods-checkbox'),
             statsTotal: document.getElementById('stats-total'),
             statsEnabled: document.getElementById('stats-enabled'),
             statsDisabled: document.getElementById('stats-disabled'),
@@ -132,6 +134,13 @@ class ModLoadOrderManager {
         // Поиск
         this.elements.searchInput.addEventListener('input', () => this.onSearchChange());
         this.elements.clearSearchBtn.addEventListener('click', () => this.clearSearch());
+        
+        // Скрытие новых модов
+        this.elements.hideNewModsCheckbox.addEventListener('change', () => {
+            this.hideNewMods = this.elements.hideNewModsCheckbox.checked;
+            const searchText = this.elements.searchInput.value;
+            this.updateModList(searchText);
+        });
         
         // Удаление мода
         this.elements.deleteModBtn.addEventListener('click', () => this.deleteSelectedMod());
@@ -471,6 +480,11 @@ class ModLoadOrderManager {
             );
         } else {
             filtered = [...this.modEntries];
+        }
+        
+        // Фильтрация новых модов, если включен чекбокс
+        if (this.hideNewMods) {
+            filtered = filtered.filter(mod => !mod.isNew);
         }
         
         // Сортировка модов
