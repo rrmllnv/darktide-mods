@@ -8,8 +8,16 @@ export class ProfileService {
     
     // Сохранение текущего состояния в формат профиля
     saveState(modEntries) {
-        // Фильтруем моды с флагом isNew - они не должны сохраняться в профиль
-        const modsToSave = modEntries.filter(modEntry => !modEntry.isNew);
+        // Сохраняем все моды, кроме тех, которые помечены как NEW и выключены
+        // Если мод с флагом NEW включен (галочка стоит), он должен сохраниться в профиль
+        const modsToSave = modEntries.filter(modEntry => {
+            // Исключаем только NEW моды, которые выключены
+            // Если NEW мод включен - сохраняем его
+            if (modEntry.isNew && !modEntry.enabled) {
+                return false;
+            }
+            return true;
+        });
         
         // Сортируем моды по orderIndex для сохранения правильного порядка
         const sortedMods = [...modsToSave].sort((a, b) => a.orderIndex - b.orderIndex);
