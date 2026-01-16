@@ -22,15 +22,7 @@
         <div class="left-panel">
             <!-- Заголовок списка -->
             <div class="header-frame">
-                <label class="header-label">Список модов:</label>
                 <div class="button-frame">
-                    <label class="sort-label">Сортировка:</label>
-                    <select id="sort-select" class="sort-combo">
-                        <option value="По порядку файла">По порядку файла</option>
-                        <option value="По имени">По имени</option>
-                        <option value="По статусу">По статусу</option>
-                        <option value="Новые сначала">Новые сначала</option>
-                    </select>
                     <button id="enable-all-btn" class="btn-icon" title="Включить все">
                         <i class="fas fa-check-double"></i>
                     </button>
@@ -51,6 +43,15 @@
                     <button id="bulk-select-disabled-btn" class="btn-icon" title="Выделить все выключенные">
                         <i class="fas fa-square"></i>
                     </button>
+                </div>
+                <div class="button-frame sort-frame">
+                    <label class="sort-label">Сортировка:</label>
+                    <select id="sort-select" class="sort-combo">
+                        <option value="По порядку файла">По порядку файла</option>
+                        <option value="По имени">По имени</option>
+                        <option value="По статусу">По статусу</option>
+                        <option value="Новые сначала">Новые сначала</option>
+                    </select>
                 </div>
             </div>
 

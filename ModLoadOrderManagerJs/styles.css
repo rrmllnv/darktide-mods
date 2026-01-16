@@ -57,6 +57,11 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 5px;
+    gap: 5px;
+}
+
+.sort-frame {
+    margin-left: auto;
 }
 
 .header-label {
@@ -77,7 +82,7 @@ body {
 }
 
 .selection-buttons-frame {
-    margin-top: 5px;
+    margin-left: 10px;
 }
 
 .sort-label {
