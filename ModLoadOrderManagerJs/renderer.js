@@ -23,6 +23,7 @@ class ModLoadOrderManager {
         this.lastSelectedModIndex = -1; // Для Shift+Click
         this.hideNewMods = false;
         this.hideUnusedMods = false;
+        this.hideDeletedMods = false;
         
         // Система профилей
         this.savedState = null;
@@ -59,6 +60,7 @@ class ModLoadOrderManager {
             clearSearchBtn: document.getElementById('clear-search-btn'),
             hideNewModsCheckbox: document.getElementById('hide-new-mods-checkbox'),
             hideUnusedModsCheckbox: document.getElementById('hide-unused-mods-checkbox'),
+            hideDeletedModsCheckbox: document.getElementById('hide-deleted-mods-checkbox'),
             createSymlinkBtn: document.getElementById('create-symlink-btn'),
             profilesList: document.getElementById('profiles-list'),
             newProfileBtn: document.getElementById('new-profile-btn'),
@@ -161,6 +163,11 @@ class ModLoadOrderManager {
             },
             onHideUnusedModsChange: (checked) => {
                 this.hideUnusedMods = checked;
+                const searchText = this.elements.searchInput.value;
+                this.updateModList(searchText);
+            },
+            onHideDeletedModsChange: (checked) => {
+                this.hideDeletedMods = checked;
                 const searchText = this.elements.searchInput.value;
                 this.updateModList(searchText);
             },
@@ -302,6 +309,7 @@ class ModLoadOrderManager {
             filterText,
             this.hideNewMods,
             this.hideUnusedMods,
+            this.hideDeletedMods,
             this.selectedModName,
             this.selectedModNames
         );

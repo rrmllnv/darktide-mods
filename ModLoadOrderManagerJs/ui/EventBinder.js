@@ -41,6 +41,13 @@ export class EventBinder {
             this.callbacks.onHideUnusedModsChange(this.elements.hideUnusedModsCheckbox.checked);
         });
         
+        // Скрытие удаленных модов
+        if (this.elements.hideDeletedModsCheckbox) {
+            this.elements.hideDeletedModsCheckbox.addEventListener('change', () => {
+                this.callbacks.onHideDeletedModsChange(this.elements.hideDeletedModsCheckbox.checked);
+            });
+        }
+        
         // Создание симлинка
         this.elements.createSymlinkBtn.addEventListener('click', () => this.callbacks.createSymlinkForMod());
         

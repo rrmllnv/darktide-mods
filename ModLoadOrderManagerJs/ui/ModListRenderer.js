@@ -31,7 +31,7 @@ export class ModListRenderer {
     }
     
     // Обновление списка модов
-    updateModList(filterText = null, hideNewMods = false, hideUnusedMods = false, selectedModName = '', selectedModNames = null) {
+    updateModList(filterText = null, hideNewMods = false, hideUnusedMods = false, hideDeletedMods = false, selectedModName = '', selectedModNames = null) {
         // Обеспечиваем, что selectedModNames всегда является Set
         if (!selectedModNames || !(selectedModNames instanceof Set)) {
             selectedModNames = new Set();
@@ -70,6 +70,11 @@ export class ModListRenderer {
         // Фильтрация не используемых модов (выключенных), если включен чекбокс
         if (hideUnusedMods) {
             filtered = filtered.filter(mod => mod.enabled);
+        }
+        
+        // Фильтрация удаленных модов, если включен чекбокс
+        if (hideDeletedMods) {
+            filtered = filtered.filter(mod => !mod.isDeleted);
         }
         
         // Сортировка модов
@@ -127,6 +132,14 @@ export class ModListRenderer {
             newLabel.textContent = '[NEW]';
         }
         
+        // Метка "DELETED" для модов с удаленной папкой
+        let deletedLabel = null;
+        if (modEntry.isDeleted) {
+            deletedLabel = document.createElement('span');
+            deletedLabel.className = 'mod-deleted-label';
+            deletedLabel.textContent = '[DELETED]';
+        }
+        
         // Индикатор статуса
         const status = document.createElement('span');
         status.className = `mod-status ${modEntry.enabled ? 'enabled' : 'disabled'}`;
@@ -151,6 +164,9 @@ export class ModListRenderer {
         modItem.appendChild(modName);
         if (newLabel) {
             modItem.appendChild(newLabel);
+        }
+        if (deletedLabel) {
+            modItem.appendChild(deletedLabel);
         }
         modItem.appendChild(status);
         

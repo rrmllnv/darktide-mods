@@ -38,11 +38,26 @@ export class ModScanService {
             const modsToRemove = [];
             let newSelectedModName = selectedModName;
             
-            for (let i = modEntries.length - 1; i >= 0; i--) {
-                const mod = modEntries[i];
+            // Проверяем все моды из файла на наличие папок
+            for (const mod of modEntries) {
+                // Если мод не новый (есть в файле), но его папки нет в файловой системе
+                if (!mod.isNew && !fileSystemMods.has(mod.name)) {
+                    mod.isDeleted = true; // Помечаем как удаленный
+                } else if (mod.isDeleted && fileSystemMods.has(mod.name)) {
+                    // Если папка появилась снова - снимаем флаг
+                    mod.isDeleted = false;
+                }
+                
                 // Если мод помечен как новый, но его нет в файловой системе - удаляем
                 if (mod.isNew && !fileSystemMods.has(mod.name)) {
                     modsToRemove.push(mod.name);
+                }
+            }
+            
+            // Удаляем моды с флагом isNew, которых нет в файловой системе
+            for (let i = modEntries.length - 1; i >= 0; i--) {
+                const mod = modEntries[i];
+                if (modsToRemove.includes(mod.name)) {
                     modEntries.splice(i, 1);
                 }
             }

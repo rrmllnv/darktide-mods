@@ -191,6 +191,13 @@ body {
     margin-right: 5px;
 }
 
+.mod-deleted-label {
+    color: red;
+    font-weight: bold;
+    font-size: 7pt;
+    margin-left: 5px;
+}
+
 .mod-status {
     margin-left: 5px;
     font-weight: bold;
