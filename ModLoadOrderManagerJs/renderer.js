@@ -51,9 +51,6 @@ class ModLoadOrderManager {
             clearSearchBtn: document.getElementById('clear-search-btn'),
             hideNewModsCheckbox: document.getElementById('hide-new-mods-checkbox'),
             hideUnusedModsCheckbox: document.getElementById('hide-unused-mods-checkbox'),
-            statsTotal: document.getElementById('stats-total'),
-            statsEnabled: document.getElementById('stats-enabled'),
-            statsDisabled: document.getElementById('stats-disabled'),
             selectedModInfo: document.getElementById('selected-mod-info'),
             deleteModBtn: document.getElementById('delete-mod-btn'),
             createSymlinkBtn: document.getElementById('create-symlink-btn'),
@@ -395,13 +392,6 @@ class ModLoadOrderManager {
             // Обновление интерфейса
             this.updateModList();
             this.updateStatistics();
-            
-            const newModsCount = this.modEntries.filter(m => m.isNew).length;
-            if (newModsCount > 0) {
-                this.setStatus(`Загружено модов: ${this.modEntries.length} (новых: ${newModsCount})`);
-            } else {
-                this.setStatus(`Загружено модов: ${this.modEntries.length}`);
-            }
             
             // Обновляем папку профилей после загрузки файла
             await this.initProfilesDirectory();
@@ -803,10 +793,15 @@ class ModLoadOrderManager {
         const total = this.modEntries.length;
         const enabled = this.modEntries.filter(m => m.enabled).length;
         const disabled = total - enabled;
+        const newModsCount = this.modEntries.filter(m => m.isNew).length;
         
-        this.elements.statsTotal.textContent = `Всего модов: ${total}`;
-        this.elements.statsEnabled.textContent = `Включено: ${enabled}`;
-        this.elements.statsDisabled.textContent = `Выключено: ${disabled}`;
+        // Формируем строку статистики для статус бара
+        let statsText = `Всего: ${total} | Включено: ${enabled} | Выключено: ${disabled}`;
+        if (newModsCount > 0) {
+            statsText += ` | Новых: ${newModsCount}`;
+        }
+        
+        this.setStatus(statsText);
     }
     
     updateMoveButtonsState() {
