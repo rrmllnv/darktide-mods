@@ -235,9 +235,6 @@ body {
     line-height: 1.4;
 }
 
-.delete-mod-frame {
-    margin-bottom: 10px;
-}
 
 .symlink-frame {
     margin-bottom: 10px;
@@ -257,6 +254,39 @@ body {
 
 .btn-half {
     flex: 1;
+}
+
+.btn-action {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 35px;
+}
+
+.btn-action:hover {
+    background-color: #e0e0e0;
+}
+
+.btn-action:active {
+    background-color: #d0d0d0;
+}
+
+.btn-action:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-action i {
+    font-size: 16px;
+    color: #333;
 }
 
 .btn-third {

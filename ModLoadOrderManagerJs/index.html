@@ -47,7 +47,7 @@
         <div class="right-container">
             <!-- Блок поиска -->
             <div class="search-panel">
-                <div class="panel-title">Поиск</div>
+                <!-- <div class="panel-title">Поиск</div> -->
                 <label class="search-label">Поиск мода:</label>
                 <input type="text" id="search-input" class="search-input" placeholder="Введите название мода..." />
                 <button id="clear-search-btn" class="btn">Очистить</button>
@@ -55,7 +55,7 @@
 
             <!-- Блок информации -->
             <div class="info-panel">
-                <div class="panel-title">Информация</div>
+                <!-- <div class="panel-title">Информация</div> -->
                 
                 <!-- Статистика -->
                 <div class="stats-frame">
@@ -80,19 +80,19 @@
                     <label class="section-label">Выбранный мод:</label>
                     <div id="selected-mod-info" class="mod-info">Нет выбора</div>
 
-                    <!-- Кнопка удаления мода -->
-                    <div class="delete-mod-frame">
-                        <button id="delete-mod-btn" class="btn-full" disabled>Удалить мод</button>
-                    </div>
-
-                    <div class="separator"></div>
-
-                    <!-- Кнопки для ручной сортировки -->
+                    <!-- Действия -->
                     <div class="sort-buttons-frame">
-                        <label class="section-label">Порядок в файле:</label>
+                        <label class="section-label">Действия:</label>
                         <div class="buttons-row">
-                            <button id="move-up-btn" class="btn-half" disabled>↑ Вверх</button>
-                            <button id="move-down-btn" class="btn-half" disabled>↓ Вниз</button>
+                            <button id="move-up-btn" class="btn-action" disabled title="Переместить вверх">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <button id="move-down-btn" class="btn-action" disabled title="Переместить вниз">
+                                <i class="fas fa-arrow-down"></i>
+                            </button>
+                            <button id="delete-mod-btn" class="btn-action" disabled title="Удалить мод">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
 
