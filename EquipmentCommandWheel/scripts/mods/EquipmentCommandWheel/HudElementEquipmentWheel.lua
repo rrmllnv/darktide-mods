@@ -3,6 +3,7 @@ local mod = get_mod("EquipmentCommandWheel")
 local HudElementBase = require("scripts/ui/hud/elements/hud_element_base")
 
 local EquipmentWheelSettings = require("EquipmentCommandWheel/scripts/mods/EquipmentCommandWheel/EquipmentCommandWheel_settings")
+local HudElementPlayerWeaponHandlerSettings = require("scripts/ui/hud/elements/player_weapon_handler/hud_element_player_weapon_handler_settings")
 
 local Definitions = mod:io_dofile("EquipmentCommandWheel/scripts/mods/EquipmentCommandWheel/EquipmentCommandWheel_definitions")
 local Utils = require("EquipmentCommandWheel/scripts/mods/EquipmentCommandWheel/EquipmentCommandWheel_utils")
@@ -16,6 +17,47 @@ local Action = require("scripts/utilities/action/action")
 local PlayerUnitVisualLoadout = require("scripts/extension_systems/visual_loadout/utilities/player_unit_visual_loadout")
 
 local collect_equipment_wheel_slots = Utils.collect_equipment_wheel_slots
+
+local function equipment_wheel_apply_icon_style_size(widget, option)
+	if not widget or not widget.style or not widget.style.icon then
+		return
+	end
+
+	local icon_style = widget.style.icon
+	local square = EquipmentWheelSettings.icon_size_square
+
+	if type(square) ~= "table" or type(square[1]) ~= "number" or type(square[2]) ~= "number" then
+		square = {
+			96,
+			96,
+		}
+	end
+
+	local w = square[1]
+	local h = square[2]
+
+	if option and option.icon_wide_weapon_layout then
+		local weapon_icon_size = HudElementPlayerWeaponHandlerSettings.weapon_icon_size
+		local scale = EquipmentWheelSettings.weapon_icon_layout_scale
+
+		if type(scale) ~= "number" or scale <= 0 then
+			scale = 0.5
+		end
+
+		if type(weapon_icon_size) == "table" and type(weapon_icon_size[1]) == "number" and type(weapon_icon_size[2]) == "number" then
+			w = math.floor(weapon_icon_size[1] * scale + 0.5)
+			h = math.floor(weapon_icon_size[2] * scale + 0.5)
+		end
+	end
+
+	icon_style.size[1] = w
+	icon_style.size[2] = h
+
+	if icon_style.default_size then
+		icon_style.default_size[1] = w
+		icon_style.default_size[2] = h
+	end
+end
 local is_equipment_wheel_context_valid = Utils.is_equipment_wheel_context_valid
 local localize_text = Utils.localize_text
 local apply_style_offset = Utils.apply_style_offset
@@ -301,6 +343,7 @@ HudElementEquipmentWheel._populate_wheel = function(self, options)
 
 				content.icon = icon_path
 				content.text = localize_text(option.label_key)
+				equipment_wheel_apply_icon_style_size(widget, option)
 				widget.dirty = true
 			end
 		end

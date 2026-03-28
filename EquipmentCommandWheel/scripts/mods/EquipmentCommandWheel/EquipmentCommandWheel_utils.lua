@@ -66,6 +66,7 @@ local function collect_equipment_wheel_slots(extensions)
 				icon = icon,
 				label_key = label_key,
 				order_index = order_index,
+				icon_wide_weapon_layout = slot_id == "slot_primary" or slot_id == "slot_secondary",
 			}
 			num_weapons = num_weapons + 1
 		elseif not weapon_template and settings.ability and grenade_ability and grenade_ability.hud_configuration and num_weapons < max_slots then
@@ -87,6 +88,7 @@ local function collect_equipment_wheel_slots(extensions)
 				icon = icon,
 				label_key = label_key,
 				order_index = order_index,
+				icon_wide_weapon_layout = false,
 			}
 			num_weapons = num_weapons + 1
 		end

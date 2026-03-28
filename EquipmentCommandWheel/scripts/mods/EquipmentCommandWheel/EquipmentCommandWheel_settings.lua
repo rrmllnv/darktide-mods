@@ -7,6 +7,11 @@ local equipment_wheel_settings = {
 	wheel_slots = 8,
 	hover_min_distance = 130,
 	hover_angle_degrees = 44,
+	icon_size_square = {
+		96,
+		96,
+	},
+	weapon_icon_layout_scale = 0.5,
 }
 
 return settings("EquipmentWheelSettings", equipment_wheel_settings)
