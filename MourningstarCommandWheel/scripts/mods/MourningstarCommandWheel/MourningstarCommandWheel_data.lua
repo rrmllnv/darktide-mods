@@ -152,6 +152,14 @@ return {
             function_name   = "open_havoc_background_view",
           },
           {
+            setting_id      = "open_expedition_view_key",
+            type            = "keybind",
+            default_value   = {},
+            keybind_trigger = "pressed",
+            keybind_type    = "function_call",
+            function_name   = "open_expedition_view",
+          },
+          {
             setting_id      = "open_group_finder_view_key",
             type            = "keybind",
             default_value   = {},

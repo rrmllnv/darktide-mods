@@ -52,6 +52,10 @@ mod.open_havoc_background_view = function(self)
 	mod:toggle_view_safe("havoc_background_view")
 end
 
+mod.open_expedition_view = function(self)
+	mod:toggle_view_safe("expedition_view")
+end
+
 mod.open_group_finder_view = function(self)
 	mod:toggle_view_safe("group_finder_view")
 end

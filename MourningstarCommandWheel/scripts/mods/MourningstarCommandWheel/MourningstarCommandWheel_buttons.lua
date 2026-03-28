@@ -85,6 +85,12 @@ local button_definitions = {
 		label_key = "loc_havoc_name",
 		icon = "content/ui/materials/hud/interactions/icons/havoc",
 	},
+	{
+		id = "expedition",
+		view = "expedition_view",
+		label_key = "loc_expeditions_view",
+		icon = "content/ui/materials/hud/interactions/icons/expeditions",
+	},
 }
 
 local button_definitions_by_id = {}

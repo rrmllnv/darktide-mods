@@ -184,6 +184,16 @@ return {
     ["zh-cn"] = "打开混乱模式菜单。",
     ru = "Открывает меню Хаоса.",
   },
+  open_expedition_view_key = {
+    en = Localize("loc_expeditions_view"),
+    ["zh-cn"] = Localize("loc_expeditions_view"),
+    ru = Localize("loc_expeditions_view"),
+  },
+  open_expedition_view_key_description = {
+    en = "Opens the Expeditions view.",
+    ["zh-cn"] = "打开远征界面。",
+    ru = "Открывает окно режима Экспедиции.",
+  },
   open_group_finder_view_key = {
     en = Localize("loc_group_finder_menu_title"),
     ["zh-cn"] = Localize("loc_group_finder_menu_title"),
