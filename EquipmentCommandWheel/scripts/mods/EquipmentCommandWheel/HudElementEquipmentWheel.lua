@@ -18,6 +18,26 @@ local PlayerUnitVisualLoadout = require("scripts/extension_systems/visual_loadou
 
 local collect_equipment_wheel_slots = Utils.collect_equipment_wheel_slots
 
+local function equipment_wheel_open_hold_delay_seconds()
+	local v = mod:get("equipment_wheel_open_hold_delay_sec")
+
+	if type(v) == "number" and v == v and v >= 0 then
+		if v <= 2 then
+			return v
+		end
+
+		return v * 0.001
+	end
+
+	v = EquipmentWheelSettings.open_hold_delay_seconds
+
+	if type(v) == "number" and v >= 0 then
+		return v
+	end
+
+	return 0.1
+end
+
 local function equipment_wheel_apply_icon_style_size(widget, option)
 	if not widget or not widget.style or not widget.style.icon then
 		return
@@ -662,10 +682,15 @@ HudElementEquipmentWheel._handle_input = function(self, t, dt, ui_renderer, rend
 
 	if start_time then
 		draw_wheel = self._wheel_active
-		local always_draw_t = start_time + 0.1
 
-		if always_draw_t < t then
-			draw_wheel = true
+		if not draw_wheel then
+			local hold_delay = equipment_wheel_open_hold_delay_seconds()
+
+			if hold_delay <= 0 then
+				draw_wheel = input_pressed
+			elseif t > start_time + hold_delay then
+				draw_wheel = true
+			end
 		end
 	end
 

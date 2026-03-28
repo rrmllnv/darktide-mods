@@ -12,6 +12,7 @@ local equipment_wheel_settings = {
 		96,
 	},
 	weapon_icon_layout_scale = 0.5,
+	open_hold_delay_seconds = 0.1,
 }
 
 return settings("EquipmentWheelSettings", equipment_wheel_settings)
