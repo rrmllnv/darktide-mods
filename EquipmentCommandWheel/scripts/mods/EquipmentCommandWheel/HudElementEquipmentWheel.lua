@@ -297,7 +297,9 @@ HudElementEquipmentWheel._populate_wheel = function(self, options)
 			entry.option = option
 
 			if option then
-				content.icon = option.icon or "content/ui/materials/base/ui_default_base"
+				local icon_path = option.icon or "content/ui/materials/base/ui_default_base"
+
+				content.icon = icon_path
 				content.text = localize_text(option.label_key)
 				widget.dirty = true
 			end
@@ -740,10 +742,15 @@ HudElementEquipmentWheel._reset_slice_styles_default = function(self)
 		apply_style_offset(highlight_style, 0, 0)
 		apply_style_offset(slice_style, 0, 0)
 
-		local default_color = EquipmentWheelSettings.button_color_default or {190, 0, 0, 0}
+		local default_slice_color = {
+			150,
+			0,
+			0,
+			0,
+		}
 
-		apply_style_color(highlight_style, default_color)
-		apply_style_color(slice_style, default_color)
+		apply_style_color(highlight_style, default_slice_color)
+		apply_style_color(slice_style, default_slice_color)
 	end
 end
 

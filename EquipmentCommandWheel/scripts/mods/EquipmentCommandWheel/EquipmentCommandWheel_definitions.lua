@@ -1,4 +1,3 @@
-local EquipmentWheelSettings = require("EquipmentCommandWheel/scripts/mods/EquipmentCommandWheel/EquipmentCommandWheel_settings")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local UISoundEvents = require("scripts/settings/ui/ui_sound_events")
 local UIWidget = require("scripts/managers/ui/ui_widget")
@@ -23,13 +22,27 @@ local scenegraph_definition = {
 			0,
 		},
 	},
+	line_pivot = {
+		horizontal_alignment = "center",
+		parent = "screen",
+		vertical_alignment = "center",
+		size = {
+			100,
+			100,
+		},
+		position = {
+			200,
+			-180,
+			1,
+		},
+	},
 	background = {
 		horizontal_alignment = "center",
 		parent = "pivot",
 		vertical_alignment = "center",
 		size = {
-			EquipmentWheelSettings.center_circle_size,
-			EquipmentWheelSettings.center_circle_size,
+			250,
+			250,
 		},
 		position = {
 			0,
@@ -39,23 +52,10 @@ local scenegraph_definition = {
 	},
 }
 
-local hover_color = EquipmentWheelSettings.line_color_hover or get_hud_color("color_tint_main_1", 255)
-local default_color = EquipmentWheelSettings.line_color_default or get_hud_color("color_tint_main_2", 255)
-local icon_hover_color = EquipmentWheelSettings.icon_color_hover or get_hud_color("color_tint_main_2", 255)
-local icon_default_color = EquipmentWheelSettings.icon_color_default or get_hud_color("color_tint_main_3", 255)
-
-if EquipmentWheelSettings.line_color_hover and type(EquipmentWheelSettings.line_color_hover) == "table" then
-	hover_color = EquipmentWheelSettings.line_color_hover
-end
-if EquipmentWheelSettings.line_color_default and type(EquipmentWheelSettings.line_color_default) == "table" then
-	default_color = EquipmentWheelSettings.line_color_default
-end
-if EquipmentWheelSettings.icon_color_hover and type(EquipmentWheelSettings.icon_color_hover) == "table" then
-	icon_hover_color = EquipmentWheelSettings.icon_color_hover
-end
-if EquipmentWheelSettings.icon_color_default and type(EquipmentWheelSettings.icon_color_default) == "table" then
-	icon_default_color = EquipmentWheelSettings.icon_color_default
-end
+local hover_color = get_hud_color("color_tint_main_1", 255)
+local default_color = get_hud_color("color_tint_main_2", 255)
+local icon_hover_color = get_hud_color("color_tint_main_2", 255)
+local icon_default_color = get_hud_color("color_tint_main_3", 255)
 
 local default_button_content = {
 	on_released_sound = nil,
@@ -67,7 +67,7 @@ local simple_button_font_setting_name = "button_medium"
 local simple_button_font_settings = UIFontSettings[simple_button_font_setting_name]
 local simple_button_font_color = simple_button_font_settings.text_color
 
-local entry_widget_definition = UIWidget.create_definition({
+local button_pass_template = {
 	{
 		content_id = "hotspot",
 		pass_type = "hotspot",
@@ -75,20 +75,24 @@ local entry_widget_definition = UIWidget.create_definition({
 	},
 	{
 		pass_type = "texture",
-		value_id = "icon",
 		value = "content/ui/materials/hud/icons/weapon_icon_container",
+		value_id = "icon",
 		style_id = "icon",
 		style = {
 			horizontal_alignment = "center",
 			vertical_alignment = "center",
 			size = {
-				EquipmentWheelSettings.icon_size,
-				EquipmentWheelSettings.icon_size,
+				96,
+				96,
+			},
+			default_size = {
+				96,
+				96,
 			},
 			offset = {
 				0,
 				0,
-				100,
+				3,
 			},
 			color = get_hud_color("color_tint_main_2", 255),
 			material_values = {},
@@ -105,30 +109,22 @@ local entry_widget_definition = UIWidget.create_definition({
 	{
 		pass_type = "rotated_texture",
 		value = "content/ui/materials/hud/communication_wheel/slice_eighth_line",
-		style_id = "slice_line",
 		style = {
 			horizontal_alignment = "center",
 			vertical_alignment = "center",
 			size = {
-				EquipmentWheelSettings.line_width,
-				EquipmentWheelSettings.line_height or ((EquipmentWheelSettings.max_radius - EquipmentWheelSettings.min_radius) * EquipmentWheelSettings.line_height_scale),
+				190,
+				140,
 			},
 			offset = {
 				0,
 				0,
-				150,
+				4,
 			},
 			color = get_hud_color("color_tint_main_1", 255),
 		},
 		change_function = function (content, style)
 			style.angle = math.pi + (content.angle or 0)
-
-			local line_height = EquipmentWheelSettings.line_height
-			if line_height == nil then
-				line_height = (EquipmentWheelSettings.max_radius - EquipmentWheelSettings.min_radius) * EquipmentWheelSettings.line_height_scale
-			end
-			style.size[1] = EquipmentWheelSettings.line_width
-			style.size[2] = line_height
 
 			local color = style.color
 			local ignore_alpha = false
@@ -148,34 +144,28 @@ local entry_widget_definition = UIWidget.create_definition({
 			offset = {
 				0,
 				0,
-				100,
+				2,
 			},
 			size = {
-				EquipmentWheelSettings.slice_width,
-				EquipmentWheelSettings.slice_height,
+				190,
+				140,
 			},
-			uvs = {
-				{ EquipmentWheelSettings.slice_uv_left, EquipmentWheelSettings.slice_uv_top },
-				{ EquipmentWheelSettings.slice_uv_right, EquipmentWheelSettings.slice_uv_bottom },
+			color = {
+				150,
+				0,
+				0,
+				0,
 			},
-			color = EquipmentWheelSettings.button_color_default,
 		},
 		change_function = function (content, style)
 			style.angle = math.pi + (content.angle or 0)
-
-			local base_width = EquipmentWheelSettings.slice_width
-			local base_height = EquipmentWheelSettings.slice_height
-			style.size[1] = base_width * EquipmentWheelSettings.slice_curvature_scale_x
-			style.size[2] = base_height * EquipmentWheelSettings.slice_curvature_scale_y
 
 			local hotspot = content.hotspot
 			local color = style.color
 			local ignore_alpha = false
 			local anim_hover_progress = hotspot.anim_hover_progress
 
-			local default_button_color = EquipmentWheelSettings.button_color_default
-			local hover_button_color = EquipmentWheelSettings.button_color_hover
-			ColorUtilities.color_lerp(default_button_color, hover_button_color, anim_hover_progress, color, false)
+			ColorUtilities.color_lerp(icon_default_color, icon_hover_color, anim_hover_progress, color, ignore_alpha)
 		end,
 	},
 	{
@@ -185,33 +175,23 @@ local entry_widget_definition = UIWidget.create_definition({
 		style = {
 			horizontal_alignment = "center",
 			vertical_alignment = "center",
-			offset = {
-				0,
-				0,
-				100,
-			},
 			size = {
-				EquipmentWheelSettings.slice_width,
-				EquipmentWheelSettings.slice_height,
+				190,
+				140,
 			},
-			uvs = {
-				{ EquipmentWheelSettings.slice_uv_left, EquipmentWheelSettings.slice_uv_top },
-				{ EquipmentWheelSettings.slice_uv_right, EquipmentWheelSettings.slice_uv_bottom },
+			color = {
+				150,
+				0,
+				0,
+				0,
 			},
-			color = EquipmentWheelSettings.button_color_default,
 		},
 		change_function = function (content, style)
 			style.angle = math.pi + (content.angle or 0)
-
-			local base_width = EquipmentWheelSettings.slice_width
-			local base_height = EquipmentWheelSettings.slice_height
-			style.size[1] = base_width * EquipmentWheelSettings.slice_curvature_scale_x
-			style.size[2] = base_height * EquipmentWheelSettings.slice_curvature_scale_y
 		end,
 	},
 	{
 		pass_type = "rect",
-		style_id = "hover_dim",
 		style = {
 			color = {
 				200,
@@ -222,7 +202,7 @@ local entry_widget_definition = UIWidget.create_definition({
 			offset = {
 				0,
 				0,
-				101,
+				1,
 			},
 		},
 		change_function = function (content, style)
@@ -231,19 +211,18 @@ local entry_widget_definition = UIWidget.create_definition({
 	},
 	{
 		pass_type = "text",
+		value = "Button",
 		value_id = "text",
-		value = "",
-		style_id = "text",
 		style = {
 			text_horizontal_alignment = "center",
 			text_vertical_alignment = "center",
 			offset = {
 				0,
 				0,
-				100,
+				2,
 			},
 			font_type = simple_button_font_settings.font_type,
-			font_size = 16,
+			font_size = simple_button_font_settings.font_size,
 			text_color = simple_button_font_color,
 			default_text_color = simple_button_font_color,
 		},
@@ -257,9 +236,10 @@ local entry_widget_definition = UIWidget.create_definition({
 			text_color[4] = default_text_color[4] * progress
 		end,
 	},
-}, "pivot")
+}
 
 local wheel_font_style = table.clone(UIFontSettings.hud_body)
+
 wheel_font_style.font_size = 28
 wheel_font_style.horizontal_alignment = "center"
 wheel_font_style.vertical_alignment = "center"
@@ -268,7 +248,7 @@ wheel_font_style.text_vertical_alignment = "center"
 wheel_font_style.offset = {
 	0,
 	0,
-	100,
+	4,
 }
 
 local widget_definitions = {
@@ -280,22 +260,21 @@ local widget_definitions = {
 				horizontal_alignment = "center",
 				vertical_alignment = "center",
 				size = {
-					EquipmentWheelSettings.rhombus_width or EquipmentWheelSettings.center_circle_size,
-					EquipmentWheelSettings.rhombus_height or (EquipmentWheelSettings.center_circle_size * 0.256),
+					250,
+					64,
 				},
 				offset = {
 					0,
 					0,
-					100,
+					1,
 				},
-				color = EquipmentWheelSettings.rhombus_color,
+				color = {
+					120,
+					0,
+					0,
+					0,
+				},
 			},
-			change_function = function (content, style)
-				local rhombus_width = EquipmentWheelSettings.rhombus_width or EquipmentWheelSettings.center_circle_size
-				local rhombus_height = EquipmentWheelSettings.rhombus_height or (EquipmentWheelSettings.center_circle_size * 0.256)
-				style.size[1] = rhombus_width
-				style.size[2] = rhombus_height
-			end,
 			visibility_function = function (content, style)
 				return content.force_hover
 			end,
@@ -313,23 +292,18 @@ local widget_definitions = {
 			pass_type = "texture",
 			value = "content/ui/materials/hud/communication_wheel/middle_circle",
 			style = {
-				horizontal_alignment = "center",
-				vertical_alignment = "center",
-				size = {
-					EquipmentWheelSettings.center_circle_size,
-					EquipmentWheelSettings.center_circle_size,
-				},
 				offset = {
 					0,
 					0,
-					100,
+					0,
 				},
-				color = EquipmentWheelSettings.background_color,
+				color = {
+					255,
+					0,
+					0,
+					0,
+				},
 			},
-			change_function = function (content, style)
-				style.size[1] = EquipmentWheelSettings.center_circle_size
-				style.size[2] = EquipmentWheelSettings.center_circle_size
-			end,
 		},
 		{
 			pass_type = "rotated_texture",
@@ -356,15 +330,6 @@ local widget_definitions = {
 			change_function = function (content, style)
 				style.angle = math.pi - (content.angle or 0)
 
-				local scale = EquipmentWheelSettings.center_circle_size / 250
-				local arrow_size_y = 28 * scale
-				local arrow_pivot_y = 147 * scale
-				local arrow_offset_y = -133 * scale
-
-				style.size[2] = arrow_size_y
-				style.pivot[2] = arrow_pivot_y
-				style.offset[2] = arrow_offset_y
-
 				local color = style.color
 				local ignore_alpha = true
 				local anim_hover_progress = content.force_hover and 1 or 0
@@ -378,5 +343,5 @@ local widget_definitions = {
 return {
 	scenegraph_definition = scenegraph_definition,
 	widget_definitions = widget_definitions,
-	entry_widget_definition = entry_widget_definition,
+	entry_widget_definition = UIWidget.create_definition(button_pass_template, "pivot"),
 }
