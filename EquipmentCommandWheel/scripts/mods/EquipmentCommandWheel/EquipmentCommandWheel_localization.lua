@@ -4,8 +4,8 @@ return {
 		ru = "Радиальное меню снаряжения",
 	},
 	mod_description = {
-		en = "Hold a key to open a radial menu and wield the same equipment slots as the weapon bar (keyboard 1–5 and grenade slot when shown).",
-		ru = "Удерживайте клавишу, чтобы открыть радиальное меню и переключить слоты снаряжения, как на панели оружия (основное/дополнительное, граната, карманные предметы и т.д.). В миссии и Псайкинариуме; в хабе Mourningstar не открывается.",
+		en = "A convenient radial menu for quick switching between your weapon and equipment slots—the same slots as the bottom HUD bar.",
+		ru = "Удобное радиальное меню для быстрого переключения слотов оружия и снаряжения — те же слоты, что на нижней панели HUD.",
 	},
 	equipment_wheel_group = {
 		en = "Equipment wheel",
@@ -16,16 +16,16 @@ return {
 		ru = "Открыть колесо снаряжения",
 	},
 	open_equipment_wheel_key_description = {
-		en = "Hold this key to show the wheel. Release to confirm the hovered slot or cancel. If the same key is bound to another action (e.g. interact), use the delay setting below so a short tap goes to the game and a longer hold opens the wheel.",
-		ru = "Удерживайте клавишу, чтобы показать колесо. Отпустите — подтвердится наведённый слот или отмена. Если та же клавиша занята другим действием (например взаимодействие), настройте задержку ниже: короткое нажатие уйдёт в игру, длинное удержание откроет колесо.",
+		en = "Hold to open the wheel; release to select the highlighted slot.",
+		ru = "Удерживайте, чтобы открыть колесо; отпустите, чтобы выбрать подсвеченный слот.",
 	},
 	equipment_wheel_open_hold_delay_sec = {
 		en = "Hold delay before wheel opens",
 		ru = "Задержка удержания до открытия колеса",
 	},
 	equipment_wheel_open_hold_delay_description = {
-		en = "How long the key must be held before the wheel appears. Longer delay makes it easier to use the same key for a quick tap action. Values are stored as whole milliseconds so they persist reliably when settings are saved.",
-		ru = "Сколько времени держать клавишу до появления колеса. Больше задержка — проще использовать ту же клавишу коротким нажатием для другого действия. Значение хранится целыми миллисекундами, чтобы при сохранении настроек оно не сбрасывалось.",
+		en = "How long the key must be held before the wheel opens. Increase it if the same key is also used for a short press in-game.",
+		ru = "Сколько держать клавишу до открытия колеса. Увеличьте, если эта же клавиша нужна для короткого нажатия в игре.",
 	},
 	equipment_wheel_hold_0_1s = {
 		en = "0.1 s",
