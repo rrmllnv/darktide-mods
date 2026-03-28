@@ -20,7 +20,7 @@ local scenegraph_definition = {
 		position = {
 			0,
 			0,
-			100,
+			0,
 		},
 	},
 	background = {
@@ -210,6 +210,26 @@ local entry_widget_definition = UIWidget.create_definition({
 		end,
 	},
 	{
+		pass_type = "rect",
+		style_id = "hover_dim",
+		style = {
+			color = {
+				200,
+				40,
+				40,
+				40,
+			},
+			offset = {
+				0,
+				0,
+				101,
+			},
+		},
+		change_function = function (content, style)
+			style.color[1] = math.max(content.hotspot.anim_hover_progress, content.hotspot.anim_select_progress) * 255
+		end,
+	},
+	{
 		pass_type = "text",
 		value_id = "text",
 		value = "",
@@ -329,7 +349,7 @@ local widget_definitions = {
 				offset = {
 					0,
 					-133,
-					200,
+					6,
 				},
 				color = get_hud_color("color_tint_main_1", 255),
 			},

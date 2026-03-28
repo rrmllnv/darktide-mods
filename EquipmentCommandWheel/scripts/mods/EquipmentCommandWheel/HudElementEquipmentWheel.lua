@@ -23,16 +23,6 @@ local apply_style_color = Utils.apply_style_color
 
 local _equipment_wheel_cursor_seq = 0
 
-local function equipment_entry_count(options_count, cap)
-	local n = math.max(options_count, 1)
-
-	if cap and n > cap then
-		return cap
-	end
-
-	return n
-end
-
 local function equipment_wheel_wield_action_input_for_ability_slot(slot_id)
 	if slot_id == "slot_grenade_ability" then
 		return "grenade_ability"
@@ -63,7 +53,6 @@ HudElementEquipmentWheel.init = function(self, parent, draw_layer, start_scale)
 	self._cursor_pushed = false
 	self._equipment_options = {}
 	self._scan_delay_duration = 0
-	self._last_entry_count = 0
 
 	_equipment_wheel_cursor_seq = _equipment_wheel_cursor_seq + 1
 	self._cursor_reference = "HudElementEquipmentWheel_" .. tostring(_equipment_wheel_cursor_seq)
@@ -76,25 +65,15 @@ HudElementEquipmentWheel.init = function(self, parent, draw_layer, start_scale)
 		self._equipment_options = {}
 	end
 
-	local cap = EquipmentWheelSettings.wheel_slots
-	local n = equipment_entry_count(#self._equipment_options, cap)
+	local wheel_slots = EquipmentWheelSettings.wheel_slots
 
-	self._last_entry_count = n
-	self:_setup_entries(n)
+	self:_setup_entries(wheel_slots)
 	self:_populate_wheel(self._equipment_options)
 
 	self._wheel_background_widget = self._widgets_by_name.wheel_background
 end
 
 HudElementEquipmentWheel._sync_entries_to_option_count = function(self)
-	local cap = EquipmentWheelSettings.wheel_slots
-	local n = equipment_entry_count(#self._equipment_options, cap)
-
-	if n ~= self._last_entry_count then
-		self._last_entry_count = n
-		self:_setup_entries(n)
-	end
-
 	self:_populate_wheel(self._equipment_options)
 end
 
@@ -304,9 +283,9 @@ end
 
 HudElementEquipmentWheel._populate_wheel = function(self, options)
 	local entries = self._entries
-	local num_entries = #entries
+	local wheel_slots = EquipmentWheelSettings.wheel_slots
 
-	for i = 1, num_entries do
+	for i = 1, wheel_slots do
 		local option = options[i]
 		local entry = entries[i]
 
@@ -430,11 +409,7 @@ HudElementEquipmentWheel._update_widget_locations = function(self)
 	local entries = self._entries
 	local start_angle = math.pi / 2
 	local num_entries = #entries
-
-	if num_entries == 0 then
-		return
-	end
-
+	local wheel_slots = EquipmentWheelSettings.wheel_slots
 	local radians_per_widget = math.pi * 2 / num_entries
 	local active_progress = self._wheel_active_progress
 	local anim_progress = math.smoothstep(active_progress, 0, 1)
@@ -442,23 +417,23 @@ HudElementEquipmentWheel._update_widget_locations = function(self)
 	local max_radius = EquipmentWheelSettings.max_radius
 	local radius = min_radius + anim_progress * (max_radius - min_radius)
 
-	for i = 1, num_entries do
+	if num_entries == 0 or wheel_slots == 0 then
+		return
+	end
+
+	for i = 1, wheel_slots do
 		local entry = entries[i]
 
 		if entry then
 			local widget = entry.widget
-			local content = widget.content
+			local angle = start_angle + (i - 1) * radians_per_widget
+			local position_x = math.sin(angle) * radius
+			local position_y = math.cos(angle) * radius
+			local offset = widget.offset
 
-			if content.visible or active_progress > 0 then
-				local angle = start_angle + (i - 1) * radians_per_widget
-				local position_x = math.sin(angle) * radius
-				local position_y = math.cos(angle) * radius
-				local offset = widget.offset
-
-				content.angle = angle
-				offset[1] = position_x
-				offset[2] = position_y
-			end
+			widget.content.angle = angle
+			offset[1] = position_x
+			offset[2] = position_y
 		end
 	end
 end
