@@ -177,9 +177,9 @@ end
 
 HudElementCommandWheel._populate_wheel = function(self, options)
 	local entries = self._entries
-	local wheel_slots = CommandWheelSettings.wheel_slots
+	local num_entries = #entries
 
-	for i = 1, wheel_slots do
+	for i = 1, num_entries do
 		local option = options[i]
 		local entry = entries[i]
 		
@@ -242,12 +242,11 @@ HudElementCommandWheel._update_widget_locations = function(self)
 	local radians_per_widget = math.pi * 2 / num_entries
 	local active_progress = self._wheel_active_progress
 	local anim_progress = math.smoothstep(active_progress, 0, 1)
-	local wheel_slots = CommandWheelSettings.wheel_slots
 	local min_radius = CommandWheelSettings.min_radius
 	local max_radius = CommandWheelSettings.max_radius
 	local radius = min_radius + anim_progress * (max_radius - min_radius)
 
-	for i = 1, wheel_slots do
+	for i = 1, num_entries do
 		local entry = entries[i]
 
 		if entry then
@@ -312,7 +311,7 @@ HudElementCommandWheel._update_wheel_presentation = function(self, dt, t, ui_ren
 	local cursor_angle_degrees_from_center = math.radians_to_degrees(cursor_angle_from_center) % 360
 	
 
-	local hover_min_distance = CommandWheelSettings.hover_min_distance or 130
+	local hover_min_distance = CommandWheelSettings.hover_min_distance or 121
 	local entry_hover_degrees = CommandWheelSettings.hover_angle_degrees or 44
 	local entry_hover_degrees_half = entry_hover_degrees * 0.5
 	local any_hover = false
