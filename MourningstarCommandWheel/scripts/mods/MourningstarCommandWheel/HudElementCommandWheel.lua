@@ -25,6 +25,7 @@ local apply_style_color = Utils.apply_style_color
 local button_definitions = Buttons.button_definitions
 local button_definitions_by_id = Buttons.button_definitions_by_id
 
+local _command_wheel_cursor_seq = 0
 
 local function load_wheel_config()
 	local saved_config = mod:get("wheel_config")
@@ -116,7 +117,10 @@ HudElementCommandWheel.init = function(self, parent, draw_layer, start_scale)
 	self._close_delay = nil
 	self._controller_stick_moved = false
 	self._exit_psychanium_blocked = false
-	
+	self._cursor_pushed = false
+
+	_command_wheel_cursor_seq = _command_wheel_cursor_seq + 1
+	self._cursor_reference = "HudElementCommandWheel_" .. tostring(_command_wheel_cursor_seq)
 
 	self._wheel_config = load_wheel_config()
 	
@@ -200,11 +204,28 @@ end
 
 HudElementCommandWheel.update = function(self, dt, t, ui_renderer, render_settings, input_service)
 	HudElementCommandWheel.super.update(self, dt, t, ui_renderer, render_settings, input_service)
-	
+
+	if not is_in_valid_lvl() then
+		local wheel_context = self._wheel_context
+		local pending_open = wheel_context and wheel_context.input_start_time ~= nil
+
+		if self._wheel_active or self._close_delay or self._cursor_pushed or pending_open then
+			self:_release_command_wheel_cursor_and_flags(false, true)
+		end
+	elseif rawget(_G, "PLATFORM") == "win32" and self._cursor_pushed and Managers.input then
+		local ok, cursor_stack_active = pcall(function()
+			return Managers.input:cursor_active()
+		end)
+
+		if ok and cursor_stack_active == false then
+			self._cursor_pushed = false
+		end
+	end
+
 	if self._exit_psychanium_blocked and not is_in_psykhanium() then
 		self._exit_psychanium_blocked = false
 	end
-	
+
 	self:_update_active_progress(dt)
 	self:_update_widget_locations()
 
@@ -579,31 +600,50 @@ HudElementCommandWheel._on_wheel_start = function(self, t, input_service)
 	self._wheel_context.input_start_time = t
 end
 
-HudElementCommandWheel._on_wheel_stop = function(self, t, ui_renderer, render_settings, input_service)
+HudElementCommandWheel._release_command_wheel_cursor_and_flags = function(self, play_close_sound, snap_visible_progress)
 	local wheel_context = self._wheel_context or {}
 	wheel_context.input_start_time = nil
-	
+
 	local was_active = self._wheel_active
-	
-	if was_active or self._close_delay then
+
+	if was_active or self._close_delay or self._cursor_pushed then
 		self:_pop_cursor()
 	end
 
 	self._wheel_active = false
 	self._close_delay = nil
+
+	if snap_visible_progress then
+		self._wheel_active_progress = 0
+	end
+
 	self._controller_stick_moved = false
 	self._last_widget_hover_data.index = nil
 	self._last_widget_hover_data.t = nil
-	
+
 	self:_reset_hover_state()
 
 	mod.dragged_entry = nil
 	mod.dragged_index = nil
 	self:_reset_drag_visual_feedback()
 
-	if was_active and UISoundEvents.emote_wheel_close then
+	if play_close_sound and was_active and Managers.ui and UISoundEvents.emote_wheel_close then
 		Managers.ui:play_2d_sound(UISoundEvents.emote_wheel_close)
 	end
+end
+
+HudElementCommandWheel._on_wheel_stop = function(self, t, ui_renderer, render_settings, input_service)
+	self:_release_command_wheel_cursor_and_flags(true, false)
+end
+
+HudElementCommandWheel.destroy = function(self, ui_renderer)
+	self:_release_command_wheel_cursor_and_flags(false, true)
+
+	if mod._command_wheel_element == self then
+		mod._command_wheel_element = nil
+	end
+
+	HudElementCommandWheel.super.destroy(self, ui_renderer)
 end
 
 
@@ -613,11 +653,11 @@ end
 
 HudElementCommandWheel._push_cursor = function(self)
 	local input_manager = Managers.input
-	local name = self.__class_name
+	local reference = self._cursor_reference
 	local position = Vector3(0.5, 0.5, 0)
 
-	input_manager:push_cursor(name)
-	input_manager:set_cursor_position(name, position)
+	input_manager:push_cursor(reference)
+	input_manager:set_cursor_position(reference, position)
 
 	self._cursor_pushed = true
 end
@@ -625,9 +665,9 @@ end
 HudElementCommandWheel._pop_cursor = function(self)
 	if self._cursor_pushed then
 		local input_manager = Managers.input
-		local name = self.__class_name
+		local reference = self._cursor_reference
 
-		input_manager:pop_cursor(name)
+		input_manager:pop_cursor(reference)
 
 		self._cursor_pushed = false
 	end
