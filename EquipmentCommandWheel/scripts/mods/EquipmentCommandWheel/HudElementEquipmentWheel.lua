@@ -787,7 +787,7 @@ HudElementEquipmentWheel.destroy = function(self, ui_renderer)
 end
 
 HudElementEquipmentWheel.using_input = function(self)
-	return self._wheel_active
+	return false
 end
 
 HudElementEquipmentWheel._push_cursor = function(self)
