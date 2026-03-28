@@ -6,6 +6,125 @@ mod:add_require_path("EquipmentCommandWheel/scripts/mods/EquipmentCommandWheel/E
 mod:add_require_path("EquipmentCommandWheel/scripts/mods/EquipmentCommandWheel/HudElementEquipmentWheel")
 
 local Utils = require("EquipmentCommandWheel/scripts/mods/EquipmentCommandWheel/EquipmentCommandWheel_utils")
+local PlayerUnitVisualLoadout = require("scripts/extension_systems/visual_loadout/utilities/player_unit_visual_loadout")
+
+local EQUIPMENT_WHEEL_WIELD_INJECT_TIMEOUT = 2
+
+mod._ew_input_inject_active = false
+mod._ew_input_inject_slot_id = nil
+mod._ew_input_inject_deadline_t = 0
+
+mod.begin_equipment_wheel_input_wield = function(self, slot_id)
+	if not slot_id then
+		return
+	end
+
+	mod._ew_input_inject_slot_id = slot_id
+	mod._ew_input_inject_active = true
+
+	local t = 0
+
+	if Managers and Managers.time then
+		local ok_time, gameplay_t = pcall(function()
+			return Managers.time:time("gameplay")
+		end)
+
+		if ok_time and type(gameplay_t) == "number" then
+			t = gameplay_t
+		end
+	end
+
+	mod._ew_input_inject_deadline_t = t + EQUIPMENT_WHEEL_WIELD_INJECT_TIMEOUT
+end
+
+mod.clear_equipment_wheel_input_wield = function(self)
+	mod._ew_input_inject_active = false
+	mod._ew_input_inject_slot_id = nil
+	mod._ew_input_inject_deadline_t = 0
+end
+
+local function _equipment_wheel_inject_matches_action(slot_id, action_name)
+	if not slot_id or not action_name then
+		return false
+	end
+
+	local slot_config = PlayerUnitVisualLoadout.slot_config_from_slot_name(slot_id)
+
+	if slot_config and slot_config.wield_inputs then
+		local wield_inputs = slot_config.wield_inputs
+
+		for i = 1, #wield_inputs do
+			if action_name == wield_inputs[i] then
+				return true
+			end
+		end
+	end
+
+	if slot_id == "slot_grenade_ability" and action_name == "grenade_ability_pressed" then
+		return true
+	end
+
+	return false
+end
+
+local function _equipment_wheel_input_action_hook(func, self, action_name)
+	local ok, result = pcall(func, self, action_name)
+
+	if not ok then
+		local action_rule = self._actions and self._actions[action_name]
+
+		if action_rule and action_rule.default_func then
+			local ok_default, default_val = pcall(action_rule.default_func, action_rule.default_value)
+
+			if ok_default then
+				return default_val
+			end
+		end
+
+		return false
+	end
+
+	local val = result
+
+	if mod._ew_input_inject_active and mod._ew_input_inject_slot_id then
+		local current_time = Managers.time and Managers.time:time("gameplay")
+
+		if current_time and current_time > mod._ew_input_inject_deadline_t then
+			mod:clear_equipment_wheel_input_wield()
+		elseif _equipment_wheel_inject_matches_action(mod._ew_input_inject_slot_id, action_name) then
+			return true
+		end
+	end
+
+	return val
+end
+
+mod:hook(CLASS.InputService, "_get", _equipment_wheel_input_action_hook)
+mod:hook(CLASS.InputService, "_get_simulate", _equipment_wheel_input_action_hook)
+
+mod:hook_safe(CLASS.PlayerUnitWeaponExtension, "on_slot_wielded", function(self, slot_name, ...)
+	if self._player == Managers.player:local_player(1) then
+		if mod._ew_input_inject_active and mod._ew_input_inject_slot_id and slot_name == mod._ew_input_inject_slot_id then
+			mod:clear_equipment_wheel_input_wield()
+		end
+	end
+end)
+
+mod.update = function(dt)
+	if not mod._ew_input_inject_active then
+		return
+	end
+
+	local current_time = Managers.time and Managers.time:time("gameplay")
+
+	if not current_time then
+		return
+	end
+
+	if current_time > mod._ew_input_inject_deadline_t then
+		mod:clear_equipment_wheel_input_wield()
+	end
+end
 
 local hud_elements = {
 	{

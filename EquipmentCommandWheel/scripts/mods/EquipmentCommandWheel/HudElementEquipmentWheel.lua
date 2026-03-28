@@ -12,9 +12,6 @@ local UISoundEvents = require("scripts/settings/ui/ui_sound_events")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local Vector3 = Vector3
 local RESOLUTION_LOOKUP = RESOLUTION_LOOKUP
-local FixedFrame = require("scripts/utilities/fixed_frame")
-local Action = require("scripts/utilities/action/action")
-local PlayerUnitVisualLoadout = require("scripts/extension_systems/visual_loadout/utilities/player_unit_visual_loadout")
 
 local collect_equipment_wheel_slots = Utils.collect_equipment_wheel_slots
 
@@ -85,18 +82,6 @@ local apply_style_color = Utils.apply_style_color
 
 local _equipment_wheel_cursor_seq = 0
 
-local function equipment_wheel_wield_action_input_for_ability_slot(slot_id)
-	if slot_id == "slot_grenade_ability" then
-		return "grenade_ability"
-	end
-
-	if slot_id == "slot_combat_ability" then
-		return "combat_ability"
-	end
-
-	return nil
-end
-
 local HudElementEquipmentWheel = class("HudElementEquipmentWheel", "HudElementBase")
 
 HudElementEquipmentWheel.init = function(self, parent, draw_layer, start_scale)
@@ -150,8 +135,6 @@ HudElementEquipmentWheel._try_wield_option = function(self, option, t)
 		return false
 	end
 
-	local player = parent:player()
-	local unit = player.player_unit
 	local extensions = parent:player_extensions()
 	local unit_data = extensions.unit_data
 	local inventory = unit_data:read_component("inventory")
@@ -168,53 +151,15 @@ HudElementEquipmentWheel._try_wield_option = function(self, option, t)
 		return false
 	end
 
-	if not weapon_extension or not weapon_extension.can_wield or not weapon_extension:can_wield(option.slot_id) then
+	if not weapon_extension or not weapon_extension.can_wield then
 		return false
 	end
 
-	local wield_t = t
-	local ok_fixed, fixed_t = pcall(function()
-		return FixedFrame.get_latest_fixed_time()
-	end)
+	local weapon_allows_slot = weapon_extension:can_wield(option.slot_id)
 
-	if ok_fixed and type(fixed_t) == "number" then
-		wield_t = fixed_t
-	elseif Managers and Managers.time then
-		local ok_time, gameplay_t = pcall(function()
-			return Managers.time:time("gameplay")
-		end)
-
-		if ok_time and type(gameplay_t) == "number" then
-			wield_t = gameplay_t
-		end
+	if not weapon_allows_slot and option.slot_id ~= "slot_device" then
+		return false
 	end
-
-	local input_extension = ScriptUnit.extension(unit, "input_system")
-	local ability_extension = extensions.ability
-	local used_input = nil
-	local slot_cfg = PlayerUnitVisualLoadout.slot_config_from_slot_name(option.slot_id)
-	local wield_inputs = slot_cfg and slot_cfg.wield_inputs
-
-	if wield_inputs and input_extension then
-		for ii = 1, #wield_inputs do
-			local candidate = wield_inputs[ii]
-			local resolved_slot = PlayerUnitVisualLoadout.slot_name_from_wield_input(candidate, inventory, visual_loadout_extension, weapon_extension, ability_extension, input_extension)
-
-			if resolved_slot == option.slot_id then
-				used_input = candidate
-
-				break
-			end
-		end
-	end
-
-	if not used_input and wield_inputs then
-		used_input = PlayerUnitVisualLoadout.wield_input_from_slot_name(option.slot_id)
-	end
-
-	local wielded_weapon = weapon_extension:_wielded_weapon(inventory, weapon_extension._weapons)
-	local weapon_action_component = unit_data:read_component("weapon_action")
-	local has_running_weapon_action = weapon_action_component and weapon_action_component.current_action_name ~= "none"
 
 	local function play_select_sound()
 		if Managers.ui and UISoundEvents.weapons_select_weapon then
@@ -222,79 +167,7 @@ HudElementEquipmentWheel._try_wield_option = function(self, option, t)
 		end
 	end
 
-	local function wield_slot_direct()
-		local ok = pcall(function()
-			PlayerUnitVisualLoadout.wield_slot(option.slot_id, unit, wield_t)
-		end)
-
-		if ok then
-			play_select_sound()
-		end
-
-		return ok
-	end
-
-	if wielded_slot == "none" or not wielded_weapon then
-		return wield_slot_direct()
-	end
-
-	local ability_wield_action_input = equipment_wheel_wield_action_input_for_ability_slot(option.slot_id)
-
-	if ability_wield_action_input then
-		local handler = weapon_extension._action_handler
-		local actions = wielded_weapon.weapon_template and wielded_weapon.weapon_template.actions
-
-		if handler and actions and handler._valid_action_from_action_input then
-			local condition_func_params = weapon_extension:condition_func_params(wielded_slot)
-			local ability_action_name, ability_action_settings = handler:_valid_action_from_action_input(actions, ability_wield_action_input, wield_t, condition_func_params, nil)
-
-			if ability_action_name and ability_action_settings and weapon_extension.action_input_is_currently_valid and weapon_extension:action_input_is_currently_valid("weapon_action", ability_wield_action_input, nil, wield_t) then
-				local ability_transition = has_running_weapon_action and "chain" or "start"
-				local ok_ability = pcall(function()
-					weapon_extension:_start_action(ability_action_name, ability_action_settings, wield_t, nil, ability_transition)
-				end)
-
-				if ok_ability then
-					play_select_sound()
-
-					return true
-				end
-			end
-		end
-
-		return false
-	end
-
-	if not used_input then
-		return false
-	end
-
-	local weapon_template = wielded_weapon.weapon_template
-	local action_settings = weapon_template and Action.action_settings(weapon_template, "action_unwield")
-
-	if not action_settings then
-		return wield_slot_direct()
-	end
-
-	local start_input = action_settings.start_input
-
-	if not start_input then
-		return wield_slot_direct()
-	end
-
-	if not weapon_extension.action_input_is_currently_valid or not weapon_extension:action_input_is_currently_valid("weapon_action", start_input, used_input, wield_t) then
-		return false
-	end
-
-	local transition_type = has_running_weapon_action and "chain" or "start"
-	local ok_start = pcall(function()
-		weapon_extension:_start_action("action_unwield", action_settings, wield_t, used_input, transition_type)
-	end)
-
-	if not ok_start then
-		return false
-	end
-
+	mod:begin_equipment_wheel_input_wield(option.slot_id)
 	play_select_sound()
 
 	return true

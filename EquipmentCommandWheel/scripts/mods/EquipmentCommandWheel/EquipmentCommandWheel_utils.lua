@@ -42,8 +42,9 @@ local function collect_equipment_wheel_slots(extensions)
 
 		local weapon_template = weapon_name and visual_loadout_extension:weapon_template_from_slot(slot_id)
 		local item = weapon_name and visual_loadout_extension:item_from_slot(slot_id)
+		local allow_hidden_template = slot_id == "slot_device"
 
-		if weapon_template and not weapon_template.hide_slot and num_weapons < max_slots then
+		if weapon_template and (not weapon_template.hide_slot or allow_hidden_template) and num_weapons < max_slots then
 			local order_index = settings.order_index
 			local icon = weapon_template.hud_icon
 
