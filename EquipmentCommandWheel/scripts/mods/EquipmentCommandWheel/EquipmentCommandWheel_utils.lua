@@ -64,6 +64,7 @@ local function collect_equipment_wheel_slots(extensions)
 
 			entries[#entries + 1] = {
 				slot_id = slot_id,
+				weapon_name = weapon_name,
 				icon = icon,
 				label_key = label_key,
 				order_index = order_index,
@@ -86,6 +87,7 @@ local function collect_equipment_wheel_slots(extensions)
 
 			entries[#entries + 1] = {
 				slot_id = slot_id,
+				weapon_name = weapon_name,
 				icon = icon,
 				label_key = label_key,
 				order_index = order_index,

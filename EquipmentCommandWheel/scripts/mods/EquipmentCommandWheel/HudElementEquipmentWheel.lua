@@ -298,6 +298,21 @@ HudElementEquipmentWheel.update = function(self, dt, t, ui_renderer, render_sett
 						changed = true
 						break
 					end
+
+					if (a.weapon_name or "") ~= (b.weapon_name or "") then
+						changed = true
+						break
+					end
+
+					if (a.icon or "") ~= (b.icon or "") then
+						changed = true
+						break
+					end
+
+					if (a.label_key or "") ~= (b.label_key or "") then
+						changed = true
+						break
+					end
 				end
 			end
 
