@@ -178,6 +178,14 @@ return {
 		en = "Show speedometer next to the timer.",
 		ru = "Показывать спидометр рядом с таймером.",
 	},
+	chat_completion_message = {
+		en = "Print result to chat",
+		ru = "Сообщение в чат по завершении",
+	},
+	chat_completion_message_description = {
+		en = "When the mission ends, print mission name, difficulty, and run time to chat (same time rules as the HUD timer and intro option).",
+		ru = "По окончании миссии вывести в чат название миссии, сложность и время прохождения (как у HUD-таймера и настройки intro).",
+	},
 }
 
 

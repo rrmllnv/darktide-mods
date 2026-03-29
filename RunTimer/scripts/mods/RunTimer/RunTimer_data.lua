@@ -53,6 +53,13 @@ return {
 				},
 			},
 			{
+				setting_id = "chat_completion_message",
+				type = "checkbox",
+				default_value = false,
+				title = "chat_completion_message",
+				tooltip_text = "chat_completion_message_description",
+			},
+			{
 				setting_id = "timer_position",
 				type = "dropdown",
 				default_value = "left",
