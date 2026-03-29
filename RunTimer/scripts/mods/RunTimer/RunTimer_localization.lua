@@ -182,6 +182,10 @@ return {
 		en = "Show speedometer next to the timer.",
 		ru = "Показывать спидометр рядом с таймером.",
 	},
+	group_chat = {
+		en = "Chat",
+		ru = "Чат",
+	},
 	chat_completion_message = {
 		en = "Print result to chat",
 		ru = "Сообщение в чат по завершении",
@@ -189,6 +193,62 @@ return {
 	chat_completion_message_description = {
 		en = "When the mission ends, print mission name, difficulty, and run time to chat (same time rules as the HUD timer and intro option).",
 		ru = "По окончании миссии вывести в чат название миссии, сложность и время прохождения (как у HUD-таймера и настройки intro).",
+	},
+	chat_include_mission_technical_id = {
+		en = "Append technical mission id",
+		ru = "Добавлять технический id миссии",
+	},
+	chat_include_mission_technical_id_description = {
+		en = "Adds the internal mission_name string in parentheses after the localized mission title (from mechanism data).",
+		ru = "Добавляет внутренний идентификатор mission_name в скобках после локализованного названия (из данных механизма).",
+	},
+	chat_include_side_mission = {
+		en = "Append side mission id",
+		ru = "Добавлять id побочной цели",
+	},
+	chat_include_side_mission_description = {
+		en = "Adds the side_mission objective name from mechanism data when it is set.",
+		ru = "Добавляет имя побочной цели side_mission из данных механизма, если оно задано.",
+	},
+	chat_include_expedition_info = {
+		en = "Append expedition template and node",
+		ru = "Шаблон экспедиции и узел",
+	},
+	chat_include_expedition_info_description = {
+		en = "Adds expedition_template_name and node_id when present (expedition / Operations missions).",
+		ru = "Добавляет expedition_template_name и node_id, если есть (экспедиции / Operations).",
+	},
+	chat_include_havoc_mutators = {
+		en = "Append Havoc mutator names",
+		ru = "Добавлять мутаторы Havoc",
+	},
+	chat_include_havoc_mutators_description = {
+		en = "After the Havoc rank, lists localized mutator names parsed from havoc_data (same field layout as the game RPC).",
+		ru = "После ранга Havoc перечисляет локализованные имена мутаторов из havoc_data (как в сетевом формате игры).",
+	},
+	chat_include_layout_seed = {
+		en = "Append layout seed",
+		ru = "Добавлять layout seed",
+	},
+	chat_include_layout_seed_description = {
+		en = "Adds layout_seed from mechanism data when available.",
+		ru = "Добавляет layout_seed из данных механизма, если доступен.",
+	},
+	chat_include_backend_mission_id = {
+		en = "Append backend mission id",
+		ru = "Добавлять backend mission id",
+	},
+	chat_include_backend_mission_id_description = {
+		en = "Adds backend_mission_id when the host provides it (dedicated / backend-driven sessions).",
+		ru = "Добавляет backend_mission_id, если хост его передаёт (выделенный сервер / backend).",
+	},
+	chat_include_gross_time = {
+		en = "Also show gross time (with intro)",
+		ru = "Также показывать полное время (с intro)",
+	},
+	chat_include_gross_time_description = {
+		en = "When intro time is excluded from the main chat time, also print the full gameplay time including intro.",
+		ru = "Если время intro исключено из основного времени в чате, дополнительно вывести полное время с intro.",
 	},
 }
 

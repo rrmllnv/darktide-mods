@@ -131,11 +131,16 @@ local function get_mission_info_for_chat()
 	local d = mech and mech._mechanism_data
 
 	if not d then
-		return "Unknown Mission", "?"
+		return "Unknown Mission", "?", nil
 	end
 
 	local tpl = Missions[d.mission_name]
 	local m_name = tpl and Localize(tpl.mission_name) or "Unknown"
+
+	if mod:get("chat_include_mission_technical_id") and d.mission_name then
+		m_name = m_name .. string.format(" (%s)", d.mission_name)
+	end
+
 	local diff = Danger.danger_by_difficulty(d.challenge, d.resistance) or {}
 	local d_name = diff.display_name and Localize(diff.display_name) or "?"
 	local havoc_data = d.havoc_data
@@ -145,6 +150,30 @@ local function get_mission_info_for_chat()
 
 		if rank and tonumber(rank) then
 			d_name = "Havoc " .. rank
+		end
+
+		if mod:get("chat_include_havoc_mutators") then
+			local fields = {}
+
+			for field in havoc_data:gmatch("[^;]+") do
+				fields[#fields + 1] = field
+			end
+
+			local mutator_field = fields[5]
+
+			if mutator_field and mutator_field ~= "nil" and mutator_field ~= "" then
+				local mutator_names = {}
+
+				for mutator_id in mutator_field:gmatch("[^:]+") do
+					local display = get_circumstance_display_name(mutator_id)
+
+					mutator_names[#mutator_names + 1] = display
+				end
+
+				if #mutator_names > 0 then
+					d_name = d_name .. ", " .. table.concat(mutator_names, ", ")
+				end
+			end
 		end
 	else
 		local circumstance = d.circumstance_name
@@ -156,7 +185,7 @@ local function get_mission_info_for_chat()
 		end
 	end
 
-	return m_name, d_name
+	return m_name, d_name, d
 end
 
 local function format_chat_run_time(run_seconds)
@@ -203,12 +232,65 @@ local function run_timer_chat_try_print()
 	end
 
 	local time_str = format_chat_run_time(run_time)
-	local mission_name, difficulty = get_mission_info_for_chat()
-	local blue_name = string.format("{#color(150,180,255)}%s{#reset()}", mission_name)
-	local green_time = string.format("{#color(50,255,50)}%s{#reset()}", time_str)
+	local mission_name, difficulty, mech_data = get_mission_info_for_chat()
+	local colored_mission_name = string.format("{#color(255, 200, 140)}%s{#reset()}", mission_name)
+	local colored_time = string.format("{#color(130,230,255)}%s{#reset()}", time_str)
 	local result_word = (mod._run_timer_chat_outcome == "lost") and "failed" or "completed"
+	local line = string.format("%s (%s) %s in %s", colored_mission_name, difficulty, result_word, colored_time)
 
-	mod:echo(string.format("%s (%s) %s in %s", blue_name, difficulty, result_word, green_time))
+	if mech_data then
+		local extra = {}
+
+		if mod:get("chat_include_side_mission") and mech_data.side_mission and mech_data.side_mission ~= "" then
+			extra[#extra + 1] = string.format("Side: %s", tostring(mech_data.side_mission))
+		end
+
+		if mod:get("chat_include_expedition_info") then
+			local exp_parts = {}
+
+			if mech_data.expedition_template_name then
+				exp_parts[#exp_parts + 1] = tostring(mech_data.expedition_template_name)
+			end
+
+			if mech_data.node_id ~= nil then
+				exp_parts[#exp_parts + 1] = string.format("node %s", tostring(mech_data.node_id))
+			end
+
+			if #exp_parts > 0 then
+				extra[#extra + 1] = "Expedition: " .. table.concat(exp_parts, ", ")
+			end
+		end
+
+		if mod:get("chat_include_layout_seed") and mech_data.layout_seed ~= nil then
+			extra[#extra + 1] = string.format("Seed: %s", tostring(mech_data.layout_seed))
+		end
+
+		if mod:get("chat_include_backend_mission_id") and mech_data.backend_mission_id ~= nil and tostring(mech_data.backend_mission_id) ~= "" then
+			extra[#extra + 1] = string.format("Backend: %s", tostring(mech_data.backend_mission_id))
+		end
+
+		if #extra > 0 then
+			line = line .. " | " .. table.concat(extra, " | ")
+		end
+	end
+
+	if mod:get("chat_include_gross_time") and (mod:get("exclude_intro_time") or 1) == 2 and mod._intro_end_time and mod._intro_end_time > 0 and mod._run_timer_chat_end_time then
+		local gross_t = mod._run_timer_chat_end_time
+
+		if gross_t < 0 then
+			gross_t = 0
+		end
+
+		local gross_str = format_chat_run_time(gross_t)
+
+		if gross_str ~= time_str then
+			local colored_gross = string.format("{#color(180,245,255)}%s{#reset()}", gross_str)
+
+			line = line .. string.format(" (gross %s)", colored_gross)
+		end
+	end
+
+	mod:echo(line)
 	mod._run_timer_chat_has_printed = true
 end
 
