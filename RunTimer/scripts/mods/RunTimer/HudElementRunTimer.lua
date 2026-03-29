@@ -19,8 +19,6 @@ local DEFAULT_FONT_TYPE = "proxima_nova_bold"
 local DEFAULT_POSITION = "left"
 local DEFAULT_VERTICAL_POSITION = "top"
 local TIMER_COLUMN_GAP = 10
--- Fallback до первого кадра с ui_renderer (см. measure_timer_text_column_width).
--- Формат 1: %02d по минутам — обычно 2 символа, до «999» мин (16+ ч) — 3 символа; не резервируем 4–5 цифр.
 local TIMER_WIDTH_HEURISTIC_FMT1_MIN = 18
 local TIMER_WIDTH_HEURISTIC_FMT1_FS_MULT = 0.98
 local TIMER_WIDTH_HEURISTIC_FMT1_PAD = 6
@@ -30,9 +28,7 @@ local TIMER_WIDTH_HEURISTIC_FMT2_PAD = 10
 local TIMER_WIDTH_HEURISTIC_FMT3_MIN = 52
 local TIMER_WIDTH_HEURISTIC_FMT3_FS_MULT = 4.35
 local TIMER_WIDTH_HEURISTIC_FMT3_PAD = 14
--- Запас к измеренной ширине (тень/сглаживание), см. UIRenderer.styled_text_size в ui_renderer.lua.
 local TIMER_WIDTH_MEASURE_PAD = 4
--- При HUD справа и пропорциональных шрифтах только для эвристики (измеренная ширина не сжимается).
 local TIMER_RIGHT_NON_DIGITAL_WIDTH_FACTOR = 0.92
 local SPEEDOMETER_COLUMN_WIDTH_MIN = 72
 local SPEEDOMETER_WIDTH_PER_PX = 3.15
@@ -115,7 +111,6 @@ local POSITION_PRESETS = {
 				0,
 				2,
 			},
-			-- Левый край внутри колонок: при center по экрану центрирование строки давало дёрганье от ширины цифр.
 			text_alignment = "left",
 			offset = {10, 0, 0},
 		},
@@ -163,7 +158,6 @@ local TIMER_BACKGROUND_HIDE = "hide"
 local TIMER_BACKGROUND_TERMINAL = "terminal"
 local TIMER_BACKGROUND_WEAPON_FRAME = "weapon_frame"
 
--- Материал weapon_frame: hud_element_mission_speaker_popup_definitions.lua (style.color = UIHudSettings.color_tint_main_3, size_addition).
 local WEAPON_FRAME_BACKGROUND_MATERIAL = "content/ui/materials/hud/backgrounds/weapon_frame"
 local WEAPON_FRAME_TEXTURE_SIZE_ADDITION = {
 	8,
@@ -296,7 +290,6 @@ local function timer_background_container_width()
 	return timer_text_column_width() + TIMER_COLUMN_GAP + speedometer_column_width()
 end
 
--- Локальные X колонок внутри run_timer_background: слева/центр — таймер, затем спидометр; справа — спидометр, затем таймер.
 local function timer_speed_column_local_x(timer_horizontal_position)
 	local text_w = timer_text_column_width()
 	local speed_w = speedometer_column_width()
@@ -544,7 +537,6 @@ local function format_time_by_mode(gameplay_time, mode)
 	return plain_text
 end
 
--- Образцы строк по режиму timer_format (1 / 2 / 3): максимальная типичная длина + «широкие» цифры для пропорциональных шрифтов.
 local function build_timer_width_sample_plain_strings(fmt)
 	if fmt == 1 then
 		return {
@@ -590,7 +582,6 @@ local function build_timer_width_sample_strings(fmt)
 	return out
 end
 
--- Реальная ширина по движку (Gui2_slug_text_extents), см. UIRenderer.styled_text_size в scripts/managers/ui/ui_renderer.lua.
 local function measure_timer_text_column_width(ui_renderer, text_style, fmt)
 	if not ui_renderer or not text_style then
 		return nil
@@ -649,12 +640,10 @@ HudElementRunTimer.init = function(self, parent, draw_layer, start_scale)
 	})
 
 	mod._run_timer_hud_element = self
-	
-	-- Кэшируем настройки для оптимизации
+
 	self._cached_exclude_intro = mod:get("exclude_intro_time") or 1
 	self._cached_timer_format = mod:get("timer_format") or 2
-	
-	-- Инициализируем спидометр
+
 	local speedometer_widget = self._widgets_by_name and self._widgets_by_name.speedometer_text
 	if speedometer_widget then
 		speedometer_widget.content.speed = ""
@@ -681,8 +670,7 @@ HudElementRunTimer.update = function(self, dt, t, ui_renderer, render_settings, 
 
 	text_widget.content.visible = visible
 	background_widget.content.visible = visible
-	
-	-- Обновляем спидометр независимо от видимости таймера, но только если включен
+
 	if speedometer_enabled and speedometer_widget then
 		local speed_text = ""
 		local player = Managers.player:local_player(1)
@@ -758,7 +746,6 @@ HudElementRunTimer.update = function(self, dt, t, ui_renderer, render_settings, 
 end
 
 HudElementRunTimer._apply_style = function(self)
-	-- Обновляем высоту на основе размера шрифта
 	local timer_height = calculate_timer_height()
 	local text_w = timer_text_column_width()
 	local speed_w = speedometer_column_width()
@@ -819,9 +806,6 @@ HudElementRunTimer._apply_layout = function(self)
 	end
 
 	if text_settings and text_settings.position then
-		-- Колонки таймера и спидометра всегда считаются от левого края контейнера (position по X).
-		-- preset.text.horizontal_alignment относится к выравниванию строки внутри виджета, не к scenegraph:
-		-- при "center"/"right" на узле scenegraph второй колонки уезжала за пределы фона.
 		local inner_h_align = "left"
 		local timer_sg_x, speed_sg_x = timer_speed_column_local_x(position)
 
@@ -847,15 +831,11 @@ HudElementRunTimer._apply_layout = function(self)
 
 		local preset_h_align = text_settings.text_alignment or text_settings.horizontal_alignment or "left"
 		local text_v_align = text_settings.vertical_alignment or "center"
-		-- HUD справа: спидометр слева от колонки таймера — его текст к правому краю колонки (к таймеру).
-		-- Таймер: при machine_medium глифы циферблата одной ширины — можно выровнять вправо к краю экрана без дёрганья;
-		-- иначе текст слева в колонке + уже ширина колонки (timer_text_column_width).
 		local timer_h_align = preset_h_align
 		local speed_h_align = preset_h_align
 
 		if position == "right" then
 			speed_h_align = "right"
-			-- Формат «только минуты»: 2–3 символа, дёрганье мало — прижимаем к правому краю колонки, без пустоты справа.
 			if current_font_type() == "machine_medium" or self._cached_timer_format == 1 then
 				timer_h_align = "right"
 			else

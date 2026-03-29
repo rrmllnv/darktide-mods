@@ -243,12 +243,9 @@ mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, para
 	return func(self, elements, visibility_groups, params)
 end)
 
--- Переменная для хранения времени окончания intro
 mod._intro_end_time = nil
 
--- Хук на init системы - проверяем есть ли intro вообще
 mod:hook_safe("CinematicSceneSystem", "init", function(self, extension_init_context, system_init_data)
-	-- Проверяем что мы на миссии, а не в хабе
 	local game_mode_name = Managers.state.game_mode and Managers.state.game_mode:game_mode_name()
 	local is_in_hub = not game_mode_name or game_mode_name == "hub"
 
@@ -257,10 +254,8 @@ mod:hook_safe("CinematicSceneSystem", "init", function(self, extension_init_cont
 	end
 
 	if self._skip_intro_cinematic then
-		-- Если intro пропущен (нет в миссии) - устанавливаем 0
 		mod._intro_end_time = 0
 	else
-		-- Intro есть, ждем его окончания
 		mod._intro_end_time = nil
 	end
 
@@ -270,7 +265,6 @@ mod:hook_safe("CinematicSceneSystem", "init", function(self, extension_init_cont
 	mod._run_timer_chat_intro_seen = false
 end)
 
--- Хук на update CinematicManager — intro для таймера; outro для сообщения в чат (логика как в MissionSpeedrunTimer).
 mod:hook("CinematicManager", "update", function(func, self, dt, t)
 	local story = self._active_story
 	local game_mode_name = Managers.state.game_mode and Managers.state.game_mode:game_mode_name()
