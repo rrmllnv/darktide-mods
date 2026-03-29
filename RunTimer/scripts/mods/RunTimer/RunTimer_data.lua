@@ -122,7 +122,7 @@ return {
 				default_value = 20,
 				range = {
 					15,
-					25,
+					40,
 				},
 			},
 			{
@@ -141,6 +141,13 @@ return {
 						default_value = false,
 					},
 				},
+			},
+			{
+				setting_id = "debug",
+				type = "checkbox",
+				default_value = false,
+				title = "debug",
+				tooltip_text = "debug_description",
 			},
 		},
 	},

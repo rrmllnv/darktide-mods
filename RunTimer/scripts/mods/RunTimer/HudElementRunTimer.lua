@@ -1,5 +1,13 @@
 local mod = get_mod("RunTimer")
 
+-- Только подхват значений из меню мода (mod:get) каждый кадр. Изменения в файлах .lua игра не подхватывает —
+-- нужен перезапуск Darktide (или копирование мода в актуальную папку mods и затем перезапуск).
+local function is_debug_live_settings()
+	local v = mod:get("debug")
+
+	return v == true or v == 1
+end
+
 local HudElementBase = require("scripts/ui/hud/elements/hud_element_base")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
@@ -10,13 +18,20 @@ local ColorUtilities = require("scripts/utilities/ui/colors")
 local DEBUG_SHOW_IN_HUB = false
 local hud_body_font_settings = UIFontSettings.hud_body or {}
 local FONT_SIZE_MIN = 15
-local FONT_SIZE_MAX = 30
+local FONT_SIZE_MAX = 40
 local DEFAULT_FONT_SIZE = 20
 local DEFAULT_COLOR_NAME = "orange"
 local DEFAULT_FONT_TYPE = "machine_medium"
 local DEFAULT_POSITION = "left"
 local DEFAULT_VERTICAL_POSITION = "top"
-local TIMER_WIDTH = 80
+local TIMER_COLUMN_GAP = 10
+local TIMER_TEXT_WIDTH_MIN = 100
+local TIMER_TEXT_WIDTH_PER_PX = 4.95
+local TIMER_TEXT_WIDTH_MS_EXTRA = 28
+local SPEEDOMETER_COLUMN_WIDTH_MIN = 72
+local SPEEDOMETER_WIDTH_PER_PX = 3.15
+local SPEEDOMETER_WIDTH_EXTRA = 16
+
 local BORDER_PADDING = 5
 
 local COLOR_PRESETS = {
@@ -143,6 +158,41 @@ local function current_font_size()
 	return math.clamp(value, FONT_SIZE_MIN, FONT_SIZE_MAX)
 end
 
+local function effective_timer_format_for_column_width()
+	if is_debug_live_settings() then
+		return mod:get("timer_format") or 2
+	end
+
+	local el = mod._run_timer_hud_element
+
+	if el then
+		return el._cached_timer_format or 2
+	end
+
+	return mod:get("timer_format") or 2
+end
+
+local function timer_text_column_width()
+	local fs = current_font_size()
+	local w = math.max(TIMER_TEXT_WIDTH_MIN, math.ceil(fs * TIMER_TEXT_WIDTH_PER_PX + 22))
+
+	if effective_timer_format_for_column_width() == 3 then
+		w = w + TIMER_TEXT_WIDTH_MS_EXTRA
+	end
+
+	return w
+end
+
+local function speedometer_column_width()
+	local fs = current_font_size()
+
+	return math.max(SPEEDOMETER_COLUMN_WIDTH_MIN, math.ceil(fs * SPEEDOMETER_WIDTH_PER_PX + SPEEDOMETER_WIDTH_EXTRA))
+end
+
+local function timer_background_container_width()
+	return timer_text_column_width() + TIMER_COLUMN_GAP + speedometer_column_width()
+end
+
 local function current_font_type()
 	local font_type = mod:get("font_type")
 
@@ -177,14 +227,32 @@ local function current_vertical_position()
 	return DEFAULT_VERTICAL_POSITION
 end
 
+-- Локальные X колонок внутри run_timer_background: слева/центр — таймер, затем спидометр; справа — спидометр, затем таймер.
+local function timer_speed_column_local_x(timer_horizontal_position)
+	local text_w = timer_text_column_width()
+	local speed_w = speedometer_column_width()
+	local gap = TIMER_COLUMN_GAP
+
+	if timer_horizontal_position == "right" then
+		return speed_w + gap, 0
+	end
+
+	return 0, text_w + gap
+end
+
 local function get_opacity_alpha()
 	local opacity = mod:get("opacity") or 100
 	return math.floor((opacity / 100) * 255)
 end
 
+local function hud_line_spacing()
+	return hud_body_font_settings.line_spacing or 1.2
+end
+
 local function calculate_timer_height()
 	local font_size = current_font_size()
-	return math.floor(font_size * (hud_body_font_settings.line_spacing or 1.2)) + BORDER_PADDING * 2
+
+	return math.floor(font_size * hud_line_spacing()) + BORDER_PADDING * 2
 end
 
 local function clone_style(base_style, color)
@@ -207,9 +275,36 @@ local function clone_style(base_style, color)
 	return style
 end
 
+local function apply_mod_settings_to_text_pass(text_style)
+	if not text_style then
+		return
+	end
+
+	local alpha = get_opacity_alpha()
+
+	text_style.font_size = current_font_size()
+	text_style.font_type = current_font_type()
+	local color = table.clone(current_font_color())
+	color[1] = alpha
+	text_style.text_color = color
+	text_style.line_spacing = hud_line_spacing()
+
+	if hud_body_font_settings.character_spacing ~= nil then
+		text_style.character_spacing = hud_body_font_settings.character_spacing
+	end
+
+	if hud_body_font_settings.drop_shadow ~= nil then
+		text_style.drop_shadow = hud_body_font_settings.drop_shadow
+	end
+end
+
 local function create_scenegraph_definition()
 	local timer_height = calculate_timer_height()
-	local container_width = TIMER_WIDTH -- * 2 + 10 -- Два таймера + отступ между ними
+	local text_w = timer_text_column_width()
+	local speed_w = speedometer_column_width()
+	local container_width = text_w + TIMER_COLUMN_GAP + speed_w
+	local timer_sg_x, speed_sg_x = timer_speed_column_local_x(current_position())
+
 	return {
 		screen = UIWorkspaceSettings.screen,
 		run_timer_background = {
@@ -231,11 +326,11 @@ local function create_scenegraph_definition()
 			parent = "run_timer_background",
 			vertical_alignment = "center",
 			size = {
-				TIMER_WIDTH,
+				text_w,
 				timer_height,
 			},
 			position = {
-				0,
+				timer_sg_x,
 				0,
 				2,
 			},
@@ -245,11 +340,11 @@ local function create_scenegraph_definition()
 			parent = "run_timer_background",
 			vertical_alignment = "center",
 			size = {
-				TIMER_WIDTH,
+				speed_w,
 				timer_height,
 			},
 			position = {
-				0,
+				speed_sg_x,
 				0,
 				2,
 			},
@@ -329,7 +424,7 @@ local widget_definitions = {
 			style_id = "speed",
 			value = "",
 			value_id = "speed",
-			style = clone_style(UIFontSettings.body),
+			style = table.clone(timer_active_text_style),
 		},
 	}, "speedometer_text"),
 }
@@ -438,6 +533,11 @@ end
 HudElementRunTimer.update = function(self, dt, t, ui_renderer, render_settings, input_service)
 	HudElementRunTimer.super.update(self, dt, t, ui_renderer, render_settings, input_service)
 
+	if is_debug_live_settings() then
+		self:_apply_style()
+		self:_apply_layout()
+	end
+
 	local text_widget = self._widgets_by_name.run_timer_text
 	local background_widget = self._widgets_by_name.run_timer_background
 	local speedometer_widget = self._widgets_by_name.speedometer_text
@@ -487,15 +587,15 @@ HudElementRunTimer.update = function(self, dt, t, ui_renderer, render_settings, 
 
 	if time_manager and time_manager:has_timer("gameplay") then
 		gameplay_time = time_manager:time("gameplay")
-		-- Вычитаем время intro если настройка включена и время зафиксировано через хук
-		local should_exclude_intro = self._cached_exclude_intro == 2
+		local exclude_intro_setting = is_debug_live_settings() and (mod:get("exclude_intro_time") or 1) or self._cached_exclude_intro
+		local should_exclude_intro = exclude_intro_setting == 2
 		if should_exclude_intro and mod._intro_end_time and mod._intro_end_time > 0 then
 			gameplay_time = gameplay_time - mod._intro_end_time
 		end
 	end
 
-	-- Используем кэшированный формат
-	local digital_text = format_time_by_mode(gameplay_time, self._cached_timer_format)
+	local timer_format = is_debug_live_settings() and (mod:get("timer_format") or 2) or self._cached_timer_format
+	local digital_text = format_time_by_mode(gameplay_time, timer_format)
 
 	text_widget.content.text = digital_text
 end
@@ -503,31 +603,24 @@ end
 HudElementRunTimer._apply_style = function(self)
 	-- Обновляем высоту на основе размера шрифта
 	local timer_height = calculate_timer_height()
-	local container_width = TIMER_WIDTH * 2 + 10 -- Два таймера + отступ между ними
+	local text_w = timer_text_column_width()
+	local speed_w = speedometer_column_width()
+	local container_width = timer_background_container_width()
+
 	self:_set_scenegraph_size("run_timer_background", container_width, timer_height)
-	self:_set_scenegraph_size("run_timer_text", TIMER_WIDTH, timer_height)
-	self:_set_scenegraph_size("speedometer_text", TIMER_WIDTH, timer_height)
+	self:_set_scenegraph_size("run_timer_text", text_w, timer_height)
+	self:_set_scenegraph_size("speedometer_text", speed_w, timer_height)
 	
 	local text_widget = self._widgets_by_name and self._widgets_by_name.run_timer_text
 
 	if text_widget and text_widget.style and text_widget.style.text then
-		local alpha = get_opacity_alpha()
-		text_widget.style.text.font_size = current_font_size()
-		text_widget.style.text.font_type = current_font_type()
-		local color = table.clone(current_font_color())
-		color[1] = alpha
-		text_widget.style.text.text_color = color
+		apply_mod_settings_to_text_pass(text_widget.style.text)
 		text_widget.dirty = true
 	end
-	
+
 	local speedometer_widget = self._widgets_by_name and self._widgets_by_name.speedometer_text
 	if speedometer_widget and speedometer_widget.style and speedometer_widget.style.speed then
-		local alpha = get_opacity_alpha()
-		speedometer_widget.style.speed.font_size = current_font_size()
-		speedometer_widget.style.speed.font_type = current_font_type()
-		local color = table.clone(current_font_color())
-		color[1] = alpha
-		speedometer_widget.style.speed.text_color = color
+		apply_mod_settings_to_text_pass(speedometer_widget.style.speed)
 		speedometer_widget.dirty = true
 	end
 	
@@ -569,37 +662,52 @@ HudElementRunTimer._apply_layout = function(self)
 	end
 
 	if text_settings and text_settings.position then
+		-- Колонки таймера и спидометра всегда считаются от левого края контейнера (position по X).
+		-- preset.text.horizontal_alignment относится к выравниванию строки внутри виджета, не к scenegraph:
+		-- при "center"/"right" на узле scenegraph второй колонки уезжала за пределы фона.
+		local inner_h_align = "left"
+		local timer_sg_x, speed_sg_x = timer_speed_column_local_x(position)
+
 		self:set_scenegraph_position(
 			"run_timer_text",
-			text_settings.position[1],
+			text_settings.position[1] + timer_sg_x,
 			text_settings.position[2],
 			text_settings.position[3],
-			text_settings.horizontal_alignment,
+			inner_h_align,
+			text_settings.vertical_alignment
+		)
+
+		self:set_scenegraph_position(
+			"speedometer_text",
+			text_settings.position[1] + speed_sg_x,
+			text_settings.position[2],
+			text_settings.position[3],
+			inner_h_align,
 			text_settings.vertical_alignment
 		)
 
 		local text_widget = self._widgets_by_name and self._widgets_by_name.run_timer_text
 
+		local text_h_align = text_settings.text_alignment or text_settings.horizontal_alignment or "left"
+		local text_v_align = text_settings.vertical_alignment or "center"
+
 		if text_widget and text_widget.style and text_widget.style.text then
-			text_widget.style.text.text_horizontal_alignment = text_settings.text_alignment or text_settings.horizontal_alignment or "left"
+			text_widget.style.text.text_horizontal_alignment = text_h_align
+			text_widget.style.text.text_vertical_alignment = text_v_align
 			if text_settings.offset then
 				text_widget.style.text.offset = table.clone(text_settings.offset)
 			end
 			text_widget.dirty = true
 		end
-		
-		-- Настраиваем спидометр рядом с таймером (в том же контейнере)
+
 		local speedometer_widget = self._widgets_by_name and self._widgets_by_name.speedometer_text
-		if speedometer_widget then
-			-- Спидометр уже позиционирован в scenegraph относительно контейнера
-			-- Просто применяем те же настройки стиля, что и для таймера
-			if speedometer_widget.style and speedometer_widget.style.speed then
-				speedometer_widget.style.speed.text_horizontal_alignment = text_settings.text_alignment or text_settings.horizontal_alignment or "left"
-				if text_settings.offset then
-					speedometer_widget.style.speed.offset = table.clone(text_settings.offset)
-				end
-				speedometer_widget.dirty = true
+		if speedometer_widget and speedometer_widget.style and speedometer_widget.style.speed then
+			speedometer_widget.style.speed.text_horizontal_alignment = text_h_align
+			speedometer_widget.style.speed.text_vertical_alignment = text_v_align
+			if text_settings.offset then
+				speedometer_widget.style.speed.offset = table.clone(text_settings.offset)
 			end
+			speedometer_widget.dirty = true
 		end
 	end
 

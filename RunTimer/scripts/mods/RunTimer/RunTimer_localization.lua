@@ -40,8 +40,8 @@ return {
 		ru = "Размер шрифта",
 	},
 	font_size_description = {
-		en = "Adjust the HUD timer font (min 15, max 30).",
-		ru = "Настройка размера шрифта HUD таймера (от 15 до 30).",
+		en = "Adjust the HUD timer font (min 15, max 40).",
+		ru = "Настройка размера шрифта HUD таймера (от 15 до 40).",
 	},
 	font_color = {
 		en = "Font color",
@@ -177,6 +177,14 @@ return {
 	speedometer_enabled_description = {
 		en = "Show speedometer next to the timer.",
 		ru = "Показывать спидометр рядом с таймером.",
+	},
+	debug = {
+		en = "Live settings (debug)",
+		ru = "Живые настройки (отладка)",
+	},
+	debug_description = {
+		en = "When enabled, mod menu settings are read every frame and layout/style refresh (no setting cache). Editing .lua files still requires a full game restart—this option does not hot-reload code. Turn off for normal play.",
+		ru = "Если включено, значения из меню мода читаются каждый кадр, стиль и раскладка без кэша. Правки в файлах .lua игра не подхватывает на лету — нужен полный перезапуск Darktide. В обычной игре отключите.",
 	},
 }
 
