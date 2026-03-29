@@ -493,8 +493,10 @@ HudElementEquipmentWheel._is_wheel_entry_hovered = function(self, t)
 	for i = 1, #entries do
 		local entry = entries[i]
 		local widget = entry.widget
+		local hotspot = widget.content.hotspot
+		local hovered = entry.option ~= nil and (hotspot.is_hover or hotspot.force_hover)
 
-		if widget.content.hotspot.is_hover then
+		if hovered then
 			self._last_widget_hover_data.index = i
 			self._last_widget_hover_data.t = t
 
