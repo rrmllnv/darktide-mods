@@ -13,8 +13,8 @@ local hud_body_font_settings = UIFontSettings.hud_body or {}
 local FONT_SIZE_MIN = 15
 local FONT_SIZE_MAX = 40
 local DEFAULT_FONT_SIZE = 20
-local DEFAULT_COLOR_NAME = "orange"
-local DEFAULT_FONT_TYPE = "machine_medium"
+local DEFAULT_COLOR_NAME = "white"
+local DEFAULT_FONT_TYPE = "proxima_nova_bold"
 local DEFAULT_POSITION = "left"
 local DEFAULT_VERTICAL_POSITION = "top"
 local TIMER_COLUMN_GAP = 10
@@ -389,9 +389,9 @@ local scenegraph_definition = create_scenegraph_definition()
 local timer_background_color = Color.terminal_background_gradient(178.5, true)
 local timer_active_text_style = clone_style(UIFontSettings.body, {
 	255,
-	221,
-	153,
-	51,
+	255,
+	255,
+	255,
 })
 
 local widget_definitions = {

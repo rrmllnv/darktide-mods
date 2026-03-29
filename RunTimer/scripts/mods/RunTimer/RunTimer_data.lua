@@ -95,7 +95,7 @@ return {
 			{
 				setting_id = "font_type",
 				type = "dropdown",
-				default_value = "machine_medium",
+				default_value = "proxima_nova_bold",
 				title = "font_type",
 				tooltip_text = "font_type_description",
 				options = get_font_type_options(),
@@ -103,7 +103,7 @@ return {
 			{
 				setting_id = "font_color",
 				type = "dropdown",
-				default_value = "orange",
+				default_value = "white",
 				options = {
 					{text = "color_white", value = "white"},
 					{text = "color_red", value = "red"},
