@@ -118,15 +118,6 @@ mod.on_setting_changed = function(setting_id)
 	refresh_settings()
 end
 
-local function argb_to_abgr(color)
-	return {
-		color[1],
-		color[4],
-		color[3],
-		color[2],
-	}
-end
-
 local function colors_equal_rgba(a, b, include_alpha)
 	if not a or not b then
 		return false
@@ -285,15 +276,9 @@ local function apply_icon_and_background_colors(self, icon_widget, background_wi
 		end
 
 		if bg_style and bg_style.color and bg_color then
-			local converted = argb_to_abgr(bg_color)
-
-			if not colors_equal_rgba(bg_style.color, converted, true) then
+			if not colors_equal_rgba(bg_style.color, bg_color, true) then
 				bg_style.color = table.clone(bg_style.color)
-				bg_style.color[1] = converted[1]
-				bg_style.color[2] = converted[2]
-				bg_style.color[3] = converted[3]
-				bg_style.color[4] = converted[4]
-				background_dirty = true
+				background_dirty = set_existing_rgba(bg_style.color, bg_color, false) or background_dirty
 			end
 		end
 	end
