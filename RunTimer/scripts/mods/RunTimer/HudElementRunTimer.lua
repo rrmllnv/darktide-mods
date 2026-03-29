@@ -6,6 +6,7 @@ local UIRenderer = require("scripts/managers/ui/ui_renderer")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local UISettings = require("scripts/settings/ui/ui_settings")
 local UIWorkspaceSettings = require("scripts/settings/ui/ui_workspace_settings")
+local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local ColorUtilities = require("scripts/utilities/ui/colors")
 
 local DEBUG_SHOW_IN_HUB = false
@@ -114,7 +115,8 @@ local POSITION_PRESETS = {
 				0,
 				2,
 			},
-			text_alignment = "center",
+			-- Левый край внутри колонок: при center по экрану центрирование строки давало дёрганье от ширины цифр.
+			text_alignment = "left",
 			offset = {10, 0, 0},
 		},
 	},
@@ -156,6 +158,41 @@ local BACKGROUND_STYLE_PRESETS = {
 		color = Color.terminal_background_gradient(255, true),
 	},
 }
+
+local TIMER_BACKGROUND_HIDE = "hide"
+local TIMER_BACKGROUND_TERMINAL = "terminal"
+local TIMER_BACKGROUND_WEAPON_FRAME = "weapon_frame"
+
+-- Материал weapon_frame: hud_element_mission_speaker_popup_definitions.lua (style.color = UIHudSettings.color_tint_main_3, size_addition).
+local WEAPON_FRAME_BACKGROUND_MATERIAL = "content/ui/materials/hud/backgrounds/weapon_frame"
+local WEAPON_FRAME_TEXTURE_SIZE_ADDITION = {
+	8,
+	5,
+}
+
+local function timer_background_mode()
+	local v = mod:get("timer_background")
+
+	if v == TIMER_BACKGROUND_HIDE or v == TIMER_BACKGROUND_TERMINAL or v == TIMER_BACKGROUND_WEAPON_FRAME then
+		return v
+	end
+
+	local legacy_show = mod:get("show_background")
+
+	if legacy_show == 2 then
+		return TIMER_BACKGROUND_HIDE
+	end
+
+	return TIMER_BACKGROUND_TERMINAL
+end
+
+local function timer_background_shows_texture()
+	return timer_background_mode() ~= TIMER_BACKGROUND_HIDE
+end
+
+local function timer_background_shows_edge_line()
+	return timer_background_mode() == TIMER_BACKGROUND_TERMINAL
+end
 
 local function current_font_size()
 	local value = mod:get("font_size") or DEFAULT_FONT_SIZE
@@ -413,8 +450,7 @@ local widget_definitions = {
 				color = timer_background_color,
 			},
 			visibility_function = function(content)
-				local show_background = mod:get("show_background") or 1
-				return content.visible and show_background == 1
+				return content.visible and timer_background_shows_texture()
 			end,
 		},
 		{
@@ -434,8 +470,7 @@ local widget_definitions = {
 				},
 			},
 			visibility_function = function(content)
-				local show_background = mod:get("show_background") or 1
-				return content.visible and content.edge_line_visible and show_background == 1
+				return content.visible and content.edge_line_visible and timer_background_shows_edge_line()
 			end,
 		},
 	}, "run_timer_background"),
@@ -852,6 +887,7 @@ HudElementRunTimer._apply_layout = function(self)
 
 	if background_widget and background_widget.style and background_widget.style.texture then
 		local texture_style = background_widget.style.texture
+		local bg_mode = timer_background_mode()
 
 		texture_style.horizontal_alignment = background_settings.horizontal_alignment or texture_style.horizontal_alignment
 		texture_style.vertical_alignment = v_layout.vertical_alignment or texture_style.vertical_alignment
@@ -860,8 +896,18 @@ HudElementRunTimer._apply_layout = function(self)
 			texture_style.offset = table.clone(background_settings.offset)
 		end
 
-		background_widget.content.texture = style_preset.material
-		texture_style.color = table.clone(style_preset.color)
+		if bg_mode == TIMER_BACKGROUND_WEAPON_FRAME then
+			background_widget.content.texture = WEAPON_FRAME_BACKGROUND_MATERIAL
+			texture_style.color = table.clone(UIHudSettings.color_tint_main_3)
+			texture_style.size_addition = {
+				WEAPON_FRAME_TEXTURE_SIZE_ADDITION[1],
+				WEAPON_FRAME_TEXTURE_SIZE_ADDITION[2],
+			}
+		else
+			background_widget.content.texture = style_preset.material
+			texture_style.color = table.clone(style_preset.color)
+			texture_style.size_addition = nil
+		end
 
 		if background_settings.flip_uvs then
 			texture_style.uvs = {
@@ -877,18 +923,22 @@ HudElementRunTimer._apply_layout = function(self)
 
 		local edge_line_style = background_widget.style.edge_line
 		if edge_line_style then
-			if position == "right" then
-				edge_line_style.horizontal_alignment = "right"
-				edge_line_style.offset = {0, 0, 1}
-				background_widget.content.edge_line_visible = true
-			elseif position == "left" then
-				edge_line_style.horizontal_alignment = "left"
-				edge_line_style.offset = {0, 0, 1}
-				background_widget.content.edge_line_visible = true
-			elseif position == "center" then
-				edge_line_style.horizontal_alignment = "left"
-				edge_line_style.offset = {0, 0, 1}
-				background_widget.content.edge_line_visible = true
+			if bg_mode == TIMER_BACKGROUND_TERMINAL then
+				if position == "right" then
+					edge_line_style.horizontal_alignment = "right"
+					edge_line_style.offset = {0, 0, 1}
+					background_widget.content.edge_line_visible = true
+				elseif position == "left" then
+					edge_line_style.horizontal_alignment = "left"
+					edge_line_style.offset = {0, 0, 1}
+					background_widget.content.edge_line_visible = true
+				elseif position == "center" then
+					edge_line_style.horizontal_alignment = "left"
+					edge_line_style.offset = {0, 0, 1}
+					background_widget.content.edge_line_visible = true
+				end
+			else
+				background_widget.content.edge_line_visible = false
 			end
 		end
 

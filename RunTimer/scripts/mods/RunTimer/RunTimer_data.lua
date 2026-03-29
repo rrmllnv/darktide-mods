@@ -84,12 +84,15 @@ return {
 				},
 			},
 			{
-				setting_id = "show_background",
+				setting_id = "timer_background",
 				type = "dropdown",
-				default_value = 1,
+				default_value = "terminal",
+				title = "timer_background",
+				tooltip_text = "timer_background_description",
 				options = {
-					{text = "show_background_show", value = 1},
-					{text = "show_background_hide", value = 2},
+					{text = "timer_background_hide", value = "hide"},
+					{text = "timer_background_terminal", value = "terminal"},
+					{text = "timer_background_weapon_frame", value = "weapon_frame"},
 				},
 			},
 			{

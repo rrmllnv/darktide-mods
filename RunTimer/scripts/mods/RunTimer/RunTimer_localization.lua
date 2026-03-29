@@ -142,21 +142,25 @@ return {
 		en = "Exclude intro time",
 		ru = "Исключить время intro",
 	},
-	show_background = {
-		en = "Show background",
-		ru = "Показывать фон",
+	timer_background = {
+		en = "Timer background",
+		ru = "Фон таймера",
 	},
-	show_background_description = {
-		en = "Toggle background visibility (Show / Hide).",
-		ru = "Переключатель видимости фона (Показать / Скрыть).",
+	timer_background_description = {
+		en = "Hide the background, use the standard terminal panel, or the framed weapon HUD style (see mission speaker popup in game assets).",
+		ru = "Скрыть фон, стандартная терминальная панель или рамка в стиле HUD оружия (как у всплывающего спикера миссии).",
 	},
-	show_background_show = {
-		en = "Show",
-		ru = "Показать",
-	},
-	show_background_hide = {
-		en = "Hide",
+	timer_background_hide = {
+		en = "Hidden",
 		ru = "Скрыть",
+	},
+	timer_background_terminal = {
+		en = "Terminal panel",
+		ru = "Терминал",
+	},
+	timer_background_weapon_frame = {
+		en = "Weapon frame",
+		ru = "Рамка (weapon frame)",
 	},
 	opacity = {
 		en = "Opacity",

@@ -368,6 +368,9 @@ function mod.on_setting_changed(setting_id)
 		end
 	elseif setting_id == "timer_position" or setting_id == "timer_vertical_position" then
 		mod._run_timer_hud_element:_apply_layout()
+	elseif setting_id == "timer_background" then
+		mod._run_timer_hud_element:_apply_layout()
+		mod._run_timer_hud_element:_apply_style()
 	elseif setting_id == "timer_format" then
 		mod._run_timer_hud_element._cached_timer_format = mod:get("timer_format") or 2
 		mod._run_timer_hud_element._cached_timer_text_column_width = nil
