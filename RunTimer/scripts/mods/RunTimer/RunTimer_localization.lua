@@ -178,14 +178,6 @@ return {
 		en = "Show speedometer next to the timer.",
 		ru = "Показывать спидометр рядом с таймером.",
 	},
-	debug = {
-		en = "Live settings (debug)",
-		ru = "Живые настройки (отладка)",
-	},
-	debug_description = {
-		en = "When enabled, mod menu settings are read every frame and layout/style refresh (no setting cache). Editing .lua files still requires a full game restart—this option does not hot-reload code. Turn off for normal play.",
-		ru = "Если включено, значения из меню мода читаются каждый кадр, стиль и раскладка без кэша. Правки в файлах .lua игра не подхватывает на лету — нужен полный перезапуск Darktide. В обычной игре отключите.",
-	},
 }
 
 

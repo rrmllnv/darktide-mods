@@ -87,6 +87,10 @@ function mod.on_setting_changed(setting_id)
 	end
 
 	if setting_id == "font_type" or setting_id == "font_size" or setting_id == "font_color" or setting_id == "opacity" then
+		if setting_id == "font_type" or setting_id == "font_size" then
+			mod._run_timer_hud_element._cached_timer_text_column_width = nil
+			mod._run_timer_hud_element._timer_width_style_key = nil
+		end
 		mod._run_timer_hud_element:_apply_style()
 		if setting_id == "font_type" or setting_id == "font_size" then
 			mod._run_timer_hud_element:_apply_layout()
@@ -95,15 +99,12 @@ function mod.on_setting_changed(setting_id)
 		mod._run_timer_hud_element:_apply_layout()
 	elseif setting_id == "timer_format" then
 		mod._run_timer_hud_element._cached_timer_format = mod:get("timer_format") or 2
+		mod._run_timer_hud_element._cached_timer_text_column_width = nil
+		mod._run_timer_hud_element._timer_width_style_key = nil
 		mod._run_timer_hud_element:_apply_style()
 		mod._run_timer_hud_element:_apply_layout()
 	elseif setting_id == "exclude_intro_time" then
 		mod._run_timer_hud_element._cached_exclude_intro = mod:get("exclude_intro_time") or 1
-	elseif setting_id == "debug" then
-		if mod:get("debug") ~= true then
-			mod._run_timer_hud_element._cached_timer_format = mod:get("timer_format") or 2
-			mod._run_timer_hud_element._cached_exclude_intro = mod:get("exclude_intro_time") or 1
-		end
 	end
 end
 

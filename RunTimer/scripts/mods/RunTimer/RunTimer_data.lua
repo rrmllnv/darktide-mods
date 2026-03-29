@@ -142,13 +142,6 @@ return {
 					},
 				},
 			},
-			{
-				setting_id = "debug",
-				type = "checkbox",
-				default_value = false,
-				title = "debug",
-				tooltip_text = "debug_description",
-			},
 		},
 	},
 }

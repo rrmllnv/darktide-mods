@@ -1,15 +1,8 @@
 local mod = get_mod("RunTimer")
 
--- Только подхват значений из меню мода (mod:get) каждый кадр. Изменения в файлах .lua игра не подхватывает —
--- нужен перезапуск Darktide (или копирование мода в актуальную папку mods и затем перезапуск).
-local function is_debug_live_settings()
-	local v = mod:get("debug")
-
-	return v == true or v == 1
-end
-
 local HudElementBase = require("scripts/ui/hud/elements/hud_element_base")
 local UIWidget = require("scripts/managers/ui/ui_widget")
+local UIRenderer = require("scripts/managers/ui/ui_renderer")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local UISettings = require("scripts/settings/ui/ui_settings")
 local UIWorkspaceSettings = require("scripts/settings/ui/ui_workspace_settings")
@@ -25,9 +18,21 @@ local DEFAULT_FONT_TYPE = "machine_medium"
 local DEFAULT_POSITION = "left"
 local DEFAULT_VERTICAL_POSITION = "top"
 local TIMER_COLUMN_GAP = 10
-local TIMER_TEXT_WIDTH_MIN = 100
-local TIMER_TEXT_WIDTH_PER_PX = 4.95
-local TIMER_TEXT_WIDTH_MS_EXTRA = 28
+-- Fallback до первого кадра с ui_renderer (см. measure_timer_text_column_width).
+-- Формат 1: %02d по минутам — обычно 2 символа, до «999» мин (16+ ч) — 3 символа; не резервируем 4–5 цифр.
+local TIMER_WIDTH_HEURISTIC_FMT1_MIN = 18
+local TIMER_WIDTH_HEURISTIC_FMT1_FS_MULT = 0.98
+local TIMER_WIDTH_HEURISTIC_FMT1_PAD = 6
+local TIMER_WIDTH_HEURISTIC_FMT2_MIN = 34
+local TIMER_WIDTH_HEURISTIC_FMT2_FS_MULT = 2.55
+local TIMER_WIDTH_HEURISTIC_FMT2_PAD = 10
+local TIMER_WIDTH_HEURISTIC_FMT3_MIN = 52
+local TIMER_WIDTH_HEURISTIC_FMT3_FS_MULT = 4.35
+local TIMER_WIDTH_HEURISTIC_FMT3_PAD = 14
+-- Запас к измеренной ширине (тень/сглаживание), см. UIRenderer.styled_text_size в ui_renderer.lua.
+local TIMER_WIDTH_MEASURE_PAD = 4
+-- При HUD справа и пропорциональных шрифтах только для эвристики (измеренная ширина не сжимается).
+local TIMER_RIGHT_NON_DIGITAL_WIDTH_FACTOR = 0.92
 local SPEEDOMETER_COLUMN_WIDTH_MIN = 72
 local SPEEDOMETER_WIDTH_PER_PX = 3.15
 local SPEEDOMETER_WIDTH_EXTRA = 16
@@ -159,10 +164,6 @@ local function current_font_size()
 end
 
 local function effective_timer_format_for_column_width()
-	if is_debug_live_settings() then
-		return mod:get("timer_format") or 2
-	end
-
 	local el = mod._run_timer_hud_element
 
 	if el then
@@ -170,27 +171,6 @@ local function effective_timer_format_for_column_width()
 	end
 
 	return mod:get("timer_format") or 2
-end
-
-local function timer_text_column_width()
-	local fs = current_font_size()
-	local w = math.max(TIMER_TEXT_WIDTH_MIN, math.ceil(fs * TIMER_TEXT_WIDTH_PER_PX + 22))
-
-	if effective_timer_format_for_column_width() == 3 then
-		w = w + TIMER_TEXT_WIDTH_MS_EXTRA
-	end
-
-	return w
-end
-
-local function speedometer_column_width()
-	local fs = current_font_size()
-
-	return math.max(SPEEDOMETER_COLUMN_WIDTH_MIN, math.ceil(fs * SPEEDOMETER_WIDTH_PER_PX + SPEEDOMETER_WIDTH_EXTRA))
-end
-
-local function timer_background_container_width()
-	return timer_text_column_width() + TIMER_COLUMN_GAP + speedometer_column_width()
 end
 
 local function current_font_type()
@@ -225,6 +205,58 @@ local function current_vertical_position()
 	end
 
 	return DEFAULT_VERTICAL_POSITION
+end
+
+local function timer_text_column_width_heuristic()
+	local fs = current_font_size()
+	local fmt = effective_timer_format_for_column_width()
+	local w
+
+	if fmt == 1 then
+		w = math.max(
+			TIMER_WIDTH_HEURISTIC_FMT1_MIN,
+			math.ceil(fs * TIMER_WIDTH_HEURISTIC_FMT1_FS_MULT + TIMER_WIDTH_HEURISTIC_FMT1_PAD)
+		)
+	elseif fmt == 3 then
+		w = math.max(
+			TIMER_WIDTH_HEURISTIC_FMT3_MIN,
+			math.ceil(fs * TIMER_WIDTH_HEURISTIC_FMT3_FS_MULT + TIMER_WIDTH_HEURISTIC_FMT3_PAD)
+		)
+	else
+		w = math.max(
+			TIMER_WIDTH_HEURISTIC_FMT2_MIN,
+			math.ceil(fs * TIMER_WIDTH_HEURISTIC_FMT2_FS_MULT + TIMER_WIDTH_HEURISTIC_FMT2_PAD)
+		)
+	end
+
+	if current_position() == "right" and current_font_type() ~= "machine_medium" then
+		local min_for_fmt = (fmt == 1) and TIMER_WIDTH_HEURISTIC_FMT1_MIN
+			or (fmt == 3) and TIMER_WIDTH_HEURISTIC_FMT3_MIN
+			or TIMER_WIDTH_HEURISTIC_FMT2_MIN
+		w = math.max(min_for_fmt, math.floor(w * TIMER_RIGHT_NON_DIGITAL_WIDTH_FACTOR + 0.5))
+	end
+
+	return w
+end
+
+local function timer_text_column_width()
+	local el = mod._run_timer_hud_element
+
+	if el and el._cached_timer_text_column_width then
+		return el._cached_timer_text_column_width
+	end
+
+	return timer_text_column_width_heuristic()
+end
+
+local function speedometer_column_width()
+	local fs = current_font_size()
+
+	return math.max(SPEEDOMETER_COLUMN_WIDTH_MIN, math.ceil(fs * SPEEDOMETER_WIDTH_PER_PX + SPEEDOMETER_WIDTH_EXTRA))
+end
+
+local function timer_background_container_width()
+	return timer_text_column_width() + TIMER_COLUMN_GAP + speedometer_column_width()
 end
 
 -- Локальные X колонок внутри run_timer_background: слева/центр — таймер, затем спидометр; справа — спидометр, затем таймер.
@@ -477,6 +509,74 @@ local function format_time_by_mode(gameplay_time, mode)
 	return plain_text
 end
 
+-- Образцы строк по режиму timer_format (1 / 2 / 3): максимальная типичная длина + «широкие» цифры для пропорциональных шрифтов.
+local function build_timer_width_sample_plain_strings(fmt)
+	if fmt == 1 then
+		return {
+			"09",
+			"99",
+			"88",
+			"999",
+		}
+	elseif fmt == 3 then
+		return {
+			"00:00:000",
+			"09:09:009",
+			"99:59:999",
+			"999:59:999",
+			"88:88:888",
+		}
+	end
+
+	return {
+		"00:00",
+		"09:09",
+		"99:59",
+		"999:59",
+		"88:88",
+	}
+end
+
+local function build_timer_width_sample_strings(fmt)
+	local use_digital = current_font_type() == "machine_medium"
+	local plain_list = build_timer_width_sample_plain_strings(fmt)
+	local out = {}
+
+	for i = 1, #plain_list do
+		local plain = plain_list[i]
+
+		if use_digital then
+			out[#out + 1] = digits_to_symbols(plain)
+		else
+			out[#out + 1] = plain
+		end
+	end
+
+	return out
+end
+
+-- Реальная ширина по движку (Gui2_slug_text_extents), см. UIRenderer.styled_text_size в scripts/managers/ui/ui_renderer.lua.
+local function measure_timer_text_column_width(ui_renderer, text_style, fmt)
+	if not ui_renderer or not text_style then
+		return nil
+	end
+
+	local samples = build_timer_width_sample_strings(fmt)
+	local max_w = 0
+
+	for i = 1, #samples do
+		local w = UIRenderer.styled_text_size(ui_renderer, samples[i], text_style, nil, false)
+
+		if w > max_w then
+			max_w = w
+		end
+	end
+
+	local pad = (fmt == 1) and 2 or TIMER_WIDTH_MEASURE_PAD
+
+	return math.ceil(max_w + pad)
+end
+
 local HUB_GAME_MODES = {
 	hub = true,
 	prologue_hub = true,
@@ -533,11 +633,6 @@ end
 HudElementRunTimer.update = function(self, dt, t, ui_renderer, render_settings, input_service)
 	HudElementRunTimer.super.update(self, dt, t, ui_renderer, render_settings, input_service)
 
-	if is_debug_live_settings() then
-		self:_apply_style()
-		self:_apply_layout()
-	end
-
 	local text_widget = self._widgets_by_name.run_timer_text
 	local background_widget = self._widgets_by_name.run_timer_background
 	local speedometer_widget = self._widgets_by_name.speedometer_text
@@ -582,20 +677,47 @@ HudElementRunTimer.update = function(self, dt, t, ui_renderer, render_settings, 
 		return
 	end
 
+	local fmt = self._cached_timer_format or 2
+	local width_cache_key = string.format("%s|%d|%d", current_font_type(), current_font_size(), fmt)
+
+	if self._timer_width_style_key ~= width_cache_key then
+		self._cached_timer_text_column_width = nil
+		self._timer_width_style_key = width_cache_key
+	end
+
+	if ui_renderer and text_widget.style and text_widget.style.text then
+		apply_mod_settings_to_text_pass(text_widget.style.text)
+		local measured_w = measure_timer_text_column_width(ui_renderer, text_widget.style.text, fmt)
+
+		if measured_w then
+			self._cached_timer_text_column_width = measured_w
+		end
+	end
+
+	local tw = timer_text_column_width()
+	local sw = speedometer_column_width()
+	local th = calculate_timer_height()
+
+	if self._last_timer_layout_text_w ~= tw or self._last_timer_layout_speed_w ~= sw or self._last_timer_layout_h ~= th then
+		self._last_timer_layout_text_w = tw
+		self._last_timer_layout_speed_w = sw
+		self._last_timer_layout_h = th
+		self:_apply_style()
+		self:_apply_layout()
+	end
+
 	local time_manager = Managers.time
 	local gameplay_time = 0
 
 	if time_manager and time_manager:has_timer("gameplay") then
 		gameplay_time = time_manager:time("gameplay")
-		local exclude_intro_setting = is_debug_live_settings() and (mod:get("exclude_intro_time") or 1) or self._cached_exclude_intro
-		local should_exclude_intro = exclude_intro_setting == 2
+		local should_exclude_intro = self._cached_exclude_intro == 2
 		if should_exclude_intro and mod._intro_end_time and mod._intro_end_time > 0 then
 			gameplay_time = gameplay_time - mod._intro_end_time
 		end
 	end
 
-	local timer_format = is_debug_live_settings() and (mod:get("timer_format") or 2) or self._cached_timer_format
-	local digital_text = format_time_by_mode(gameplay_time, timer_format)
+	local digital_text = format_time_by_mode(gameplay_time, self._cached_timer_format)
 
 	text_widget.content.text = digital_text
 end
@@ -688,11 +810,26 @@ HudElementRunTimer._apply_layout = function(self)
 
 		local text_widget = self._widgets_by_name and self._widgets_by_name.run_timer_text
 
-		local text_h_align = text_settings.text_alignment or text_settings.horizontal_alignment or "left"
+		local preset_h_align = text_settings.text_alignment or text_settings.horizontal_alignment or "left"
 		local text_v_align = text_settings.vertical_alignment or "center"
+		-- HUD справа: спидометр слева от колонки таймера — его текст к правому краю колонки (к таймеру).
+		-- Таймер: при machine_medium глифы циферблата одной ширины — можно выровнять вправо к краю экрана без дёрганья;
+		-- иначе текст слева в колонке + уже ширина колонки (timer_text_column_width).
+		local timer_h_align = preset_h_align
+		local speed_h_align = preset_h_align
+
+		if position == "right" then
+			speed_h_align = "right"
+			-- Формат «только минуты»: 2–3 символа, дёрганье мало — прижимаем к правому краю колонки, без пустоты справа.
+			if current_font_type() == "machine_medium" or self._cached_timer_format == 1 then
+				timer_h_align = "right"
+			else
+				timer_h_align = "left"
+			end
+		end
 
 		if text_widget and text_widget.style and text_widget.style.text then
-			text_widget.style.text.text_horizontal_alignment = text_h_align
+			text_widget.style.text.text_horizontal_alignment = timer_h_align
 			text_widget.style.text.text_vertical_alignment = text_v_align
 			if text_settings.offset then
 				text_widget.style.text.offset = table.clone(text_settings.offset)
@@ -702,7 +839,7 @@ HudElementRunTimer._apply_layout = function(self)
 
 		local speedometer_widget = self._widgets_by_name and self._widgets_by_name.speedometer_text
 		if speedometer_widget and speedometer_widget.style and speedometer_widget.style.speed then
-			speedometer_widget.style.speed.text_horizontal_alignment = text_h_align
+			speedometer_widget.style.speed.text_horizontal_alignment = speed_h_align
 			speedometer_widget.style.speed.text_vertical_alignment = text_v_align
 			if text_settings.offset then
 				speedometer_widget.style.speed.offset = table.clone(text_settings.offset)
