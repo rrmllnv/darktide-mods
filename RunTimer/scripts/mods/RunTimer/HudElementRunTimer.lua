@@ -255,7 +255,7 @@ local widget_definitions = {
 		{
 			pass_type = "texture",
 			style_id = "edge_line",
-			value_id = "edge_line_visible",
+			value_id = "edge_line_texture",
 			value = "content/ui/materials/dividers/faded_line_01",
 			style = {
 				horizontal_alignment = "left",
