@@ -7,6 +7,34 @@ return {
 		en = "Shows a mission runtime timer in the HUD.",
 		ru = "Показывает таймер времени миссии в HUD.",
 	},
+	font_type = {
+		en = "Font type",
+		ru = "Тип шрифта",
+	},
+	font_type_description = {
+		en = "HUD font for the timer and speedometer. Digital clock symbols are used only with Machine Medium.",
+		ru = "Шрифт HUD для таймера и спидометра. Символы «цифрового табло» используются только с Machine Medium.",
+	},
+	font_option_machine_medium = {
+		en = "Machine Medium",
+		ru = "Machine Medium",
+	},
+	font_option_proxima_nova_bold = {
+		en = "Proxima Nova Bold",
+		ru = "Proxima Nova Bold",
+	},
+	font_option_proxima_nova_medium = {
+		en = "Proxima Nova Medium",
+		ru = "Proxima Nova Medium",
+	},
+	font_option_itc_novarese_medium = {
+		en = "ITC Novarese Medium",
+		ru = "ITC Novarese Medium",
+	},
+	font_option_itc_novarese_bold = {
+		en = "ITC Novarese Bold",
+		ru = "ITC Novarese Bold",
+	},
 	font_size = {
 		en = "Font size",
 		ru = "Размер шрифта",
@@ -46,6 +74,34 @@ return {
 	timer_position_description = {
 		en = "Choose where the timer appears on the screen.",
 		ru = "Выберите, где показывать таймер на экране.",
+	},
+	timer_position_horizontal = {
+		en = "Timer position (horizontal)",
+		ru = "Позиция таймера (горизонталь)",
+	},
+	timer_position_horizontal_description = {
+		en = "Align the timer to the left, center, or right of the screen.",
+		ru = "Выравнивание таймера по горизонтали: слева, по центру или справа.",
+	},
+	timer_vertical_position = {
+		en = "Timer position (vertical)",
+		ru = "Позиция таймера (вертикаль)",
+	},
+	timer_vertical_position_description = {
+		en = "Align the timer to the top, middle, or bottom of the screen.",
+		ru = "Выравнивание таймера по вертикали: сверху, по центру или снизу.",
+	},
+	timer_vertical_top = {
+		en = "Top",
+		ru = "Верх",
+	},
+	timer_vertical_center = {
+		en = "Center",
+		ru = "Центр",
+	},
+	timer_vertical_bottom = {
+		en = "Bottom",
+		ru = "Низ",
 	},
 	timer_position_left = {en = "Left", ru = "Слева"},
 	timer_position_center = {en = "Center", ru = "По центру"},

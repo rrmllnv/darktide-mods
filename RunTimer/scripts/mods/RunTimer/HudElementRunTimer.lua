@@ -13,7 +13,9 @@ local FONT_SIZE_MIN = 15
 local FONT_SIZE_MAX = 30
 local DEFAULT_FONT_SIZE = 20
 local DEFAULT_COLOR_NAME = "orange"
+local DEFAULT_FONT_TYPE = "machine_medium"
 local DEFAULT_POSITION = "left"
+local DEFAULT_VERTICAL_POSITION = "top"
 local TIMER_WIDTH = 80
 local BORDER_PADDING = 5
 
@@ -36,11 +38,25 @@ local COLOR_PRESETS = {
 	grey = {255, 102, 102, 102},
 }
 
+local VERTICAL_LAYOUT_PRESETS = {
+	top = {
+		vertical_alignment = "top",
+		position_y = 10,
+	},
+	center = {
+		vertical_alignment = "center",
+		position_y = 0,
+	},
+	bottom = {
+		vertical_alignment = "bottom",
+		position_y = -10,
+	},
+}
+
 local POSITION_PRESETS = {
 	left = {
 		background = {
 			horizontal_alignment = "left",
-			vertical_alignment = "top",
 			position = {
 				50,
 				10,
@@ -63,7 +79,6 @@ local POSITION_PRESETS = {
 	center = {
 		background = {
 			horizontal_alignment = "center",
-			vertical_alignment = "top",
 			position = {
 				0,
 				10,
@@ -86,7 +101,6 @@ local POSITION_PRESETS = {
 	right = {
 		background = {
 			horizontal_alignment = "right",
-			vertical_alignment = "top",
 			position = {
 				-50,
 				10,
@@ -129,6 +143,20 @@ local function current_font_size()
 	return math.clamp(value, FONT_SIZE_MIN, FONT_SIZE_MAX)
 end
 
+local function current_font_type()
+	local font_type = mod:get("font_type")
+
+	if font_type == "proxima_nova_bold"
+		or font_type == "proxima_nova_medium"
+		or font_type == "itc_novarese_medium"
+		or font_type == "itc_novarese_bold"
+	then
+		return font_type
+	end
+
+	return DEFAULT_FONT_TYPE
+end
+
 local function current_font_color()
 	local color_name = mod:get("font_color") or DEFAULT_COLOR_NAME
 
@@ -137,6 +165,16 @@ end
 
 local function current_position()
 	return mod:get("timer_position") or DEFAULT_POSITION
+end
+
+local function current_vertical_position()
+	local v = mod:get("timer_vertical_position")
+
+	if v == "center" or v == "bottom" then
+		return v
+	end
+
+	return DEFAULT_VERTICAL_POSITION
 end
 
 local function get_opacity_alpha()
@@ -157,7 +195,7 @@ local function clone_style(base_style, color)
 	style.text_color = color_override and table.clone(color_override) or style.text_color
 	style.color = color and table.clone(color) or style.color
 	style.font_size = current_font_size()
-	style.font_type = hud_body_font_settings.font_type or "machine_medium"
+	style.font_type = current_font_type()
 	style.text_vertical_alignment = "center"
 	style.text_horizontal_alignment = "center"
 	style.offset = {
@@ -326,23 +364,22 @@ local function format_time_by_mode(gameplay_time, mode)
 	local minutes = gameplay_time / 60
 	local seconds = gameplay_time % 60
 	local milliseconds = (gameplay_time - math.floor(gameplay_time)) * 1000
-	
+	local use_digital_glyphs = current_font_type() == "machine_medium"
+	local plain_text
+
 	if mode == 1 then
-		-- Только минуты
-		local minutes_text = format_double_digit(minutes)
-		return digits_to_symbols(minutes_text)
+		plain_text = format_double_digit(minutes)
 	elseif mode == 3 then
-		-- Минуты:Секунды:Миллисекунды
-		local minutes_text = format_double_digit(minutes)
-		local seconds_text = format_double_digit(seconds)
-		local ms_text = format_triple_digit(milliseconds)
-		return digits_to_symbols(minutes_text .. ":" .. seconds_text .. ":" .. ms_text)
+		plain_text = format_double_digit(minutes) .. ":" .. format_double_digit(seconds) .. ":" .. format_triple_digit(milliseconds)
 	else
-		-- Минуты:Секунды (по умолчанию, mode == 2)
-		local minutes_text = format_double_digit(minutes)
-		local seconds_text = format_double_digit(seconds)
-		return digits_to_symbols(minutes_text .. ":" .. seconds_text)
+		plain_text = format_double_digit(minutes) .. ":" .. format_double_digit(seconds)
 	end
+
+	if use_digital_glyphs then
+		return digits_to_symbols(plain_text)
+	end
+
+	return plain_text
 end
 
 local HUB_GAME_MODES = {
@@ -476,6 +513,7 @@ HudElementRunTimer._apply_style = function(self)
 	if text_widget and text_widget.style and text_widget.style.text then
 		local alpha = get_opacity_alpha()
 		text_widget.style.text.font_size = current_font_size()
+		text_widget.style.text.font_type = current_font_type()
 		local color = table.clone(current_font_color())
 		color[1] = alpha
 		text_widget.style.text.text_color = color
@@ -486,6 +524,7 @@ HudElementRunTimer._apply_style = function(self)
 	if speedometer_widget and speedometer_widget.style and speedometer_widget.style.speed then
 		local alpha = get_opacity_alpha()
 		speedometer_widget.style.speed.font_size = current_font_size()
+		speedometer_widget.style.speed.font_type = current_font_type()
 		local color = table.clone(current_font_color())
 		color[1] = alpha
 		speedometer_widget.style.speed.text_color = color
@@ -511,6 +550,8 @@ end
 
 HudElementRunTimer._apply_layout = function(self)
 	local position = current_position()
+	local vertical_key = current_vertical_position()
+	local v_layout = VERTICAL_LAYOUT_PRESETS[vertical_key] or VERTICAL_LAYOUT_PRESETS[DEFAULT_VERTICAL_POSITION]
 	local preset = POSITION_PRESETS[position] or POSITION_PRESETS[DEFAULT_POSITION]
 	local style_preset = BACKGROUND_STYLE_PRESETS[position] or BACKGROUND_STYLE_PRESETS[DEFAULT_POSITION]
 	local background_settings = preset.background
@@ -520,10 +561,10 @@ HudElementRunTimer._apply_layout = function(self)
 		self:set_scenegraph_position(
 			"run_timer_background",
 			background_settings.position[1],
-			background_settings.position[2],
+			v_layout.position_y,
 			background_settings.position[3],
 			background_settings.horizontal_alignment,
-			background_settings.vertical_alignment
+			v_layout.vertical_alignment
 		)
 	end
 
@@ -568,7 +609,7 @@ HudElementRunTimer._apply_layout = function(self)
 		local texture_style = background_widget.style.texture
 
 		texture_style.horizontal_alignment = background_settings.horizontal_alignment or texture_style.horizontal_alignment
-		texture_style.vertical_alignment = background_settings.vertical_alignment or texture_style.vertical_alignment
+		texture_style.vertical_alignment = v_layout.vertical_alignment or texture_style.vertical_alignment
 
 		if background_settings.offset then
 			texture_style.offset = table.clone(background_settings.offset)

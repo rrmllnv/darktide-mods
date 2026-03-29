@@ -1,5 +1,32 @@
 local mod = get_mod("RunTimer")
 
+local font_type_options = {
+	{
+		text = "font_option_machine_medium",
+		value = "machine_medium",
+	},
+	{
+		text = "font_option_proxima_nova_bold",
+		value = "proxima_nova_bold",
+	},
+	{
+		text = "font_option_proxima_nova_medium",
+		value = "proxima_nova_medium",
+	},
+	{
+		text = "font_option_itc_novarese_medium",
+		value = "itc_novarese_medium",
+	},
+	{
+		text = "font_option_itc_novarese_bold",
+		value = "itc_novarese_bold",
+	},
+}
+
+local function get_font_type_options()
+	return table.clone(font_type_options)
+end
+
 return {
 	name = mod:localize("mod_name"),
 	description = mod:localize("mod_description"),
@@ -29,10 +56,24 @@ return {
 				setting_id = "timer_position",
 				type = "dropdown",
 				default_value = "left",
+				title = "timer_position_horizontal",
+				tooltip_text = "timer_position_horizontal_description",
 				options = {
 					{text = "timer_position_left", value = "left"},
 					{text = "timer_position_center", value = "center"},
 					{text = "timer_position_right", value = "right"},
+				},
+			},
+			{
+				setting_id = "timer_vertical_position",
+				type = "dropdown",
+				default_value = "top",
+				title = "timer_vertical_position",
+				tooltip_text = "timer_vertical_position_description",
+				options = {
+					{text = "timer_vertical_top", value = "top"},
+					{text = "timer_vertical_center", value = "center"},
+					{text = "timer_vertical_bottom", value = "bottom"},
 				},
 			},
 			{
@@ -43,6 +84,14 @@ return {
 					{text = "show_background_show", value = 1},
 					{text = "show_background_hide", value = 2},
 				},
+			},
+			{
+				setting_id = "font_type",
+				type = "dropdown",
+				default_value = "machine_medium",
+				title = "font_type",
+				tooltip_text = "font_type_description",
+				options = get_font_type_options(),
 			},
 			{
 				setting_id = "font_color",

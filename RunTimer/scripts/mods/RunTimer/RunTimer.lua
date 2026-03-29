@@ -86,9 +86,9 @@ function mod.on_setting_changed(setting_id)
 		return
 	end
 
-	if setting_id == "font_size" or setting_id == "font_color" or setting_id == "opacity" then
+	if setting_id == "font_type" or setting_id == "font_size" or setting_id == "font_color" or setting_id == "opacity" then
 		mod._run_timer_hud_element:_apply_style()
-	elseif setting_id == "timer_position" then
+	elseif setting_id == "timer_position" or setting_id == "timer_vertical_position" then
 		mod._run_timer_hud_element:_apply_layout()
 	elseif setting_id == "timer_format" then
 		-- Обновляем кэш формата
