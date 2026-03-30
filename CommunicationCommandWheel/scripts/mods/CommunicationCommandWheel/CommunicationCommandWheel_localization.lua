@@ -15,6 +15,10 @@ return {
 		en = "Settings",
 		ru = "Настройки",
 	},
+	ccw_page_switch_group = {
+		en = "Page switching",
+		ru = "Переключение страниц",
+	},
 	ccw_reset_slot_commands = {
 		en = "Reset commands to defaults",
 		ru = "Сбросить команды к умолчанию",
@@ -95,6 +99,14 @@ return {
 		en = "When the wheel is open and more than one page has commands, scroll changes pages and weapon switch on the mouse wheel is blocked (same mechanism as the tactical overlay).",
 		ru = "Пока колесо открыто и больше одной страницы с командами, прокрутка меняет страницы, а смена оружия колёсиком блокируется (как в тактическом оверлее).",
 	},
+	ccw_center_click_switch_page = {
+		en = "Center click switches page",
+		ru = "Клик по центру переключает страницу",
+	},
+	ccw_center_click_switch_page_tooltip = {
+		en = "While the wheel is open and more than one page has commands, left click or gamepad confirm in the center hub advances the page. Disable to use only the page key and mouse wheel.",
+		ru = "Пока колесо открыто и больше одной страницы с командами, ЛКМ или подтверждение на геймпаде в центральной зоне переключают страницу. Выключите, чтобы остались только горячая клавиша и колёсико.",
+	},
 	ccw_open_hold_delay = {
 		en = "Open hold delay",
 		ru = "Задержка до открытия",
@@ -160,8 +172,8 @@ return {
 		ru = "Мне это нужно",
 	},
 	ccw_command_daemonhost = {
-		en = "Attention,\n Daemonhost",
-		ru = "Внимание,\n Демонхост",
+		en = "Attention, Daemonhost",
+		ru = "Внимание, Демонхост",
 	},
 	ccw_command_enemy_ahead = {
 		en = "Enemy ahead",

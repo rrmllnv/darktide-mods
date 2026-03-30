@@ -24,6 +24,16 @@ local is_in_valid_lvl = function()
 	return false
 end
 
+local function ccw_option_center_click_switch_page_enabled()
+	local v = mod:get("ccw_center_click_switch_page")
+
+	if v == false or v == 0 then
+		return false
+	end
+
+	return true
+end
+
 local localize_text = Utils.localize_text
 local activate_option = Utils.activate_option
 local apply_style_offset = Utils.apply_style_offset
@@ -778,8 +788,9 @@ HudElementCommunicationCommandWheel._update_wheel_presentation = function(self, 
 	local center_button_hover = distance_to_center <= center_radius * scale
 
 	local visible_pages = self._visible_pages or {}
+	local center_switch_by_click = ccw_option_center_click_switch_page_enabled()
 
-	self._center_switch_zone_hovered = center_button_hover and #visible_pages > 1
+	self._center_switch_zone_hovered = center_button_hover and #visible_pages > 1 and center_switch_by_click
 
 	local wheel_background_widget = self._wheel_background_widget
 
@@ -801,7 +812,7 @@ HudElementCommunicationCommandWheel._update_wheel_presentation = function(self, 
 					Managers.ui:play_2d_sound(UISoundEvents.emote_wheel_entry_hover)
 				end
 			end
-		elseif center_button_hover and #visible_pages > 1 then
+		elseif center_button_hover and #visible_pages > 1 and center_switch_by_click then
 			wheel_background_widget.content.text = localize_text("ccw_page_switch")
 		elseif not any_hover then
 			wheel_background_widget.content.text = ""

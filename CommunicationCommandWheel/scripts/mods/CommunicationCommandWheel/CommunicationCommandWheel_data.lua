@@ -117,6 +117,13 @@ local widgets = {
 				tooltip_text = "ccw_open_hold_delay_tooltip",
 				options = hold_delay_options,
 			},
+		},
+	},
+	{
+		setting_id = "ccw_page_switch_group",
+		type = "group",
+		title = "ccw_page_switch_group",
+		sub_widgets = {
 			{
 				setting_id = "communication_command_wheel_switch_page_key",
 				type = "keybind",
@@ -133,6 +140,13 @@ local widgets = {
 				default_value = false,
 				title = "ccw_scroll_switch_page",
 				tooltip_text = "ccw_scroll_switch_page_tooltip",
+			},
+			{
+				setting_id = "ccw_center_click_switch_page",
+				type = "checkbox",
+				default_value = true,
+				title = "ccw_center_click_switch_page",
+				tooltip_text = "ccw_center_click_switch_page_tooltip",
 			},
 		},
 	},
