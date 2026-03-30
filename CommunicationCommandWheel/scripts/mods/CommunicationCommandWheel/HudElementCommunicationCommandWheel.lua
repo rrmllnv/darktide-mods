@@ -561,7 +561,7 @@ HudElementCommunicationCommandWheel._update_wheel_presentation = function(self, 
 				end
 			end
 		elseif center_button_hover and #visible_pages > 1 then
-			wheel_background_widget.content.text = localize_text("loc_page_switch")
+			wheel_background_widget.content.text = localize_text("ccw_page_switch")
 		elseif not any_hover then
 			wheel_background_widget.content.text = ""
 		end

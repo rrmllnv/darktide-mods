@@ -13,7 +13,7 @@ if CommunicationCommandWheel_localization and type(CommunicationCommandWheel_loc
 	local global_strings = {}
 
 	for key, value in pairs(CommunicationCommandWheel_localization) do
-		if string.sub(key, 1, 4) == "loc_" then
+		if string.sub(key, 1, 13) == "ccw_command_" then
 			global_strings[key] = value
 		end
 	end
@@ -212,7 +212,7 @@ mod.on_setting_changed = function(setting_id)
 		mod._communication_wheel_eval_func = nil
 	elseif setting_id == "reset_slot_commands" then
 		if mod:get("reset_slot_commands") == 1 then
-			mod:notify(mod:localize("reset_slot_commands"))
+			mod:notify(mod:localize("ccw_reset_slot_commands"))
 			mod:set("reset_slot_commands", 0)
 
 			local layout = Pages.DEFAULT_SLOT_LAYOUT

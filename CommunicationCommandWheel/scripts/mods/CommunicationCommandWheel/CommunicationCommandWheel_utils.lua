@@ -13,7 +13,7 @@ local function localize_text(label_key)
 		return result
 	end
 
-	if string.sub(label_key, 1, 4) == "loc_" then
+	if string.sub(label_key, 1, 13) == "ccw_command_" then
 		local success_global, global_result = pcall(function()
 			return Localize(label_key)
 		end)
@@ -117,20 +117,15 @@ local function activate_option(option)
 			if channel_handle then
 				local text_key = option.chat_message_data.text
 				local english_text = text_key
+				local localization_table = mod._localization_cache
 
-				if string.sub(text_key, 1, 4) == "loc_" then
-					local localization_table = mod._localization_cache
+				if not localization_table then
+					localization_table = mod:io_dofile("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_localization")
+					mod._localization_cache = localization_table
+				end
 
-					if not localization_table then
-						localization_table = mod:io_dofile("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_localization")
-						mod._localization_cache = localization_table
-					end
-
-					if localization_table and localization_table[text_key] then
-						english_text = localization_table[text_key].en or text_key
-					else
-						english_text = text_key
-					end
+				if localization_table and localization_table[text_key] and localization_table[text_key].en then
+					english_text = localization_table[text_key].en
 				end
 
 				local formatted_message = string.format("{#color(79,175,255)}%s{#reset()}", english_text)
