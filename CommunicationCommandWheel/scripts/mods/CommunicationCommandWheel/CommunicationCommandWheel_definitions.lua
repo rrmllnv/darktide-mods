@@ -58,7 +58,7 @@ local scenegraph_definition = {
 		parent = "pivot",
 		vertical_alignment = "top",
 		size = {
-			2 * S.page_indicator_size + S.page_indicator_spacing,
+			3 * S.page_indicator_size + 2 * S.page_indicator_spacing,
 			S.page_indicator_size,
 		},
 		position = {
@@ -302,30 +302,54 @@ local page_indicators_definition = UIWidget.create_definition({
 			},
 		},
 	},
-	{
-		pass_type = "rect",
-		value_id = "page_2",
-		style_id = "page_2",
-		style = {
-			horizontal_alignment = "left",
-			vertical_alignment = "center",
-			size = {
-				S.page_indicator_size,
-				S.page_indicator_size,
-			},
-			offset = {
-				S.page_indicator_size + S.page_indicator_spacing,
-				0,
-				2,
-			},
-			color = {
-				150,
-				150,
-				150,
-				150,
+		{
+			pass_type = "rect",
+			value_id = "page_2",
+			style_id = "page_2",
+			style = {
+				horizontal_alignment = "left",
+				vertical_alignment = "center",
+				size = {
+					S.page_indicator_size,
+					S.page_indicator_size,
+				},
+				offset = {
+					S.page_indicator_size + S.page_indicator_spacing,
+					0,
+					2,
+				},
+				color = {
+					150,
+					150,
+					150,
+					150,
+				},
 			},
 		},
-	},
+		{
+			pass_type = "rect",
+			value_id = "page_3",
+			style_id = "page_3",
+			style = {
+				horizontal_alignment = "left",
+				vertical_alignment = "center",
+				size = {
+					S.page_indicator_size,
+					S.page_indicator_size,
+				},
+				offset = {
+					2 * S.page_indicator_size + 2 * S.page_indicator_spacing,
+					0,
+					2,
+				},
+				color = {
+					150,
+					150,
+					150,
+					150,
+				},
+			},
+		},
 }, "page_indicators")
 
 local widget_definitions = {

@@ -78,30 +78,24 @@ local function communication_wheel_apply_icon_style_size(widget, option)
 	end
 end
 
+local CONFIGURED_SLOT_COUNT = Pages and Pages.CONFIGURED_SLOT_COUNT or 8
+local MAX_WHEEL_PAGES = Pages and Pages.MAX_PAGES or 3
+
+local function page_slot_setting_id(page_index, slot_index)
+	return string.format("page_%d_slot_%d", page_index, slot_index)
+end
+
 local function generate_options_from_page(current_page)
 	local options = {}
+	local wheel_slots = CommunicationCommandWheelSettings.wheel_slots
+	local max_slot = math.min(wheel_slots, CONFIGURED_SLOT_COUNT)
 
-	if not Pages or not Pages.get_page_config then
-		return options
-	end
+	for slot_index = 1, max_slot do
+		local raw = mod:get(page_slot_setting_id(current_page, slot_index))
+		local command_id = type(raw) == "string" and raw or ""
 
-	local page_config = Pages.get_page_config(current_page)
-
-	if not page_config then
-		return options
-	end
-
-	local commands = page_config.commands
-
-	if commands and type(commands) == "table" then
-		local wheel_slots = CommunicationCommandWheelSettings.wheel_slots
-
-		for i = 1, math.min(#commands, wheel_slots) do
-			local command_id = commands[i]
-
-			if command_id and button_definitions_by_id and button_definitions_by_id[command_id] then
-				options[i] = button_definitions_by_id[command_id]
-			end
+		if command_id ~= "" and button_definitions_by_id and button_definitions_by_id[command_id] then
+			options[slot_index] = button_definitions_by_id[command_id]
 		end
 	end
 
@@ -133,7 +127,7 @@ HudElementCommunicationCommandWheel.init = function(self, parent, draw_layer, st
 	self._cursor_reference = "HudElementCommunicationCommandWheel_" .. tostring(_communication_wheel_cursor_seq)
 
 	self._current_page = 1
-	self._max_pages = Pages and Pages.get_max_pages and Pages.get_max_pages() or 1
+	self._max_pages = MAX_WHEEL_PAGES
 
 	local wheel_slots = CommunicationCommandWheelSettings.wheel_slots
 
@@ -173,6 +167,13 @@ HudElementCommunicationCommandWheel._sync_page_indicators = function(self)
 			end
 		end
 	end
+end
+
+HudElementCommunicationCommandWheel._refresh_wheel_layout_from_settings = function(self)
+	local options = generate_options_from_page(self._current_page)
+
+	self:_populate_wheel(options)
+	self:_sync_page_indicators()
 end
 
 HudElementCommunicationCommandWheel._setup_entries = function(self, num_entries)

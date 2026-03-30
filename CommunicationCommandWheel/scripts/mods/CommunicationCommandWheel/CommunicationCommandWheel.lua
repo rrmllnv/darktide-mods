@@ -160,5 +160,11 @@ end)
 mod.on_setting_changed = function(setting_id)
 	if setting_id == "open_communication_command_wheel_key" then
 		mod._communication_wheel_eval_func = nil
+	elseif string.match(setting_id, "^page_%d+_slot_%d+$") then
+		local element = mod._communication_wheel_element
+
+		if element and element._refresh_wheel_layout_from_settings then
+			element:_refresh_wheel_layout_from_settings()
+		end
 	end
 end
