@@ -102,6 +102,44 @@ local function generate_options_from_page(current_page)
 	return options
 end
 
+local function page_has_any_filled_slot(page_index)
+	local wheel_slots = CommunicationCommandWheelSettings.wheel_slots
+	local max_slot = math.min(wheel_slots, CONFIGURED_SLOT_COUNT)
+
+	for slot_index = 1, max_slot do
+		local raw = mod:get(page_slot_setting_id(page_index, slot_index))
+		local command_id = type(raw) == "string" and raw or ""
+
+		if command_id ~= "" and button_definitions_by_id and button_definitions_by_id[command_id] then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function build_visible_page_numbers()
+	local list = {}
+
+	for page_index = 1, MAX_WHEEL_PAGES do
+		if page_has_any_filled_slot(page_index) then
+			list[#list + 1] = page_index
+		end
+	end
+
+	return list
+end
+
+local function visible_pages_contains(visible_pages, page_num)
+	for i = 1, #visible_pages do
+		if visible_pages[i] == page_num then
+			return true
+		end
+	end
+
+	return false
+end
+
 local _communication_wheel_cursor_seq = 0
 
 local HudElementCommunicationCommandWheel = class("HudElementCommunicationCommandWheel", "HudElementBase")
@@ -128,10 +166,12 @@ HudElementCommunicationCommandWheel.init = function(self, parent, draw_layer, st
 
 	self._current_page = 1
 	self._max_pages = MAX_WHEEL_PAGES
+	self._visible_pages = {}
 
 	local wheel_slots = CommunicationCommandWheelSettings.wheel_slots
 
 	self:_setup_entries(wheel_slots)
+	self:_ensure_current_page_visible()
 
 	local options = generate_options_from_page(self._current_page)
 
@@ -141,6 +181,24 @@ HudElementCommunicationCommandWheel.init = function(self, parent, draw_layer, st
 	self._page_indicators_widget = self._widgets_by_name.page_indicators
 
 	self:_sync_page_indicators()
+end
+
+HudElementCommunicationCommandWheel._rebuild_visible_pages = function(self)
+	self._visible_pages = build_visible_page_numbers()
+end
+
+HudElementCommunicationCommandWheel._ensure_current_page_visible = function(self)
+	self:_rebuild_visible_pages()
+
+	local visible = self._visible_pages or {}
+
+	if #visible > 0 then
+		if not visible_pages_contains(visible, self._current_page) then
+			self._current_page = visible[1]
+		end
+	else
+		self._current_page = 1
+	end
 end
 
 HudElementCommunicationCommandWheel._sync_page_indicators = function(self)
@@ -170,6 +228,8 @@ HudElementCommunicationCommandWheel._sync_page_indicators = function(self)
 end
 
 HudElementCommunicationCommandWheel._refresh_wheel_layout_from_settings = function(self)
+	self:_ensure_current_page_visible()
+
 	local options = generate_options_from_page(self._current_page)
 
 	self:_populate_wheel(options)
@@ -240,13 +300,31 @@ end
 HudElementCommunicationCommandWheel.switch_page = function(self, direction)
 	direction = direction or 1
 
-	self._current_page = self._current_page + direction
+	local visible = self._visible_pages or {}
 
-	if self._current_page > self._max_pages then
-		self._current_page = 1
-	elseif self._current_page < 1 then
-		self._current_page = self._max_pages
+	if #visible <= 1 then
+		return
 	end
+
+	local idx = 1
+
+	for i = 1, #visible do
+		if visible[i] == self._current_page then
+			idx = i
+
+			break
+		end
+	end
+
+	idx = idx + direction
+
+	if idx > #visible then
+		idx = 1
+	elseif idx < 1 then
+		idx = #visible
+	end
+
+	self._current_page = visible[idx]
 
 	local options = generate_options_from_page(self._current_page)
 
@@ -458,7 +536,9 @@ HudElementCommunicationCommandWheel._update_wheel_presentation = function(self, 
 	local distance_to_center = math.distance_2d(center_x, center_y, cursor[1], cursor[2])
 	local center_button_hover = distance_to_center <= center_radius * scale
 
-	self._center_switch_zone_hovered = center_button_hover
+	local visible_pages = self._visible_pages or {}
+
+	self._center_switch_zone_hovered = center_button_hover and #visible_pages > 1
 
 	local wheel_background_widget = self._wheel_background_widget
 
@@ -480,8 +560,10 @@ HudElementCommunicationCommandWheel._update_wheel_presentation = function(self, 
 					Managers.ui:play_2d_sound(UISoundEvents.emote_wheel_entry_hover)
 				end
 			end
-		elseif center_button_hover then
+		elseif center_button_hover and #visible_pages > 1 then
 			wheel_background_widget.content.text = localize_text("loc_page_switch")
+		elseif not any_hover then
+			wheel_background_widget.content.text = ""
 		end
 	end
 end
@@ -586,9 +668,12 @@ HudElementCommunicationCommandWheel._handle_input = function(self, t, dt, ui_ren
 		self._controller_stick_moved = false
 		self:_reset_hover_state()
 
+		self:_ensure_current_page_visible()
+
 		local options = generate_options_from_page(self._current_page)
 
 		self:_populate_wheel(options)
+		self:_sync_page_indicators()
 
 		if UISoundEvents.emote_wheel_open then
 			Managers.ui:play_2d_sound(UISoundEvents.emote_wheel_open)
