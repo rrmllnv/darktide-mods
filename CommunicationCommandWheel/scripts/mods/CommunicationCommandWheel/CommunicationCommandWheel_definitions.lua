@@ -122,6 +122,9 @@ local button_pass_template = {
 
 			ColorUtilities.color_lerp(icon_default_color, icon_hover_color, anim_hover_progress, color, ignore_alpha)
 		end,
+		visibility_function = function (content, style)
+			return false
+		end,
 	},
 	{
 		pass_type = "rotated_texture",
@@ -231,15 +234,21 @@ local button_pass_template = {
 		value = "Button",
 		value_id = "text",
 		style = {
+			horizontal_alignment = "center",
+			vertical_alignment = "center",
 			text_horizontal_alignment = "center",
 			text_vertical_alignment = "center",
+			size = {
+				96,
+				96,
+			},
 			offset = {
 				0,
 				0,
-				2,
+				8,
 			},
 			font_type = simple_button_font_settings.font_type,
-			font_size = simple_button_font_settings.font_size,
+			font_size = 16,
 			text_color = simple_button_font_color,
 			default_text_color = simple_button_font_color,
 		},

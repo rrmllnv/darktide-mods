@@ -78,63 +78,6 @@ local function communication_wheel_apply_icon_style_size(widget, option)
 	end
 end
 
-local EMOTE_SLOT_IDS = {
-	"slot_animation_emote_1",
-	"slot_animation_emote_2",
-	"slot_animation_emote_3",
-	"slot_animation_emote_4",
-	"slot_animation_emote_5",
-}
-
-local EMOTE_ICON_EMPTY_TEXTURE = "content/ui/textures/icons/emotes/empty"
-local UI_DEFAULT_BASE_MATERIAL = "content/ui/materials/base/ui_default_base"
-
-local function communication_wheel_apply_entry_icon(self, widget, option, wheel_slot_index)
-	local content = widget.content
-	local icon_style = widget.style and widget.style.icon
-
-	if not icon_style then
-		return
-	end
-
-	local mv = icon_style.material_values
-
-	if not mv then
-		icon_style.material_values = {}
-		mv = icon_style.material_values
-	end
-
-	if self._current_page == 2 then
-		local emote_index = ((wheel_slot_index - 1) % #EMOTE_SLOT_IDS) + 1
-		local slot_id = EMOTE_SLOT_IDS[emote_index]
-		local texture_map = EMOTE_ICON_EMPTY_TEXTURE
-		local use_placeholder_texture = 1
-		local parent = self._parent
-
-		if parent and parent.player then
-			local player = parent:player()
-			local profile = player and player:profile()
-			local loadout = profile and profile.loadout
-			local item = loadout and slot_id and loadout[slot_id]
-
-			if item and item.icon and item.icon ~= "" then
-				texture_map = item.icon
-				use_placeholder_texture = 0
-			end
-		end
-
-		content.icon = UI_DEFAULT_BASE_MATERIAL
-		mv.texture_map = texture_map
-		mv.use_placeholder_texture = use_placeholder_texture
-	else
-		local icon_path = option.icon or "content/ui/materials/base/ui_default_base"
-
-		content.icon = icon_path
-		mv.texture_map = nil
-		mv.use_placeholder_texture = nil
-	end
-end
-
 local function generate_options_from_page(current_page)
 	local options = {}
 
@@ -273,7 +216,17 @@ HudElementCommunicationCommandWheel._populate_wheel = function(self, options)
 			entry.option = option
 
 			if option then
-				communication_wheel_apply_entry_icon(self, widget, option, i)
+				local icon_path = option.icon or "content/ui/materials/base/ui_default_base"
+
+				content.icon = icon_path
+
+				local icon_style = widget.style and widget.style.icon
+
+				if icon_style and icon_style.material_values then
+					icon_style.material_values.texture_map = nil
+					icon_style.material_values.use_placeholder_texture = nil
+				end
+
 				content.text = localize_text(option.label_key)
 				communication_wheel_apply_icon_style_size(widget, option)
 				widget.dirty = true
