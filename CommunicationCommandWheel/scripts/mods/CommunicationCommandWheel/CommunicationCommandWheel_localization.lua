@@ -147,6 +147,10 @@ return {
 		en = "Attention,\n Daemonhost",
 		ru = "Внимание,\n Демонхост",
 	},
+	ccw_command_enemy_ahead = {
+		en = "Enemy ahead",
+		ru = "Враг впереди",
+	},
 	ccw_command_daemonhost_alert = {
 		en = "Attention, Daemonhost",
 		ru = "Внимание, Демонхост",

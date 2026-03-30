@@ -27,7 +27,7 @@ return {
 			"away_from_squad",
 			"back",
 			"hold_position",
-			"",
+			"enemy_ahead",
 			"",
 			"",
 			"",

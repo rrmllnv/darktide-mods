@@ -27,7 +27,7 @@ local Utils = require("CommunicationCommandWheel/scripts/mods/CommunicationComma
 local Pages = require("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_pages")
 local Buttons = require("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_buttons")
 
-local PAGE3_LAYOUT_MIGRATION_VERSION = 3
+local PAGE3_LAYOUT_MIGRATION_VERSION = 4
 
 local function migrate_page3_slots_from_defaults_once()
 	if mod:get("_ccw_layout_migration_v") == PAGE3_LAYOUT_MIGRATION_VERSION then

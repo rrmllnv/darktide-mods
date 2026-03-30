@@ -104,6 +104,19 @@ local button_definitions = {
 		},
 	},
 	{
+		id = "enemy_ahead",
+		label_key = "ccw_command_enemy_ahead",
+		icon = "content/ui/materials/hud/communication_wheel/icons/enemy",
+		voice_event_data = {
+			voice_tag_concept = VOQueryConstants.concepts.on_demand_com_wheel,
+			voice_tag_id = VOQueryConstants.trigger_ids.com_wheel_vo_enemy_over_here,
+		},
+		chat_message_data = {
+			text = "ccw_command_enemy_ahead",
+			channel = ChannelTags.MISSION,
+		},
+	},
+	{
 		id = "follow_you",
 		label_key = "ccw_command_follow_you",
 		icon = "content/ui/materials/hud/interactions/icons/location",

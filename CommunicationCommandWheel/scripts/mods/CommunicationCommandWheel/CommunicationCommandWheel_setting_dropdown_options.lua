@@ -38,6 +38,10 @@ return {
 		value = "daemonhost",
 	},
 	{
+		text = "ccw_command_enemy_ahead",
+		value = "enemy_ahead",
+	},
+	{
 		text = "ccw_command_follow_you",
 		value = "follow_you",
 	},
