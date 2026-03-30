@@ -732,7 +732,7 @@ HudElementCommunicationCommandWheel.destroy = function(self, ui_renderer)
 end
 
 HudElementCommunicationCommandWheel.using_input = function(self)
-	return self._wheel_active
+	return false
 end
 
 HudElementCommunicationCommandWheel._push_cursor = function(self)
