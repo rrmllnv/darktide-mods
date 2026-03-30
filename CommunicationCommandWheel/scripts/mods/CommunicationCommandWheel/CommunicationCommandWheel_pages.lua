@@ -23,9 +23,9 @@ return {
 			"wait",
 		},
 		[3] = {
-			"",
-			"",
-			"",
+			"almost_there",
+			"away_from_squad",
+			"back",
 			"",
 			"",
 			"",

@@ -104,32 +104,6 @@ local button_definitions = {
 		},
 	},
 	{
-		id = "almost_there",
-		label_key = "loc_command_almost_there",
-		icon = "content/ui/materials/hud/interactions/icons/location",
-		voice_event_data = {
-			voice_tag_concept = VOQueryConstants.concepts.generic_mission_vo,
-			voice_tag_id = "almost_there",
-		},
-		chat_message_data = {
-			text = "loc_command_almost_there",
-			channel = ChannelTags.MISSION,
-		},
-	},
-	{
-		id = "away_from_squad",
-		label_key = "loc_command_away_from_squad",
-		icon = "content/ui/materials/hud/interactions/icons/location",
-		voice_event_data = {
-			voice_tag_concept = VOQueryConstants.concepts.generic_mission_vo,
-			voice_tag_id = "away_from_squad",
-		},
-		chat_message_data = {
-			text = "loc_command_away_from_squad",
-			channel = ChannelTags.MISSION,
-		},
-	},
-	{
 		id = "follow_you",
 		label_key = "loc_command_follow_you",
 		icon = "content/ui/materials/hud/interactions/icons/location",
@@ -206,6 +180,32 @@ local button_definitions = {
 		},
 		chat_message_data = {
 			text = "loc_command_wait",
+			channel = ChannelTags.MISSION,
+		},
+	},
+	{
+		id = "almost_there",
+		label_key = "loc_command_almost_there",
+		icon = "content/ui/materials/hud/interactions/icons/location",
+		voice_event_data = {
+			voice_tag_concept = VOQueryConstants.concepts.generic_mission_vo,
+			voice_tag_id = "almost_there",
+		},
+		chat_message_data = {
+			text = "loc_command_almost_there",
+			channel = ChannelTags.MISSION,
+		},
+	},
+	{
+		id = "away_from_squad",
+		label_key = "loc_command_away_from_squad",
+		icon = "content/ui/materials/hud/interactions/icons/location",
+		voice_event_data = {
+			voice_tag_concept = VOQueryConstants.concepts.generic_mission_vo,
+			voice_tag_id = "away_from_squad",
+		},
+		chat_message_data = {
+			text = "loc_command_away_from_squad",
 			channel = ChannelTags.MISSION,
 		},
 	},

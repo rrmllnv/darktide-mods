@@ -25,6 +25,54 @@ end
 
 local Utils = require("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_utils")
 local Pages = require("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_pages")
+local Buttons = require("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_buttons")
+
+local PAGE3_LAYOUT_MIGRATION_VERSION = 2
+
+local function migrate_page3_slots_from_defaults_once()
+	if mod:get("_ccw_layout_migration_v") == PAGE3_LAYOUT_MIGRATION_VERSION then
+		return
+	end
+
+	local by_id = Buttons.button_definitions_by_id
+	local layout = Pages.DEFAULT_SLOT_LAYOUT
+	local row = layout and layout[3]
+
+	if type(row) ~= "table" or type(by_id) ~= "table" then
+		mod:set("_ccw_layout_migration_v", PAGE3_LAYOUT_MIGRATION_VERSION)
+
+		return
+	end
+
+	local configured_slots = Pages.CONFIGURED_SLOT_COUNT or 8
+	local any_slot_written = false
+
+	mod._ccw_suppress_wheel_refresh = true
+
+	for slot_index = 1, configured_slots do
+		local key = string.format("page_3_slot_%d", slot_index)
+		local cur = mod:get(key)
+		local cur_s = type(cur) == "string" and cur or ""
+		local cur_valid = cur_s ~= "" and by_id[cur_s] ~= nil
+		local want = row[slot_index]
+		local want_s = type(want) == "string" and want or ""
+
+		if not cur_valid and cur_s ~= want_s then
+			mod:set(key, want_s)
+			any_slot_written = true
+		end
+	end
+
+	mod._ccw_suppress_wheel_refresh = false
+
+	mod:set("_ccw_layout_migration_v", PAGE3_LAYOUT_MIGRATION_VERSION)
+
+	local element = mod._communication_wheel_element
+
+	if any_slot_written and element and element._refresh_wheel_layout_from_settings then
+		element:_refresh_wheel_layout_from_settings()
+	end
+end
 
 local hud_elements = {
 	{
@@ -208,3 +256,5 @@ mod.on_setting_changed = function(setting_id)
 		end
 	end
 end
+
+migrate_page3_slots_from_defaults_once()

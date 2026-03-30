@@ -38,14 +38,6 @@ return {
 		value = "daemonhost",
 	},
 	{
-		text = "ccw_opt_almost_there",
-		value = "almost_there",
-	},
-	{
-		text = "ccw_opt_away_from_squad",
-		value = "away_from_squad",
-	},
-	{
 		text = "ccw_opt_follow_you",
 		value = "follow_you",
 	},
@@ -76,6 +68,14 @@ return {
 	{
 		text = "ccw_opt_wait",
 		value = "wait",
+	},
+	{
+		text = "ccw_opt_almost_there",
+		value = "almost_there",
+	},
+	{
+		text = "ccw_opt_away_from_squad",
+		value = "away_from_squad",
 	},
 	{
 		text = "ccw_opt_back",
