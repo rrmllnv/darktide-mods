@@ -24,6 +24,7 @@ if CommunicationCommandWheel_localization and type(CommunicationCommandWheel_loc
 end
 
 local Utils = require("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_utils")
+local Pages = require("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_pages")
 
 local hud_elements = {
 	{
@@ -37,6 +38,7 @@ local hud_elements = {
 }
 
 mod._communication_wheel_element = nil
+mod._ccw_suppress_wheel_refresh = false
 
 mod.get_communication_wheel_element = function(self)
 	return mod._communication_wheel_element
@@ -160,7 +162,45 @@ end)
 mod.on_setting_changed = function(setting_id)
 	if setting_id == "open_communication_command_wheel_key" then
 		mod._communication_wheel_eval_func = nil
+	elseif setting_id == "reset_slot_commands" then
+		if mod:get("reset_slot_commands") == 1 then
+			mod:notify(mod:localize("reset_slot_commands"))
+			mod:set("reset_slot_commands", 0)
+
+			local layout = Pages.DEFAULT_SLOT_LAYOUT
+			local max_pages = Pages.MAX_PAGES or 3
+			local configured_slots = Pages.CONFIGURED_SLOT_COUNT or 8
+
+			mod._ccw_suppress_wheel_refresh = true
+
+			if type(layout) == "table" then
+				for page_index = 1, max_pages do
+					local row = layout[page_index]
+
+					if type(row) == "table" then
+						for slot_index = 1, configured_slots do
+							local value = row[slot_index]
+							local stored = type(value) == "string" and value or ""
+
+							mod:set(string.format("page_%d_slot_%d", page_index, slot_index), stored)
+						end
+					end
+				end
+			end
+
+			mod._ccw_suppress_wheel_refresh = false
+
+			local element = mod._communication_wheel_element
+
+			if element and element._refresh_wheel_layout_from_settings then
+				element:_refresh_wheel_layout_from_settings()
+			end
+		end
 	elseif string.match(setting_id, "^page_%d+_slot_%d+$") then
+		if mod._ccw_suppress_wheel_refresh then
+			return
+		end
+
 		local element = mod._communication_wheel_element
 
 		if element and element._refresh_wheel_layout_from_settings then

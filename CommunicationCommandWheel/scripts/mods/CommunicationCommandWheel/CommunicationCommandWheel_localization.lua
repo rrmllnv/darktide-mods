@@ -11,6 +11,18 @@ return {
 		en = "Communication wheel",
 		ru = "Колесо коммуникации",
 	},
+	ccw_settings_group = {
+		en = "Settings",
+		ru = "Настройки",
+	},
+	reset_slot_commands = {
+		en = "Reset commands to defaults",
+		ru = "Сбросить команды к умолчанию",
+	},
+	reset_slot_commands_description = {
+		en = "Restores the built-in command layout for all pages and slots. Keybind and hold delay are unchanged.",
+		ru = "Восстанавливает встроенную раскладку команд для всех страниц и слотов. Клавиша открытия и задержка удержания не меняются.",
+	},
 	ccw_command_none = {
 		en = "— Empty —",
 		ru = "— Пусто —",

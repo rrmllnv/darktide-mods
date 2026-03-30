@@ -5,6 +5,11 @@ local command_dropdown_options = mod:io_dofile("CommunicationCommandWheel/script
 
 local NUM_PAGES = PageInfo and PageInfo.MAX_PAGES or 3
 local NUM_SLOTS = PageInfo and PageInfo.CONFIGURED_SLOT_COUNT or 8
+local DEFAULT_SLOT_LAYOUT = PageInfo and PageInfo.DEFAULT_SLOT_LAYOUT
+
+if type(DEFAULT_SLOT_LAYOUT) ~= "table" then
+	DEFAULT_SLOT_LAYOUT = {}
+end
 
 if not command_dropdown_options or type(command_dropdown_options) ~= "table" then
 	command_dropdown_options = {
@@ -61,39 +66,6 @@ local hold_delay_options = {
 	},
 }
 
-local DEFAULT_SLOT_LAYOUT = {
-	[1] = {
-		"yes",
-		"please",
-		"sorry",
-		"need_help",
-		"no",
-		"take_this",
-		"i_need_this",
-		"daemonhost",
-	},
-	[2] = {
-		"follow_you",
-		"follow_me",
-		"cover_me",
-		"coming_to_you",
-		"waiting_for_you",
-		"dont_fall_behind",
-		"faster",
-		"wait",
-	},
-	[3] = {
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-	},
-}
-
 local function build_slot_widgets(page_index)
 	local sub_widgets = {}
 
@@ -101,7 +73,7 @@ local function build_slot_widgets(page_index)
 		sub_widgets[#sub_widgets + 1] = {
 			setting_id = string.format("page_%d_slot_%d", page_index, slot_index),
 			type = "dropdown",
-			default_value = DEFAULT_SLOT_LAYOUT[page_index][slot_index],
+			default_value = (DEFAULT_SLOT_LAYOUT[page_index] and DEFAULT_SLOT_LAYOUT[page_index][slot_index]) or "",
 			title = "ccw_slot_" .. slot_index,
 			options = copy_dropdown_options_template(command_dropdown_options),
 		}
@@ -152,6 +124,29 @@ local widgets = {
 for i = 1, #page_widget_groups do
 	widgets[#widgets + 1] = page_widget_groups[i]
 end
+
+widgets[#widgets + 1] = {
+	setting_id = "ccw_settings_group",
+	type = "group",
+	title = "ccw_settings_group",
+	sub_widgets = {
+		{
+			setting_id = "reset_slot_commands",
+			type = "dropdown",
+			default_value = 0,
+			options = {
+				{
+					text = "",
+					value = 0,
+				},
+				{
+					text = "reset_slot_commands",
+					value = 1,
+				},
+			},
+		},
+	},
+}
 
 return {
 	name = mod:localize("mod_name"),

@@ -1,4 +1,36 @@
 return {
 	MAX_PAGES = 3,
 	CONFIGURED_SLOT_COUNT = 8,
+	DEFAULT_SLOT_LAYOUT = {
+		[1] = {
+			"yes",
+			"please",
+			"sorry",
+			"need_help",
+			"no",
+			"take_this",
+			"i_need_this",
+			"daemonhost",
+		},
+		[2] = {
+			"follow_you",
+			"follow_me",
+			"cover_me",
+			"coming_to_you",
+			"waiting_for_you",
+			"dont_fall_behind",
+			"faster",
+			"wait",
+		},
+		[3] = {
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+		},
+	},
 }
