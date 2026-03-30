@@ -4,10 +4,10 @@ local PAGE_CONFIGS = {
 		name_key = "loc_page_1",
 		commands = {
 			"yes",
-			"no",
 			"please",
 			"sorry",
 			"need_help",
+			"no",
 			"take_this",
 			"i_need_this",
 			"daemonhost",
