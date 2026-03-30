@@ -58,12 +58,12 @@ local scenegraph_definition = {
 		parent = "pivot",
 		vertical_alignment = "top",
 		size = {
-			200,
-			40,
+			2 * S.page_indicator_size + S.page_indicator_spacing,
+			S.page_indicator_size,
 		},
 		position = {
 			0,
-			-250,
+			-300,
 			10,
 		},
 	},
@@ -268,143 +268,20 @@ wheel_font_style.offset = {
 	4,
 }
 
-local center_page_button_definition = UIWidget.create_definition({
-	{
-		content_id = "hotspot",
-		pass_type = "hotspot",
-		content = default_button_content,
-	},
-	{
-		pass_type = "texture",
-		value = "content/ui/materials/hud/communication_wheel/middle_circle",
-		style_id = "background",
-		style = {
-			horizontal_alignment = "center",
-			vertical_alignment = "center",
-			size = {
-				120,
-				120,
-			},
-			offset = {
-				0,
-				0,
-				1,
-			},
-			color = {
-				0,
-				50,
-				50,
-				50,
-			},
-		},
-		change_function = function (content, style)
-			local hotspot = content.hotspot
-			local anim_hover_progress = hotspot.anim_hover_progress
-			local color = style.color
-			local default_c = {
-				0,
-				50,
-				50,
-				50,
-			}
-			local hover_c = {
-				255,
-				100,
-				100,
-				100,
-			}
-
-			ColorUtilities.color_lerp(default_c, hover_c, anim_hover_progress, color, false)
-		end,
-	},
-	{
-		pass_type = "text",
-		value_id = "page_text",
-		value = "1/2",
-		style_id = "page_text",
-		style = {
-			font_type = simple_button_font_settings.font_type,
-			font_size = 24,
-			text_horizontal_alignment = "center",
-			text_vertical_alignment = "center",
-			offset = {
-				0,
-				0,
-				10,
-			},
-			text_color = {
-				255,
-				255,
-				255,
-				255,
-			},
-			default_text_color = {
-				255,
-				255,
-				255,
-				255,
-			},
-			hover_text_color = {
-				255,
-				255,
-				255,
-				255,
-			},
-			hover_color = {
-				255,
-				255,
-				255,
-				255,
-			},
-		},
-		change_function = function (content, style)
-			local text_color = style.text_color
-
-			text_color[1] = 255
-			text_color[2] = 255
-			text_color[3] = 255
-
-			local any_hover = content.force_hover or false
-			local hotspot = content.hotspot
-			local button_hover_progress = hotspot and hotspot.anim_hover_progress or 0
-
-			if button_hover_progress > 0 then
-				text_color[4] = 255
-			else
-				text_color[4] = any_hover and 0 or 255
-			end
-		end,
-	},
-}, "background")
-
 local page_indicators_definition = UIWidget.create_definition({
-	{
-		pass_type = "rect",
-		style_id = "background",
-		style = {
-			size = {
-				200,
-				40,
-			},
-			color = {
-				50,
-				0,
-				0,
-				0,
-			},
-		},
-	},
 	{
 		pass_type = "rect",
 		value_id = "page_1",
 		style_id = "page_1",
 		style = {
+			horizontal_alignment = "left",
+			vertical_alignment = "center",
 			size = {
 				S.page_indicator_size,
 				S.page_indicator_size,
 			},
 			offset = {
-				-S.page_indicator_size - S.page_indicator_spacing,
+				0,
 				0,
 				2,
 			},
@@ -421,12 +298,14 @@ local page_indicators_definition = UIWidget.create_definition({
 		value_id = "page_2",
 		style_id = "page_2",
 		style = {
+			horizontal_alignment = "left",
+			vertical_alignment = "center",
 			size = {
 				S.page_indicator_size,
 				S.page_indicator_size,
 			},
 			offset = {
-				0,
+				S.page_indicator_size + S.page_indicator_spacing,
 				0,
 				2,
 			},
@@ -483,23 +362,18 @@ local widget_definitions = {
 			pass_type = "texture",
 			value = "content/ui/materials/hud/communication_wheel/middle_circle",
 			style = {
-				horizontal_alignment = "center",
-				vertical_alignment = "center",
-				size = {
-					S.center_circle_size,
-					S.center_circle_size,
-				},
 				offset = {
 					0,
 					0,
-					100,
+					0,
 				},
-				color = S.background_color,
+				color = {
+					255,
+					0,
+					0,
+					0,
+				},
 			},
-			change_function = function (content, style)
-				style.size[1] = S.center_circle_size
-				style.size[2] = S.center_circle_size
-			end,
 		},
 		{
 			pass_type = "rotated_texture",
@@ -543,7 +417,6 @@ local widget_definitions = {
 			end,
 		},
 	}, "background"),
-	center_page_button = center_page_button_definition,
 	page_indicators = page_indicators_definition,
 }
 

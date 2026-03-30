@@ -17,19 +17,6 @@ local button_definitions = {
 		},
 	},
 	{
-		id = "no",
-		label_key = "loc_command_no",
-		icon = "content/ui/materials/icons/list_buttons/cross",
-		voice_event_data = {
-			voice_tag_concept = VOQueryConstants.concepts.on_demand_com_wheel,
-			voice_tag_id = VOQueryConstants.trigger_ids.com_wheel_vo_no,
-		},
-		chat_message_data = {
-			text = "loc_command_no",
-			channel = ChannelTags.MISSION,
-		},
-	},
-	{
 		id = "please",
 		label_key = "loc_command_please",
 		icon = "content/ui/materials/hud/icons/speaker",
@@ -61,6 +48,19 @@ local button_definitions = {
 		},
 		chat_message_data = {
 			text = "loc_command_need_help",
+			channel = ChannelTags.MISSION,
+		},
+	},
+	{
+		id = "no",
+		label_key = "loc_command_no",
+		icon = "content/ui/materials/icons/list_buttons/cross",
+		voice_event_data = {
+			voice_tag_concept = VOQueryConstants.concepts.on_demand_com_wheel,
+			voice_tag_id = VOQueryConstants.trigger_ids.com_wheel_vo_no,
+		},
+		chat_message_data = {
+			text = "loc_command_no",
 			channel = ChannelTags.MISSION,
 		},
 	},

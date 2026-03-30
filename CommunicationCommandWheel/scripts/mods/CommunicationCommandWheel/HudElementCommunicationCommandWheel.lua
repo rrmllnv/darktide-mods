@@ -126,6 +126,7 @@ HudElementCommunicationCommandWheel.init = function(self, parent, draw_layer, st
 	self._close_delay = nil
 	self._controller_stick_moved = false
 	self._cursor_pushed = false
+	self._center_switch_zone_hovered = false
 
 	_communication_wheel_cursor_seq = _communication_wheel_cursor_seq + 1
 	self._cursor_reference = "HudElementCommunicationCommandWheel_" .. tostring(_communication_wheel_cursor_seq)
@@ -142,13 +143,12 @@ HudElementCommunicationCommandWheel.init = function(self, parent, draw_layer, st
 	self:_populate_wheel(options)
 
 	self._wheel_background_widget = self._widgets_by_name.wheel_background
-	self._center_page_button_widget = self._widgets_by_name.center_page_button
 	self._page_indicators_widget = self._widgets_by_name.page_indicators
 
-	self:_sync_page_indicators_and_center_text()
+	self:_sync_page_indicators()
 end
 
-HudElementCommunicationCommandWheel._sync_page_indicators_and_center_text = function(self)
+HudElementCommunicationCommandWheel._sync_page_indicators = function(self)
 	if self._page_indicators_widget then
 		for i = 1, self._max_pages do
 			local style = self._page_indicators_widget.style["page_" .. i]
@@ -171,10 +171,6 @@ HudElementCommunicationCommandWheel._sync_page_indicators_and_center_text = func
 				end
 			end
 		end
-	end
-
-	if self._center_page_button_widget then
-		self._center_page_button_widget.content.page_text = string.format("%d/%d", self._current_page, self._max_pages)
 	end
 end
 
@@ -245,7 +241,7 @@ HudElementCommunicationCommandWheel.switch_page = function(self, direction)
 	local options = generate_options_from_page(self._current_page)
 
 	self:_populate_wheel(options)
-	self:_sync_page_indicators_and_center_text()
+	self:_sync_page_indicators()
 
 	if UISoundEvents.emote_wheel_open then
 		Managers.ui:play_2d_sound(UISoundEvents.emote_wheel_open)
@@ -266,10 +262,7 @@ HudElementCommunicationCommandWheel._reset_hover_state = function(self)
 		self._wheel_background_widget.style.mark.color[1] = 0
 	end
 
-	if self._center_page_button_widget then
-		self._center_page_button_widget.content.hotspot.force_hover = false
-		self._center_page_button_widget.content.force_hover = false
-	end
+	self._center_switch_zone_hovered = false
 
 	self._last_widget_hover_data.index = nil
 	self._last_widget_hover_data.t = nil
@@ -293,33 +286,6 @@ HudElementCommunicationCommandWheel.update = function(self, dt, t, ui_renderer, 
 
 	if self._wheel_active then
 		self:_update_wheel_presentation(dt, t, ui_renderer, render_settings, input_service)
-
-		if self._center_page_button_widget then
-			local any_hover = false
-			local entries = self._entries
-
-			if entries then
-				for i = 1, #entries do
-					local entry = entries[i]
-
-					if entry and entry.widget then
-						local widget = entry.widget
-
-						if widget.content and widget.content.hotspot and widget.content.hotspot.is_hover then
-							any_hover = true
-
-							break
-						end
-					end
-				end
-			end
-
-			if not any_hover then
-				any_hover = self._center_page_button_widget.content.force_hover or false
-			end
-
-			self._center_page_button_widget.content.force_hover = any_hover
-		end
 	end
 
 	self:_handle_input(t, dt, ui_renderer, render_settings, input_service)
@@ -342,10 +308,6 @@ HudElementCommunicationCommandWheel._update_active_progress = function(self, dt)
 
 	if wheel_background_widget then
 		wheel_background_widget.visible = progress > 0
-	end
-
-	if self._center_page_button_widget then
-		self._center_page_button_widget.visible = progress > 0
 	end
 
 	if self._page_indicators_widget then
@@ -391,6 +353,8 @@ HudElementCommunicationCommandWheel._update_widget_locations = function(self)
 end
 
 HudElementCommunicationCommandWheel._update_wheel_presentation = function(self, dt, t, ui_renderer, render_settings, input_service)
+	self._center_switch_zone_hovered = false
+
 	if not input_service or type(input_service.has) ~= "function" then
 		return
 	end
@@ -466,18 +430,13 @@ HudElementCommunicationCommandWheel._update_wheel_presentation = function(self, 
 		widget.content.hotspot.force_hover = is_hover
 	end
 
-	local center_button_hover = false
+	local center_x = screen_width * 0.5
+	local center_y = screen_height * 0.5
+	local center_radius = 60
+	local distance_to_center = math.distance_2d(center_x, center_y, cursor[1], cursor[2])
+	local center_button_hover = distance_to_center <= center_radius * scale
 
-	if self._center_page_button_widget then
-		local center_x = screen_width * 0.5
-		local center_y = screen_height * 0.5
-		local center_radius = 60
-		local distance = math.distance_2d(center_x, center_y, cursor[1], cursor[2])
-
-		center_button_hover = distance <= center_radius * scale
-		self._center_page_button_widget.content.hotspot.force_hover = center_button_hover
-		self._center_page_button_widget.content.force_hover = any_hover
-	end
+	self._center_switch_zone_hovered = center_button_hover
 
 	local wheel_background_widget = self._wheel_background_widget
 
@@ -536,12 +495,8 @@ HudElementCommunicationCommandWheel._is_wheel_entry_hovered = function(self, t)
 	end
 end
 
-HudElementCommunicationCommandWheel._is_center_button_hotspot_active = function(self)
-	if not self._center_page_button_widget then
-		return false
-	end
-
-	return self._center_page_button_widget.content.hotspot.force_hover
+HudElementCommunicationCommandWheel._is_center_switch_zone_active = function(self)
+	return self._center_switch_zone_hovered == true
 end
 
 HudElementCommunicationCommandWheel._handle_input = function(self, t, dt, ui_renderer, render_settings, input_service)
@@ -655,7 +610,7 @@ HudElementCommunicationCommandWheel._handle_input = function(self, t, dt, ui_ren
 	end
 
 	if not right_mouse_held and input_service and type(input_service.has) == "function" then
-		if self:_is_center_button_hotspot_active() then
+		if self:_is_center_switch_zone_active() then
 			local center_activate = false
 
 			if input_service:has("left_pressed") and input_service:get("left_pressed") then
