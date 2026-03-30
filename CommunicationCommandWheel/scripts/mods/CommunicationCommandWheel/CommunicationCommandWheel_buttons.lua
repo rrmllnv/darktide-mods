@@ -117,6 +117,15 @@ local button_definitions = {
 		},
 	},
 	{
+		id = "dont_shoot_poxbuster",
+		label_key = "ccw_command_dont_shoot_poxbuster",
+		icon = "content/ui/materials/hud/interactions/icons/enemy",
+		chat_message_data = {
+			text = "ccw_command_dont_shoot_poxbuster",
+			channel = ChannelTags.MISSION,
+		},
+	},
+	{
 		id = "follow_you",
 		label_key = "ccw_command_follow_you",
 		icon = "content/ui/materials/hud/interactions/icons/location",
@@ -202,6 +211,24 @@ local button_definitions = {
 		icon = "content/ui/materials/hud/interactions/icons/attention",
 		chat_message_data = {
 			text = "ccw_command_hold_position",
+			channel = ChannelTags.MISSION,
+		},
+	},
+	{
+		id = "hold_exit",
+		label_key = "ccw_command_hold_exit",
+		icon = "content/ui/materials/hud/interactions/icons/attention",
+		chat_message_data = {
+			text = "ccw_command_hold_exit",
+			channel = ChannelTags.MISSION,
+		},
+	},
+	{
+		id = "dont_split_up",
+		label_key = "ccw_command_dont_split_up",
+		icon = "content/ui/materials/hud/icons/party_cohesion",
+		chat_message_data = {
+			text = "ccw_command_dont_split_up",
 			channel = ChannelTags.MISSION,
 		},
 	},

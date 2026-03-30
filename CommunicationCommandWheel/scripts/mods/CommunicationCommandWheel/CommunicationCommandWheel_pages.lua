@@ -28,9 +28,9 @@ return {
 			"back",
 			"hold_position",
 			"enemy_ahead",
-			"",
-			"",
-			"",
+			"hold_exit",
+			"dont_split_up",
+			"dont_shoot_poxbuster",
 		},
 	},
 }

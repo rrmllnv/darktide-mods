@@ -151,6 +151,10 @@ return {
 		en = "Enemy ahead",
 		ru = "Враг впереди",
 	},
+	ccw_command_dont_shoot_poxbuster = {
+		en = "Don't shoot the Poxburster",
+		ru = "Не стреляй по poxbuster",
+	},
 	ccw_command_daemonhost_alert = {
 		en = "Attention, Daemonhost",
 		ru = "Внимание, Демонхост",
@@ -198,6 +202,14 @@ return {
 	ccw_command_hold_position = {
 		en = "Hold this position",
 		ru = "Удерживайте позицию",
+	},
+	ccw_command_hold_exit = {
+		en = "Hold the exit",
+		ru = "Держим выход",
+	},
+	ccw_command_dont_split_up = {
+		en = "Don't split up",
+		ru = "Не разбегаемся",
 	},
 	ccw_command_back = {
 		en = "Back",

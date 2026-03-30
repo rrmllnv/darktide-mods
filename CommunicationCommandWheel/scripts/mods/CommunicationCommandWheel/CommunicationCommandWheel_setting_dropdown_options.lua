@@ -42,6 +42,10 @@ return {
 		value = "enemy_ahead",
 	},
 	{
+		text = "ccw_command_dont_shoot_poxbuster",
+		value = "dont_shoot_poxbuster",
+	},
+	{
 		text = "ccw_command_follow_you",
 		value = "follow_you",
 	},
@@ -76,6 +80,14 @@ return {
 	{
 		text = "ccw_command_hold_position",
 		value = "hold_position",
+	},
+	{
+		text = "ccw_command_hold_exit",
+		value = "hold_exit",
+	},
+	{
+		text = "ccw_command_dont_split_up",
+		value = "dont_split_up",
 	},
 	{
 		text = "ccw_command_almost_there",
