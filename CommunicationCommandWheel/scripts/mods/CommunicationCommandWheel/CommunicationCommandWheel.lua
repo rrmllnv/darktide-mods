@@ -304,6 +304,12 @@ mod.on_setting_changed = function(setting_id)
 		mod._communication_wheel_eval_func = nil
 	elseif setting_id == "communication_command_wheel_switch_page_key" then
 		mod._switch_page_key_eval_func = nil
+	elseif setting_id == "ccw_scroll_switch_page" then
+		local element = mod._communication_wheel_element
+
+		if element and element._ccw_sync_wield_scroll_input_capture then
+			element:_ccw_sync_wield_scroll_input_capture()
+		end
 	elseif setting_id == "reset_slot_commands" then
 		if mod:get("reset_slot_commands") == 1 then
 			mod:notify(mod:localize("ccw_reset_slot_commands"))

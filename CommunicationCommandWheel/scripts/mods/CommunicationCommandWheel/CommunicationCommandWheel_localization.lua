@@ -92,8 +92,8 @@ return {
 		ru = "Колёсико переключает страницы",
 	},
 	ccw_scroll_switch_page_tooltip = {
-		en = "When the wheel is open, scroll anywhere to change pages (no need to aim at the center).",
-		ru = "Пока колесо открыто, крутите колёсико в любом месте — смена страницы (центр не нужен).",
+		en = "When the wheel is open and more than one page has commands, scroll changes pages and weapon switch on the mouse wheel is blocked (same mechanism as the tactical overlay).",
+		ru = "Пока колесо открыто и больше одной страницы с командами, прокрутка меняет страницы, а смена оружия колёсиком блокируется (как в тактическом оверлее).",
 	},
 	ccw_open_hold_delay = {
 		en = "Open hold delay",

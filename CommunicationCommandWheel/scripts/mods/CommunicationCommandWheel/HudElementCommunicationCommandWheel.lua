@@ -173,6 +173,7 @@ end
 
 local CONFIGURED_SLOT_COUNT = Pages and Pages.CONFIGURED_SLOT_COUNT or 8
 local MAX_WHEEL_PAGES = Pages and Pages.MAX_PAGES or 3
+local CCW_INGAME_INPUT_SERVICE = "Ingame"
 
 local function page_slot_setting_id(page_index, slot_index)
 	return string.format("page_%d_slot_%d", page_index, slot_index)
@@ -256,6 +257,7 @@ HudElementCommunicationCommandWheel.init = function(self, parent, draw_layer, st
 	self._ccw_page_scroll_cooldown_until = nil
 	self._ccw_last_mouse_wheel_z = nil
 	self._ccw_switch_page_key_prev_held = false
+	self._ccw_wield_scroll_reserved = false
 
 	_communication_wheel_cursor_seq = _communication_wheel_cursor_seq + 1
 	self._cursor_reference = "HudElementCommunicationCommandWheel_" .. tostring(_communication_wheel_cursor_seq)
@@ -330,6 +332,57 @@ HudElementCommunicationCommandWheel._refresh_wheel_layout_from_settings = functi
 
 	self:_populate_wheel(options)
 	self:_sync_page_indicators()
+
+	if self._wheel_active then
+		self:_ccw_sync_wield_scroll_input_capture()
+	end
+end
+
+HudElementCommunicationCommandWheel._ccw_wants_capture_wield_scroll = function(self)
+	local v = mod:get("ccw_scroll_switch_page")
+
+	if v ~= true and v ~= 1 then
+		return false
+	end
+
+	local visible = self._visible_pages or {}
+
+	return #visible > 1
+end
+
+HudElementCommunicationCommandWheel._ccw_clear_wield_scroll_input_capture = function(self)
+	if not self._ccw_wield_scroll_reserved then
+		return
+	end
+
+	local ui = Managers and Managers.ui
+
+	if ui and ui.remove_inputs_in_use_by_ui then
+		ui:remove_inputs_in_use_by_ui("wield_scroll_down", CCW_INGAME_INPUT_SERVICE)
+		ui:remove_inputs_in_use_by_ui("wield_scroll_up", CCW_INGAME_INPUT_SERVICE)
+	end
+
+	self._ccw_wield_scroll_reserved = false
+end
+
+HudElementCommunicationCommandWheel._ccw_sync_wield_scroll_input_capture = function(self)
+	local ui = Managers and Managers.ui
+
+	if not ui or not ui.add_inputs_in_use_by_ui or not ui.remove_inputs_in_use_by_ui then
+		return
+	end
+
+	local want = self:_ccw_wants_capture_wield_scroll()
+
+	if want and not self._ccw_wield_scroll_reserved then
+		ui:add_inputs_in_use_by_ui("wield_scroll_down", CCW_INGAME_INPUT_SERVICE)
+		ui:add_inputs_in_use_by_ui("wield_scroll_up", CCW_INGAME_INPUT_SERVICE)
+		self._ccw_wield_scroll_reserved = true
+	elseif not want and self._ccw_wield_scroll_reserved then
+		ui:remove_inputs_in_use_by_ui("wield_scroll_down", CCW_INGAME_INPUT_SERVICE)
+		ui:remove_inputs_in_use_by_ui("wield_scroll_up", CCW_INGAME_INPUT_SERVICE)
+		self._ccw_wield_scroll_reserved = false
+	end
 end
 
 HudElementCommunicationCommandWheel._setup_entries = function(self, num_entries)
@@ -871,7 +924,10 @@ HudElementCommunicationCommandWheel._handle_input = function(self, t, dt, ui_ren
 		if not InputDevice.gamepad_active then
 			self:_push_cursor()
 		end
+
+		self:_ccw_sync_wield_scroll_input_capture()
 	elseif not draw_wheel and self._wheel_active then
+		self:_ccw_clear_wield_scroll_input_capture()
 		self._wheel_active = false
 		self._close_delay = InputDevice.gamepad_active and 0.15 or 0
 
@@ -977,6 +1033,8 @@ HudElementCommunicationCommandWheel._release_communication_wheel_cursor_and_flag
 	local wheel_context = self._wheel_context or {}
 
 	wheel_context.input_start_time = nil
+
+	self:_ccw_clear_wield_scroll_input_capture()
 
 	local was_active = self._wheel_active
 
