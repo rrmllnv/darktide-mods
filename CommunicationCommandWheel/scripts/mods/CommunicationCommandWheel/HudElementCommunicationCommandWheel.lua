@@ -31,6 +31,99 @@ local apply_style_color = Utils.apply_style_color
 
 local button_definitions_by_id = Buttons.button_definitions_by_id
 
+local function ccw_read_mouse_wheel_axis_z()
+	local im = Managers and Managers.input
+
+	if not im or not im._find_active_device then
+		return nil
+	end
+
+	local mouse = im:_find_active_device("mouse")
+
+	if not mouse then
+		return nil
+	end
+
+	local idx = mouse:axis_index("wheel")
+
+	if not idx then
+		return nil
+	end
+
+	local raw = mouse:raw_device()
+
+	if not raw or type(raw.axis) ~= "function" then
+		return nil
+	end
+
+	local v = raw:axis(idx)
+
+	if v == nil then
+		return nil
+	end
+
+	if type(v) == "number" then
+		return v
+	end
+
+	if v.z ~= nil then
+		return v.z
+	end
+
+	if v[3] ~= nil then
+		return v[3]
+	end
+
+	return nil
+end
+
+local function ccw_input_action_truthy(input_service, action_name)
+	if not input_service or type(input_service.has) ~= "function" then
+		return false
+	end
+
+	if not input_service:has(action_name) then
+		return false
+	end
+
+	local v = input_service:get(action_name)
+
+	if v == nil then
+		return false
+	end
+
+	if type(v) == "boolean" then
+		return v
+	end
+
+	if type(v) == "number" then
+		return v ~= 0
+	end
+
+	return not not v
+end
+
+local function ccw_largest_scroll_axis_component(scroll_axis)
+	if not scroll_axis then
+		return 0
+	end
+
+	local x = scroll_axis.x or scroll_axis[1] or 0
+	local y = scroll_axis.y or scroll_axis[2] or 0
+	local z = scroll_axis.z or scroll_axis[3] or 0
+	local best = x
+
+	if math.abs(y) > math.abs(best) then
+		best = y
+	end
+
+	if math.abs(z) > math.abs(best) then
+		best = z
+	end
+
+	return best
+end
+
 local function communication_wheel_open_hold_delay_seconds()
 	local v = mod:get("communication_wheel_open_hold_delay_sec")
 
@@ -160,6 +253,9 @@ HudElementCommunicationCommandWheel.init = function(self, parent, draw_layer, st
 	self._cursor_pushed = false
 	self._center_switch_zone_hovered = false
 	self._ccw_wants_camera_prev = false
+	self._ccw_page_scroll_cooldown_until = nil
+	self._ccw_last_mouse_wheel_z = nil
+	self._ccw_switch_page_key_prev_held = false
 
 	_communication_wheel_cursor_seq = _communication_wheel_cursor_seq + 1
 	self._cursor_reference = "HudElementCommunicationCommandWheel_" .. tostring(_communication_wheel_cursor_seq)
@@ -351,9 +447,101 @@ HudElementCommunicationCommandWheel._reset_hover_state = function(self)
 	end
 
 	self._center_switch_zone_hovered = false
+	self._ccw_last_mouse_wheel_z = nil
+	self._ccw_switch_page_key_prev_held = false
 
 	self._last_widget_hover_data.index = nil
 	self._last_widget_hover_data.t = nil
+end
+
+HudElementCommunicationCommandWheel._ccw_sync_switch_page_key_baseline = function(self)
+	if mod._is_switch_page_key_held then
+		self._ccw_switch_page_key_prev_held = mod._is_switch_page_key_held()
+	else
+		self._ccw_switch_page_key_prev_held = false
+	end
+end
+
+HudElementCommunicationCommandWheel._ccw_try_scroll_switch_page = function(self, t, input_service)
+	local v = mod:get("ccw_scroll_switch_page")
+
+	if v ~= true and v ~= 1 then
+		return false
+	end
+
+	local visible_pages = self._visible_pages or {}
+
+	if #visible_pages <= 1 then
+		return false
+	end
+
+	local cooldown_until = self._ccw_page_scroll_cooldown_until
+
+	if cooldown_until and t < cooldown_until then
+		return false
+	end
+
+	local direction = 0
+
+	if input_service and input_service.has and input_service:has("scroll_axis") then
+		local scroll_axis = input_service:get("scroll_axis")
+		local mag = ccw_largest_scroll_axis_component(scroll_axis)
+
+		if math.abs(mag) > 0.1 then
+			direction = mag > 0 and -1 or 1
+		end
+	end
+
+	if direction == 0 then
+		local ingame_ok, ingame = pcall(function()
+			return Managers.input:get_input_service("Ingame")
+		end)
+
+		if ingame_ok and ingame and type(ingame.has) == "function" then
+			if ingame:has("wield_scroll_up") and ccw_input_action_truthy(ingame, "wield_scroll_up") then
+				direction = -1
+			elseif ingame:has("wield_scroll_down") and ccw_input_action_truthy(ingame, "wield_scroll_down") then
+				direction = 1
+			end
+		end
+	end
+
+	if direction == 0 and input_service then
+		if ccw_input_action_truthy(input_service, "wield_scroll_up") then
+			direction = -1
+		elseif ccw_input_action_truthy(input_service, "wield_scroll_down") then
+			direction = 1
+		end
+	end
+
+	if direction == 0 then
+		local z = ccw_read_mouse_wheel_axis_z()
+
+		if z ~= nil then
+			local last_z = self._ccw_last_mouse_wheel_z
+
+			self._ccw_last_mouse_wheel_z = z
+
+			if last_z ~= nil then
+				local dz = z - last_z
+
+				if dz > 0.5 then
+					direction = -1
+				elseif dz < -0.5 then
+					direction = 1
+				end
+			end
+		end
+	end
+
+	if direction == 0 then
+		return false
+	end
+
+	self._ccw_page_scroll_cooldown_until = t + 0.12
+	self:switch_page(direction)
+
+	return true
 end
 
 HudElementCommunicationCommandWheel.update = function(self, dt, t, ui_renderer, render_settings, input_service)
@@ -667,6 +855,7 @@ HudElementCommunicationCommandWheel._handle_input = function(self, t, dt, ui_ren
 		self._wheel_active = true
 		self._controller_stick_moved = false
 		self:_reset_hover_state()
+		self:_ccw_sync_switch_page_key_baseline()
 
 		self:_ensure_current_page_visible()
 
@@ -703,6 +892,30 @@ HudElementCommunicationCommandWheel._handle_input = function(self, t, dt, ui_ren
 		self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
 
 		return
+	end
+
+	if self:_ccw_try_scroll_switch_page(t, input_service) then
+		return
+	end
+
+	local visible_for_switch = self._visible_pages or {}
+
+	if #visible_for_switch > 1 and mod._is_switch_page_key_held then
+		local switch_held = mod._is_switch_page_key_held()
+		local switch_prev = self._ccw_switch_page_key_prev_held
+
+		self._ccw_switch_page_key_prev_held = switch_held
+
+		if switch_held and not switch_prev then
+			local cd_switch = self._ccw_page_scroll_cooldown_until
+
+			if not cd_switch or t >= cd_switch then
+				self:switch_page(1)
+				self._ccw_page_scroll_cooldown_until = t + 0.12
+
+				return
+			end
+		end
 	end
 
 	local Mouse = rawget(_G, "Mouse")

@@ -79,6 +79,22 @@ return {
 		en = "Hold to open the wheel.",
 		ru = "Удерживайте, чтобы открыть колесо.",
 	},
+	ccw_switch_page_key = {
+		en = "Switch wheel page",
+		ru = "Следующая страница колеса",
+	},
+	ccw_switch_page_key_tooltip = {
+		en = "While the wheel is open, press this key once to advance to the next page (wraps). Uses the same input polling as the open key, not the mouse button.",
+		ru = "Пока колесо открыто, одно нажатие этой клавиши — следующая страница (по кругу). Обрабатывается опросом клавиш, как открытие колеса, без ЛКМ.",
+	},
+	ccw_scroll_switch_page = {
+		en = "Mouse wheel switches pages",
+		ru = "Колёсико переключает страницы",
+	},
+	ccw_scroll_switch_page_tooltip = {
+		en = "When the wheel is open, scroll anywhere to change pages (no need to aim at the center).",
+		ru = "Пока колесо открыто, крутите колёсико в любом месте — смена страницы (центр не нужен).",
+	},
 	ccw_open_hold_delay = {
 		en = "Open hold delay",
 		ru = "Задержка до открытия",

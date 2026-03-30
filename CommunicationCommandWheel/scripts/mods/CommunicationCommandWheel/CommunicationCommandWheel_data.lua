@@ -117,6 +117,23 @@ local widgets = {
 				tooltip_text = "ccw_open_hold_delay_tooltip",
 				options = hold_delay_options,
 			},
+			{
+				setting_id = "communication_command_wheel_switch_page_key",
+				type = "keybind",
+				default_value = {},
+				title = "ccw_switch_page_key",
+				tooltip_text = "ccw_switch_page_key_tooltip",
+				keybind_trigger = "held",
+				keybind_type = "function_call",
+				function_name = "communication_command_wheel_switch_page_held",
+			},
+			{
+				setting_id = "ccw_scroll_switch_page",
+				type = "checkbox",
+				default_value = false,
+				title = "ccw_scroll_switch_page",
+				tooltip_text = "ccw_scroll_switch_page_tooltip",
+			},
 		},
 	},
 }
