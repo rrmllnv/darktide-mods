@@ -184,6 +184,15 @@ local button_definitions = {
 		},
 	},
 	{
+		id = "hold_position",
+		label_key = "ccw_command_hold_position",
+		icon = "content/ui/materials/hud/interactions/icons/attention",
+		chat_message_data = {
+			text = "ccw_command_hold_position",
+			channel = ChannelTags.MISSION,
+		},
+	},
+	{
 		id = "almost_there",
 		label_key = "ccw_command_almost_there",
 		icon = "content/ui/materials/hud/interactions/icons/location",

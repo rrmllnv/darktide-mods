@@ -191,6 +191,10 @@ return {
 		en = "Wait",
 		ru = "Ждите",
 	},
+	ccw_command_hold_position = {
+		en = "Hold this position",
+		ru = "Удерживайте позицию",
+	},
 	ccw_command_back = {
 		en = "Back",
 		ru = "Назад",

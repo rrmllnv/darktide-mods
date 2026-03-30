@@ -26,7 +26,7 @@ return {
 			"almost_there",
 			"away_from_squad",
 			"back",
-			"",
+			"hold_position",
 			"",
 			"",
 			"",

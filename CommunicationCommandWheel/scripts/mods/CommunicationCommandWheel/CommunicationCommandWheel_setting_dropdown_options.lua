@@ -70,6 +70,10 @@ return {
 		value = "wait",
 	},
 	{
+		text = "ccw_command_hold_position",
+		value = "hold_position",
+	},
+	{
 		text = "ccw_command_almost_there",
 		value = "almost_there",
 	},
