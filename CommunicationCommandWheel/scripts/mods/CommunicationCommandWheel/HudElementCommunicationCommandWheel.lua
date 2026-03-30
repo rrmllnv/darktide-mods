@@ -127,6 +127,7 @@ HudElementCommunicationCommandWheel.init = function(self, parent, draw_layer, st
 	self._controller_stick_moved = false
 	self._cursor_pushed = false
 	self._center_switch_zone_hovered = false
+	self._ccw_wants_camera_prev = false
 
 	_communication_wheel_cursor_seq = _communication_wheel_cursor_seq + 1
 	self._cursor_reference = "HudElementCommunicationCommandWheel_" .. tostring(_communication_wheel_cursor_seq)
@@ -297,6 +298,18 @@ HudElementCommunicationCommandWheel.update = function(self, dt, t, ui_renderer, 
 	end
 
 	self:_handle_input(t, dt, ui_renderer, render_settings, input_service)
+
+	local wants_camera = self._wheel_active or self._close_delay ~= nil
+
+	if wants_camera ~= self._ccw_wants_camera_prev then
+		if wants_camera then
+			Managers.event:trigger("event_set_communication_wheel_state", "camera_lock")
+		else
+			Managers.event:trigger("event_set_communication_wheel_state", false)
+		end
+
+		self._ccw_wants_camera_prev = wants_camera
+	end
 end
 
 HudElementCommunicationCommandWheel._update_active_progress = function(self, dt)
@@ -722,7 +735,15 @@ HudElementCommunicationCommandWheel._on_wheel_stop = function(self, t, ui_render
 end
 
 HudElementCommunicationCommandWheel.destroy = function(self, ui_renderer)
+	local wants_camera = self._wheel_active or self._close_delay ~= nil
+
 	self:_release_communication_wheel_cursor_and_flags(false, true)
+
+	if wants_camera then
+		Managers.event:trigger("event_set_communication_wheel_state", false)
+	end
+
+	self._ccw_wants_camera_prev = false
 
 	if mod._communication_wheel_element == self then
 		mod._communication_wheel_element = nil
