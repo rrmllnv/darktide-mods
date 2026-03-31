@@ -24,7 +24,8 @@
 | Ответы / вежливость | `yes`, `no`, `please`, `sorry` | У `sorry` нет `voice_event_data` в определении — только чат. |
 | Помощь / обмен | `need_help`, `take_this`, `i_need_this` | `need_help`: `generic_mission_vo` + `calling_for_help`. |
 | Угроза | `daemonhost`, `enemy_ahead`, `dont_shoot_poxbuster` | `daemonhost`: `on_demand_vo_tag_enemy`, `chaos_daemonhost`. `enemy_ahead`: чат «Враг впереди»; VO ванильного пинга угрозы — `on_demand_com_wheel` + `com_wheel_vo_enemy_over_here`. `dont_shoot_poxbuster` — только чат (поксбастер / Poxburster). |
-| Движение / связь | `follow_you`, `follow_me`, `cover_me`, `coming_to_you`, `waiting_for_you`, `dont_fall_behind`, `faster`, `wait`, `hold_position`, `hold_exit`, `dont_split_up` | У многих только чат, без `voice_event_data`. `hold_exit` / `dont_split_up` — удержание выхода и «не разбегаться» (экстракт, экспедиции); VO нет. |
+| Движение и темп | `follow_you`, `follow_me`, `cover_me`, `coming_to_you`, `waiting_for_you`, `dont_fall_behind`, `faster`, `wait` | В основном про относительное движение и скорость; у многих только чат, без `voice_event_data`. |
+| Удержание и состав отряда | `hold_position`, `hold_exit`, `dont_split_up` | Тактика точки/выхода и «не расползаться» (в т.ч. экспедиции, экстракт); только чат, VO нет. |
 | Статус позиции | `almost_there`, `away_from_squad` | `generic_mission_vo`. |
 | Навигация | `back` | Только чат. |
 
@@ -33,8 +34,8 @@
 | Страница | Слоты (по умолчанию) | Примечание |
 |----------|------------------------|------------|
 | 1 | `yes`, `please`, `sorry`, `need_help`, `no`, `take_this`, `i_need_this`, `daemonhost` | Смешение групп «ответы», «помощь», «угроза». |
-| 2 | `follow_you` … `wait` (8 слотов) | Группа «движение / связь»; страница заполнена. |
-| 3 | `almost_there`, `away_from_squad`, `back`, `hold_position`, `enemy_ahead`, `hold_exit`, `dont_split_up`, `dont_shoot_poxbuster` | Стр. 3 заполнена; в т.ч. удержание выхода и предупреждение про Poxburster. |
+| 2 | `follow_you` … `wait` (8 слотов) | Только «движение и темп»; страница заполнена. |
+| 3 | `almost_there`, `away_from_squad`, `back`, `hold_position`, `enemy_ahead`, `hold_exit`, `dont_split_up`, `dont_shoot_poxbuster` | Смешение статуса, навигации, удержания/состава отряда и угрозы. |
 
 ## Технические файлы (кратко)
 
