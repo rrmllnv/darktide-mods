@@ -25,17 +25,17 @@
 | Помощь | `need_help` | Запрос поддержки в бою; VO: `generic_mission_vo` + `calling_for_help`. |
 | Предметы | `take_this`, `i_need_this` | Предложить предмет союзнику и попросить у отряда; VO ком-колеса для обеих. |
 | Угроза | `daemonhost`, `enemy_ahead`, `dont_shoot_poxbuster` | Предупреждение отряду: демонхост (VO `on_demand_vo_tag_enemy` + `chaos_daemonhost`), враг в секторе (VO ком-колеса), не стрелять во взрывоопасную цель (`dont_shoot_poxbuster` — только чат). |
-| Навигация | `follow_you`, `follow_me`, `cover_me`, `coming_to_you`, `waiting_for_you`, `dont_fall_behind`, `faster`, `wait`, `back` | Куда идти, кого ждать, прикрытие, ускориться / стоп, направление «назад»; у `back` и части остальных — только чат, без VO. |
+| Координация движения | `follow_you`, `follow_me`, `cover_me`, `coming_to_you`, `waiting_for_you`, `dont_fall_behind`, `faster`, `wait`, `almost_there`, `away_from_squad`, `back` | Согласовать с отрядом: куда идти, кого ждать, прикрытие, темп, где ты относительно точки/отряда («почти на месте», «оторвался»), отступление («назад»); не про карту или маршрут. У `almost_there` и `away_from_squad` — `generic_mission_vo`; у `back` и части остальных — только чат, без VO. |
 | Защита | `hold_position`, `hold_exit` | Удержание занятой точки и удержание выхода (в т.ч. экстракт, экспедиции); только чат, VO нет. |
-| Отряд | `dont_split_up`, `almost_there`, `away_from_squad` | Связность («не расползаться»), статус «почти на месте» и «оторван от отряда»; у `almost_there` и `away_from_squad` — `generic_mission_vo`, `dont_split_up` — только чат. |
+| Отряд | `dont_split_up` | Связность («не расползаться»); только чат, без VO. |
 
 ### Связь с дефолтными страницами (`CommunicationCommandWheel_pages.lua`)
 
 | Страница | Слоты (по умолчанию) | Примечание |
 |----------|------------------------|------------|
 | 1 | `yes`, `please`, `sorry`, `need_help`, `no`, `take_this`, `i_need_this`, `daemonhost` | Смешение «ответы», «помощь», «предметы», «угроза». |
-| 2 | `follow_you` … `wait` (8 слотов) | Вся страница — «навигация» (без `back`); слоты заполнены. |
-| 3 | `almost_there`, `away_from_squad`, `back`, `hold_position`, `enemy_ahead`, `hold_exit`, `dont_split_up`, `dont_shoot_poxbuster` | Смешение «отряд», «навигация» (`back`), «защита», «угроза». |
+| 2 | `follow_you` … `wait` (8 слотов) | Часть «координации движения» (без `back`, `almost_there`, `away_from_squad`); слоты заполнены. |
+| 3 | `almost_there`, `away_from_squad`, `back`, `hold_position`, `enemy_ahead`, `hold_exit`, `dont_split_up`, `dont_shoot_poxbuster` | «Координация движения» (`almost_there`, `away_from_squad`, `back`), «отряд», «защита», «угроза». |
 
 ## Технические файлы (кратко)
 
@@ -80,9 +80,9 @@
 | `dont_fall_behind` | Don't Fall Behind | Не отставай |
 | `faster` | Faster | Быстрее |
 | `wait` | Wait | Ждите |
-| `hold_position` | Hold this position | Удерживайте позицию |
-| `hold_exit` | Hold the exit | Держим выход |
-| `dont_split_up` | Don't split up | Не разбегаемся |
 | `almost_there` | Almost There | Почти на месте |
 | `away_from_squad` | Away From Squad | Отстал от отряда |
 | `back` | Back | Назад |
+| `hold_position` | Hold this position | Удерживайте позицию |
+| `hold_exit` | Hold the exit | Держим выход |
+| `dont_split_up` | Don't split up | Не разбегаемся |
