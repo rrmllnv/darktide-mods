@@ -4,8 +4,8 @@ return {
 		ru = "Communication Command Wheel",
 	},
 	ccw_mod_description = {
-		en = "Hold your keybind to open a wheel of squad phrases. Each choice sends text to mission chat and, when the game allows it, plays a short voice line from your character. You can change what sits on each sector in the mod settings.",
-		ru = "Удерживайте назначенную клавишу — откроется колесо с фразами для отряда. Выбранная фраза появляется в чате миссии, а персонаж произносит реплику там, где это предусмотрено игрой. Что на каком секторе висит, задаётся в настройках мода.",
+		en = "A convenient radial menu for quick squad communication in missions—mission chat and optional voice lines, with customizable sectors and pages.",
+		ru = "Удобное радиальное меню для быстрой связи с отрядом в миссии: чат миссии и при возможности голос персонажа, настраиваемые секторы и страницы.",
 	},
 	ccw_display_group = {
 		en = "\238\128\140 DISPLAY",
