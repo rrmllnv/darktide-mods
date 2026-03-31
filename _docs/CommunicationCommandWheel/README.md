@@ -17,26 +17,26 @@
 
 ## Группы команд по смыслу
 
-Ниже — **логическая** классификация встроенных `id` из `CommunicationCommandWheel_buttons.lua`: в одной строке только то, что по смыслу рядом; схожие по форме, но разные по задаче вещи (удержание точки vs «не расползаться») не смешиваем. Это не границы страниц в mod options.
+Ниже — **логическая** классификация встроенных `id` из `CommunicationCommandWheel_buttons.lua`: в одной строке только то, что по смыслу рядом. Это не границы страниц в mod options.
 
 | Группа | Команды (`id`) | Замечание |
 |--------|----------------|-----------|
 | Ответы и вежливость | `yes`, `no`, `please`, `sorry` | Короткие реплики в диалоге; у `sorry` нет VO — только чат. |
-| Помощь и обмен предметами | `need_help`, `take_this`, `i_need_this` | Запрос помощи и просьбы про лут; `need_help` — `generic_mission_vo` + `calling_for_help`. |
-| Угрозы и опасность в бою | `daemonhost`, `enemy_ahead`, `dont_shoot_poxbuster` | Все три — предупреждение отряду об опасности: демонхост (VO `on_demand_vo_tag_enemy` + `chaos_daemonhost`), враг в секторе (VO ком-колеса), не стрелять во взрывоопасную цель (`dont_shoot_poxbuster` — только чат). |
+| Помощь | `need_help` | Запрос поддержки в бою; VO: `generic_mission_vo` + `calling_for_help`. |
+| Обмен предметами | `take_this`, `i_need_this` | Предложить предмет союзнику и попросить у отряда; VO ком-колеса для обеих. |
+| Угрозы и опасность в бою | `daemonhost`, `enemy_ahead`, `dont_shoot_poxbuster` | Предупреждение отряду: демонхост (VO `on_demand_vo_tag_enemy` + `chaos_daemonhost`), враг в секторе (VO ком-колеса), не стрелять во взрывоопасную цель (`dont_shoot_poxbuster` — только чат). |
 | Движение, прикрытие и темп | `follow_you`, `follow_me`, `cover_me`, `coming_to_you`, `waiting_for_you`, `dont_fall_behind`, `faster`, `wait` | Куда идти, кого ждать, прикрытие, ускориться / стоп; у части команд нет VO. |
-| Удержание позиции и выхода | `hold_position`, `hold_exit` | Точка удержания и выход/экстракт (в т.ч. экспедиции); только чат, VO нет. |
-| Связность отряда | `dont_split_up` | «Не расползаться» по секторам — не про удержание точки, а про состав/геометрию отряда; только чат. |
-| Статус относительно отряда | `almost_there`, `away_from_squad` | `generic_mission_vo` для обоих. |
+| Защита | `hold_position`, `hold_exit` | Удержание занятой точки и удержание выхода (в т.ч. экстракт, экспедиции); только чат, VO нет. |
+| Отряд | `dont_split_up`, `almost_there`, `away_from_squad` | Связность («не расползаться»), статус «почти на месте» и «оторван от отряда»; у `almost_there` и `away_from_squad` — `generic_mission_vo`, `dont_split_up` — только чат. |
 | Навигация | `back` | Только чат. |
 
 ### Связь с дефолтными страницами (`CommunicationCommandWheel_pages.lua`)
 
 | Страница | Слоты (по умолчанию) | Примечание |
 |----------|------------------------|------------|
-| 1 | `yes`, `please`, `sorry`, `need_help`, `no`, `take_this`, `i_need_this`, `daemonhost` | Смешение групп «ответы», «помощь», «угроза». |
+| 1 | `yes`, `please`, `sorry`, `need_help`, `no`, `take_this`, `i_need_this`, `daemonhost` | Смешение «ответы», «помощь», «обмен предметами», «угрозы». |
 | 2 | `follow_you` … `wait` (8 слотов) | Только «движение, прикрытие и темп»; страница заполнена. |
-| 3 | `almost_there`, `away_from_squad`, `back`, `hold_position`, `enemy_ahead`, `hold_exit`, `dont_split_up`, `dont_shoot_poxbuster` | Смешение статуса, навигации, удержания, угрозы и связности отряда. |
+| 3 | `almost_there`, `away_from_squad`, `back`, `hold_position`, `enemy_ahead`, `hold_exit`, `dont_split_up`, `dont_shoot_poxbuster` | Смешение «отряд», навигации, «защита», «угрозы». |
 
 ## Технические файлы (кратко)
 
@@ -56,3 +56,34 @@
 Ключи **`ccw_command_*`** дополнительно регистрируются в глобальную таблицу локализации игры (см. `CommunicationCommandWheel.lua`), чтобы `Localize()` находил те же строки, что и `mod:localize()`.
 
 Префикс **`ccw`** = **C**ommunication **C**ommand **W**heel.
+
+## Переводы команд (к разделу «Группы команд по смыслу»)
+
+Тексты как в `CommunicationCommandWheel_localization.lua` (`en` / `ru`). В **чат миссии** по сети уходит **английская** строка (`en`); `ru` — для интерфейса колеса при выбранном русском языке.
+
+| `id` | English (`en`) | Русский (`ru`) |
+|------|----------------|----------------|
+| `yes` | Yes | Да |
+| `no` | No | Нет |
+| `please` | Please | Пожалуйста |
+| `sorry` | Sorry | Извини |
+| `need_help` | Need Help | Нужна помощь |
+| `take_this` | Take This | Возьми это |
+| `i_need_this` | I Need This | Мне это нужно |
+| `daemonhost` | Attention, Daemonhost | Внимание, Демонхост |
+| `enemy_ahead` | Enemy ahead | Враг впереди |
+| `dont_shoot_poxbuster` | Don't shoot the Poxburster | Не стреляй по poxbuster |
+| `follow_you` | Following You | Следую за тобой |
+| `follow_me` | Follow Me | Следуй за мной |
+| `cover_me` | Cover Me | Прикрой меня |
+| `coming_to_you` | Coming To You | Иду к тебе |
+| `waiting_for_you` | Waiting For You | Жду тебя |
+| `dont_fall_behind` | Don't Fall Behind | Не отставай |
+| `faster` | Faster | Быстрее |
+| `wait` | Wait | Ждите |
+| `hold_position` | Hold this position | Удерживайте позицию |
+| `hold_exit` | Hold the exit | Держим выход |
+| `dont_split_up` | Don't split up | Не разбегаемся |
+| `almost_there` | Almost There | Почти на месте |
+| `away_from_squad` | Away From Squad | Отстал от отряда |
+| `back` | Back | Назад |
