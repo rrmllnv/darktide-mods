@@ -128,10 +128,8 @@ local function activate_option(option)
 					english_text = localization_table[text_key].en
 				end
 
-				local formatted_message = string.format("{#color(79,175,255)}%s{#reset()}", english_text)
-
 				if chat_manager.send_channel_message then
-					chat_manager:send_channel_message(channel_handle, formatted_message)
+					chat_manager:send_channel_message(channel_handle, english_text)
 				end
 			end
 		end

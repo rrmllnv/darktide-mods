@@ -1,5 +1,3 @@
--- text = ключи mod:localize; для команд те же ccw_command_* что в CommunicationCommandWheel_buttons (label_key). Пустой слот — ccw_command_none. На каждый слот в mod_data — копия списка options (иначе DMF повторно локализует и портит подписи).
-
 return {
 	{
 		text = "ccw_command_none",
