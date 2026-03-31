@@ -7,17 +7,21 @@ return {
 		en = "Hold your keybind to open a wheel of squad phrases. Each choice sends text to mission chat and, when the game allows it, plays a short voice line from your character. You can change what sits on each sector in the mod settings.",
 		ru = "Удерживайте назначенную клавишу — откроется колесо с фразами для отряда. Выбранная фраза появляется в чате миссии, а персонаж произносит реплику там, где это предусмотрено игрой. Что на каком секторе висит, задаётся в настройках мода.",
 	},
-	ccw_wheel_group = {
-		en = "Communication wheel",
-		ru = "Колесо коммуникации",
-	},
-	ccw_settings_group = {
-		en = "Settings",
-		ru = "Настройки",
+	ccw_display_group = {
+		en = "\238\128\140 DISPLAY",
+		ru = "\238\128\140 ОТОБРАЖЕНИЕ",
 	},
 	ccw_page_switch_group = {
-		en = "Page switching",
-		ru = "Переключение страниц",
+		en = "\238\129\135 PAGE SWITCH",
+		ru = "\238\129\135 ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ",
+	},
+	ccw_slots_group = {
+		en = "\238\128\172 COMMAND SLOTS",
+		ru = "\238\128\172 КОМАНДЫ ПО СЕКТОРАМ",
+	},
+	ccw_system_settings_group = {
+		en = "\238\128\169 SYSTEM SETTINGS",
+		ru = "\238\128\169 СИСТЕМНЫЕ НАСТРОЙКИ",
 	},
 	ccw_reset_slot_commands = {
 		en = "Reset commands to defaults",

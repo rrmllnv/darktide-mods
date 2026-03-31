@@ -95,9 +95,8 @@ end
 
 local widgets = {
 	{
-		setting_id = "communication_command_wheel_group",
+		setting_id = "ccw_display_group",
 		type = "group",
-		title = "ccw_wheel_group",
 		sub_widgets = {
 			{
 				setting_id = "open_communication_command_wheel_key",
@@ -117,64 +116,62 @@ local widgets = {
 				tooltip_text = "ccw_open_hold_delay_tooltip",
 				options = hold_delay_options,
 			},
-		},
-	},
-	{
-		setting_id = "ccw_page_switch_group",
-		type = "group",
-		title = "ccw_page_switch_group",
-		sub_widgets = {
 			{
-				setting_id = "communication_command_wheel_switch_page_key",
-				type = "keybind",
-				default_value = {},
-				title = "ccw_switch_page_key",
-				tooltip_text = "ccw_switch_page_key_tooltip",
-				keybind_trigger = "held",
-				keybind_type = "function_call",
-				function_name = "communication_command_wheel_switch_page_held",
-			},
-			{
-				setting_id = "ccw_scroll_switch_page",
-				type = "checkbox",
-				default_value = false,
-				title = "ccw_scroll_switch_page",
-				tooltip_text = "ccw_scroll_switch_page_tooltip",
-			},
-			{
-				setting_id = "ccw_center_click_switch_page",
-				type = "checkbox",
-				default_value = true,
-				title = "ccw_center_click_switch_page",
-				tooltip_text = "ccw_center_click_switch_page_tooltip",
-			},
-		},
-	},
-}
-
-for i = 1, #page_widget_groups do
-	widgets[#widgets + 1] = page_widget_groups[i]
-end
-
-widgets[#widgets + 1] = {
-	setting_id = "ccw_settings_group",
-	type = "group",
-	title = "ccw_settings_group",
-	sub_widgets = {
-		{
-			setting_id = "reset_slot_commands",
-			type = "dropdown",
-			default_value = 0,
-			title = "ccw_reset_slot_commands",
-			tooltip_text = "ccw_reset_slot_commands_description",
-			options = {
-				{
-					text = "",
-					value = 0,
+				setting_id = "ccw_page_switch_group",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "communication_command_wheel_switch_page_key",
+						type = "keybind",
+						default_value = {},
+						title = "ccw_switch_page_key",
+						tooltip_text = "ccw_switch_page_key_tooltip",
+						keybind_trigger = "held",
+						keybind_type = "function_call",
+						function_name = "communication_command_wheel_switch_page_held",
+					},
+					{
+						setting_id = "ccw_scroll_switch_page",
+						type = "checkbox",
+						default_value = true,
+						title = "ccw_scroll_switch_page",
+						tooltip_text = "ccw_scroll_switch_page_tooltip",
+					},
+					{
+						setting_id = "ccw_center_click_switch_page",
+						type = "checkbox",
+						default_value = true,
+						title = "ccw_center_click_switch_page",
+						tooltip_text = "ccw_center_click_switch_page_tooltip",
+					},
 				},
-				{
-					text = "ccw_reset_slot_commands",
-					value = 1,
+			},
+			{
+				setting_id = "ccw_slots_group",
+				type = "group",
+				sub_widgets = page_widget_groups,
+			},
+			{
+				setting_id = "ccw_system_settings_group",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "reset_slot_commands",
+						type = "dropdown",
+						default_value = 0,
+						title = "ccw_reset_slot_commands",
+						tooltip_text = "ccw_reset_slot_commands_description",
+						options = {
+							{
+								text = "",
+								value = 0,
+							},
+							{
+								text = "ccw_reset_slot_commands",
+								value = 1,
+							},
+						},
+					},
 				},
 			},
 		},
