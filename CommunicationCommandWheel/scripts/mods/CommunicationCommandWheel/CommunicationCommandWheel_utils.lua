@@ -26,6 +26,86 @@ local function localize_text(label_key)
 	return label_key
 end
 
+local function trigger_smart_tag_option(option)
+	if not option or not option.smart_tag_type then
+		return
+	end
+
+	if not Managers or not Managers.player or not Managers.state or not Managers.state.extension then
+		return
+	end
+
+	local local_player = Managers.player:local_player_safe(1)
+
+	if not local_player or not local_player:unit_is_alive() or not local_player.player_unit then
+		return
+	end
+
+	local player_unit = local_player.player_unit
+
+	if not Unit.alive(player_unit) then
+		return
+	end
+
+	local smart_tag_system = Managers.state.extension:system("smart_tag_system")
+
+	if not smart_tag_system then
+		return
+	end
+
+	local function try_set_contextual_tag(target_unit_to_tag)
+		if not target_unit_to_tag then
+			return false
+		end
+
+		local target_extension = smart_tag_system._unit_extension_data and smart_tag_system._unit_extension_data[target_unit_to_tag]
+		local template = target_extension and target_extension.contextual_tag_template and target_extension:contextual_tag_template(player_unit)
+
+		if not template then
+			return false
+		end
+
+		smart_tag_system:set_contextual_unit_tag(player_unit, target_unit_to_tag)
+
+		return true
+	end
+
+	local target_unit
+	local target_position
+	local ScriptUnit = ScriptUnit or require("scripts/extension_systems/core/script_unit")
+	local interactor_extension = ScriptUnit and ScriptUnit.has_extension and ScriptUnit.has_extension(player_unit, "interactor_system")
+	local interactor_target_unit = interactor_extension and interactor_extension:target_unit()
+	local interactor_smart_tag_extension = interactor_target_unit and ScriptUnit.has_extension(interactor_target_unit, "smart_tag_system")
+
+	if interactor_smart_tag_extension then
+		target_unit = interactor_target_unit
+	end
+
+	if not target_unit then
+		local ui_manager = Managers.ui
+		local hud = ui_manager and ui_manager._hud
+		local smart_tag_element = hud and hud.element and hud:element("HudElementSmartTagging")
+
+		if smart_tag_element and not smart_tag_element.destroyed and smart_tag_element._find_best_smart_tag_interaction then
+			local ui_renderer = hud.ui_renderer and hud:ui_renderer() or hud._ui_renderer
+			local render_settings = hud._render_settings
+			local force_update_targets = true
+			local _, best_unit, best_position = smart_tag_element:_find_best_smart_tag_interaction(ui_renderer, render_settings, force_update_targets)
+
+			target_unit = best_unit
+			target_position = best_position
+		end
+	end
+
+	if target_unit and option.prefer_contextual_unit_tag and try_set_contextual_tag(target_unit) then
+		return
+	end
+
+	if target_position then
+		smart_tag_system:set_tag(option.smart_tag_type, player_unit, nil, target_position)
+	end
+end
+
 local function activate_option(option)
 	if not option then
 		return false
@@ -80,6 +160,8 @@ local function activate_option(option)
 				Vo.on_demand_vo_event(player_unit, voice_tag_concept, voice_tag_id)
 			end
 		end
+
+		trigger_smart_tag_option(option)
 
 		if option.chat_message_data then
 			if not Managers or not Managers.chat then

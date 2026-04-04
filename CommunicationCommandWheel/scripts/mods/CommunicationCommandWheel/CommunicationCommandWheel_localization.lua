@@ -176,8 +176,8 @@ return {
 		ru = "Мне это нужно",
 	},
 	ccw_command_daemonhost = {
-		en = "Attention, Daemonhost",
-		ru = "Внимание, Демонхост",
+		en = "Attention, Daemonhost here!",
+		ru = "Внимание, Демонхост здесь!",
 	},
 	ccw_command_enemy_ahead = {
 		en = "Enemy ahead",
@@ -188,8 +188,8 @@ return {
 		ru = "Не стреляй по poxbuster",
 	},
 	ccw_command_daemonhost_alert = {
-		en = "Attention, Daemonhost",
-		ru = "Внимание, Демонхост",
+		en = "Attention, Daemonhost here!",
+		ru = "Внимание, Демонхост здесь!",
 	},
 	ccw_command_almost_there = {
 		en = "Almost There",
