@@ -1,5 +1,13 @@
 local mod = get_mod("MourningstarCommandWheel")
 
+mod:hook_require("scripts/settings/ui/ui_hud_settings", function(UIHudSettings)
+	local layers = UIHudSettings and UIHudSettings.element_draw_layers
+
+	if layers then
+		layers.HudElementCommandWheel = layers.HudElementEmoteWheel or 451
+	end
+end)
+
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_settings")
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_definitions")
 mod:add_require_path("MourningstarCommandWheel/scripts/mods/MourningstarCommandWheel/MourningstarCommandWheel_utils")
@@ -306,6 +314,13 @@ mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, para
 end)
 
 mod:hook_safe("HudElementCommandWheel", "init", function(self, parent, draw_layer, start_scale)
+	local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
+	local layers = UIHudSettings and UIHudSettings.element_draw_layers
+
+	if layers then
+		self._draw_layer = layers.HudElementCommandWheel or layers.HudElementEmoteWheel or 451
+	end
+
 	mod._command_wheel_element = self
 end)
 
