@@ -2,9 +2,18 @@ local mod = get_mod("EquipmentCommandWheel")
 
 local HudElementPlayerWeaponHandlerSettings = require("scripts/ui/hud/elements/player_weapon_handler/hud_element_player_weapon_handler_settings")
 local ItemSlotSettings = require("scripts/settings/item/item_slot_settings")
+local VALID_DEVICE_ITEM_NAMES = {
+	["content/items/devices/auspex_map"] = true,
+}
 
 local function sort_equipment_entries_by_order(a, b)
 	return a.order_index < b.order_index
+end
+
+local function has_meaningful_hud_icon(icon)
+	return type(icon) == "string"
+		and icon ~= ""
+		and icon ~= "content/ui/materials/base/ui_default_base"
 end
 
 local function collect_equipment_wheel_slots(extensions)
@@ -42,17 +51,27 @@ local function collect_equipment_wheel_slots(extensions)
 
 		local weapon_template = weapon_name and visual_loadout_extension:weapon_template_from_slot(slot_id)
 		local item = weapon_name and visual_loadout_extension:item_from_slot(slot_id)
-		local allow_hidden_template = slot_id == "slot_device"
+		local weapon_template_icon = weapon_template and weapon_template.hud_icon
+		local item_icon = item and item.hud_icon
+		local allow_hidden_template = false
+
+		if slot_id == "slot_device" and VALID_DEVICE_ITEM_NAMES[weapon_name] then
+			allow_hidden_template = true
+		end
 
 		if weapon_template and (not weapon_template.hide_slot or allow_hidden_template) and num_weapons < max_slots then
 			local order_index = settings.order_index
-			local icon = weapon_template.hud_icon
-
-			if not icon and item then
-				icon = item.hud_icon
-			end
+			local icon = weapon_template_icon
 
 			if not icon then
+				icon = item_icon
+			end
+
+			if not has_meaningful_hud_icon(icon) then
+				if slot_id == "slot_device" or slot_id == "slot_pocketable" or slot_id == "slot_pocketable_small" then
+					goto continue
+				end
+
 				icon = settings.default_icon
 			end
 
@@ -95,6 +114,8 @@ local function collect_equipment_wheel_slots(extensions)
 			}
 			num_weapons = num_weapons + 1
 		end
+
+		::continue::
 	end
 
 	table.sort(entries, sort_equipment_entries_by_order)
