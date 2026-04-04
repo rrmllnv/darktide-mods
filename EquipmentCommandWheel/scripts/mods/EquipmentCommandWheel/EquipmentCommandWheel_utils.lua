@@ -5,6 +5,14 @@ local ItemSlotSettings = require("scripts/settings/item/item_slot_settings")
 local VALID_DEVICE_ITEM_NAMES = {
 	["content/items/devices/auspex_map"] = true,
 }
+local EQUIPMENT_WHEEL_LAYOUT_INDEXES = {
+	2,
+	3,
+	4,
+	6,
+	7,
+	8,
+}
 
 local function sort_equipment_entries_by_order(a, b)
 	return a.order_index < b.order_index
@@ -14,6 +22,22 @@ local function has_meaningful_hud_icon(icon)
 	return type(icon) == "string"
 		and icon ~= ""
 		and icon ~= "content/ui/materials/base/ui_default_base"
+end
+
+local function remap_equipment_entries_for_wheel(entries)
+	local remapped_entries = {}
+
+	for source_index = 1, #entries do
+		local target_index = EQUIPMENT_WHEEL_LAYOUT_INDEXES[source_index]
+
+		if not target_index then
+			break
+		end
+
+		remapped_entries[target_index] = entries[source_index]
+	end
+
+	return remapped_entries
 end
 
 local function collect_equipment_wheel_slots(extensions)
@@ -120,7 +144,7 @@ local function collect_equipment_wheel_slots(extensions)
 
 	table.sort(entries, sort_equipment_entries_by_order)
 
-	return entries
+	return remap_equipment_entries_for_wheel(entries)
 end
 
 local EQUIPMENT_WHEEL_DISALLOWED_GAME_MODES = {

@@ -81,6 +81,56 @@ local apply_style_offset = Utils.apply_style_offset
 local apply_style_color = Utils.apply_style_color
 
 local _equipment_wheel_cursor_seq = 0
+local WHEEL_SLOT_COUNT = EquipmentWheelSettings.wheel_slots
+
+local function equipment_options_have_any_entry(options)
+	if not options then
+		return false
+	end
+
+	for i = 1, WHEEL_SLOT_COUNT do
+		if options[i] ~= nil then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function equipment_options_changed(a_options, b_options)
+	for i = 1, WHEEL_SLOT_COUNT do
+		local a = a_options and a_options[i]
+		local b = b_options and b_options[i]
+
+		if a == nil and b == nil then
+			goto continue
+		end
+
+		if a == nil or b == nil then
+			return true
+		end
+
+		if a.slot_id ~= b.slot_id then
+			return true
+		end
+
+		if (a.weapon_name or "") ~= (b.weapon_name or "") then
+			return true
+		end
+
+		if (a.icon or "") ~= (b.icon or "") then
+			return true
+		end
+
+		if (a.label_key or "") ~= (b.label_key or "") then
+			return true
+		end
+
+		::continue::
+	end
+
+	return false
+end
 
 local HudElementEquipmentWheel = class("HudElementEquipmentWheel", "HudElementBase")
 
@@ -113,9 +163,7 @@ HudElementEquipmentWheel.init = function(self, parent, draw_layer, start_scale)
 		self._equipment_options = {}
 	end
 
-	local wheel_slots = EquipmentWheelSettings.wheel_slots
-
-	self:_setup_entries(wheel_slots)
+	self:_setup_entries(WHEEL_SLOT_COUNT)
 	self:_populate_wheel(self._equipment_options)
 
 	self._wheel_background_widget = self._widgets_by_name.wheel_background
@@ -219,9 +267,8 @@ end
 
 HudElementEquipmentWheel._populate_wheel = function(self, options)
 	local entries = self._entries
-	local wheel_slots = EquipmentWheelSettings.wheel_slots
 
-	for i = 1, wheel_slots do
+	for i = 1, WHEEL_SLOT_COUNT do
 		local option = options[i]
 		local entry = entries[i]
 
@@ -288,34 +335,7 @@ HudElementEquipmentWheel.update = function(self, dt, t, ui_renderer, render_sett
 		if is_equipment_wheel_context_valid(self._parent) then
 			local extensions = self._parent:player_extensions()
 			local new_opts = collect_equipment_wheel_slots(extensions)
-			local changed = #new_opts ~= #self._equipment_options
-
-			if not changed then
-				for i = 1, #new_opts do
-					local a = new_opts[i]
-					local b = self._equipment_options[i]
-
-					if not b or a.slot_id ~= b.slot_id then
-						changed = true
-						break
-					end
-
-					if (a.weapon_name or "") ~= (b.weapon_name or "") then
-						changed = true
-						break
-					end
-
-					if (a.icon or "") ~= (b.icon or "") then
-						changed = true
-						break
-					end
-
-					if (a.label_key or "") ~= (b.label_key or "") then
-						changed = true
-						break
-					end
-				end
-			end
+			local changed = equipment_options_changed(new_opts, self._equipment_options)
 
 			if changed then
 				self._equipment_options = new_opts
@@ -532,7 +552,7 @@ HudElementEquipmentWheel._is_wheel_entry_hovered = function(self, t)
 end
 
 HudElementEquipmentWheel._has_any_equipment_option = function(self)
-	return #self._equipment_options > 0
+	return equipment_options_have_any_entry(self._equipment_options)
 end
 
 HudElementEquipmentWheel._handle_input = function(self, t, dt, ui_renderer, render_settings, input_service)
