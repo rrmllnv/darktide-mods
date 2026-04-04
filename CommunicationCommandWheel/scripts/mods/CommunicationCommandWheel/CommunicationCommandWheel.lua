@@ -1,5 +1,13 @@
 local mod = get_mod("CommunicationCommandWheel")
 
+mod:hook_require("scripts/settings/ui/ui_hud_settings", function(UIHudSettings)
+	local layers = UIHudSettings and UIHudSettings.element_draw_layers
+
+	if layers then
+		layers.HudElementCommunicationCommandWheel = layers.HudElementEmoteWheel or 451
+	end
+end)
+
 mod:add_require_path("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_settings")
 mod:add_require_path("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_definitions")
 mod:add_require_path("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_utils")
@@ -296,6 +304,13 @@ mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, para
 end)
 
 mod:hook_safe("HudElementCommunicationCommandWheel", "init", function(self, parent, draw_layer, start_scale)
+	local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
+	local layers = UIHudSettings and UIHudSettings.element_draw_layers
+
+	if layers then
+		self._draw_layer = layers.HudElementCommunicationCommandWheel or layers.HudElementEmoteWheel or 451
+	end
+
 	mod._communication_wheel_element = self
 end)
 

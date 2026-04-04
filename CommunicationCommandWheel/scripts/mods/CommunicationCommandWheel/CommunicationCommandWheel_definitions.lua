@@ -367,9 +367,14 @@ local widget_definitions = {
 				offset = {
 					0,
 					0,
-					100,
+					1,
 				},
-				color = S.rhombus_color,
+				color = {
+					120,
+					0,
+					0,
+					0,
+				},
 			},
 			change_function = function (content, style)
 				local rw = S.rhombus_width or S.center_circle_size
@@ -426,7 +431,7 @@ local widget_definitions = {
 				offset = {
 					0,
 					-133,
-					100,
+					6,
 				},
 				color = get_hud_color("color_tint_main_1", 255),
 			},
