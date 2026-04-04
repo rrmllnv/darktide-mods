@@ -1,5 +1,13 @@
 local mod = get_mod("EquipmentCommandWheel")
 
+mod:hook_require("scripts/settings/ui/ui_hud_settings", function(UIHudSettings)
+	local layers = UIHudSettings and UIHudSettings.element_draw_layers
+
+	if layers then
+		layers.HudElementEquipmentWheel = layers.HudElementEmoteWheel or 451
+	end
+end)
+
 mod:add_require_path("EquipmentCommandWheel/scripts/mods/EquipmentCommandWheel/EquipmentCommandWheel_settings")
 mod:add_require_path("EquipmentCommandWheel/scripts/mods/EquipmentCommandWheel/EquipmentCommandWheel_definitions")
 mod:add_require_path("EquipmentCommandWheel/scripts/mods/EquipmentCommandWheel/EquipmentCommandWheel_utils")
@@ -255,6 +263,13 @@ mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, para
 end)
 
 mod:hook_safe("HudElementEquipmentWheel", "init", function(self, parent, draw_layer, start_scale)
+	local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
+	local layers = UIHudSettings and UIHudSettings.element_draw_layers
+
+	if layers then
+		self._draw_layer = layers.HudElementEquipmentWheel or layers.HudElementEmoteWheel or 451
+	end
+
 	mod._equipment_wheel_element = self
 end)
 
