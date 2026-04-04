@@ -20,6 +20,13 @@ return {
             function_name   = "command_wheel_held",
           },
           {
+            setting_id = "command_wheel_toggle_mode",
+            type = "checkbox",
+            default_value = false,
+            title = "command_wheel_toggle_mode",
+            tooltip_text = "command_wheel_toggle_mode_description",
+          },
+          {
             setting_id = "enable_in_psykhanium_wheel",
             type = "checkbox",
             default_value = true,

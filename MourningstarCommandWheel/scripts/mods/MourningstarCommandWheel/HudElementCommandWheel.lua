@@ -27,6 +27,12 @@ local button_definitions_by_id = Buttons.button_definitions_by_id
 
 local _command_wheel_cursor_seq = 0
 
+local function command_wheel_toggle_mode_enabled()
+	local value = mod:get("command_wheel_toggle_mode")
+
+	return value == true or value == 1
+end
+
 local function load_wheel_config()
 	local saved_config = mod:get("wheel_config")
 	if saved_config and #saved_config > 0 then
@@ -118,6 +124,8 @@ HudElementCommandWheel.init = function(self, parent, draw_layer, start_scale)
 	self._controller_stick_moved = false
 	self._exit_psychanium_blocked = false
 	self._cursor_pushed = false
+	self._toggle_key_prev_pressed = false
+	self._toggle_wait_for_release = false
 
 	_command_wheel_cursor_seq = _command_wheel_cursor_seq + 1
 	self._cursor_reference = "HudElementCommandWheel_" .. tostring(_command_wheel_cursor_seq)
@@ -446,8 +454,26 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 	
 	local wheel_context = self._wheel_context
 	local start_time = wheel_context.input_start_time
+	local toggle_mode = command_wheel_toggle_mode_enabled()
 
-	if input_pressed and not start_time then
+	if not input_pressed then
+		self._toggle_wait_for_release = false
+	end
+
+	local just_pressed = input_pressed and not self._toggle_key_prev_pressed and not self._toggle_wait_for_release
+
+	self._toggle_key_prev_pressed = input_pressed
+
+	if toggle_mode then
+		if just_pressed then
+			if self._wheel_active or self._close_delay or start_time then
+				self._toggle_wait_for_release = true
+				self:_on_wheel_stop(t, ui_renderer, render_settings, input_service)
+			else
+				self:_on_wheel_start(t, input_service)
+			end
+		end
+	elseif input_pressed and not start_time then
 		self:_on_wheel_start(t, input_service)
 	elseif not input_pressed and start_time then
 		local hovered_entry, hovered_index = self:_is_wheel_entry_hovered(t)
@@ -466,11 +492,15 @@ HudElementCommandWheel._handle_input = function(self, t, dt, ui_renderer, render
 	local start_time = wheel_context.input_start_time
 
 	if start_time then
-		draw_wheel = self._wheel_active
-		local always_draw_t = start_time + 0.1
-
-		if always_draw_t < t then
+		if toggle_mode then
 			draw_wheel = true
+		else
+			draw_wheel = self._wheel_active
+			local always_draw_t = start_time + 0.1
+
+			if always_draw_t < t then
+				draw_wheel = true
+			end
 		end
 	end
 

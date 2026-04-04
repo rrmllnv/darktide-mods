@@ -53,6 +53,14 @@ return {
     en = "Key to open the command wheel.",
     ru = "Клавиша для открытия колеса команд.",
   },
+  command_wheel_toggle_mode = {
+    en = "Toggle Command Wheel",
+    ru = "Открывать колесо переключением",
+  },
+  command_wheel_toggle_mode_description = {
+    en = "If enabled, one press opens the command wheel and the next press closes it. If disabled, the wheel opens by holding the key.",
+    ru = "Если включено, одно нажатие открывает колесо, а повторное закрывает его. Если выключено, колесо открывается удержанием клавиши.",
+  },
   open_inventory_view_key = {
     en = Localize("loc_character_view_display_name"),
     ["zh-cn"] = Localize("loc_character_view_display_name"),
