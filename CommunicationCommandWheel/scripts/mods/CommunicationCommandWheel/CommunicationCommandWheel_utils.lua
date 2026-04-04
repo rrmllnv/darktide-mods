@@ -26,6 +26,103 @@ local function localize_text(label_key)
 	return label_key
 end
 
+local function get_local_player_unit()
+	if not Managers or not Managers.player then
+		return nil
+	end
+
+	local local_player = Managers.player:local_player_safe(1)
+
+	if not local_player or not local_player:unit_is_alive() or not local_player.player_unit then
+		return nil
+	end
+
+	local player_unit = local_player.player_unit
+
+	if not Unit.alive(player_unit) then
+		return nil
+	end
+
+	return player_unit
+end
+
+local function send_mission_chat_message(text_key)
+	if not text_key or not Managers or not Managers.chat then
+		return false
+	end
+
+	local chat_manager = Managers.chat
+	local ChannelTags = require("scripts/foundation/managers/chat/chat_manager_constants").ChannelTag
+	local channels = chat_manager:connected_chat_channels()
+	local channel_handle = nil
+
+	if channels then
+		for handle, channel in pairs(channels) do
+			if channel.tag == ChannelTags.MISSION then
+				channel_handle = handle
+
+				break
+			end
+		end
+	end
+
+	if not channel_handle then
+		local sessions = chat_manager:sessions()
+
+		if sessions then
+			channel_handle = next(sessions)
+		end
+	end
+
+	if not channel_handle then
+		return false
+	end
+
+	local english_text = text_key
+	local localization_table = mod._localization_cache
+
+	if not localization_table then
+		localization_table = mod:io_dofile("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_localization")
+		mod._localization_cache = localization_table
+	end
+
+	if localization_table and localization_table[text_key] and localization_table[text_key].en then
+		english_text = localization_table[text_key].en
+	end
+
+	local formatted_message = string.format("{#color(79,175,255)} %s {#reset()}", english_text)
+
+	if chat_manager.send_channel_message then
+		chat_manager:send_channel_message(channel_handle, formatted_message)
+
+		return true
+	end
+
+	return false
+end
+
+local function trigger_location_ping_at_position(position, player_unit)
+	if not position or not Managers or not Managers.state or not Managers.state.extension then
+		return false
+	end
+
+	local tagger_unit = player_unit or get_local_player_unit()
+
+	if not tagger_unit then
+		return false
+	end
+
+	local smart_tag_system = Managers.state.extension:system("smart_tag_system")
+
+	if not smart_tag_system then
+		return false
+	end
+
+	smart_tag_system:set_tag("location_ping", tagger_unit, nil, position)
+
+	return true
+end
+
 local function trigger_smart_tag_option(option)
 	if not option or not option.smart_tag_type then
 		return
@@ -35,15 +132,9 @@ local function trigger_smart_tag_option(option)
 		return
 	end
 
-	local local_player = Managers.player:local_player_safe(1)
+	local player_unit = get_local_player_unit()
 
-	if not local_player or not local_player:unit_is_alive() or not local_player.player_unit then
-		return
-	end
-
-	local player_unit = local_player.player_unit
-
-	if not Unit.alive(player_unit) then
+	if not player_unit then
 		return
 	end
 
@@ -163,59 +254,8 @@ local function activate_option(option)
 
 		trigger_smart_tag_option(option)
 
-		if option.chat_message_data then
-			if not Managers or not Managers.chat then
-				return
-			end
-
-			local chat_manager = Managers.chat
-			local channel_tag = option.chat_message_data.channel
-
-			if not channel_tag then
-				return
-			end
-
-			local channels = chat_manager:connected_chat_channels()
-			local channel_handle = nil
-
-			if channels then
-				for handle, channel in pairs(channels) do
-					if channel.tag == channel_tag then
-						channel_handle = handle
-
-						break
-					end
-				end
-			end
-
-			if not channel_handle then
-				local sessions = chat_manager:sessions()
-
-				if sessions then
-					channel_handle = next(sessions)
-				end
-			end
-
-			if channel_handle then
-				local text_key = option.chat_message_data.text
-				local english_text = text_key
-				local localization_table = mod._localization_cache
-
-				if not localization_table then
-					localization_table = mod:io_dofile("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_localization")
-					mod._localization_cache = localization_table
-				end
-
-				if localization_table and localization_table[text_key] and localization_table[text_key].en then
-					english_text = localization_table[text_key].en
-				end
-
-				local formatted_message = string.format("{#color(79,175,255)} %s {#reset()}", english_text)
-
-				if chat_manager.send_channel_message then
-					chat_manager:send_channel_message(channel_handle, formatted_message)
-				end
-			end
+		if option.chat_message_data and option.chat_message_data.text then
+			send_mission_chat_message(option.chat_message_data.text)
 		end
 	end)
 
@@ -270,6 +310,9 @@ end
 return {
 	localize_text = localize_text,
 	activate_option = activate_option,
+	get_local_player_unit = get_local_player_unit,
+	send_mission_chat_message = send_mission_chat_message,
+	trigger_location_ping_at_position = trigger_location_ping_at_position,
 	find_device_for_key = find_device_for_key,
 	apply_style_offset = apply_style_offset,
 	apply_style_color = apply_style_color,

@@ -154,6 +154,26 @@ local widgets = {
 		sub_widgets = page_widget_groups,
 	},
 	{
+		setting_id = "ccw_automatic_commands_group",
+		type = "group",
+		sub_widgets = {
+			{
+				setting_id = "ccw_auto_chat_medical_crate_deployed",
+				type = "checkbox",
+				default_value = true,
+				title = "ccw_auto_chat_medical_crate_deployed",
+				tooltip_text = "ccw_auto_chat_medical_crate_deployed_description",
+			},
+			{
+				setting_id = "ccw_auto_chat_ammo_crate_deployed",
+				type = "checkbox",
+				default_value = true,
+				title = "ccw_auto_chat_ammo_crate_deployed",
+				tooltip_text = "ccw_auto_chat_ammo_crate_deployed_description",
+			},
+		},
+	},
+	{
 		setting_id = "ccw_system_settings_group",
 		type = "group",
 		sub_widgets = {

@@ -35,6 +35,27 @@ local Utils = require("CommunicationCommandWheel/scripts/mods/CommunicationComma
 local Pages = require("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_pages")
 local Buttons = require("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_buttons")
 
+local function is_local_player_action(action_self)
+	local local_player_unit = Utils.get_local_player_unit and Utils.get_local_player_unit()
+
+	if not local_player_unit or not action_self or not action_self._player_unit then
+		return false
+	end
+
+	return action_self._player_unit == local_player_unit
+end
+
+local function trigger_auto_deployed_message_and_ping(setting_id, message_key, position)
+	local enabled = mod:get(setting_id)
+
+	if enabled ~= true and enabled ~= 1 then
+		return
+	end
+
+	Utils.send_mission_chat_message(message_key)
+	Utils.trigger_location_ping_at_position(position)
+end
+
 local PAGE3_LAYOUT_MIGRATION_VERSION = 6
 
 local function migrate_page3_slots_from_defaults_once()
@@ -312,6 +333,40 @@ mod:hook_safe("HudElementCommunicationCommandWheel", "init", function(self, pare
 	end
 
 	mod._communication_wheel_element = self
+end)
+
+mod:hook_safe("ActionPlaceDeployable", "_place_unit", function(self, action_settings, position, rotation, placed_on_unit)
+	if not is_local_player_action(self) then
+		return
+	end
+
+	local deployable_settings = action_settings and action_settings.deployable_settings
+	local deployable_name = deployable_settings and deployable_settings.name
+
+	if deployable_name == "medical_crate" then
+		trigger_auto_deployed_message_and_ping(
+			"ccw_auto_chat_medical_crate_deployed",
+			"ccw_auto_message_medical_crate_deployed_here",
+			position
+		)
+	end
+end)
+
+mod:hook_safe("ActionPlacePickup", "_place_unit", function(self, action_settings, position, rotation, placed_on_unit)
+	if not is_local_player_action(self) then
+		return
+	end
+
+	local weapon_template = self._weapon_template
+	local pickup_name = action_settings and action_settings.pickup_name or weapon_template and weapon_template.pickup_name
+
+	if pickup_name == "ammo_cache_deployable" then
+		trigger_auto_deployed_message_and_ping(
+			"ccw_auto_chat_ammo_crate_deployed",
+			"ccw_auto_message_ammo_crate_deployed_here",
+			position
+		)
+	end
 end)
 
 mod.on_setting_changed = function(setting_id)

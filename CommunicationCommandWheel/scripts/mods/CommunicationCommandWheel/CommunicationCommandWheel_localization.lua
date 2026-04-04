@@ -23,6 +23,26 @@ return {
 		en = "\238\128\169 SYSTEM SETTINGS",
 		ru = "\238\128\169 СИСТЕМНЫЕ НАСТРОЙКИ",
 	},
+	ccw_automatic_commands_group = {
+		en = " AUTOMATIC COMMUNICATION COMMANDS",
+		ru = " АВТОМАТИЧЕСКИЕ КОМАНДЫ СВЯЗИ",
+	},
+	ccw_auto_chat_medical_crate_deployed = {
+		en = "Medical crate deployed",
+		ru = "Medical crate deployed",
+	},
+	ccw_auto_chat_medical_crate_deployed_description = {
+		en = "When you deploy a medical crate, automatically send 'Medical crate deployed here' to mission chat and place a location ping.",
+		ru = "Когда вы разворачиваете медицинский ящик, автоматически отправлять в чат миссии 'Medical crate deployed here' и ставить метку location_ping.",
+	},
+	ccw_auto_chat_ammo_crate_deployed = {
+		en = "Ammo crate deployed",
+		ru = "Ammo crate deployed",
+	},
+	ccw_auto_chat_ammo_crate_deployed_description = {
+		en = "When you deploy an ammo crate, automatically send 'Ammo crate deployed here' to mission chat and place a location ping.",
+		ru = "Когда вы разворачиваете ящик с боеприпасами, автоматически отправлять в чат миссии 'Ammo crate deployed here' и ставить метку location_ping.",
+	},
 	ccw_reset_slot_commands = {
 		en = "Reset commands to defaults",
 		ru = "Сбросить команды к умолчанию",
@@ -238,6 +258,14 @@ return {
 	ccw_command_hold_exit = {
 		en = "Hold the exit",
 		ru = "Держим выход",
+	},
+	ccw_auto_message_medical_crate_deployed_here = {
+		en = "Medical crate deployed here",
+		ru = "Medical crate deployed here",
+	},
+	ccw_auto_message_ammo_crate_deployed_here = {
+		en = "Ammo crate deployed here",
+		ru = "Ammo crate deployed here",
 	},
 	ccw_command_dont_split_up = {
 		en = "Don't split up",
