@@ -272,8 +272,8 @@ return {
 		ru = "Не разбегаемся",
 	},
 	ccw_command_back = {
-		en = "Back",
-		ru = "Назад",
+		en = "Fall Back",
+		ru = "Отступаем",
 	},
 	ccw_page_switch = {
 		en = "Switch Page",

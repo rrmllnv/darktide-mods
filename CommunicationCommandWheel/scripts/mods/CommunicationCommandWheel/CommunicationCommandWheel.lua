@@ -34,6 +34,7 @@ end
 local Utils = require("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_utils")
 local Pages = require("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_pages")
 local Buttons = require("CommunicationCommandWheel/scripts/mods/CommunicationCommandWheel/CommunicationCommandWheel_buttons")
+local ActionUtility = require("scripts/extension_systems/weapon/actions/utilities/action_utility")
 
 local function is_local_player_action(action_self)
 	local local_player_unit = Utils.get_local_player_unit and Utils.get_local_player_unit()
@@ -54,6 +55,83 @@ local function trigger_auto_deployed_message_and_ping(setting_id, message_key, p
 
 	Utils.send_mission_chat_message(message_key)
 	Utils.trigger_location_ping_at_position(position)
+end
+
+local function get_auto_deploy_message_data(action_self)
+	if not is_local_player_action(action_self) then
+		return nil
+	end
+
+	local action_settings = action_self and action_self._action_settings
+	local deployable_settings = action_settings and action_settings.deployable_settings
+
+	if deployable_settings and deployable_settings.name == "medical_crate" then
+		return "ccw_auto_chat_medical_crate_deployed", "ccw_auto_message_medical_crate_deployed_here"
+	end
+
+	local weapon_template = action_self and action_self._weapon_template
+	local pickup_name = action_settings and action_settings.pickup_name or weapon_template and weapon_template.pickup_name
+
+	if pickup_name == "ammo_cache_deployable" then
+		return "ccw_auto_chat_ammo_crate_deployed", "ccw_auto_message_ammo_crate_deployed_here"
+	end
+
+	return nil
+end
+
+local function hook_auto_deploy_action(ActionClass)
+	mod:hook_safe(ActionClass, "start", function(self, action_settings, t, time_scale, action_start_params)
+		self._ccw_auto_deploy_message_sent = false
+	end)
+
+	mod:hook(ActionClass, "fixed_update", function(func, self, dt, t, time_in_action)
+		local result = func(self, dt, t, time_in_action)
+
+		if self._ccw_auto_deploy_message_sent then
+			return result
+		end
+
+		local setting_id, message_key = get_auto_deploy_message_data(self)
+
+		if not setting_id or not message_key then
+			return result
+		end
+
+		local action_settings = self._action_settings
+		local can_place, can_place_time_or_nil, position = self:_get_placement_data_from_component()
+
+		if not can_place or not position then
+			return result
+		end
+
+		local finish_time = action_settings and action_settings.total_time
+		local place_time = action_settings and (action_settings.place_time or finish_time)
+		local weapon_action_component = self._weapon_action_component
+		local time_scale = weapon_action_component and weapon_action_component.time_scale or 1
+
+		if not place_time or time_scale == 0 then
+			return result
+		end
+
+		local time_able_to_place = can_place_time_or_nil and (t - can_place_time_or_nil) or time_in_action
+		local is_in_placement_time = ActionUtility.is_within_trigger_time(time_able_to_place, dt, place_time / time_scale)
+
+		if not is_in_placement_time then
+			return result
+		end
+
+		local ammunition_usage = action_settings and action_settings.ammunition_usage
+
+		if ammunition_usage and ammunition_usage > self:_current_ammo() then
+			return result
+		end
+
+		self._ccw_auto_deploy_message_sent = true
+
+		trigger_auto_deployed_message_and_ping(setting_id, message_key, position)
+
+		return result
+	end)
 end
 
 local PAGE3_LAYOUT_MIGRATION_VERSION = 6
@@ -335,38 +413,12 @@ mod:hook_safe("HudElementCommunicationCommandWheel", "init", function(self, pare
 	mod._communication_wheel_element = self
 end)
 
-mod:hook_safe("ActionPlaceDeployable", "_place_unit", function(self, action_settings, position, rotation, placed_on_unit)
-	if not is_local_player_action(self) then
-		return
-	end
-
-	local deployable_settings = action_settings and action_settings.deployable_settings
-	local deployable_name = deployable_settings and deployable_settings.name
-
-	if deployable_name == "medical_crate" then
-		trigger_auto_deployed_message_and_ping(
-			"ccw_auto_chat_medical_crate_deployed",
-			"ccw_auto_message_medical_crate_deployed_here",
-			position
-		)
-	end
+mod:hook_require("scripts/extension_systems/weapon/actions/action_place_pickup", function(ActionPlacePickup)
+	hook_auto_deploy_action(ActionPlacePickup)
 end)
 
-mod:hook_safe("ActionPlacePickup", "_place_unit", function(self, action_settings, position, rotation, placed_on_unit)
-	if not is_local_player_action(self) then
-		return
-	end
-
-	local weapon_template = self._weapon_template
-	local pickup_name = action_settings and action_settings.pickup_name or weapon_template and weapon_template.pickup_name
-
-	if pickup_name == "ammo_cache_deployable" then
-		trigger_auto_deployed_message_and_ping(
-			"ccw_auto_chat_ammo_crate_deployed",
-			"ccw_auto_message_ammo_crate_deployed_here",
-			position
-		)
-	end
+mod:hook_require("scripts/extension_systems/weapon/actions/action_place_deployable", function(ActionPlaceDeployable)
+	hook_auto_deploy_action(ActionPlaceDeployable)
 end)
 
 mod.on_setting_changed = function(setting_id)
