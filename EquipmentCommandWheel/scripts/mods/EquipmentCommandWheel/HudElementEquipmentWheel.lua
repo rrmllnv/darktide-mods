@@ -100,6 +100,7 @@ HudElementEquipmentWheel.init = function(self, parent, draw_layer, start_scale)
 	self._cursor_pushed = false
 	self._equipment_options = {}
 	self._scan_delay_duration = 0
+	self._ew_wants_camera_prev = false
 
 	_equipment_wheel_cursor_seq = _equipment_wheel_cursor_seq + 1
 	self._cursor_reference = "HudElementEquipmentWheel_" .. tostring(_equipment_wheel_cursor_seq)
@@ -336,6 +337,18 @@ HudElementEquipmentWheel.update = function(self, dt, t, ui_renderer, render_sett
 	end
 
 	self:_handle_input(t, dt, ui_renderer, render_settings, input_service)
+
+	local wants_camera = self._wheel_active or self._close_delay ~= nil
+
+	if wants_camera ~= self._ew_wants_camera_prev then
+		if wants_camera then
+			Managers.event:trigger("event_set_communication_wheel_state", "camera_lock")
+		else
+			Managers.event:trigger("event_set_communication_wheel_state", false)
+		end
+
+		self._ew_wants_camera_prev = wants_camera
+	end
 end
 
 HudElementEquipmentWheel._update_active_progress = function(self, dt)
@@ -717,7 +730,15 @@ HudElementEquipmentWheel._on_wheel_stop = function(self, t, ui_renderer, render_
 end
 
 HudElementEquipmentWheel.destroy = function(self, ui_renderer)
+	local wants_camera = self._wheel_active or self._close_delay ~= nil
+
 	self:_release_equipment_wheel_cursor_and_flags(false, true)
+
+	if wants_camera then
+		Managers.event:trigger("event_set_communication_wheel_state", false)
+	end
+
+	self._ew_wants_camera_prev = false
 
 	if mod._equipment_wheel_element == self then
 		mod._equipment_wheel_element = nil
