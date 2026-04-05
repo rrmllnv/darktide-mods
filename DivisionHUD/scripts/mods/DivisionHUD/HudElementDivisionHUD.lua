@@ -26,6 +26,84 @@ local BUFF_ICON_BASE_MATERIAL = "content/ui/materials/base/ui_default_base"
 local COMBAT_ABILITY_TYPE = "combat_ability"
 local GRENADE_ABILITY_TYPE = "grenade_ability"
 
+local HUD_LAYOUT_SCALE = Definitions.HUD_LAYOUT_SCALE or 1
+
+local function division_hud_mod_numeric(key, default_val)
+	local v = mod:get(key)
+
+	if type(v) == "number" and v == v then
+		return v
+	end
+
+	return default_val
+end
+
+local function division_hud_wrapped_angle_delta(prev_rad, curr_rad)
+	return (curr_rad - prev_rad + math.pi) % (math.pi * 2) - math.pi
+end
+
+HudElementDivisionHUD._division_hud_reset_dynamic_offset_state = function(self)
+	self._division_hud_dyn_prev_yaw = nil
+	self._division_hud_dyn_prev_pitch = nil
+	self._division_hud_dyn_ox = 0
+	self._division_hud_dyn_oy = 0
+end
+
+HudElementDivisionHUD._division_hud_compute_dynamic_root_offset = function(self, dt, player)
+	local strength = division_hud_mod_numeric("dynamic_hud_strength", 110)
+	local pitch_ratio = division_hud_mod_numeric("dynamic_hud_pitch_ratio", 0.65)
+	local decay_hz = division_hud_mod_numeric("dynamic_hud_decay", 11)
+	local max_off = division_hud_mod_numeric("dynamic_hud_max_offset", 72)
+
+	if not player or player.get_orientation == nil then
+		self:_division_hud_reset_dynamic_offset_state()
+
+		return 0, 0
+	end
+
+	local orientation = player:get_orientation()
+
+	if not orientation or type(orientation.yaw) ~= "number" or type(orientation.pitch) ~= "number" then
+		self:_division_hud_reset_dynamic_offset_state()
+
+		return 0, 0
+	end
+
+	local yaw = orientation.yaw
+	local pitch = orientation.pitch
+	local ox = self._division_hud_dyn_ox or 0
+	local oy = self._division_hud_dyn_oy or 0
+	local decay = math.exp(-decay_hz * dt)
+
+	ox = ox * decay
+	oy = oy * decay
+
+	local prev_yaw = self._division_hud_dyn_prev_yaw
+
+	if prev_yaw then
+		local dyaw = division_hud_wrapped_angle_delta(prev_yaw, yaw)
+
+		ox = ox - strength * dyaw
+	end
+
+	local prev_pitch = self._division_hud_dyn_prev_pitch
+
+	if prev_pitch then
+		local dpitch = division_hud_wrapped_angle_delta(prev_pitch, pitch)
+
+		oy = oy + strength * pitch_ratio * dpitch
+	end
+
+	self._division_hud_dyn_prev_yaw = yaw
+	self._division_hud_dyn_prev_pitch = pitch
+	ox = math.clamp(ox, -max_off, max_off)
+	oy = math.clamp(oy, -max_off, max_off)
+	self._division_hud_dyn_ox = ox
+	self._division_hud_dyn_oy = oy
+
+	return ox * HUD_LAYOUT_SCALE, oy * HUD_LAYOUT_SCALE
+end
+
 HudElementDivisionHUD._slot_cell_visible = function(self, slot_id)
 	if slot_id == "slot_grenade_ability" then
 		return mod:get("show_grenades") ~= false and mod:get("show_grenades") ~= 0
@@ -328,6 +406,8 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 
 	HudElementDivisionHUD.super.init(self, parent, draw_layer, start_scale, definitions)
 
+	self:_division_hud_reset_dynamic_offset_state()
+
 	self._buff_widgets = {}
 	self._max_buffs = 9
 
@@ -341,13 +421,33 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 end
 
 HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_settings, input_service)
-	HudElementDivisionHUD.super.update(self, dt, t, ui_renderer, render_settings, input_service)
-
 	local game_mode_manager = Managers.state.game_mode
 	local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
 	local is_in_hub = not game_mode_name or game_mode_name == "hub" or game_mode_name == "prologue_hub"
 
+	if not is_in_hub then
+		local layout_player = Managers.player:local_player(1)
+		local layout_unit = layout_player and layout_player.player_unit
+
+		if layout_player and layout_unit and ALIVE[layout_unit] then
+			local pos_x = mod:get("position_x") or 0
+			local pos_y = mod:get("position_y") or 0
+			local dyn_x, dyn_y = 0, 0
+
+			if mod:get("dynamic_hud") ~= false and mod:get("dynamic_hud") ~= 0 then
+				dyn_x, dyn_y = self:_division_hud_compute_dynamic_root_offset(dt, layout_player)
+			else
+				self:_division_hud_reset_dynamic_offset_state()
+			end
+
+			self:set_scenegraph_position("root", 20 + pos_x + dyn_x, 50 + pos_y + dyn_y)
+		end
+	end
+
+	HudElementDivisionHUD.super.update(self, dt, t, ui_renderer, render_settings, input_service)
+
 	if is_in_hub then
+		self:_division_hud_reset_dynamic_offset_state()
 		self:_set_all_visible(false)
 		return
 	end
@@ -355,6 +455,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	local player = Managers.player:local_player(1)
 
 	if not player then
+		self:_division_hud_reset_dynamic_offset_state()
 		self:_set_all_visible(false)
 		return
 	end
@@ -362,19 +463,12 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	local player_unit = player.player_unit
 
 	if not player_unit or not ALIVE[player_unit] then
+		self:_division_hud_reset_dynamic_offset_state()
 		self:_set_all_visible(false)
 		return
 	end
 
-	local pos_x = mod:get("position_x") or 0
-	local pos_y = mod:get("position_y") or 0
 	local opacity = mod:get("opacity") or 1.0
-
-	local root_pos = self._ui_scenegraph.root.position
-
-	root_pos[1] = 20 + pos_x
-	root_pos[2] = 50 + pos_y
-
 	local widgets = self._widgets_by_name
 
 	self:_update_stamina_bar(player_unit, widgets.stamina_bar, opacity)
@@ -674,6 +768,7 @@ end
 HudElementDivisionHUD.destroy = function(self, ui_renderer)
 	Managers.event:unregister(self, "event_player_profile_updated")
 	self:_clear_buff_widgets(ui_renderer)
+	self:_division_hud_reset_dynamic_offset_state()
 
 	HudElementDivisionHUD.super.destroy(self, ui_renderer)
 end

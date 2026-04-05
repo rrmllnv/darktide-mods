@@ -63,5 +63,25 @@ return {
 		en = "Show Buffs",
 		ru = "Показывать баффы",
 	},
+	dynamic_hud = {
+		en = "Dynamic HUD (follows look: opposite nudge, then returns)",
+		ru = "Динамический HUD (сдвиг против поворота камеры, затем возврат)",
+	},
+	dynamic_hud_strength = {
+		en = "Dynamic HUD strength (horizontal; pixels per radian impulse)",
+		ru = "Сила сдвига HUD (горизонталь, условно пикс/рад)",
+	},
+	dynamic_hud_pitch_ratio = {
+		en = "Dynamic HUD vertical ratio (vs horizontal)",
+		ru = "Вертикаль относительно горизонтали (коэффициент)",
+	},
+	dynamic_hud_decay = {
+		en = "Dynamic HUD return speed (higher = faster)",
+		ru = "Скорость возврата HUD (больше — быстрее)",
+	},
+	dynamic_hud_max_offset = {
+		en = "Dynamic HUD max offset (pixels)",
+		ru = "Макс. смещение HUD (пикс)",
+	},
 }
 
