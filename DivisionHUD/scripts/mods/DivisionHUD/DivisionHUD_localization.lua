@@ -4,8 +4,8 @@ return {
 		ru = "Division HUD",
 	},
 	mod_description = {
-		en = "Division-style HUD: bars, large ammo readout (clip + reserve), right panel: wielded weapon (inventory.wielded_slot) + blitz, stimm, pickup; buffs.",
-		ru = "HUD в стиле Division: полосы, крупный блок патронов, справа: оружие в руках (wielded_slot) + блиц, стим, карман; баффы.",
+		en = "Division-style HUD: bars, large ammo readout (clip + reserve), right panel: wielded weapon (inventory.wielded_slot) + blitz, stimm, pickup.",
+		ru = "HUD в стиле Division: полосы, крупный блок патронов, справа: оружие в руках (wielded_slot) + блиц, стим, карман.",
 	},
 	position_x = {
 		en = "Position X",
@@ -58,10 +58,6 @@ return {
 	show_pickups = {
 		en = "Show Pickup Slot (large pocketable)",
 		ru = "Показывать слот крупного кармана (ящик и т.п.)",
-	},
-	show_buffs = {
-		en = "Show Buffs",
-		ru = "Показывать баффы",
 	},
 	dynamic_hud = {
 		en = "Dynamic HUD (follows look: opposite nudge, then returns)",

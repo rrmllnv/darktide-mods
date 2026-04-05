@@ -2,7 +2,6 @@ local mod = get_mod("DivisionHUD")
 
 require("scripts/ui/hud/elements/hud_element_base")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
-local UIWidget = require("scripts/managers/ui/ui_widget")
 local Ammo = require("scripts/utilities/ammo")
 local PlayerCharacterConstants = require("scripts/settings/player_character/player_character_constants")
 
@@ -18,13 +17,8 @@ local ROOT_LAYOUT_OFFSET_Y = Definitions.ROOT_LAYOUT_OFFSET_Y
 local ROOT_LAYOUT_OFFSET_Z = Definitions.ROOT_LAYOUT_OFFSET_Z
 
 local BAR_WIDTH = Definitions.BAR_WIDTH
-local BUFF_SIZE = Definitions.BUFF_SIZE
-local BUFF_SPACING = Definitions.BUFF_SPACING
-local BUFF_ICON_PADDING = Definitions.BUFF_ICON_PADDING
 local RIGHT_SLOT_COUNT = Definitions.RIGHT_SLOT_COUNT
 local right_slot_widget_names = Definitions.right_slot_widget_names
-local BUFF_ICON_FALLBACK_TEXTURE = SlotData.DEFAULT_GRENADE_FLAT_ICON
-local BUFF_ICON_BASE_MATERIAL = "content/ui/materials/base/ui_default_base"
 
 local COMBAT_ABILITY_TYPE = "combat_ability"
 local GRENADE_ABILITY_TYPE = "grenade_ability"
@@ -411,16 +405,11 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 
 	self:_division_hud_reset_dynamic_offset_state()
 
-	self._buff_widgets = {}
-	self._max_buffs = 9
-
 	local widgets = self._widgets_by_name
 
 	for _, widget in pairs(widgets) do
 		widget.content.visible = false
 	end
-
-	Managers.event:register(self, "event_player_profile_updated", "_event_player_profile_updated")
 end
 
 HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_settings, input_service)
@@ -485,7 +474,6 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	self:_update_ability_bar(player_unit, widgets.ability_bar, opacity)
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
 	self:_update_right_slot_grid(player_unit, widgets, opacity)
-	self:_update_buffs(player_unit, t, ui_renderer, opacity)
 end
 
 HudElementDivisionHUD._update_stamina_bar = function(self, player_unit, widget, opacity)
@@ -599,156 +587,6 @@ HudElementDivisionHUD._update_ability_bar = function(self, player_unit, widget, 
 	widget.dirty = true
 end
 
-HudElementDivisionHUD._update_buffs = function(self, player_unit, t, ui_renderer, opacity)
-	if not mod:get("show_buffs") then
-		self:_clear_buff_widgets(ui_renderer)
-
-		return
-	end
-
-	local buff_extension = ScriptUnit.has_extension(player_unit, "buff_system")
-
-	if not buff_extension then
-		return
-	end
-
-	local active_buffs = {}
-	local buffs_by_index = buff_extension._buffs_by_index
-
-	if buffs_by_index then
-		for _, buff in pairs(buffs_by_index) do
-			local template = buff:template()
-
-			if template and template.hud_icon then
-				local remaining = buff:duration() or 0
-
-				if remaining > 0 then
-					table.insert(active_buffs, {
-						icon = template.hud_icon,
-						duration = remaining,
-					})
-				end
-			end
-		end
-	end
-
-	local needed_widgets = math.min(#active_buffs, self._max_buffs)
-	local current_widgets = #self._buff_widgets
-
-	while current_widgets < needed_widgets do
-		current_widgets = current_widgets + 1
-		local widget_name = "buff_" .. current_widgets
-		local offset_x = (current_widgets - 1) * (BUFF_SIZE + BUFF_SPACING)
-		local widget_def = UIWidget.create_definition({
-			{
-				pass_type = "rect",
-				style_id = "background",
-				style = {
-					color = {
-						HUD_GLASS_PLATE_COLOR[1],
-						HUD_GLASS_PLATE_COLOR[2],
-						HUD_GLASS_PLATE_COLOR[3],
-						HUD_GLASS_PLATE_COLOR[4],
-					},
-					size = { BUFF_SIZE, BUFF_SIZE },
-					offset = { offset_x, 0, 0 },
-				},
-			},
-			{
-				pass_type = "texture",
-				style_id = "icon",
-				value = BUFF_ICON_BASE_MATERIAL,
-				value_id = "icon",
-				style = {
-					size = {
-						BUFF_SIZE - BUFF_ICON_PADDING * 2,
-						BUFF_SIZE - BUFF_ICON_PADDING * 2,
-					},
-					color = UIHudSettings.color_tint_main_1,
-					offset = { offset_x + BUFF_ICON_PADDING, BUFF_ICON_PADDING, 1 },
-					material_values = {
-						texture_map = BUFF_ICON_FALLBACK_TEXTURE,
-						use_placeholder_texture = 0,
-					},
-				},
-			},
-		}, "buffs_row")
-
-		local created_widget = self:_create_widget(widget_name, widget_def)
-
-		self._buff_widgets[current_widgets] = created_widget
-	end
-
-	while current_widgets > needed_widgets do
-		local widget = self._buff_widgets[current_widgets]
-
-		if widget then
-			local widget_name = "buff_" .. current_widgets
-
-			self:_unregister_widget_name(widget_name)
-			UIWidget.destroy(ui_renderer, widget)
-		end
-
-		self._buff_widgets[current_widgets] = nil
-		current_widgets = current_widgets - 1
-	end
-
-	for i = 1, needed_widgets do
-		local widget = self._buff_widgets[i]
-		local buff_data = active_buffs[i]
-
-		if widget and buff_data then
-			local tex = buff_data.icon
-
-			if type(tex) ~= "string" or tex == "" or tex == "content/ui/materials/base/ui_default_base" then
-				tex = BUFF_ICON_FALLBACK_TEXTURE
-			end
-
-			widget.content.icon = BUFF_ICON_BASE_MATERIAL
-
-			local icon_style = widget.style and widget.style.icon
-
-			if icon_style then
-				local mv = icon_style.material_values
-
-				if not mv then
-					icon_style.material_values = {}
-					mv = icon_style.material_values
-				end
-
-				mv.texture_map = tex
-				mv.use_placeholder_texture = 0
-			end
-
-			widget.style.background.color[1] = HUD_GLASS_PLATE_ALPHA_BASE * opacity
-			widget.style.icon.color[1] = 255 * opacity
-			widget.dirty = true
-		end
-	end
-end
-
-HudElementDivisionHUD._clear_buff_widgets = function(self, ui_renderer)
-	for i, buff_widget in ipairs(self._buff_widgets) do
-		if buff_widget then
-			local widget_name = "buff_" .. i
-
-			self:_unregister_widget_name(widget_name)
-
-			if ui_renderer then
-				UIWidget.destroy(ui_renderer, buff_widget)
-			end
-		end
-	end
-
-	self._buff_widgets = {}
-end
-
-HudElementDivisionHUD._event_player_profile_updated = function(self)
-	local ui_renderer = self._parent and self._parent._ui_renderer
-
-	self:_clear_buff_widgets(ui_renderer)
-end
-
 HudElementDivisionHUD._set_all_visible = function(self, visible)
 	local widgets = self._widgets_by_name
 
@@ -757,25 +595,11 @@ HudElementDivisionHUD._set_all_visible = function(self, visible)
 	end
 end
 
-HudElementDivisionHUD._draw_widgets = function(self, dt, t, input_service, ui_renderer, render_settings)
-	HudElementDivisionHUD.super._draw_widgets(self, dt, t, input_service, ui_renderer, render_settings)
-
-	for i = 1, #self._buff_widgets do
-		local widget = self._buff_widgets[i]
-
-		if widget then
-			UIWidget.draw(widget, ui_renderer)
-		end
-	end
-end
-
 HudElementDivisionHUD.draw = function(self, dt, t, ui_renderer, render_settings, input_service)
 	HudElementDivisionHUD.super.draw(self, dt, t, ui_renderer, render_settings, input_service)
 end
 
 HudElementDivisionHUD.destroy = function(self, ui_renderer)
-	Managers.event:unregister(self, "event_player_profile_updated")
-	self:_clear_buff_widgets(ui_renderer)
 	self:_division_hud_reset_dynamic_offset_state()
 
 	HudElementDivisionHUD.super.destroy(self, ui_renderer)

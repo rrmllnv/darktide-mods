@@ -80,11 +80,6 @@ return {
 				default_value = true,
 			},
 			{
-				setting_id = "show_buffs",
-				type = "checkbox",
-				default_value = true,
-			},
-			{
 				setting_id = "dynamic_hud",
 				type = "checkbox",
 				default_value = false,

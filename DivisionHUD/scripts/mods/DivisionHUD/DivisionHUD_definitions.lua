@@ -26,14 +26,11 @@ local WIELDED_ROW_HEIGHT = math.max(sc(28), BIG_AMMO_BOX - RIGHT_CELL - RIGHT_BO
 local RIGHT_BOTTOM_SLOT_WIDTH = math.max(sc(26), math.floor((RIGHT_GRID_WIDTH - 2 * RIGHT_GAP) / 3))
 local MAIN_ROW_HEIGHT = BIG_AMMO_BOX
 local ROW_WIDTH = BIG_AMMO_BOX + GAP_LEFT_TO_GRID + RIGHT_GRID_WIDTH
-local BUFF_SIZE = sc(32)
-local BUFF_SPACING = sc(4)
 local BAR_WIDTH = ROW_WIDTH
 local BAR_HEIGHT = sc(8)
 local BAR_STACK_GAP = sc(2)
 local BOXES_ROW_TOP_GAP = sc(8)
-local BUFFS_ROW_TOP_GAP = sc(8)
-local ROOT_HEIGHT = sc(212)
+local ROOT_HEIGHT = sc(212) - sc(32) - sc(8)
 local SLOT_ICON_TEXTURE_SIZE = sc(26)
 local ECW_WEAPON_ICON_LAYOUT_SCALE = 0.5
 local _weapon_icon_sz = HudElementPlayerWeaponHandlerSettings.weapon_icon_size
@@ -87,7 +84,6 @@ local AMMO_CLIP_FONT = sc(56)
 local AMMO_RESERVE_FONT = sc(26)
 local AMMO_CLIP_OFFSET_Y = sc(14)
 local AMMO_RESERVE_OFFSET_Y = sc(30)
-local BUFF_ICON_PADDING = sc(2)
 
 local HUD_GLASS_PLATE_ALPHA_BASE = 48
 local HUD_GLASS_PLATE_COLOR = {
@@ -212,13 +208,6 @@ local scenegraph_definition = {
 		vertical_alignment = "top",
 		size = { RIGHT_BOTTOM_SLOT_WIDTH, RIGHT_CELL },
 		position = { RIGHT_GRID_ORIGIN_X + (RIGHT_BOTTOM_SLOT_WIDTH + RIGHT_GAP) * 2, RIGHT_BOTTOM_ROW_Y, 0 },
-	},
-	buffs_row = {
-		parent = "boxes_row",
-		horizontal_alignment = "left",
-		vertical_alignment = "top",
-		size = { ROW_WIDTH, BUFF_SIZE },
-		position = { 0, MAIN_ROW_HEIGHT + BUFFS_ROW_TOP_GAP, 0 },
 	},
 }
 
@@ -372,9 +361,6 @@ return {
 	HUD_LAYOUT_SCALE = LAYOUT_SCALE,
 	BAR_WIDTH = BAR_WIDTH,
 	ROW_WIDTH = ROW_WIDTH,
-	BUFF_SIZE = BUFF_SIZE,
-	BUFF_SPACING = BUFF_SPACING,
-	BUFF_ICON_PADDING = BUFF_ICON_PADDING,
 	RIGHT_SLOT_COUNT = 4,
 	right_slot_widget_names = right_slot_widget_names,
 	HUD_WEAPON_ICON_CONTAINER = HUD_WEAPON_ICON_CONTAINER,
