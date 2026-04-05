@@ -24,12 +24,12 @@ return {
 		ru = "Прозрачность",
 	},
 	show_stamina_bar = {
-		en = "Show Stamina Bar (white, top row)",
-		ru = "Полоса стамины (белая, верхний ряд)",
+		en = "Show vanilla stamina + dodge (under equipment slots)",
+		ru = "Ванильная стамина и увороты (под слотами снаряжения)",
 	},
 	show_toughness_bar = {
-		en = "Show Toughness Bar (below stamina; former stamina color)",
-		ru = "Полоса стойкости (под стаминой, цвет как у старой стамины)",
+		en = "Show Toughness Bar (top row)",
+		ru = "Полоса стойкости (верхний ряд)",
 	},
 	show_health_bar = {
 		en = "Show Health Bar",

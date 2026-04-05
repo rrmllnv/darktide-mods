@@ -1,12 +1,14 @@
 local mod = get_mod("DivisionHUD")
 
 require("scripts/ui/hud/elements/hud_element_base")
+local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local Ammo = require("scripts/utilities/ammo")
 local PlayerCharacterConstants = require("scripts/settings/player_character/player_character_constants")
 
 local Definitions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_definitions")
 local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_slot_data")
+local VanillaStaminaDodge = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_stamina_dodge")
 
 local HudElementDivisionHUD = class("HudElementDivisionHUD", "HudElementBase")
 
@@ -474,16 +476,22 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	local definitions = {
 		scenegraph_definition = Definitions.scenegraph_definition,
 		widget_definitions = Definitions.widget_definitions,
+		animations = Definitions.vanilla_stamina_dodge_animations,
 	}
 
 	HudElementDivisionHUD.super.init(self, parent, draw_layer, start_scale, definitions)
 
+	VanillaStaminaDodge.init(self, Definitions)
+
 	self:_division_hud_reset_dynamic_offset_state()
 
 	local widgets = self._widgets_by_name
+	local skip_init_hide = Definitions.VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS
 
-	for _, widget in pairs(widgets) do
-		widget.content.visible = false
+	for name, widget in pairs(widgets) do
+		if widget.content and not skip_init_hide[name] and name ~= "stamina_nodge" then
+			widget.content.visible = false
+		end
 	end
 end
 
@@ -543,47 +551,27 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	local opacity = mod:get("opacity") or 1.0
 	local widgets = self._widgets_by_name
 
-	self:_update_stamina_bar(player_unit, widgets.stamina_bar, opacity)
-	self:_update_toughness_bar(player_unit, widgets.toughness_bar, opacity)
-	self:_update_health_bar(player_unit, widgets.health_bar, opacity)
+	VanillaStaminaDodge.update(self, dt, t, ui_renderer, render_settings, input_service)
+
+	self:_update_toughness_bar(player_unit, widgets, opacity)
+	self:_update_health_bar(player_unit, widgets, opacity)
 	self:_update_ability_bar(player_unit, widgets.ability_bar, opacity)
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
 	self:_update_auspex_slot(player_unit, widgets, opacity)
 	self:_update_right_slot_grid(player_unit, widgets, opacity)
 end
 
-HudElementDivisionHUD._update_stamina_bar = function(self, player_unit, widget, opacity)
-	if not mod:get("show_stamina_bar") then
-		widget.content.visible = false
-		return
-	end
+HudElementDivisionHUD._update_toughness_bar = function(self, player_unit, widgets, opacity)
+	local widget = widgets.toughness_bar
+	local label_widget = widgets.toughness_value_label
 
-	local unit_data_extension = ScriptUnit.has_extension(player_unit, "unit_data_system")
-
-	if not unit_data_extension then
-		widget.content.visible = false
-		return
-	end
-
-	local stamina_component = unit_data_extension:read_component("stamina")
-
-	if not stamina_component then
-		widget.content.visible = false
-		return
-	end
-
-	local stamina_fraction = stamina_component.current_fraction or 0
-
-	widget.content.visible = true
-	widget.style.fill.size[1] = BAR_WIDTH * stamina_fraction
-	widget.style.fill.color[1] = 255 * opacity
-	widget.style.background.color[1] = 160 * opacity
-	widget.dirty = true
-end
-
-HudElementDivisionHUD._update_toughness_bar = function(self, player_unit, widget, opacity)
 	if not mod:get("show_toughness_bar") then
 		widget.content.visible = false
+
+		if label_widget and label_widget.content then
+			label_widget.content.visible = false
+		end
+
 		return
 	end
 
@@ -591,6 +579,11 @@ HudElementDivisionHUD._update_toughness_bar = function(self, player_unit, widget
 
 	if not toughness_extension then
 		widget.content.visible = false
+
+		if label_widget and label_widget.content then
+			label_widget.content.visible = false
+		end
+
 		return
 	end
 
@@ -598,6 +591,11 @@ HudElementDivisionHUD._update_toughness_bar = function(self, player_unit, widget
 
 	if toughness_fraction == nil then
 		widget.content.visible = false
+
+		if label_widget and label_widget.content then
+			label_widget.content.visible = false
+		end
+
 		return
 	end
 
@@ -608,11 +606,29 @@ HudElementDivisionHUD._update_toughness_bar = function(self, player_unit, widget
 	widget.style.fill.color[1] = 255 * opacity
 	widget.style.background.color[1] = 160 * opacity
 	widget.dirty = true
+
+	if label_widget and label_widget.content then
+		local remaining = toughness_extension:remaining_toughness()
+		local max_t = toughness_extension:max_toughness()
+
+		label_widget.content.visible = true
+		label_widget.content.text = string.format("%d/%d", math.floor(remaining), math.floor(max_t))
+		label_widget.style.text.text_color[1] = 255 * opacity
+		label_widget.dirty = true
+	end
 end
 
-HudElementDivisionHUD._update_health_bar = function(self, player_unit, widget, opacity)
+HudElementDivisionHUD._update_health_bar = function(self, player_unit, widgets, opacity)
+	local widget = widgets.health_bar
+	local label_widget = widgets.health_value_label
+
 	if not mod:get("show_health_bar") then
 		widget.content.visible = false
+
+		if label_widget and label_widget.content then
+			label_widget.content.visible = false
+		end
+
 		return
 	end
 
@@ -620,6 +636,11 @@ HudElementDivisionHUD._update_health_bar = function(self, player_unit, widget, o
 
 	if not health_extension then
 		widget.content.visible = false
+
+		if label_widget and label_widget.content then
+			label_widget.content.visible = false
+		end
+
 		return
 	end
 
@@ -630,6 +651,16 @@ HudElementDivisionHUD._update_health_bar = function(self, player_unit, widget, o
 	widget.style.fill.color[1] = 255 * opacity
 	widget.style.background.color[1] = 160 * opacity
 	widget.dirty = true
+
+	if label_widget and label_widget.content then
+		local current = health_extension:current_health()
+		local max_h = health_extension:max_health()
+
+		label_widget.content.visible = true
+		label_widget.content.text = string.format("%d/%d", math.floor(current), math.floor(max_h))
+		label_widget.style.text.text_color[1] = 255 * opacity
+		label_widget.dirty = true
+	end
 end
 
 HudElementDivisionHUD._update_ability_bar = function(self, player_unit, widget, opacity)
@@ -665,9 +696,30 @@ end
 
 HudElementDivisionHUD._set_all_visible = function(self, visible)
 	local widgets = self._widgets_by_name
+	local skip_init_hide = Definitions.VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS
 
-	for _, widget in pairs(widgets) do
-		widget.content.visible = visible
+	for name, widget in pairs(widgets) do
+		if widget.content and not skip_init_hide[name] and name ~= "stamina_nodge" then
+			widget.content.visible = visible
+		end
+	end
+end
+
+HudElementDivisionHUD._draw_widgets = function(self, dt, t, input_service, ui_renderer, render_settings)
+	local skip = Definitions.VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS
+	local widgets = self._widgets
+	local n_widgets = #widgets
+
+	for i = 1, n_widgets do
+		local widget = widgets[i]
+
+		if not skip[widget.name] then
+			UIWidget.draw(widget, ui_renderer)
+		end
+	end
+
+	if mod:get("show_stamina_bar") ~= false and mod:get("show_stamina_bar") ~= 0 then
+		VanillaStaminaDodge.draw(self, dt, t, input_service, ui_renderer, render_settings)
 	end
 end
 
@@ -677,6 +729,8 @@ end
 
 HudElementDivisionHUD.destroy = function(self, ui_renderer)
 	self:_division_hud_reset_dynamic_offset_state()
+
+	VanillaStaminaDodge.destroy(self, ui_renderer)
 
 	HudElementDivisionHUD.super.destroy(self, ui_renderer)
 end

@@ -38,11 +38,14 @@ local RIGHT_COLUMN_TOTAL_HEIGHT = WIELDED_ROW_HEIGHT + RIGHT_BOTTOM_ROW_GAP + RI
 local BIG_AMMO_H = RIGHT_COLUMN_TOTAL_HEIGHT
 local MAIN_ROW_HEIGHT = RIGHT_COLUMN_TOTAL_HEIGHT
 local ROW_WIDTH = BIG_AMMO_W + GAP_LEFT_TO_GRID + RIGHT_GRID_WIDTH
-local BAR_WIDTH = ROW_WIDTH
+local BAR_LABEL_W = sc(44)
+local BAR_FILL_WIDTH = math.max(1, ROW_WIDTH - BAR_LABEL_W)
+local BIG_AMMO_W_LAYOUT = math.max(1, BIG_AMMO_W - BAR_LABEL_W)
+local BAR_WIDTH = BAR_FILL_WIDTH
 local BAR_HEIGHT = sc(8)
 local BAR_STACK_GAP = sc(2)
 local BOXES_ROW_TOP_GAP = sc(8)
-local ROOT_HEIGHT = sc(212) - sc(32) - sc(8)
+local ROOT_HEIGHT_BASE = sc(212) - sc(32) - sc(8)
 local SLOT_ICON_TEXTURE_SIZE = sc(22)
 local ECW_WEAPON_ICON_LAYOUT_SCALE = 0.5
 local _weapon_icon_sz = HudElementPlayerWeaponHandlerSettings.weapon_icon_size
@@ -111,7 +114,7 @@ local HUD_GLASS_PLATE_COLOR = {
 
 local HUD_WEAPON_ICON_CONTAINER = "content/ui/materials/hud/icons/weapon_icon_container"
 local RIGHT_SLOT_ICON_FALLBACK = "content/ui/materials/icons/weapons/flat/grenade"
-local RIGHT_GRID_ORIGIN_X = BIG_AMMO_W + GAP_LEFT_TO_GRID
+local RIGHT_GRID_ORIGIN_X = BIG_AMMO_W_LAYOUT + GAP_LEFT_TO_GRID
 local RIGHT_BOTTOM_ROW_Y = WIELDED_ROW_HEIGHT + RIGHT_BOTTOM_ROW_GAP
 
 local function text_style_from_hud_body(font_size, offset)
@@ -138,6 +141,31 @@ local function text_style_slot_counter_after_icon(font_size, left_offset_x)
 	return style
 end
 
+local function text_style_bar_value_label()
+	local style = table.clone(UIFontSettings.hud_body)
+	style.font_size = SLOT_TEXT_FONT
+	style.drop_shadow = true
+	style.text_horizontal_alignment = "right"
+	style.text_vertical_alignment = "center"
+	style.horizontal_alignment = "right"
+	style.vertical_alignment = "center"
+	style.text_color = UIHudSettings.color_tint_main_1
+	style.offset = { -sc(2), 0, 2 }
+	return style
+end
+
+local function create_bar_value_label_widget(scenegraph_id)
+	return UIWidget.create_definition({
+		{
+			pass_type = "text",
+			value_id = "text",
+			value = "0",
+			style_id = "text",
+			style = text_style_bar_value_label(),
+		},
+	}, scenegraph_id)
+end
+
 local ROOT_LAYOUT_OFFSET_X = 300
 local ROOT_LAYOUT_OFFSET_Y = 200
 local ROOT_LAYOUT_OFFSET_Z = 100
@@ -152,21 +180,28 @@ local scenegraph_definition = {
 		parent = "screen",
 		horizontal_alignment = "center",
 		vertical_alignment = "center",
-		size = { ROW_WIDTH, ROOT_HEIGHT },
+		size = { ROW_WIDTH, ROOT_HEIGHT_BASE },
 		position = { ROOT_LAYOUT_OFFSET_X, ROOT_LAYOUT_OFFSET_Y, ROOT_LAYOUT_OFFSET_Z },
 	},
-	stamina_bar = {
+	toughness_value_label = {
+		parent = "root",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { BAR_LABEL_W, BAR_HEIGHT },
+		position = { 0, 0, 0 },
+	},
+	toughness_bar = {
 		parent = "root",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
 		size = { BAR_WIDTH, BAR_HEIGHT },
-		position = { 0, 0, 0 },
+		position = { BAR_LABEL_W, 0, 0 },
 	},
-	toughness_bar = {
-		parent = "stamina_bar",
+	health_value_label = {
+		parent = "root",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
-		size = { BAR_WIDTH, BAR_HEIGHT },
+		size = { BAR_LABEL_W, BAR_HEIGHT },
 		position = { 0, BAR_HEIGHT + BAR_STACK_GAP, 0 },
 	},
 	health_bar = {
@@ -187,14 +222,14 @@ local scenegraph_definition = {
 		parent = "ability_bar",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
-		size = { ROW_WIDTH, MAIN_ROW_HEIGHT },
+		size = { BAR_FILL_WIDTH, MAIN_ROW_HEIGHT },
 		position = { 0, BAR_HEIGHT + BOXES_ROW_TOP_GAP, 0 },
 	},
 	ammo_big = {
 		parent = "boxes_row",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
-		size = { BIG_AMMO_W, BIG_AMMO_H },
+		size = { BIG_AMMO_W_LAYOUT, BIG_AMMO_H },
 		position = { 0, 0, 0 },
 	},
 	slot_auspex = {
@@ -233,6 +268,21 @@ local scenegraph_definition = {
 		position = { RIGHT_GRID_ORIGIN_X + (RIGHT_BOTTOM_SLOT_WIDTH + RIGHT_GAP) * 2, RIGHT_BOTTOM_ROW_Y, 0 },
 	},
 }
+
+
+local DivisionHUDVanillaStaminaDodgeDefs = require("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_stamina_dodge_definitions")
+local _division_vanilla_stm_ddg = DivisionHUDVanillaStaminaDodgeDefs.build(MAIN_ROW_HEIGHT)
+
+
+for k, v in pairs(_division_vanilla_stm_ddg.scenegraph_definition) do
+	scenegraph_definition[k] = v
+end
+
+scenegraph_definition.boxes_row.size[2] = MAIN_ROW_HEIGHT + _division_vanilla_stm_ddg.extend_below_main_row
+
+local ROOT_HEIGHT = ROOT_HEIGHT_BASE + _division_vanilla_stm_ddg.extend_below_main_row
+
+scenegraph_definition.root.size[2] = ROOT_HEIGHT
 
 local function create_bar_widget(scenegraph_id, color)
 	return UIWidget.create_definition({
@@ -386,7 +436,8 @@ local function create_weapon_wielded_slot_widget(scenegraph_id)
 end
 
 local widget_definitions = {
-	stamina_bar = create_bar_widget("stamina_bar", { 255, 255, 255, 255 }),
+	toughness_value_label = create_bar_value_label_widget("toughness_value_label"),
+	health_value_label = create_bar_value_label_widget("health_value_label"),
 	toughness_bar = create_bar_widget("toughness_bar", { 255, 100, 200, 255 }),
 	health_bar = create_bar_widget("health_bar", { 255, 100, 255, 100 }),
 	ability_bar = create_bar_widget("ability_bar", { 255, 255, 50, 50 }),
@@ -396,6 +447,18 @@ local widget_definitions = {
 	slot_blitz = create_right_slot_widget("slot_blitz"),
 	slot_stimm = create_right_slot_widget("slot_stimm"),
 	slot_pickup = create_right_slot_widget("slot_pickup"),
+}
+
+for k, v in pairs(_division_vanilla_stm_ddg.widget_definitions) do
+	widget_definitions[k] = v
+end
+
+local VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS = {
+	stamina_gauge = true,
+	stamina_bar = true,
+	stamina_depleted_bar = true,
+	dodge_gauge = true,
+	wide_bar = true,
 }
 
 local right_slot_widget_names = {
@@ -408,11 +471,17 @@ local right_slot_widget_names = {
 return {
 	scenegraph_definition = scenegraph_definition,
 	widget_definitions = widget_definitions,
+	vanilla_stamina_dodge_animations = _division_vanilla_stm_ddg.animations,
+	stamina_nodges_definition = _division_vanilla_stm_ddg.stamina_nodges_definition,
+	dodge_bar_definition = _division_vanilla_stm_ddg.dodge_bar_definition,
+	VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS = VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS,
 	ROOT_LAYOUT_OFFSET_X = ROOT_LAYOUT_OFFSET_X,
 	ROOT_LAYOUT_OFFSET_Y = ROOT_LAYOUT_OFFSET_Y,
 	ROOT_LAYOUT_OFFSET_Z = ROOT_LAYOUT_OFFSET_Z,
 	HUD_LAYOUT_SCALE = LAYOUT_SCALE,
 	BAR_WIDTH = BAR_WIDTH,
+	BAR_LABEL_W = BAR_LABEL_W,
+	BAR_FILL_WIDTH = BAR_FILL_WIDTH,
 	ROW_WIDTH = ROW_WIDTH,
 	RIGHT_SLOT_COUNT = 4,
 	right_slot_widget_names = right_slot_widget_names,

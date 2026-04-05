@@ -16,6 +16,8 @@ end
 
 mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_definitions")
 mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_slot_data")
+mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_stamina_dodge_definitions")
+mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_stamina_dodge")
 
 mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, params)
 	for _, hud_element in ipairs(hud_elements) do
