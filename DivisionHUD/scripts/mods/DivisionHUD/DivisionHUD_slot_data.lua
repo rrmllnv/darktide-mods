@@ -377,6 +377,44 @@ local function resolve_wielded_weapon_display_entry(extensions)
 	}
 end
 
+local function resolve_auspex_display_entry(extensions)
+	local slots_settings = HudElementPlayerWeaponHandlerSettings.slots_settings
+	local device_settings = slots_settings and slots_settings.slot_device
+
+	if not device_settings or not extensions.unit_data then
+		return {
+			slot_id = "slot_auspex_display",
+			icon = nil,
+			has_equipment = false,
+			weapon_template = nil,
+			item = nil,
+		}
+	end
+
+	local inventory_component = extensions.unit_data:read_component("inventory")
+	local weapon_name = inventory_component and inventory_component.slot_device
+
+	if not weapon_name or weapon_name == "not_equipped" or not VALID_DEVICE_ITEM_NAMES[weapon_name] then
+		return {
+			slot_id = "slot_auspex_display",
+			icon = nil,
+			has_equipment = false,
+			weapon_template = nil,
+			item = nil,
+		}
+	end
+
+	local resolved = resolve_weapon_handler_slot("slot_device", device_settings, extensions)
+
+	return {
+		slot_id = "slot_auspex_display",
+		icon = resolved.icon,
+		has_equipment = resolved.has_equipment,
+		weapon_template = resolved.weapon_template,
+		item = resolved.item,
+	}
+end
+
 local function build_division_right_slots(extensions)
 	local slots_settings = HudElementPlayerWeaponHandlerSettings.slots_settings
 
@@ -390,6 +428,7 @@ end
 
 return {
 	build_division_right_slots = build_division_right_slots,
+	resolve_auspex_display_entry = resolve_auspex_display_entry,
 	DEFAULT_GRENADE_FLAT_ICON = DEFAULT_GRENADE_FLAT_ICON,
 	HUD_WEAPON_ICON_CONTAINER_MATERIAL = "content/ui/materials/hud/icons/weapon_icon_container",
 	VALID_DEVICE_ITEM_NAMES = VALID_DEVICE_ITEM_NAMES,

@@ -22,6 +22,9 @@ local RIGHT_CELL = sc(58)
 local RIGHT_GAP = sc(4)
 local RIGHT_GRID_COLUMN_COUNT = 3
 local RIGHT_GRID_WIDTH = RIGHT_CELL * RIGHT_GRID_COLUMN_COUNT + RIGHT_GAP * (RIGHT_GRID_COLUMN_COUNT - 1)
+local AUSPEX_SLOT_WIDTH = RIGHT_CELL
+local AUSPEX_TO_WEAPON_GAP = RIGHT_GAP
+local WIELDED_STRIP_WIDTH = math.max(1, RIGHT_GRID_WIDTH - AUSPEX_SLOT_WIDTH - AUSPEX_TO_WEAPON_GAP)
 local RIGHT_BOTTOM_ROW_GAP = sc(4)
 local RIGHT_BOTTOM_SLOT_HEIGHT = sc(40)
 local REFERENCE_AMMO_BOX_FOR_WIELDED_ROW = sc(120)
@@ -54,7 +57,7 @@ end
 local WEAPON_STRIP_ICON_ASPECT_RATIO = WEAPON_ICON_NATIVE_W / WEAPON_ICON_NATIVE_H
 local WEAPON_STRIP_ICON_H = sc(math.floor(WEAPON_ICON_NATIVE_H * ECW_WEAPON_ICON_LAYOUT_SCALE + 0.5))
 local WEAPON_STRIP_ICON_W = math.max(1, math.floor(WEAPON_STRIP_ICON_H * WEAPON_STRIP_ICON_ASPECT_RATIO + 0.5))
-local WEAPON_STRIP_MAX_W = math.max(1, RIGHT_GRID_WIDTH - sc(4))
+local WEAPON_STRIP_MAX_W = math.max(1, WIELDED_STRIP_WIDTH - sc(4))
 
 if WEAPON_STRIP_ICON_W > WEAPON_STRIP_MAX_W then
 	WEAPON_STRIP_ICON_W = WEAPON_STRIP_MAX_W
@@ -84,7 +87,11 @@ end
 local WIELDED_STRIP_SQUARE_ICON = math.min(
 	sc(WIELDED_SQUARE_ICON_SOURCE),
 	math.max(1, WIELDED_ROW_HEIGHT - sc(2)),
-	math.max(1, RIGHT_GRID_WIDTH - sc(4))
+	math.max(1, WIELDED_STRIP_WIDTH - sc(4))
+)
+local AUSPEX_ICON_SIZE = math.min(
+	SLOT_ICON_TEXTURE_SIZE,
+	math.max(1, math.min(AUSPEX_SLOT_WIDTH - sc(6), WIELDED_ROW_HEIGHT - sc(6)))
 )
 local SLOT_TEXT_FONT = sc(16)
 local SLOT_ICON_LEFT_INSET = sc(3)
@@ -190,12 +197,19 @@ local scenegraph_definition = {
 		size = { BIG_AMMO_W, BIG_AMMO_H },
 		position = { 0, 0, 0 },
 	},
+	slot_auspex = {
+		parent = "boxes_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { AUSPEX_SLOT_WIDTH, WIELDED_ROW_HEIGHT },
+		position = { RIGHT_GRID_ORIGIN_X, 0, 0 },
+	},
 	slot_weapon_wielded = {
 		parent = "boxes_row",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
-		size = { RIGHT_GRID_WIDTH, WIELDED_ROW_HEIGHT },
-		position = { RIGHT_GRID_ORIGIN_X, 0, 0 },
+		size = { WIELDED_STRIP_WIDTH, WIELDED_ROW_HEIGHT },
+		position = { RIGHT_GRID_ORIGIN_X + AUSPEX_SLOT_WIDTH + AUSPEX_TO_WEAPON_GAP, 0, 0 },
 	},
 	slot_blitz = {
 		parent = "boxes_row",
@@ -313,6 +327,34 @@ local function create_right_slot_widget(scenegraph_id)
 	}, scenegraph_id)
 end
 
+local function create_auspex_slot_widget(scenegraph_id)
+	return UIWidget.create_definition({
+		{
+			pass_type = "rect",
+			style_id = "background",
+			value_id = "background",
+			style = {
+				color = table.clone(HUD_GLASS_PLATE_COLOR),
+				offset = { 0, 0, 0 },
+			},
+		},
+		{
+			pass_type = "texture",
+			style_id = "icon",
+			value = RIGHT_SLOT_ICON_FALLBACK,
+			value_id = "icon",
+			style = {
+				horizontal_alignment = "center",
+				vertical_alignment = "center",
+				size = { AUSPEX_ICON_SIZE, AUSPEX_ICON_SIZE },
+				default_size = { AUSPEX_ICON_SIZE, AUSPEX_ICON_SIZE },
+				offset = { 0, 0, 1 },
+				color = { 255, 255, 255, 0 },
+			},
+		},
+	}, scenegraph_id)
+end
+
 local function create_weapon_wielded_slot_widget(scenegraph_id)
 	return UIWidget.create_definition({
 		{
@@ -348,6 +390,7 @@ local widget_definitions = {
 	health_bar = create_bar_widget("health_bar", { 255, 100, 255, 100 }),
 	ability_bar = create_bar_widget("ability_bar", { 255, 255, 50, 50 }),
 	ammo_big = create_ammo_big_widget("ammo_big"),
+	slot_auspex = create_auspex_slot_widget("slot_auspex"),
 	slot_weapon_wielded = create_weapon_wielded_slot_widget("slot_weapon_wielded"),
 	slot_blitz = create_right_slot_widget("slot_blitz"),
 	slot_stimm = create_right_slot_widget("slot_stimm"),
@@ -380,4 +423,5 @@ return {
 	WEAPON_STRIP_ICON_H = WEAPON_STRIP_ICON_H,
 	WEAPON_STRIP_ICON_ASPECT_RATIO = WEAPON_STRIP_ICON_ASPECT_RATIO,
 	WIELDED_STRIP_SQUARE_ICON = WIELDED_STRIP_SQUARE_ICON,
+	AUSPEX_ICON_SIZE = AUSPEX_ICON_SIZE,
 }

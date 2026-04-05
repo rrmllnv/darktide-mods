@@ -155,13 +155,42 @@ HudElementDivisionHUD._apply_slot_icon_material = function(self, widget, entry)
 	local slot_id = entry and entry.slot_id
 	local icon = entry and entry.icon
 
-	if type(icon) ~= "string" or icon == "" or icon == "content/ui/materials/base/ui_default_base" then
+	if slot_id == "slot_auspex_display" then
+		if type(icon) ~= "string" or icon == "" or icon == "content/ui/materials/base/ui_default_base" then
+			return
+		end
+	elseif type(icon) ~= "string" or icon == "" or icon == "content/ui/materials/base/ui_default_base" then
 		icon = Definitions.RIGHT_SLOT_ICON_FALLBACK
 	end
 
 	local icon_style = widget.style and widget.style.icon
 
-	if slot_id == "slot_wielded_display" and icon_style then
+	if slot_id == "slot_auspex_display" and icon_style then
+		if division_hud_icon_is_texture_bitmap_path(icon) then
+			widget.content.icon = Definitions.HUD_WEAPON_ICON_CONTAINER
+
+			if not icon_style.material_values then
+				icon_style.material_values = {}
+			end
+
+			icon_style.material_values.texture_map = icon
+			icon_style.material_values.use_placeholder_texture = 0
+		elseif division_hud_icon_must_skip_create_material(icon) then
+			widget.content.icon = icon
+			icon_style.material_values = nil
+		else
+			widget.content.icon = icon
+			icon_style.material_values = {}
+		end
+
+		local auspex_sz = Definitions.AUSPEX_ICON_SIZE
+
+		icon_style.size[1] = auspex_sz
+		icon_style.size[2] = auspex_sz
+		icon_style.default_size[1] = auspex_sz
+		icon_style.default_size[2] = auspex_sz
+		icon_style.aspect_ratio = 1
+	elseif slot_id == "slot_wielded_display" and icon_style then
 		if division_hud_icon_is_texture_bitmap_path(icon) then
 			widget.content.icon = Definitions.HUD_WEAPON_ICON_CONTAINER
 
@@ -346,6 +375,48 @@ HudElementDivisionHUD._update_ammo_big = function(self, player_unit, widget, opa
 	widget.dirty = true
 end
 
+HudElementDivisionHUD._update_auspex_slot = function(self, player_unit, widgets, opacity)
+	local widget = widgets.slot_auspex
+
+	if not widget or not widget.style then
+		return
+	end
+
+	local extensions = self:_build_extensions(player_unit)
+
+	if not extensions then
+		widget.content.visible = false
+
+		if widget.style.icon.material_values ~= nil then
+			widget.style.icon.material_values = nil
+		end
+
+		widget.dirty = true
+		return
+	end
+
+	if widget.style.background then
+		widget.style.background.color[1] = HUD_GLASS_PLATE_ALPHA_BASE * opacity
+	end
+
+	local entry = SlotData.resolve_auspex_display_entry(extensions)
+
+	if entry.has_equipment and type(entry.icon) == "string" and entry.icon ~= "" and entry.icon ~= "content/ui/materials/base/ui_default_base" then
+		widget.content.visible = true
+		self:_apply_slot_icon_material(widget, entry)
+		widget.style.icon.color[1] = 255 * opacity
+		widget.style.icon.color[4] = 255
+	else
+		widget.content.visible = false
+
+		if widget.style.icon.material_values ~= nil then
+			widget.style.icon.material_values = nil
+		end
+	end
+
+	widget.dirty = true
+end
+
 HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widgets, opacity)
 	local extensions = self:_build_extensions(player_unit)
 
@@ -357,6 +428,10 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 			if widget then
 				widget.content.visible = false
 			end
+		end
+
+		if widgets.slot_auspex then
+			widgets.slot_auspex.content.visible = false
 		end
 
 		return
@@ -473,6 +548,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	self:_update_health_bar(player_unit, widgets.health_bar, opacity)
 	self:_update_ability_bar(player_unit, widgets.ability_bar, opacity)
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
+	self:_update_auspex_slot(player_unit, widgets, opacity)
 	self:_update_right_slot_grid(player_unit, widgets, opacity)
 end
 
