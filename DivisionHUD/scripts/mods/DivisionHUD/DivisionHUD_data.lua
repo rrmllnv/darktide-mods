@@ -40,6 +40,11 @@ return {
 				default_value = true,
 			},
 			{
+				setting_id = "show_toughness_bar",
+				type = "checkbox",
+				default_value = true,
+			},
+			{
 				setting_id = "show_health_bar",
 				type = "checkbox",
 				default_value = true,

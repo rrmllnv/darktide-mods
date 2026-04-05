@@ -24,8 +24,12 @@ return {
 		ru = "Прозрачность",
 	},
 	show_stamina_bar = {
-		en = "Show Stamina Bar",
-		ru = "Показывать стамину",
+		en = "Show Stamina Bar (white, top row)",
+		ru = "Полоса стамины (белая, верхний ряд)",
+	},
+	show_toughness_bar = {
+		en = "Show Toughness Bar (below stamina; former stamina color)",
+		ru = "Полоса стойкости (под стаминой, цвет как у старой стамины)",
 	},
 	show_health_bar = {
 		en = "Show Health Bar",

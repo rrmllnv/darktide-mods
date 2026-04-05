@@ -2,17 +2,43 @@ local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 
-local BIG_AMMO_BOX = 120
-local GAP_LEFT_TO_GRID = 40
-local RIGHT_CELL = 58
-local RIGHT_GAP = 4
+local LAYOUT_SCALE = 0.8
+
+local function sc(n)
+	if n == 0 then
+		return 0
+	end
+
+	local sign = n < 0 and -1 or 1
+	local a = math.abs(n)
+
+	return sign * math.max(1, math.floor(a * LAYOUT_SCALE + 0.5))
+end
+
+local BIG_AMMO_BOX = sc(120)
+local GAP_LEFT_TO_GRID = sc(12)
+local RIGHT_CELL = sc(58)
+local RIGHT_GAP = sc(4)
 local RIGHT_GRID_WIDTH = RIGHT_CELL * 2 + RIGHT_GAP
 local MAIN_ROW_HEIGHT = BIG_AMMO_BOX
 local ROW_WIDTH = BIG_AMMO_BOX + GAP_LEFT_TO_GRID + RIGHT_GRID_WIDTH
-local BUFF_SIZE = 32
-local BUFF_SPACING = 4
+local BUFF_SIZE = sc(32)
+local BUFF_SPACING = sc(4)
 local BAR_WIDTH = ROW_WIDTH
-local BAR_HEIGHT = 8
+local BAR_HEIGHT = sc(8)
+local BAR_STACK_GAP = sc(2)
+local BOXES_ROW_TOP_GAP = sc(8)
+local BUFFS_ROW_TOP_GAP = sc(8)
+local ROOT_HEIGHT = sc(212)
+local SLOT_ICON_TEXTURE_SIZE = sc(26)
+local SLOT_TEXT_FONT = sc(20)
+local SLOT_ICON_LEFT_INSET = sc(3)
+local SLOT_TEXT_RIGHT_INSET = sc(4)
+local AMMO_CLIP_FONT = sc(56)
+local AMMO_RESERVE_FONT = sc(26)
+local AMMO_CLIP_OFFSET_Y = sc(14)
+local AMMO_RESERVE_OFFSET_Y = sc(30)
+local BUFF_ICON_PADDING = sc(2)
 
 local HUD_WEAPON_ICON_CONTAINER = "content/ui/materials/hud/icons/weapon_icon_container"
 local RIGHT_SLOT_ICON_FALLBACK = "content/ui/materials/icons/weapons/flat/grenade"
@@ -31,6 +57,19 @@ local function text_style_from_hud_body(font_size, offset)
 	return style
 end
 
+local function text_style_slot_counter_right(font_size, right_inset)
+	local style = table.clone(UIFontSettings.hud_body)
+	style.font_size = font_size
+	style.drop_shadow = true
+	style.text_horizontal_alignment = "right"
+	style.text_vertical_alignment = "center"
+	style.horizontal_alignment = "right"
+	style.vertical_alignment = "center"
+	style.text_color = UIHudSettings.color_tint_main_1
+	style.offset = { -right_inset, 0, 3 }
+	return style
+end
+
 local scenegraph_definition = {
 	screen = {
 		scale = "fit",
@@ -41,7 +80,7 @@ local scenegraph_definition = {
 		parent = "screen",
 		horizontal_alignment = "center",
 		vertical_alignment = "center",
-		size = { ROW_WIDTH, 200 },
+		size = { ROW_WIDTH, ROOT_HEIGHT },
 		position = { 300, 200, 100 },
 	},
 	stamina_bar = {
@@ -51,26 +90,33 @@ local scenegraph_definition = {
 		size = { BAR_WIDTH, BAR_HEIGHT },
 		position = { 0, 0, 0 },
 	},
-	health_bar = {
+	toughness_bar = {
 		parent = "stamina_bar",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
 		size = { BAR_WIDTH, BAR_HEIGHT },
-		position = { 0, BAR_HEIGHT + 2, 0 },
+		position = { 0, BAR_HEIGHT + BAR_STACK_GAP, 0 },
+	},
+	health_bar = {
+		parent = "toughness_bar",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { BAR_WIDTH, BAR_HEIGHT },
+		position = { 0, BAR_HEIGHT + BAR_STACK_GAP, 0 },
 	},
 	ability_bar = {
 		parent = "health_bar",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
 		size = { BAR_WIDTH, BAR_HEIGHT },
-		position = { 0, BAR_HEIGHT + 2, 0 },
+		position = { 0, BAR_HEIGHT + BAR_STACK_GAP, 0 },
 	},
 	boxes_row = {
 		parent = "ability_bar",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
 		size = { ROW_WIDTH, MAIN_ROW_HEIGHT },
-		position = { 0, BAR_HEIGHT + 8, 0 },
+		position = { 0, BAR_HEIGHT + BOXES_ROW_TOP_GAP, 0 },
 	},
 	ammo_big = {
 		parent = "boxes_row",
@@ -112,7 +158,7 @@ local scenegraph_definition = {
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
 		size = { ROW_WIDTH, BUFF_SIZE },
-		position = { 0, MAIN_ROW_HEIGHT + 8, 0 },
+		position = { 0, MAIN_ROW_HEIGHT + BUFFS_ROW_TOP_GAP, 0 },
 	},
 }
 
@@ -143,8 +189,8 @@ local function create_bar_widget(scenegraph_id, color)
 end
 
 local function create_ammo_big_widget(scenegraph_id)
-	local text_style = text_style_from_hud_body(56, { 0, -14, 2 })
-	local text_style_reserve = text_style_from_hud_body(26, { 0, 30, 2 })
+	local text_style = text_style_from_hud_body(AMMO_CLIP_FONT, { 0, -AMMO_CLIP_OFFSET_Y, 2 })
+	local text_style_reserve = text_style_from_hud_body(AMMO_RESERVE_FONT, { 0, AMMO_RESERVE_OFFSET_Y, 2 })
 
 	return UIWidget.create_definition({
 		{
@@ -174,7 +220,7 @@ local function create_ammo_big_widget(scenegraph_id)
 end
 
 local function create_right_slot_widget(scenegraph_id)
-	local text_style = text_style_from_hud_body(14, { 0, 18, 3 })
+	local text_style = text_style_slot_counter_right(SLOT_TEXT_FONT, SLOT_TEXT_RIGHT_INSET)
 
 	return UIWidget.create_definition({
 		{
@@ -192,10 +238,10 @@ local function create_right_slot_widget(scenegraph_id)
 			value = RIGHT_SLOT_ICON_FALLBACK,
 			value_id = "icon",
 			style = {
-				horizontal_alignment = "center",
+				horizontal_alignment = "left",
 				vertical_alignment = "center",
-				size = { 38, 38 },
-				offset = { 0, -8, 1 },
+				size = { SLOT_ICON_TEXTURE_SIZE, SLOT_ICON_TEXTURE_SIZE },
+				offset = { SLOT_ICON_LEFT_INSET, 0, 1 },
 				color = { 255, 255, 255, 255 },
 			},
 		},
@@ -210,7 +256,7 @@ local function create_right_slot_widget(scenegraph_id)
 end
 
 local function create_combat_ability_right_slot_widget(scenegraph_id)
-	local text_style = text_style_from_hud_body(14, { 0, 18, 3 })
+	local text_style = text_style_slot_counter_right(SLOT_TEXT_FONT, SLOT_TEXT_RIGHT_INSET)
 
 	return UIWidget.create_definition({
 		{
@@ -228,10 +274,10 @@ local function create_combat_ability_right_slot_widget(scenegraph_id)
 			value = HUD_WEAPON_ICON_CONTAINER,
 			value_id = "icon",
 			style = {
-				horizontal_alignment = "center",
+				horizontal_alignment = "left",
 				vertical_alignment = "center",
-				size = { 38, 38 },
-				offset = { 0, -8, 1 },
+				size = { SLOT_ICON_TEXTURE_SIZE, SLOT_ICON_TEXTURE_SIZE },
+				offset = { SLOT_ICON_LEFT_INSET, 0, 1 },
 				color = { 255, 255, 255, 255 },
 				material_values = {
 					texture_map = DEFAULT_COMBAT_ABILITY_ICON_TEXTURE,
@@ -250,7 +296,8 @@ local function create_combat_ability_right_slot_widget(scenegraph_id)
 end
 
 local widget_definitions = {
-	stamina_bar = create_bar_widget("stamina_bar", { 255, 100, 200, 255 }),
+	stamina_bar = create_bar_widget("stamina_bar", { 255, 255, 255, 255 }),
+	toughness_bar = create_bar_widget("toughness_bar", { 255, 100, 200, 255 }),
 	health_bar = create_bar_widget("health_bar", { 255, 100, 255, 100 }),
 	ability_bar = create_bar_widget("ability_bar", { 255, 255, 50, 50 }),
 	ammo_big = create_ammo_big_widget("ammo_big"),
@@ -270,10 +317,12 @@ local right_slot_widget_names = {
 return {
 	scenegraph_definition = scenegraph_definition,
 	widget_definitions = widget_definitions,
+	HUD_LAYOUT_SCALE = LAYOUT_SCALE,
 	BAR_WIDTH = BAR_WIDTH,
 	ROW_WIDTH = ROW_WIDTH,
 	BUFF_SIZE = BUFF_SIZE,
 	BUFF_SPACING = BUFF_SPACING,
+	BUFF_ICON_PADDING = BUFF_ICON_PADDING,
 	RIGHT_SLOT_COUNT = 4,
 	right_slot_widget_names = right_slot_widget_names,
 	HUD_WEAPON_ICON_CONTAINER = HUD_WEAPON_ICON_CONTAINER,

@@ -14,6 +14,7 @@ local HudElementDivisionHUD = class("HudElementDivisionHUD", "HudElementBase")
 local BAR_WIDTH = Definitions.BAR_WIDTH
 local BUFF_SIZE = Definitions.BUFF_SIZE
 local BUFF_SPACING = Definitions.BUFF_SPACING
+local BUFF_ICON_PADDING = Definitions.BUFF_ICON_PADDING
 local RIGHT_SLOT_COUNT = Definitions.RIGHT_SLOT_COUNT
 local right_slot_widget_names = Definitions.right_slot_widget_names
 local BUFF_ICON_FALLBACK_TEXTURE = SlotData.DEFAULT_GRENADE_FLAT_ICON
@@ -352,6 +353,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	local widgets = self._widgets_by_name
 
 	self:_update_stamina_bar(player_unit, widgets.stamina_bar, opacity)
+	self:_update_toughness_bar(player_unit, widgets.toughness_bar, opacity)
 	self:_update_health_bar(player_unit, widgets.health_bar, opacity)
 	self:_update_ability_bar(player_unit, widgets.ability_bar, opacity)
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
@@ -383,6 +385,35 @@ HudElementDivisionHUD._update_stamina_bar = function(self, player_unit, widget, 
 
 	widget.content.visible = true
 	widget.style.fill.size[1] = BAR_WIDTH * stamina_fraction
+	widget.style.fill.color[1] = 255 * opacity
+	widget.style.background.color[1] = 160 * opacity
+	widget.dirty = true
+end
+
+HudElementDivisionHUD._update_toughness_bar = function(self, player_unit, widget, opacity)
+	if not mod:get("show_toughness_bar") then
+		widget.content.visible = false
+		return
+	end
+
+	local toughness_extension = ScriptUnit.has_extension(player_unit, "toughness_system")
+
+	if not toughness_extension then
+		widget.content.visible = false
+		return
+	end
+
+	local toughness_fraction = toughness_extension:current_toughness_percent()
+
+	if toughness_fraction == nil then
+		widget.content.visible = false
+		return
+	end
+
+	toughness_fraction = math.clamp(toughness_fraction, 0, 1)
+
+	widget.content.visible = true
+	widget.style.fill.size[1] = BAR_WIDTH * toughness_fraction
 	widget.style.fill.color[1] = 255 * opacity
 	widget.style.background.color[1] = 160 * opacity
 	widget.dirty = true
@@ -497,9 +528,12 @@ HudElementDivisionHUD._update_buffs = function(self, player_unit, t, ui_renderer
 				value = BUFF_ICON_BASE_MATERIAL,
 				value_id = "icon",
 				style = {
-					size = { BUFF_SIZE - 4, BUFF_SIZE - 4 },
+					size = {
+						BUFF_SIZE - BUFF_ICON_PADDING * 2,
+						BUFF_SIZE - BUFF_ICON_PADDING * 2,
+					},
 					color = UIHudSettings.color_tint_main_1,
-					offset = { offset_x + 2, 2, 1 },
+					offset = { offset_x + BUFF_ICON_PADDING, BUFF_ICON_PADDING, 1 },
 					material_values = {
 						texture_map = BUFF_ICON_FALLBACK_TEXTURE,
 						use_placeholder_texture = 0,
