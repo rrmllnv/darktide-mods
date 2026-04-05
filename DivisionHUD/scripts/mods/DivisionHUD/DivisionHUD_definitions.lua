@@ -1,3 +1,5 @@
+local mod = get_mod("DivisionHUD")
+
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
@@ -16,10 +18,11 @@ local function sc(n)
 	return sign * math.max(1, math.floor(a * LAYOUT_SCALE + 0.5))
 end
 
-local BIG_AMMO_W = sc(120)
-local GAP_LEFT_TO_GRID = sc(12)
 local RIGHT_CELL = sc(58)
 local RIGHT_GAP = sc(4)
+local GAP_LEFT_TO_GRID_OLD = sc(12)
+local GAP_LEFT_TO_GRID = RIGHT_GAP
+local BIG_AMMO_W = sc(120) + GAP_LEFT_TO_GRID_OLD - GAP_LEFT_TO_GRID
 local RIGHT_GRID_COLUMN_COUNT = 3
 local RIGHT_GRID_WIDTH = RIGHT_CELL * RIGHT_GRID_COLUMN_COUNT + RIGHT_GAP * (RIGHT_GRID_COLUMN_COUNT - 1)
 local AUSPEX_SLOT_WIDTH = RIGHT_CELL
@@ -43,6 +46,7 @@ local BAR_FILL_WIDTH = math.max(1, ROW_WIDTH - BAR_LABEL_W)
 local BIG_AMMO_W_LAYOUT = math.max(1, BIG_AMMO_W - BAR_LABEL_W)
 local BAR_WIDTH = BAR_FILL_WIDTH
 local BAR_HEIGHT = sc(8)
+local HEALTH_BAR_HEIGHT = sc(16)
 local BAR_STACK_GAP = sc(2)
 local BOXES_ROW_TOP_GAP = sc(8)
 local ROOT_HEIGHT_BASE = sc(212) - sc(32) - sc(8)
@@ -99,7 +103,7 @@ local AUSPEX_ICON_SIZE = math.min(
 local SLOT_TEXT_FONT = sc(20)
 local SLOT_ICON_LEFT_INSET = sc(3)
 local SLOT_TEXT_AFTER_ICON_GAP = sc(2)
-local AMMO_CLIP_FONT = sc(56)
+local AMMO_CLIP_FONT = sc(38)
 local AMMO_RESERVE_FONT = sc(26)
 local AMMO_CLIP_OFFSET_Y = sc(14)
 local AMMO_RESERVE_OFFSET_Y = sc(30)
@@ -141,31 +145,6 @@ local function text_style_slot_counter_after_icon(font_size, left_offset_x)
 	return style
 end
 
-local function text_style_bar_value_label()
-	local style = table.clone(UIFontSettings.hud_body)
-	style.font_size = SLOT_TEXT_FONT
-	style.drop_shadow = true
-	style.text_horizontal_alignment = "right"
-	style.text_vertical_alignment = "center"
-	style.horizontal_alignment = "right"
-	style.vertical_alignment = "center"
-	style.text_color = UIHudSettings.color_tint_main_1
-	style.offset = { -sc(2), 0, 2 }
-	return style
-end
-
-local function create_bar_value_label_widget(scenegraph_id)
-	return UIWidget.create_definition({
-		{
-			pass_type = "text",
-			value_id = "text",
-			value = "0",
-			style_id = "text",
-			style = text_style_bar_value_label(),
-		},
-	}, scenegraph_id)
-end
-
 local ROOT_LAYOUT_OFFSET_X = 300
 local ROOT_LAYOUT_OFFSET_Y = 200
 local ROOT_LAYOUT_OFFSET_Z = 100
@@ -183,40 +162,12 @@ local scenegraph_definition = {
 		size = { ROW_WIDTH, ROOT_HEIGHT_BASE },
 		position = { ROOT_LAYOUT_OFFSET_X, ROOT_LAYOUT_OFFSET_Y, ROOT_LAYOUT_OFFSET_Z },
 	},
-	toughness_value_label = {
-		parent = "root",
-		horizontal_alignment = "left",
-		vertical_alignment = "top",
-		size = { BAR_LABEL_W, BAR_HEIGHT },
-		position = { 0, 0, 0 },
-	},
-	toughness_bar = {
-		parent = "root",
-		horizontal_alignment = "left",
-		vertical_alignment = "top",
-		size = { BAR_WIDTH, BAR_HEIGHT },
-		position = { BAR_LABEL_W, 0, 0 },
-	},
-	health_value_label = {
-		parent = "root",
-		horizontal_alignment = "left",
-		vertical_alignment = "top",
-		size = { BAR_LABEL_W, BAR_HEIGHT },
-		position = { 0, BAR_HEIGHT + BAR_STACK_GAP, 0 },
-	},
-	health_bar = {
-		parent = "toughness_bar",
-		horizontal_alignment = "left",
-		vertical_alignment = "top",
-		size = { BAR_WIDTH, BAR_HEIGHT },
-		position = { 0, BAR_HEIGHT + BAR_STACK_GAP, 0 },
-	},
 	ability_bar = {
 		parent = "health_bar",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
 		size = { BAR_WIDTH, BAR_HEIGHT },
-		position = { 0, BAR_HEIGHT + BAR_STACK_GAP, 0 },
+		position = { 0, HEALTH_BAR_HEIGHT + BAR_STACK_GAP, 0 },
 	},
 	boxes_row = {
 		parent = "ability_bar",
@@ -269,10 +220,15 @@ local scenegraph_definition = {
 	},
 }
 
+local DivisionHUDVanillaToughnessHealthDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_toughness_health_definitions")
+local _division_vanilla_th = DivisionHUDVanillaToughnessHealthDefs.build(BAR_WIDTH, BAR_HEIGHT, HEALTH_BAR_HEIGHT, BAR_LABEL_W, BAR_STACK_GAP)
 
-local DivisionHUDVanillaStaminaDodgeDefs = require("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_stamina_dodge_definitions")
+for k, v in pairs(_division_vanilla_th.scenegraph_definition) do
+	scenegraph_definition[k] = v
+end
+
+local DivisionHUDVanillaStaminaDodgeDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_stamina_dodge_definitions")
 local _division_vanilla_stm_ddg = DivisionHUDVanillaStaminaDodgeDefs.build(MAIN_ROW_HEIGHT)
-
 
 for k, v in pairs(_division_vanilla_stm_ddg.scenegraph_definition) do
 	scenegraph_definition[k] = v
@@ -310,20 +266,28 @@ local function create_bar_widget(scenegraph_id, color)
 	}, scenegraph_id)
 end
 
+local function create_slots_bg_widget(scenegraph_id, w, h)
+	return UIWidget.create_definition({
+		{
+			pass_type = "texture",
+			style_id = "background",
+			value = "content/ui/materials/hud/backgrounds/terminal_background_weapon",
+			style = {
+				horizontal_alignment = "left",
+				vertical_alignment = "top",
+				color = Color.terminal_background_gradient(255, true),
+				size = { w, h },
+				offset = { 0, 0, 0 },
+			},
+		},
+	}, scenegraph_id)
+end
+
 local function create_ammo_big_widget(scenegraph_id)
 	local text_style = text_style_from_hud_body(AMMO_CLIP_FONT, { 0, -AMMO_CLIP_OFFSET_Y, 2 })
 	local text_style_reserve = text_style_from_hud_body(AMMO_RESERVE_FONT, { 0, AMMO_RESERVE_OFFSET_Y, 2 })
 
 	return UIWidget.create_definition({
-		{
-			pass_type = "rect",
-			style_id = "background",
-			value_id = "background",
-			style = {
-				color = table.clone(HUD_GLASS_PLATE_COLOR),
-				offset = { 0, 0, 0 },
-			},
-		},
 		{
 			pass_type = "text",
 			value_id = "text",
@@ -346,15 +310,6 @@ local function create_right_slot_widget(scenegraph_id)
 	local text_style = text_style_slot_counter_after_icon(SLOT_TEXT_FONT, text_left_x)
 
 	return UIWidget.create_definition({
-		{
-			pass_type = "rect",
-			style_id = "background",
-			value_id = "background",
-			style = {
-				color = table.clone(HUD_GLASS_PLATE_COLOR),
-				offset = { 0, 0, 0 },
-			},
-		},
 		{
 			pass_type = "texture",
 			style_id = "icon",
@@ -381,15 +336,6 @@ end
 local function create_auspex_slot_widget(scenegraph_id)
 	return UIWidget.create_definition({
 		{
-			pass_type = "rect",
-			style_id = "background",
-			value_id = "background",
-			style = {
-				color = table.clone(HUD_GLASS_PLATE_COLOR),
-				offset = { 0, 0, 0 },
-			},
-		},
-		{
 			pass_type = "texture",
 			style_id = "icon",
 			value = RIGHT_SLOT_ICON_FALLBACK,
@@ -409,15 +355,6 @@ end
 local function create_weapon_wielded_slot_widget(scenegraph_id)
 	return UIWidget.create_definition({
 		{
-			pass_type = "rect",
-			style_id = "background",
-			value_id = "background",
-			style = {
-				color = table.clone(HUD_GLASS_PLATE_COLOR),
-				offset = { 0, 0, 0 },
-			},
-		},
-		{
 			pass_type = "texture",
 			style_id = "icon",
 			value = RIGHT_SLOT_ICON_FALLBACK,
@@ -436,10 +373,7 @@ local function create_weapon_wielded_slot_widget(scenegraph_id)
 end
 
 local widget_definitions = {
-	toughness_value_label = create_bar_value_label_widget("toughness_value_label"),
-	health_value_label = create_bar_value_label_widget("health_value_label"),
-	toughness_bar = create_bar_widget("toughness_bar", { 255, 100, 200, 255 }),
-	health_bar = create_bar_widget("health_bar", { 255, 100, 255, 100 }),
+	boxes_bg = create_slots_bg_widget("boxes_row", BAR_FILL_WIDTH, MAIN_ROW_HEIGHT),
 	ability_bar = create_bar_widget("ability_bar", { 255, 255, 50, 50 }),
 	ammo_big = create_ammo_big_widget("ammo_big"),
 	slot_auspex = create_auspex_slot_widget("slot_auspex"),
@@ -448,6 +382,10 @@ local widget_definitions = {
 	slot_stimm = create_right_slot_widget("slot_stimm"),
 	slot_pickup = create_right_slot_widget("slot_pickup"),
 }
+
+for k, v in pairs(_division_vanilla_th.widget_definitions) do
+	widget_definitions[k] = v
+end
 
 for k, v in pairs(_division_vanilla_stm_ddg.widget_definitions) do
 	widget_definitions[k] = v
@@ -459,6 +397,8 @@ local VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS = {
 	stamina_depleted_bar = true,
 	dodge_gauge = true,
 	wide_bar = true,
+	health_stamina_nodge = true,
+	toughness_stamina_nodge = true,
 }
 
 local right_slot_widget_names = {
@@ -473,6 +413,8 @@ return {
 	widget_definitions = widget_definitions,
 	vanilla_stamina_dodge_animations = _division_vanilla_stm_ddg.animations,
 	stamina_nodges_definition = _division_vanilla_stm_ddg.stamina_nodges_definition,
+	health_stamina_nodges_definition = _division_vanilla_th.health_stamina_nodges_definition,
+	toughness_stamina_nodges_definition = _division_vanilla_th.toughness_stamina_nodges_definition,
 	dodge_bar_definition = _division_vanilla_stm_ddg.dodge_bar_definition,
 	VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS = VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS,
 	ROOT_LAYOUT_OFFSET_X = ROOT_LAYOUT_OFFSET_X,
