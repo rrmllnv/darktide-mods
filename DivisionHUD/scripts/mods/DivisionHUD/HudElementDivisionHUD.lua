@@ -11,6 +11,9 @@ local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD
 
 local HudElementDivisionHUD = class("HudElementDivisionHUD", "HudElementBase")
 
+local HUD_GLASS_PLATE_ALPHA_BASE = Definitions.HUD_GLASS_PLATE_ALPHA_BASE
+local HUD_GLASS_PLATE_COLOR = Definitions.HUD_GLASS_PLATE_COLOR
+
 local BAR_WIDTH = Definitions.BAR_WIDTH
 local BUFF_SIZE = Definitions.BUFF_SIZE
 local BUFF_SPACING = Definitions.BUFF_SPACING
@@ -30,8 +33,8 @@ HudElementDivisionHUD._slot_cell_visible = function(self, slot_id)
 		return mod:get("show_pickups") ~= false and mod:get("show_pickups") ~= 0
 	elseif slot_id == "slot_pocketable_small" then
 		return mod:get("show_stimm") ~= false and mod:get("show_stimm") ~= 0
-	elseif slot_id == "slot_combat_ability" then
-		return mod:get("show_ultimate") ~= false and mod:get("show_ultimate") ~= 0
+	elseif slot_id == "slot_wielded_display" then
+		return mod:get("show_wielded_weapon") ~= false and mod:get("show_wielded_weapon") ~= 0
 	end
 
 	return true
@@ -53,6 +56,22 @@ HudElementDivisionHUD._build_extensions = function(self, player_unit)
 	}
 end
 
+local function division_hud_icon_is_texture_bitmap_path(icon_path)
+	return type(icon_path) == "string" and string.find(icon_path, "/textures/", 1, true) ~= nil
+end
+
+local function division_hud_icon_must_skip_create_material(icon_path)
+	if type(icon_path) ~= "string" then
+		return false
+	end
+
+	if string.find(icon_path, "/materials/icons/weapons/flat/", 1, true) then
+		return true
+	end
+
+	return false
+end
+
 HudElementDivisionHUD._apply_slot_icon_material = function(self, widget, entry)
 	if not widget or not widget.content then
 		return
@@ -62,28 +81,46 @@ HudElementDivisionHUD._apply_slot_icon_material = function(self, widget, entry)
 	local icon = entry and entry.icon
 
 	if type(icon) ~= "string" or icon == "" or icon == "content/ui/materials/base/ui_default_base" then
-		if slot_id == "slot_combat_ability" then
-			icon = Definitions.DEFAULT_COMBAT_ABILITY_ICON_TEXTURE
-		else
-			icon = Definitions.RIGHT_SLOT_ICON_FALLBACK
-		end
+		icon = Definitions.RIGHT_SLOT_ICON_FALLBACK
 	end
 
 	local icon_style = widget.style and widget.style.icon
 
-	if slot_id == "slot_combat_ability" then
-		widget.content.icon = Definitions.HUD_WEAPON_ICON_CONTAINER
+	if slot_id == "slot_wielded_display" and icon_style then
+		if division_hud_icon_is_texture_bitmap_path(icon) then
+			widget.content.icon = Definitions.HUD_WEAPON_ICON_CONTAINER
 
-		if icon_style then
-			local material_values = icon_style.material_values
-
-			if not material_values then
+			if not icon_style.material_values then
 				icon_style.material_values = {}
-				material_values = icon_style.material_values
 			end
 
-			material_values.texture_map = icon
-			material_values.use_placeholder_texture = 0
+			icon_style.material_values.texture_map = icon
+			icon_style.material_values.use_placeholder_texture = 0
+		elseif division_hud_icon_must_skip_create_material(icon) then
+			widget.content.icon = icon
+			icon_style.material_values = nil
+		else
+			widget.content.icon = icon
+			icon_style.material_values = {}
+		end
+
+		local real_wield_slot = entry.wielded_source_slot_id
+		local use_wide_weapon_strip = real_wield_slot == "slot_primary" or real_wield_slot == "slot_secondary"
+
+		if use_wide_weapon_strip then
+			icon_style.size[1] = Definitions.WEAPON_STRIP_ICON_W
+			icon_style.size[2] = Definitions.WEAPON_STRIP_ICON_H
+			icon_style.default_size[1] = Definitions.WEAPON_STRIP_ICON_W
+			icon_style.default_size[2] = Definitions.WEAPON_STRIP_ICON_H
+			icon_style.aspect_ratio = Definitions.WEAPON_STRIP_ICON_ASPECT_RATIO
+		else
+			local sq = Definitions.WIELDED_STRIP_SQUARE_ICON
+
+			icon_style.size[1] = sq
+			icon_style.size[2] = sq
+			icon_style.default_size[1] = sq
+			icon_style.default_size[2] = sq
+			icon_style.aspect_ratio = 1
 		end
 	else
 		widget.content.icon = icon
@@ -97,22 +134,6 @@ HudElementDivisionHUD._apply_slot_icon_material = function(self, widget, entry)
 end
 
 HudElementDivisionHUD._slot_numeric_text = function(self, slot_id, entry, player_unit)
-	if slot_id == "slot_combat_ability" then
-		local ability_extension = ScriptUnit.has_extension(player_unit, "ability_system")
-
-		if not ability_extension then
-			return "0"
-		end
-
-		local remaining_cooldown = ability_extension:remaining_ability_cooldown(COMBAT_ABILITY_TYPE)
-
-		if remaining_cooldown and remaining_cooldown > 0 then
-			return string.format("%.0f", remaining_cooldown)
-		end
-
-		return "0"
-	end
-
 	if slot_id == "slot_grenade_ability" then
 		local ability_extension = ScriptUnit.has_extension(player_unit, "ability_system")
 
@@ -233,7 +254,7 @@ HudElementDivisionHUD._update_ammo_big = function(self, player_unit, widget, opa
 	if not ammo_slot_id then
 		widget.content.text = ""
 		widget.content.text_reserve = ""
-		widget.style.background.color[1] = 200 * opacity
+		widget.style.background.color[1] = HUD_GLASS_PLATE_ALPHA_BASE * opacity
 		widget.style.text.text_color[1] = 255 * opacity
 		widget.style.text_reserve.text_color[1] = 255 * opacity
 		widget.dirty = true
@@ -244,7 +265,7 @@ HudElementDivisionHUD._update_ammo_big = function(self, player_unit, widget, opa
 
 	widget.content.text = string.format("%d", clip)
 	widget.content.text_reserve = string.format("%d", reserve)
-	widget.style.background.color[1] = 200 * opacity
+	widget.style.background.color[1] = HUD_GLASS_PLATE_ALPHA_BASE * opacity
 	widget.style.text.text_color[1] = 255 * opacity
 	widget.style.text_reserve.text_color[1] = 255 * opacity
 	widget.dirty = true
@@ -285,10 +306,14 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 
 			if visible then
 				self:_apply_slot_icon_material(widget, entry)
-				widget.content.text = self:_slot_numeric_text(slot_id, entry, player_unit)
-				widget.style.background.color[1] = 200 * opacity
-				widget.style.text.text_color[1] = 255 * opacity
+				widget.style.background.color[1] = HUD_GLASS_PLATE_ALPHA_BASE * opacity
 				widget.style.icon.color[1] = 255 * opacity
+
+				if widget.style.text then
+					widget.content.text = self:_slot_numeric_text(slot_id, entry, player_unit)
+					widget.style.text.text_color[1] = 255 * opacity
+				end
+
 				widget.dirty = true
 			end
 		end
@@ -517,7 +542,12 @@ HudElementDivisionHUD._update_buffs = function(self, player_unit, t, ui_renderer
 				pass_type = "rect",
 				style_id = "background",
 				style = {
-					color = { 200, 200, 200, 50 },
+					color = {
+						HUD_GLASS_PLATE_COLOR[1],
+						HUD_GLASS_PLATE_COLOR[2],
+						HUD_GLASS_PLATE_COLOR[3],
+						HUD_GLASS_PLATE_COLOR[4],
+					},
 					size = { BUFF_SIZE, BUFF_SIZE },
 					offset = { offset_x, 0, 0 },
 				},
@@ -588,7 +618,7 @@ HudElementDivisionHUD._update_buffs = function(self, player_unit, t, ui_renderer
 				mv.use_placeholder_texture = 0
 			end
 
-			widget.style.background.color[1] = 200 * opacity
+			widget.style.background.color[1] = HUD_GLASS_PLATE_ALPHA_BASE * opacity
 			widget.style.icon.color[1] = 255 * opacity
 			widget.dirty = true
 		end

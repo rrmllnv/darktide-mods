@@ -1,6 +1,7 @@
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
+local HudElementPlayerWeaponHandlerSettings = require("scripts/ui/hud/elements/player_weapon_handler/hud_element_player_weapon_handler_settings")
 
 local LAYOUT_SCALE = 0.8
 
@@ -20,6 +21,9 @@ local GAP_LEFT_TO_GRID = sc(12)
 local RIGHT_CELL = sc(58)
 local RIGHT_GAP = sc(4)
 local RIGHT_GRID_WIDTH = RIGHT_CELL * 2 + RIGHT_GAP
+local RIGHT_BOTTOM_ROW_GAP = sc(4)
+local WIELDED_ROW_HEIGHT = math.max(sc(28), BIG_AMMO_BOX - RIGHT_CELL - RIGHT_BOTTOM_ROW_GAP)
+local RIGHT_BOTTOM_SLOT_WIDTH = math.max(sc(26), math.floor((RIGHT_GRID_WIDTH - 2 * RIGHT_GAP) / 3))
 local MAIN_ROW_HEIGHT = BIG_AMMO_BOX
 local ROW_WIDTH = BIG_AMMO_BOX + GAP_LEFT_TO_GRID + RIGHT_GRID_WIDTH
 local BUFF_SIZE = sc(32)
@@ -31,6 +35,51 @@ local BOXES_ROW_TOP_GAP = sc(8)
 local BUFFS_ROW_TOP_GAP = sc(8)
 local ROOT_HEIGHT = sc(212)
 local SLOT_ICON_TEXTURE_SIZE = sc(26)
+local ECW_WEAPON_ICON_LAYOUT_SCALE = 0.5
+local _weapon_icon_sz = HudElementPlayerWeaponHandlerSettings.weapon_icon_size
+local WEAPON_ICON_NATIVE_W = 256
+local WEAPON_ICON_NATIVE_H = 96
+
+if type(_weapon_icon_sz) == "table" and type(_weapon_icon_sz[1]) == "number" and type(_weapon_icon_sz[2]) == "number" and _weapon_icon_sz[2] > 0 then
+	WEAPON_ICON_NATIVE_W = _weapon_icon_sz[1]
+	WEAPON_ICON_NATIVE_H = _weapon_icon_sz[2]
+end
+
+local WEAPON_STRIP_ICON_ASPECT_RATIO = WEAPON_ICON_NATIVE_W / WEAPON_ICON_NATIVE_H
+local WEAPON_STRIP_ICON_H = sc(math.floor(WEAPON_ICON_NATIVE_H * ECW_WEAPON_ICON_LAYOUT_SCALE + 0.5))
+local WEAPON_STRIP_ICON_W = math.max(1, math.floor(WEAPON_STRIP_ICON_H * WEAPON_STRIP_ICON_ASPECT_RATIO + 0.5))
+local WEAPON_STRIP_MAX_W = math.max(1, RIGHT_GRID_WIDTH - sc(4))
+
+if WEAPON_STRIP_ICON_W > WEAPON_STRIP_MAX_W then
+	WEAPON_STRIP_ICON_W = WEAPON_STRIP_MAX_W
+	WEAPON_STRIP_ICON_H = math.max(1, math.floor(WEAPON_STRIP_ICON_W / WEAPON_STRIP_ICON_ASPECT_RATIO + 0.5))
+end
+
+if WEAPON_STRIP_ICON_H > WIELDED_ROW_HEIGHT then
+	WEAPON_STRIP_ICON_H = math.max(1, WIELDED_ROW_HEIGHT - sc(2))
+	WEAPON_STRIP_ICON_W = math.max(1, math.floor(WEAPON_STRIP_ICON_H * WEAPON_STRIP_ICON_ASPECT_RATIO + 0.5))
+
+	if WEAPON_STRIP_ICON_W > WEAPON_STRIP_MAX_W then
+		WEAPON_STRIP_ICON_W = WEAPON_STRIP_MAX_W
+		WEAPON_STRIP_ICON_H = math.max(1, math.floor(WEAPON_STRIP_ICON_W / WEAPON_STRIP_ICON_ASPECT_RATIO + 0.5))
+	end
+end
+
+local _handler_icon_sz = HudElementPlayerWeaponHandlerSettings.icon_size
+local WIELDED_SQUARE_ICON_SOURCE = 84
+
+if type(_handler_icon_sz) == "table" and type(_handler_icon_sz[1]) == "number" then
+	local a = _handler_icon_sz[1]
+	local b = type(_handler_icon_sz[2]) == "number" and _handler_icon_sz[2] or a
+
+	WIELDED_SQUARE_ICON_SOURCE = math.min(a, b)
+end
+
+local WIELDED_STRIP_SQUARE_ICON = math.min(
+	sc(WIELDED_SQUARE_ICON_SOURCE),
+	math.max(1, WIELDED_ROW_HEIGHT - sc(2)),
+	math.max(1, RIGHT_GRID_WIDTH - sc(4))
+)
 local SLOT_TEXT_FONT = sc(20)
 local SLOT_ICON_LEFT_INSET = sc(3)
 local SLOT_TEXT_RIGHT_INSET = sc(4)
@@ -40,11 +89,18 @@ local AMMO_CLIP_OFFSET_Y = sc(14)
 local AMMO_RESERVE_OFFSET_Y = sc(30)
 local BUFF_ICON_PADDING = sc(2)
 
+local HUD_GLASS_PLATE_ALPHA_BASE = 48
+local HUD_GLASS_PLATE_COLOR = {
+	HUD_GLASS_PLATE_ALPHA_BASE,
+	232,
+	240,
+	255,
+}
+
 local HUD_WEAPON_ICON_CONTAINER = "content/ui/materials/hud/icons/weapon_icon_container"
 local RIGHT_SLOT_ICON_FALLBACK = "content/ui/materials/icons/weapons/flat/grenade"
-local DEFAULT_COMBAT_ABILITY_ICON_TEXTURE = "content/ui/materials/icons/abilities/throwables/default"
-
 local RIGHT_GRID_ORIGIN_X = BIG_AMMO_BOX + GAP_LEFT_TO_GRID
+local RIGHT_BOTTOM_ROW_Y = WIELDED_ROW_HEIGHT + RIGHT_BOTTOM_ROW_GAP
 
 local function text_style_from_hud_body(font_size, offset)
 	local style = table.clone(UIFontSettings.hud_body)
@@ -125,33 +181,33 @@ local scenegraph_definition = {
 		size = { BIG_AMMO_BOX, BIG_AMMO_BOX },
 		position = { 0, 0, 0 },
 	},
+	slot_weapon_wielded = {
+		parent = "boxes_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { RIGHT_GRID_WIDTH, WIELDED_ROW_HEIGHT },
+		position = { RIGHT_GRID_ORIGIN_X, 0, 0 },
+	},
 	slot_blitz = {
 		parent = "boxes_row",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
-		size = { RIGHT_CELL, RIGHT_CELL },
-		position = { RIGHT_GRID_ORIGIN_X, 0, 0 },
+		size = { RIGHT_BOTTOM_SLOT_WIDTH, RIGHT_CELL },
+		position = { RIGHT_GRID_ORIGIN_X, RIGHT_BOTTOM_ROW_Y, 0 },
 	},
 	slot_stimm = {
 		parent = "boxes_row",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
-		size = { RIGHT_CELL, RIGHT_CELL },
-		position = { RIGHT_GRID_ORIGIN_X + RIGHT_CELL + RIGHT_GAP, 0, 0 },
+		size = { RIGHT_BOTTOM_SLOT_WIDTH, RIGHT_CELL },
+		position = { RIGHT_GRID_ORIGIN_X + RIGHT_BOTTOM_SLOT_WIDTH + RIGHT_GAP, RIGHT_BOTTOM_ROW_Y, 0 },
 	},
 	slot_pickup = {
 		parent = "boxes_row",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
-		size = { RIGHT_CELL, RIGHT_CELL },
-		position = { RIGHT_GRID_ORIGIN_X, RIGHT_CELL + RIGHT_GAP, 0 },
-	},
-	slot_ultimate = {
-		parent = "boxes_row",
-		horizontal_alignment = "left",
-		vertical_alignment = "top",
-		size = { RIGHT_CELL, RIGHT_CELL },
-		position = { RIGHT_GRID_ORIGIN_X + RIGHT_CELL + RIGHT_GAP, RIGHT_CELL + RIGHT_GAP, 0 },
+		size = { RIGHT_BOTTOM_SLOT_WIDTH, RIGHT_CELL },
+		position = { RIGHT_GRID_ORIGIN_X + (RIGHT_BOTTOM_SLOT_WIDTH + RIGHT_GAP) * 2, RIGHT_BOTTOM_ROW_Y, 0 },
 	},
 	buffs_row = {
 		parent = "boxes_row",
@@ -198,7 +254,7 @@ local function create_ammo_big_widget(scenegraph_id)
 			style_id = "background",
 			value_id = "background",
 			style = {
-				color = { 200, 0, 0, 0 },
+				color = table.clone(HUD_GLASS_PLATE_COLOR),
 				offset = { 0, 0, 0 },
 			},
 		},
@@ -228,7 +284,7 @@ local function create_right_slot_widget(scenegraph_id)
 			style_id = "background",
 			value_id = "background",
 			style = {
-				color = { 200, 60, 60, 60 },
+				color = table.clone(HUD_GLASS_PLATE_COLOR),
 				offset = { 0, 0, 0 },
 			},
 		},
@@ -255,42 +311,31 @@ local function create_right_slot_widget(scenegraph_id)
 	}, scenegraph_id)
 end
 
-local function create_combat_ability_right_slot_widget(scenegraph_id)
-	local text_style = text_style_slot_counter_right(SLOT_TEXT_FONT, SLOT_TEXT_RIGHT_INSET)
-
+local function create_weapon_wielded_slot_widget(scenegraph_id)
 	return UIWidget.create_definition({
 		{
 			pass_type = "rect",
 			style_id = "background",
 			value_id = "background",
 			style = {
-				color = { 200, 60, 60, 60 },
+				color = table.clone(HUD_GLASS_PLATE_COLOR),
 				offset = { 0, 0, 0 },
 			},
 		},
 		{
 			pass_type = "texture",
 			style_id = "icon",
-			value = HUD_WEAPON_ICON_CONTAINER,
+			value = RIGHT_SLOT_ICON_FALLBACK,
 			value_id = "icon",
 			style = {
-				horizontal_alignment = "left",
+				horizontal_alignment = "center",
 				vertical_alignment = "center",
-				size = { SLOT_ICON_TEXTURE_SIZE, SLOT_ICON_TEXTURE_SIZE },
-				offset = { SLOT_ICON_LEFT_INSET, 0, 1 },
+				size = { WEAPON_STRIP_ICON_W, WEAPON_STRIP_ICON_H },
+				default_size = { WEAPON_STRIP_ICON_W, WEAPON_STRIP_ICON_H },
+				aspect_ratio = WEAPON_STRIP_ICON_ASPECT_RATIO,
+				offset = { 0, 0, 1 },
 				color = { 255, 255, 255, 255 },
-				material_values = {
-					texture_map = DEFAULT_COMBAT_ABILITY_ICON_TEXTURE,
-					use_placeholder_texture = 0,
-				},
 			},
-		},
-		{
-			pass_type = "text",
-			value_id = "text",
-			value = "0",
-			style_id = "text",
-			style = text_style,
 		},
 	}, scenegraph_id)
 end
@@ -301,17 +346,17 @@ local widget_definitions = {
 	health_bar = create_bar_widget("health_bar", { 255, 100, 255, 100 }),
 	ability_bar = create_bar_widget("ability_bar", { 255, 255, 50, 50 }),
 	ammo_big = create_ammo_big_widget("ammo_big"),
+	slot_weapon_wielded = create_weapon_wielded_slot_widget("slot_weapon_wielded"),
 	slot_blitz = create_right_slot_widget("slot_blitz"),
 	slot_stimm = create_right_slot_widget("slot_stimm"),
 	slot_pickup = create_right_slot_widget("slot_pickup"),
-	slot_ultimate = create_combat_ability_right_slot_widget("slot_ultimate"),
 }
 
 local right_slot_widget_names = {
+	"slot_weapon_wielded",
 	"slot_blitz",
 	"slot_stimm",
 	"slot_pickup",
-	"slot_ultimate",
 }
 
 return {
@@ -327,5 +372,10 @@ return {
 	right_slot_widget_names = right_slot_widget_names,
 	HUD_WEAPON_ICON_CONTAINER = HUD_WEAPON_ICON_CONTAINER,
 	RIGHT_SLOT_ICON_FALLBACK = RIGHT_SLOT_ICON_FALLBACK,
-	DEFAULT_COMBAT_ABILITY_ICON_TEXTURE = DEFAULT_COMBAT_ABILITY_ICON_TEXTURE,
+	HUD_GLASS_PLATE_COLOR = HUD_GLASS_PLATE_COLOR,
+	HUD_GLASS_PLATE_ALPHA_BASE = HUD_GLASS_PLATE_ALPHA_BASE,
+	WEAPON_STRIP_ICON_W = WEAPON_STRIP_ICON_W,
+	WEAPON_STRIP_ICON_H = WEAPON_STRIP_ICON_H,
+	WEAPON_STRIP_ICON_ASPECT_RATIO = WEAPON_STRIP_ICON_ASPECT_RATIO,
+	WIELDED_STRIP_SQUARE_ICON = WIELDED_STRIP_SQUARE_ICON,
 }

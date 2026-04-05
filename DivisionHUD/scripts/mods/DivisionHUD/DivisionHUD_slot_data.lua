@@ -1,11 +1,11 @@
 --[[
-	Статические пути иконок (взяты из Darktide-Source-Code):
-	- DEFAULT_GRENADE_FLAT_ICON … scripts/ui/hud/elements/player_weapon_handler/hud_element_player_weapon_handler_settings.lua (slot_grenade_ability.default_icon)
-	- DEFAULT_POCKETABLE_ICON_AMMO … scripts/settings/equipment/weapon_templates/pocketables/ammo_cache_pocketable.lua (weapon_template.hud_icon_small)
-	- DEFAULT_STIM_ICON_HEAL … scripts/settings/equipment/weapon_templates/pocketables/syringe_corruption_pocketable.lua (hud_icon_small)
-	- DEFAULT_COMBAT_ABILITY_PLACEHOLDER … scripts/settings/ability/player_abilities/abilities/psyker_abilities.lua (hud_icon для гранатных слотов, throwables/default)
-	Материал пасса текстуры для HUD-иконок (не подставлять ui_default_base):
-	- content/ui/materials/hud/icons/weapon_icon_container … hud_element_player_weapon_definitions.lua, EquipmentCommandWheel_definitions.lua
+	Статические пути иконок (из Darktide-Source-Code):
+	- DEFAULT_GRENADE_FLAT_ICON … hud_element_player_weapon_handler_settings (slot_grenade_ability.default_icon)
+	- DEFAULT_POCKETABLE_ICON_AMMO … ammo_cache_pocketable и т.п.
+	- DEFAULT_STIM_ICON_HEAL … syringe_corruption_pocketable
+	Материал пасса: content/ui/materials/hud/icons/weapon_icon_container … hud_element_player_weapon_definitions.lua
+	Нижний ряд (блиц / стим / ящик): resolve_weapon_handler_slot (hide_slot, шаблон+item, граната, фолбэки).
+	Полоса «в руках»: только алгоритм иконки из EquipmentCommandWheel_utils.collect_equipment_wheel_slots для текущего wielded_slot.
 ]]
 
 local AbilityTemplates = require("scripts/settings/ability/ability_templates/ability_templates")
@@ -15,7 +15,6 @@ local VALID_DEVICE_ITEM_NAMES = {
 	["content/items/devices/auspex_map"] = true,
 }
 
-local DEFAULT_COMBAT_ABILITY_PLACEHOLDER = "content/ui/materials/icons/abilities/throwables/default"
 local DEFAULT_GRENADE_FLAT_ICON = "content/ui/materials/icons/weapons/flat/grenade"
 local DEFAULT_POCKETABLE_ICON_AMMO = "content/ui/materials/icons/pocketables/hud/small/party_ammo_crate"
 local DEFAULT_STIM_ICON_HEAL = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption"
@@ -114,13 +113,13 @@ local function resolve_grenade_ability_icon(grenade_ability, settings)
 		return nil
 	end
 
-	local icon = grenade_ability.hud_icon_small
+	local icon = grenade_ability.hud_icon
 
 	if has_meaningful_hud_icon(icon) then
 		return icon
 	end
 
-	icon = grenade_ability.hud_icon
+	icon = grenade_ability.hud_icon_small
 
 	if has_meaningful_hud_icon(icon) then
 		return icon
@@ -130,7 +129,13 @@ local function resolve_grenade_ability_icon(grenade_ability, settings)
 	local ability_template = template_name and AbilityTemplates[template_name]
 
 	if ability_template then
-		icon = ability_template.hud_icon_small or ability_template.hud_icon
+		icon = ability_template.hud_icon
+
+		if has_meaningful_hud_icon(icon) then
+			return icon
+		end
+
+		icon = ability_template.hud_icon_small
 
 		if has_meaningful_hud_icon(icon) then
 			return icon
@@ -142,6 +147,91 @@ local function resolve_grenade_ability_icon(grenade_ability, settings)
 	end
 
 	return nil
+end
+
+local function resolve_wielded_slot_icon_as_equipment_wheel_collects(wielded_slot, extensions)
+	local visual_loadout_extension = extensions.visual_loadout
+	local unit_data = extensions.unit_data
+	local ability_extension = extensions.ability
+	local slots_settings = HudElementPlayerWeaponHandlerSettings.slots_settings
+	local settings = slots_settings[wielded_slot]
+
+	if not visual_loadout_extension or not unit_data or not ability_extension or not settings then
+		return DEFAULT_GRENADE_FLAT_ICON, nil, nil, false
+	end
+
+	local inventory_component = unit_data:read_component("inventory")
+	local equipped_abilities = ability_extension:equipped_abilities()
+	local grenade_ability = equipped_abilities and equipped_abilities.grenade_ability
+	local weapon_name
+
+	if settings.ability then
+		local ability_name = grenade_ability and grenade_ability.name
+
+		weapon_name = inventory_component[wielded_slot] ~= "not_equipped" and inventory_component[wielded_slot] or ability_name or "not_equipped"
+	else
+		weapon_name = inventory_component[wielded_slot]
+	end
+
+	local weapon_template = weapon_name and visual_loadout_extension:weapon_template_from_slot(wielded_slot)
+	local item = weapon_name and visual_loadout_extension:item_from_slot(wielded_slot)
+	local weapon_template_icon = weapon_template and weapon_template.hud_icon
+	local item_icon = item and item.hud_icon
+	local allow_hidden_template = false
+
+	if wielded_slot == "slot_device" and VALID_DEVICE_ITEM_NAMES[weapon_name] then
+		allow_hidden_template = true
+	end
+
+	local icon
+	local has_equipment
+
+	if weapon_template and (not weapon_template.hide_slot or allow_hidden_template) then
+		icon = weapon_template_icon
+
+		if not icon then
+			icon = item_icon
+		end
+
+		if not has_meaningful_hud_icon(icon) then
+			icon = settings.default_icon
+		end
+
+		if not icon then
+			icon = "content/ui/materials/base/ui_default_base"
+		end
+
+		has_equipment = true
+	elseif weapon_template and weapon_template.hide_slot and not allow_hidden_template and settings.ability and grenade_ability and grenade_ability.hud_configuration then
+		icon = grenade_ability.hud_icon
+
+		if not icon then
+			icon = settings.default_icon
+		end
+
+		if not icon then
+			icon = "content/ui/materials/base/ui_default_base"
+		end
+
+		has_equipment = true
+	elseif not weapon_template and settings.ability and grenade_ability and grenade_ability.hud_configuration then
+		icon = grenade_ability.hud_icon
+
+		if not icon then
+			icon = settings.default_icon
+		end
+
+		if not icon then
+			icon = "content/ui/materials/base/ui_default_base"
+		end
+
+		has_equipment = true
+	else
+		icon = guaranteed_icon(settings and settings.default_icon, wielded_slot, settings)
+		has_equipment = weapon_name ~= nil and weapon_name ~= "not_equipped"
+	end
+
+	return icon, weapon_template, item, has_equipment
 end
 
 local function resolve_weapon_handler_slot(slot_id, settings, extensions)
@@ -166,6 +256,7 @@ local function resolve_weapon_handler_slot(slot_id, settings, extensions)
 
 	if settings.ability then
 		local ability_name = grenade_ability and grenade_ability.name
+
 		weapon_name = inventory_component[slot_id] ~= "not_equipped" and inventory_component[slot_id] or ability_name or "not_equipped"
 	else
 		weapon_name = inventory_component[slot_id]
@@ -241,41 +332,48 @@ local function resolve_weapon_handler_slot(slot_id, settings, extensions)
 	}
 end
 
-local function resolve_combat_ability_slot(extensions)
-	local ability_extension = extensions.ability
+local function resolve_wielded_weapon_display_entry(extensions)
+	local slots_settings = HudElementPlayerWeaponHandlerSettings.slots_settings
+	local default_wield_slot
 
-	if not ability_extension then
+	for slot_id_iter, slot_settings in pairs(slots_settings) do
+		if slot_settings.default_wield_slot then
+			default_wield_slot = slot_id_iter
+
+			break
+		end
+	end
+
+	local unit_data = extensions.unit_data
+	local inventory_component = unit_data:read_component("inventory")
+	local wielded_slot = inventory_component.wielded_slot
+
+	if not slots_settings[wielded_slot] then
+		wielded_slot = default_wield_slot or "slot_primary"
+	end
+
+	local settings = slots_settings[wielded_slot]
+
+	if not settings then
 		return {
-			slot_id = "slot_combat_ability",
-			icon = DEFAULT_COMBAT_ABILITY_PLACEHOLDER,
+			slot_id = "slot_wielded_display",
+			wielded_source_slot_id = nil,
+			icon = DEFAULT_GRENADE_FLAT_ICON,
 			has_equipment = false,
-			combat_ability = nil,
+			weapon_template = nil,
+			item = nil,
 		}
 	end
 
-	local equipped_abilities = ability_extension:equipped_abilities()
-	local combat_ability = equipped_abilities and equipped_abilities.combat_ability
-
-	if not combat_ability then
-		return {
-			slot_id = "slot_combat_ability",
-			icon = DEFAULT_COMBAT_ABILITY_PLACEHOLDER,
-			has_equipment = false,
-			combat_ability = nil,
-		}
-	end
-
-	local icon = combat_ability.hud_icon_small or combat_ability.hud_icon or DEFAULT_COMBAT_ABILITY_PLACEHOLDER
-
-	if not has_meaningful_hud_icon(icon) then
-		icon = DEFAULT_COMBAT_ABILITY_PLACEHOLDER
-	end
+	local icon, weapon_template, item, has_equipment = resolve_wielded_slot_icon_as_equipment_wheel_collects(wielded_slot, extensions)
 
 	return {
-		slot_id = "slot_combat_ability",
+		slot_id = "slot_wielded_display",
+		wielded_source_slot_id = wielded_slot,
 		icon = icon,
-		has_equipment = true,
-		combat_ability = combat_ability,
+		has_equipment = has_equipment,
+		weapon_template = weapon_template,
+		item = item,
 	}
 end
 
@@ -283,20 +381,18 @@ local function build_division_right_slots(extensions)
 	local slots_settings = HudElementPlayerWeaponHandlerSettings.slots_settings
 
 	return {
+		resolve_wielded_weapon_display_entry(extensions),
 		resolve_weapon_handler_slot("slot_grenade_ability", slots_settings.slot_grenade_ability, extensions),
 		resolve_weapon_handler_slot("slot_pocketable_small", slots_settings.slot_pocketable_small, extensions),
 		resolve_weapon_handler_slot("slot_pocketable", slots_settings.slot_pocketable, extensions),
-		resolve_combat_ability_slot(extensions),
 	}
 end
 
 return {
 	build_division_right_slots = build_division_right_slots,
-	DEFAULT_COMBAT_ABILITY_PLACEHOLDER = DEFAULT_COMBAT_ABILITY_PLACEHOLDER,
 	DEFAULT_GRENADE_FLAT_ICON = DEFAULT_GRENADE_FLAT_ICON,
 	HUD_WEAPON_ICON_CONTAINER_MATERIAL = "content/ui/materials/hud/icons/weapon_icon_container",
 	VALID_DEVICE_ITEM_NAMES = VALID_DEVICE_ITEM_NAMES,
 	DEFAULT_POCKETABLE_ICON_AMMO = DEFAULT_POCKETABLE_ICON_AMMO,
 	DEFAULT_STIM_ICON_HEAL = DEFAULT_STIM_ICON_HEAL,
 }
-

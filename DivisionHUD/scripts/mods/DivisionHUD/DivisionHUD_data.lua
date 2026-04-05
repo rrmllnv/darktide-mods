@@ -60,7 +60,7 @@ return {
 				default_value = true,
 			},
 			{
-				setting_id = "show_ultimate",
+				setting_id = "show_wielded_weapon",
 				type = "checkbox",
 				default_value = true,
 			},
