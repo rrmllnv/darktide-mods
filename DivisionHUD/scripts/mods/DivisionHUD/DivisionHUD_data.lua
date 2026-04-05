@@ -55,11 +55,6 @@ return {
 				default_value = true,
 			},
 			{
-				setting_id = "show_special",
-				type = "checkbox",
-				default_value = true,
-			},
-			{
 				setting_id = "show_ultimate",
 				type = "checkbox",
 				default_value = true,
