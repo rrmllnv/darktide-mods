@@ -16,22 +16,30 @@ local function sc(n)
 	return sign * math.max(1, math.floor(a * LAYOUT_SCALE + 0.5))
 end
 
-local BIG_AMMO_BOX = sc(120)
+local BIG_AMMO_W = sc(120)
 local GAP_LEFT_TO_GRID = sc(12)
 local RIGHT_CELL = sc(58)
 local RIGHT_GAP = sc(4)
 local RIGHT_GRID_WIDTH = RIGHT_CELL * 2 + RIGHT_GAP
 local RIGHT_BOTTOM_ROW_GAP = sc(4)
-local WIELDED_ROW_HEIGHT = math.max(sc(28), BIG_AMMO_BOX - RIGHT_CELL - RIGHT_BOTTOM_ROW_GAP)
+local RIGHT_BOTTOM_SLOT_HEIGHT = sc(40)
+local REFERENCE_AMMO_BOX_FOR_WIELDED_ROW = sc(120)
+local REFERENCE_BOTTOM_CELL_FOR_WIELDED_ROW = sc(58)
+local WIELDED_ROW_HEIGHT = math.max(
+	sc(28),
+	REFERENCE_AMMO_BOX_FOR_WIELDED_ROW - REFERENCE_BOTTOM_CELL_FOR_WIELDED_ROW - RIGHT_BOTTOM_ROW_GAP
+)
 local RIGHT_BOTTOM_SLOT_WIDTH = math.max(sc(26), math.floor((RIGHT_GRID_WIDTH - 2 * RIGHT_GAP) / 3))
-local MAIN_ROW_HEIGHT = BIG_AMMO_BOX
-local ROW_WIDTH = BIG_AMMO_BOX + GAP_LEFT_TO_GRID + RIGHT_GRID_WIDTH
+local RIGHT_COLUMN_TOTAL_HEIGHT = WIELDED_ROW_HEIGHT + RIGHT_BOTTOM_ROW_GAP + RIGHT_BOTTOM_SLOT_HEIGHT
+local BIG_AMMO_H = RIGHT_COLUMN_TOTAL_HEIGHT
+local MAIN_ROW_HEIGHT = RIGHT_COLUMN_TOTAL_HEIGHT
+local ROW_WIDTH = BIG_AMMO_W + GAP_LEFT_TO_GRID + RIGHT_GRID_WIDTH
 local BAR_WIDTH = ROW_WIDTH
 local BAR_HEIGHT = sc(8)
 local BAR_STACK_GAP = sc(2)
 local BOXES_ROW_TOP_GAP = sc(8)
 local ROOT_HEIGHT = sc(212) - sc(32) - sc(8)
-local SLOT_ICON_TEXTURE_SIZE = sc(26)
+local SLOT_ICON_TEXTURE_SIZE = sc(22)
 local ECW_WEAPON_ICON_LAYOUT_SCALE = 0.5
 local _weapon_icon_sz = HudElementPlayerWeaponHandlerSettings.weapon_icon_size
 local WEAPON_ICON_NATIVE_W = 256
@@ -77,7 +85,7 @@ local WIELDED_STRIP_SQUARE_ICON = math.min(
 	math.max(1, WIELDED_ROW_HEIGHT - sc(2)),
 	math.max(1, RIGHT_GRID_WIDTH - sc(4))
 )
-local SLOT_TEXT_FONT = sc(20)
+local SLOT_TEXT_FONT = sc(16)
 local SLOT_ICON_LEFT_INSET = sc(3)
 local SLOT_TEXT_RIGHT_INSET = sc(4)
 local AMMO_CLIP_FONT = sc(56)
@@ -95,7 +103,7 @@ local HUD_GLASS_PLATE_COLOR = {
 
 local HUD_WEAPON_ICON_CONTAINER = "content/ui/materials/hud/icons/weapon_icon_container"
 local RIGHT_SLOT_ICON_FALLBACK = "content/ui/materials/icons/weapons/flat/grenade"
-local RIGHT_GRID_ORIGIN_X = BIG_AMMO_BOX + GAP_LEFT_TO_GRID
+local RIGHT_GRID_ORIGIN_X = BIG_AMMO_W + GAP_LEFT_TO_GRID
 local RIGHT_BOTTOM_ROW_Y = WIELDED_ROW_HEIGHT + RIGHT_BOTTOM_ROW_GAP
 
 local function text_style_from_hud_body(font_size, offset)
@@ -178,7 +186,7 @@ local scenegraph_definition = {
 		parent = "boxes_row",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
-		size = { BIG_AMMO_BOX, BIG_AMMO_BOX },
+		size = { BIG_AMMO_W, BIG_AMMO_H },
 		position = { 0, 0, 0 },
 	},
 	slot_weapon_wielded = {
@@ -192,21 +200,21 @@ local scenegraph_definition = {
 		parent = "boxes_row",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
-		size = { RIGHT_BOTTOM_SLOT_WIDTH, RIGHT_CELL },
+		size = { RIGHT_BOTTOM_SLOT_WIDTH, RIGHT_BOTTOM_SLOT_HEIGHT },
 		position = { RIGHT_GRID_ORIGIN_X, RIGHT_BOTTOM_ROW_Y, 0 },
 	},
 	slot_stimm = {
 		parent = "boxes_row",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
-		size = { RIGHT_BOTTOM_SLOT_WIDTH, RIGHT_CELL },
+		size = { RIGHT_BOTTOM_SLOT_WIDTH, RIGHT_BOTTOM_SLOT_HEIGHT },
 		position = { RIGHT_GRID_ORIGIN_X + RIGHT_BOTTOM_SLOT_WIDTH + RIGHT_GAP, RIGHT_BOTTOM_ROW_Y, 0 },
 	},
 	slot_pickup = {
 		parent = "boxes_row",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
-		size = { RIGHT_BOTTOM_SLOT_WIDTH, RIGHT_CELL },
+		size = { RIGHT_BOTTOM_SLOT_WIDTH, RIGHT_BOTTOM_SLOT_HEIGHT },
 		position = { RIGHT_GRID_ORIGIN_X + (RIGHT_BOTTOM_SLOT_WIDTH + RIGHT_GAP) * 2, RIGHT_BOTTOM_ROW_Y, 0 },
 	},
 }
