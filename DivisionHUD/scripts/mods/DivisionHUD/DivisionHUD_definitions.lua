@@ -93,9 +93,9 @@ local AUSPEX_ICON_SIZE = math.min(
 	SLOT_ICON_TEXTURE_SIZE,
 	math.max(1, math.min(AUSPEX_SLOT_WIDTH - sc(6), WIELDED_ROW_HEIGHT - sc(6)))
 )
-local SLOT_TEXT_FONT = sc(16)
+local SLOT_TEXT_FONT = sc(20)
 local SLOT_ICON_LEFT_INSET = sc(3)
-local SLOT_TEXT_RIGHT_INSET = sc(4)
+local SLOT_TEXT_AFTER_ICON_GAP = sc(2)
 local AMMO_CLIP_FONT = sc(56)
 local AMMO_RESERVE_FONT = sc(26)
 local AMMO_CLIP_OFFSET_Y = sc(14)
@@ -125,16 +125,16 @@ local function text_style_from_hud_body(font_size, offset)
 	return style
 end
 
-local function text_style_slot_counter_right(font_size, right_inset)
+local function text_style_slot_counter_after_icon(font_size, left_offset_x)
 	local style = table.clone(UIFontSettings.hud_body)
 	style.font_size = font_size
 	style.drop_shadow = true
-	style.text_horizontal_alignment = "right"
+	style.text_horizontal_alignment = "left"
 	style.text_vertical_alignment = "center"
-	style.horizontal_alignment = "right"
+	style.horizontal_alignment = "left"
 	style.vertical_alignment = "center"
 	style.text_color = UIHudSettings.color_tint_main_1
-	style.offset = { -right_inset, 0, 3 }
+	style.offset = { left_offset_x, 0, 3 }
 	return style
 end
 
@@ -292,7 +292,8 @@ local function create_ammo_big_widget(scenegraph_id)
 end
 
 local function create_right_slot_widget(scenegraph_id)
-	local text_style = text_style_slot_counter_right(SLOT_TEXT_FONT, SLOT_TEXT_RIGHT_INSET)
+	local text_left_x = SLOT_ICON_LEFT_INSET + SLOT_ICON_TEXTURE_SIZE + SLOT_TEXT_AFTER_ICON_GAP
+	local text_style = text_style_slot_counter_after_icon(SLOT_TEXT_FONT, text_left_x)
 
 	return UIWidget.create_definition({
 		{
