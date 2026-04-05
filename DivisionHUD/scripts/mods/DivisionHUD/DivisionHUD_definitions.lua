@@ -126,6 +126,10 @@ local function text_style_slot_counter_right(font_size, right_inset)
 	return style
 end
 
+local ROOT_LAYOUT_OFFSET_X = 300
+local ROOT_LAYOUT_OFFSET_Y = 200
+local ROOT_LAYOUT_OFFSET_Z = 100
+
 local scenegraph_definition = {
 	screen = {
 		scale = "fit",
@@ -137,7 +141,7 @@ local scenegraph_definition = {
 		horizontal_alignment = "center",
 		vertical_alignment = "center",
 		size = { ROW_WIDTH, ROOT_HEIGHT },
-		position = { 300, 200, 100 },
+		position = { ROOT_LAYOUT_OFFSET_X, ROOT_LAYOUT_OFFSET_Y, ROOT_LAYOUT_OFFSET_Z },
 	},
 	stamina_bar = {
 		parent = "root",
@@ -362,6 +366,9 @@ local right_slot_widget_names = {
 return {
 	scenegraph_definition = scenegraph_definition,
 	widget_definitions = widget_definitions,
+	ROOT_LAYOUT_OFFSET_X = ROOT_LAYOUT_OFFSET_X,
+	ROOT_LAYOUT_OFFSET_Y = ROOT_LAYOUT_OFFSET_Y,
+	ROOT_LAYOUT_OFFSET_Z = ROOT_LAYOUT_OFFSET_Z,
 	HUD_LAYOUT_SCALE = LAYOUT_SCALE,
 	BAR_WIDTH = BAR_WIDTH,
 	ROW_WIDTH = ROW_WIDTH,

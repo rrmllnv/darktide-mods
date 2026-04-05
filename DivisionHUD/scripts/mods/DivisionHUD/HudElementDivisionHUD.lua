@@ -13,6 +13,9 @@ local HudElementDivisionHUD = class("HudElementDivisionHUD", "HudElementBase")
 
 local HUD_GLASS_PLATE_ALPHA_BASE = Definitions.HUD_GLASS_PLATE_ALPHA_BASE
 local HUD_GLASS_PLATE_COLOR = Definitions.HUD_GLASS_PLATE_COLOR
+local ROOT_LAYOUT_OFFSET_X = Definitions.ROOT_LAYOUT_OFFSET_X
+local ROOT_LAYOUT_OFFSET_Y = Definitions.ROOT_LAYOUT_OFFSET_Y
+local ROOT_LAYOUT_OFFSET_Z = Definitions.ROOT_LAYOUT_OFFSET_Z
 
 local BAR_WIDTH = Definitions.BAR_WIDTH
 local BUFF_SIZE = Definitions.BUFF_SIZE
@@ -440,7 +443,12 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 				self:_division_hud_reset_dynamic_offset_state()
 			end
 
-			self:set_scenegraph_position("root", 20 + pos_x + dyn_x, 50 + pos_y + dyn_y)
+			self:set_scenegraph_position(
+				"root",
+				ROOT_LAYOUT_OFFSET_X + pos_x + dyn_x,
+				ROOT_LAYOUT_OFFSET_Y + pos_y + dyn_y,
+				ROOT_LAYOUT_OFFSET_Z
+			)
 		end
 	end
 
