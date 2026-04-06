@@ -155,6 +155,11 @@ return {
 						type = "checkbox",
 						default_value = d("hide_vanilla_combat_ability_slot", false),
 					},
+					{
+						setting_id = "hide_vanilla_player_buffs_background",
+						type = "checkbox",
+						default_value = d("hide_vanilla_player_buffs_background", false),
+					},
 				},
 			},
 			{

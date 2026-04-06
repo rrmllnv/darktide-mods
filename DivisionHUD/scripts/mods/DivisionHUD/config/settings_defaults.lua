@@ -17,5 +17,6 @@ return {
 	hide_vanilla_dodge_area = false,
 	hide_vanilla_weapon_pivot = false,
 	hide_vanilla_combat_ability_slot = false,
+	hide_vanilla_player_buffs_background = false,
 	divisionhud_reset_all_settings = 0,
 }

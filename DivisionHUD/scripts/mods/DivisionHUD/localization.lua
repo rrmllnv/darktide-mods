@@ -43,6 +43,10 @@ return {
 		en = "Hide combat ability",
 		ru = "Скрыть боевую способность",
 	},
+	hide_vanilla_player_buffs_background = {
+		en = "Hide buffs",
+		ru = "Скрыть баффы",
+	},
 	divisionhud_super_system = {
 		en = "\238\128\169 SYSTEM SETTINGS",
 		ru = "\238\128\169 СИСТЕМНЫЕ НАСТРОЙКИ",
