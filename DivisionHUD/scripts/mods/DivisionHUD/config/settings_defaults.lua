@@ -1,4 +1,4 @@
--- Единый источник значений по умолчанию: DivisionHUD_data и сброс из DivisionHUD.lua
+-- Единый источник значений по умолчанию: data.lua, systems/settings.lua, сброс из DivisionHUD.lua
 return {
 	position_x = 960,
 	position_y = 540,

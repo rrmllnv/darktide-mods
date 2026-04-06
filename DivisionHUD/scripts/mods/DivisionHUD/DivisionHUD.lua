@@ -2,7 +2,7 @@ local mod = get_mod("DivisionHUD")
 
 local hud_elements = {
 	{
-		filename = "DivisionHUD/scripts/mods/DivisionHUD/HudElementDivisionHUD",
+		filename = "DivisionHUD/scripts/mods/DivisionHUD/hud/HudElementDivisionHUD",
 		class_name = "HudElementDivisionHUD",
 		visibility_groups = {
 			"alive",
@@ -14,10 +14,10 @@ for _, hud_element in ipairs(hud_elements) do
 	mod:add_require_path(hud_element.filename)
 end
 
-mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_definitions")
-mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_slot_data")
-mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_stamina_dodge_definitions")
-mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_stamina_dodge")
+mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/core/definitions")
+mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/core/slot_data")
+mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/core/vanilla_stamina_dodge_definitions")
+mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/widgets/vanilla_stamina_dodge")
 
 mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, params)
 	-- UIManager.create_spectator_hud задаёт params.renderer_name == "spectator_hud_ui_renderer"
@@ -45,5 +45,5 @@ mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, para
 end)
 
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/hud_utils")
-mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/settings_manager")
+mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/settings")
 

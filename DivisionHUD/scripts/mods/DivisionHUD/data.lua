@@ -1,6 +1,6 @@
 local mod = get_mod("DivisionHUD")
 
-local Defaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_settings_defaults")
+local Defaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/settings_defaults")
 
 if type(Defaults) ~= "table" then
 	Defaults = {}
@@ -16,7 +16,7 @@ local function d(key, fallback)
 	return fallback
 end
 
--- Смещение HUD в пикселях логического холста, как в DivisionHUD_definitions (screen 1920×1080).
+-- Смещение HUD в пикселях логического холста, как в core/definitions (screen 1920×1080).
 local POSITION_RANGE_X = { 0, 1920 }
 local POSITION_RANGE_Y = { 0, 1080 }
 

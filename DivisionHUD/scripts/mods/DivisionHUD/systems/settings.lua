@@ -1,6 +1,6 @@
 local mod = get_mod("DivisionHUD")
 
-local DivisionHUD_settings_defaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_settings_defaults")
+local DivisionHUD_settings_defaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/settings_defaults")
 
 mod._settings = mod._settings or {}
 

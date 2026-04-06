@@ -6,17 +6,18 @@ local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local Ammo = require("scripts/utilities/ammo")
 local PlayerCharacterConstants = require("scripts/settings/player_character/player_character_constants")
 
-local Definitions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_definitions")
-local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_slot_data")
-local VanillaStaminaDodge = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_stamina_dodge")
-local VanillaToughnessHealth = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_toughness_health")
-local DivisionHUDSettingsDefaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_settings_defaults")
+local Definitions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/definitions")
+local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/slot_data")
+local VanillaStaminaDodge = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/vanilla_stamina_dodge")
+local VanillaToughnessHealth = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/vanilla_toughness_health")
+local DivisionHUDSettingsDefaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/settings_defaults")
 
 if type(DivisionHUDSettingsDefaults) ~= "table" then
 	DivisionHUDSettingsDefaults = {}
 end
 
 local DynamicHudContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/dynamic_hud")
+local GameFlowContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/game_flow")
 
 local HudElementDivisionHUD = class("HudElementDivisionHUD", "HudElementBase")
 
@@ -480,33 +481,27 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 end
 
 HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_settings, input_service)
-	local game_mode_manager = Managers.state.game_mode
-	local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
-	local is_in_hub = not game_mode_name or game_mode_name == "hub" or game_mode_name == "prologue_hub"
+	local is_in_hub = GameFlowContext.is_hub_like()
+	local local_player, player_unit = GameFlowContext.local_player_alive_unit()
 
-	if not is_in_hub then
-		local layout_player = Managers.player:local_player(1)
-		local layout_unit = layout_player and layout_player.player_unit
+	if not is_in_hub and local_player and player_unit then
+		local s = mod._settings
+		local pos_x = (s and type(s.position_x) == "number" and s.position_x) or 0
+		local pos_y = (s and type(s.position_y) == "number" and s.position_y) or 0
+		local dyn_x, dyn_y = 0, 0
 
-		if layout_player and layout_unit and ALIVE[layout_unit] then
-			local s = mod._settings
-			local pos_x = (s and type(s.position_x) == "number" and s.position_x) or 0
-			local pos_y = (s and type(s.position_y) == "number" and s.position_y) or 0
-			local dyn_x, dyn_y = 0, 0
-
-			if DynamicHudContext.dynamic_hud_enabled(mod, DivisionHUDSettingsDefaults) then
-				dyn_x, dyn_y = self:_division_hud_compute_dynamic_root_offset(dt, layout_player)
-			else
-				self:_division_hud_reset_dynamic_offset_state()
-			end
-
-			self:set_scenegraph_position(
-				"root",
-				ROOT_LAYOUT_OFFSET_X + pos_x + dyn_x,
-				ROOT_LAYOUT_OFFSET_Y + pos_y + dyn_y,
-				ROOT_LAYOUT_OFFSET_Z
-			)
+		if DynamicHudContext.dynamic_hud_enabled(mod, DivisionHUDSettingsDefaults) then
+			dyn_x, dyn_y = self:_division_hud_compute_dynamic_root_offset(dt, local_player)
+		else
+			self:_division_hud_reset_dynamic_offset_state()
 		end
+
+		self:set_scenegraph_position(
+			"root",
+			ROOT_LAYOUT_OFFSET_X + pos_x + dyn_x,
+			ROOT_LAYOUT_OFFSET_Y + pos_y + dyn_y,
+			ROOT_LAYOUT_OFFSET_Z
+		)
 	end
 
 	HudElementDivisionHUD.super.update(self, dt, t, ui_renderer, render_settings, input_service)
@@ -517,17 +512,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 		return
 	end
 
-	local player = Managers.player:local_player(1)
-
-	if not player then
-		self:_division_hud_reset_dynamic_offset_state()
-		self:_set_all_visible(false)
-		return
-	end
-
-	local player_unit = player.player_unit
-
-	if not player_unit or not ALIVE[player_unit] then
+	if not local_player or not player_unit then
 		self:_division_hud_reset_dynamic_offset_state()
 		self:_set_all_visible(false)
 		return

@@ -1,6 +1,6 @@
 --[[
 	Определения для полос здоровья и стойкости DivisionHUD.
-	Паттерн такой же, как в DivisionHUD_vanilla_stamina_dodge_definitions.lua:
+	Паттерн такой же, как в vanilla_stamina_dodge_definitions.lua:
 	  build(bar_w, bar_h, bar_label_w, bar_stack_gap) → { scenegraph_definition, widget_definitions,
 	    health_stamina_nodges_definition, toughness_stamina_nodges_definition }
 	Scenegraph-узлы: toughness_value_label, toughness_bar, health_value_label, health_bar.
@@ -14,7 +14,7 @@
 
 local mod = get_mod("DivisionHUD")
 
-local StaminaDodgeDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_stamina_dodge_definitions")
+local StaminaDodgeDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/vanilla_stamina_dodge_definitions")
 
 local HudElementStaminaSettings = require("scripts/ui/hud/elements/blocking/hud_element_stamina_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")

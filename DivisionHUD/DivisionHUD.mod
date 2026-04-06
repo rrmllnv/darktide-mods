@@ -4,8 +4,8 @@ return {
 
 		new_mod("DivisionHUD", {
 			mod_script       = "DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD",
-			mod_data         = "DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_data",
-			mod_localization = "DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_localization",
+			mod_data         = "DivisionHUD/scripts/mods/DivisionHUD/data",
+			mod_localization = "DivisionHUD/scripts/mods/DivisionHUD/localization",
 		})
 	end,
 	packages = {},
