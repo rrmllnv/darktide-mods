@@ -1,17 +1,3 @@
---[[
-	Определения для полос здоровья и стойкости DivisionHUD.
-	Паттерн такой же, как в vanilla_stamina_dodge_definitions.lua:
-	  build(bar_w, bar_h, bar_label_w, bar_stack_gap) → { scenegraph_definition, widget_definitions,
-	    health_stamina_nodges_definition, toughness_stamina_nodges_definition }
-	Scenegraph-узлы: toughness_value_label, toughness_bar, health_value_label, health_bar.
-	Цвета:
-	  - Стойкость (bar_fill): UIHudSettings.color_tint_6 = Color.ui_toughness_default (синий, как в ваниле).
-	  - Здоровье (bar_fill): UIHudSettings.color_tint_1 (белый, как в hud_element_player_health_definitions.lua).
-	  - Ранения/скверна (health_max bar_fill): UIHudSettings.color_tint_3 = Color.ui_orange_dark(153) (как в ваниле).
-	Цифры: body_small, только текущее значение (без слеша), правое выравнивание — как value_text_style в stamina/dodge defs.
-	Засечки (nodges): только через VanillaToughnessHealth.draw (не в стандартном _draw_widgets).
-]]
-
 local mod = get_mod("DivisionHUD")
 
 local StaminaDodgeDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/vanilla_stamina_dodge_definitions")

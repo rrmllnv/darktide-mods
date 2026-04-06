@@ -1,15 +1,5 @@
 local mod = get_mod("DivisionHUD")
 
---[[
-	Логика из hud_element_player_health.lua + hud_health_bar_logic.lua (Darktide-Source-Code).
-	Полосы: rect + stamina_full / stamina_spent (bar_background / bar_spent / bar_fill), как stamina_bar в ваниле.
-	Ширины — через size_addition[1], как в hud_element_stamina.lua.
-	Полоса «потерянного» макс. HP (ранения/скверна) — health_max / toughness_max как dodge_bar: bar_fill + bar_background, оба size[1].
-	health_max цвет: UIHudSettings.color_tint_3 (orange_dark) — как в hud_element_player_health_definitions.lua.
-	Цифры слева — toughness_value_label / health_value_label: только текущее значение (без слеша).
-	Засечки (nodges) только через VanillaToughnessHealth.draw; в общем цикле _draw_widgets не рисуются (VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS).
-]]
-
 local HudHealthBarLogic = require("scripts/ui/hud/elements/hud_health_bar_logic")
 local HudElementPlayerHealthSettings = require("scripts/ui/hud/elements/player_health/hud_element_player_health_settings")
 local HudElementPlayerToughnessSettings = require("scripts/ui/hud/elements/player_health/hud_element_player_toughness_settings")
@@ -96,12 +86,10 @@ M.init = function(self, definitions)
 	self._vdth_disabled = nil
 	self._vdth_knocked_down = nil
 
-	-- засечки стойкости: разделы по stamina chunks
 	self._vdth_num_stamina_chunks = 0
 	self._vdth_stamina_chunk_width = 0
 	self._vdth_stamina_fraction_for_nodges = 1
 
-	-- засечки здоровья: разделы по max_wounds (health_extension:max_wounds())
 	self._vdth_num_health_wounds = 0
 	self._vdth_health_chunk_width = 0
 	self._vdth_health_fraction_for_nodges = 1
@@ -139,7 +127,6 @@ local function _compute_chunk_width(bar_width, num_chunks)
 	return num_chunks > 0 and total_bar / num_chunks or total_bar
 end
 
--- Засечки стойкости: кол-во по stamina chunks
 M._update_vdth_toughness_nodge_chunk_layout = function(self, player_unit)
 	local num_stamina_chunks = 0
 
@@ -171,7 +158,6 @@ M._update_vdth_toughness_nodge_chunk_layout = function(self, player_unit)
 	end
 end
 
--- Засечки здоровья: кол-во по max_wounds (health_extension:max_wounds())
 M._update_vdth_health_nodge_chunk_layout = function(self, player_unit)
 	local num_wounds = 0
 
@@ -208,7 +194,6 @@ M._update_vdth_stamina_fraction_for_nodges = function(self, player_unit)
 	self._vdth_stamina_fraction_for_nodges = stamina_fraction
 end
 
--- num_chunks, chunk_width, fill_fraction — явные параметры, чтобы здоровье и стойкость использовали свои значения
 M._draw_style_nodges = function(self, ui_renderer, render_settings, nodge_widget, row_alpha_multiplier, num_chunks, chunk_width, fill_fraction)
 	if not nodge_widget then
 		return
@@ -255,8 +240,6 @@ M._draw_style_nodges = function(self, ui_renderer, render_settings, nodge_widget
 		nodge_widget_color[3] = nodge_color[3]
 		nodge_widget_color[4] = nodge_color[4]
 
-		-- UIWidget._draw_widget_passes: при retained_id у rect-pass после первого кадра
-		-- требуется widget.dirty или pass_data.dirty, иначе pass не рисуется (ui_widget.lua).
 		nodge_widget.dirty = true
 
 		UIWidget.draw(nodge_widget, ui_renderer)
@@ -284,8 +267,6 @@ M.draw = function(self, dt, t, input_service, ui_renderer, render_settings)
 			self._vdth_health_fraction_for_nodges
 		)
 	end
-
-	-- Засечки у стойкости отключены
 end
 
 M._set_health_row_visible = function(self, widgets, visible)
@@ -377,8 +358,6 @@ M._apply_health_fraction = function(self, health_fraction, health_ghost_fraction
 	health_widget.style.bar_fill.size_addition[1] = -(bar_width - health_width)
 	health_widget.style.bar_spent.size_addition[1] = -(bar_width - ghost_total_width)
 
-	-- Ранения/скверна: правый край полосы, доля (1 - health_max_fraction) от ширины бара.
-	-- Цвет color_tint_3 (orange_dark) задан в definitions, здесь управляем только размером.
 	local health_max_id = "health_max"
 	local health_max_width = bar_width - math.max(bar_width * health_max_fraction, 0)
 
@@ -530,8 +509,6 @@ M.update = function(self, dt, t, player_unit, opacity)
 
 				bar_logic:update(dt, t, toughness_percentage, 1)
 
-				-- Ваниль: HudElementPlayerHealth не применяет bar_logic:alpha_multiplier() к полосам
-				-- (_set_bar_alpha(1)), иначе срабатывает alpha_fade из hud_health_bar_logic и полосы «гаснут».
 				local alpha = opacity
 
 				M._set_bar_alpha_toughness(self, widgets, alpha)

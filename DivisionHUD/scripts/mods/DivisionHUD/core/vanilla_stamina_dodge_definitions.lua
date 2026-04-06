@@ -1,10 +1,3 @@
---[[
-	Виджеты, сцена и анимации из исходников:
-	- hud_element_stamina_definitions.lua
-	- hud_element_dodge_counter_definitions.lua
-	Узлы сцены — дети boxes_row под MAIN_ROW_HEIGHT; id узлов уникальны в общем графе DivisionHUD.
-]]
-
 local HudElementStaminaSettings = require("scripts/ui/hud/elements/blocking/hud_element_stamina_settings")
 local HudElementDodgeCounterSettings = require("scripts/ui/hud/elements/dodge_counter/hud_element_dodge_counter_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")

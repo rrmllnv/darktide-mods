@@ -1,11 +1,3 @@
---[[
-	Логика из hud_element_stamina.lua и hud_element_dodge_counter.lua (Darktide-Source-Code).
-	parent:player_extensions() → self._parent:player_extensions()
-	element("HudElementDodgeCounter"/"HudElementStamina") → self._vddg_is_active / self._vstm_is_active
-	_widgets_by_name.gauge → stamina_gauge
-	_alpha_multiplier → _vstm_alpha_mult / _vddg_alpha_mult
-]]
-
 local HudElementStaminaSettings = require("scripts/ui/hud/elements/blocking/hud_element_stamina_settings")
 local HudElementDodgeCounterSettings = require("scripts/ui/hud/elements/dodge_counter/hud_element_dodge_counter_settings")
 local Stamina = require("scripts/utilities/attack/stamina")

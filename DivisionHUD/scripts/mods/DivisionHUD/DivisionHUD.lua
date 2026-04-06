@@ -20,10 +20,6 @@ mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/core/vanilla_stamina_
 mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/widgets/vanilla_stamina_dodge")
 
 mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, params)
-	-- UIManager.create_spectator_hud задаёт params.renderer_name == "spectator_hud_ui_renderer"
-	-- (scripts/managers/ui/ui_manager.lua). Иначе DivisionHUD попадает в spectator HUD: группа
-	-- "alive" смотрит на здоровье наблюдаемого игрока, а данные берутся с local_player — HUD
-	-- остаётся видимым при смерти и наблюдении за союзниками.
 	local is_spectator_hud = params and params.renderer_name == "spectator_hud_ui_renderer"
 
 	if not is_spectator_hud then

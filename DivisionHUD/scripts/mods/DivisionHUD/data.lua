@@ -16,7 +16,6 @@ local function d(key, fallback)
 	return fallback
 end
 
--- Смещение от центра экрана (root: center/center), логический холст 1920×1080: ±половина ширины/высоты.
 local POSITION_RANGE_X = { -960, 960 }
 local POSITION_RANGE_Y = { -540, 540 }
 

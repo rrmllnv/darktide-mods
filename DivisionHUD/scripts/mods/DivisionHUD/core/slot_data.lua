@@ -1,13 +1,3 @@
---[[
-	Статические пути иконок (из Darktide-Source-Code):
-	- DEFAULT_GRENADE_FLAT_ICON … hud_element_player_weapon_handler_settings (slot_grenade_ability.default_icon)
-	- DEFAULT_POCKETABLE_ICON_AMMO … ammo_cache_pocketable и т.п.
-	- DEFAULT_STIM_ICON_HEAL … syringe_corruption_pocketable
-	Материал пасса: content/ui/materials/hud/icons/weapon_icon_container … hud_element_player_weapon_definitions.lua
-	Нижний ряд: slot_grenade_ability — иконка как HudElementPlayerPanelBase._get_grenade_ability_status (weapon_template.hud_icon_small слота, иначе AbilityTemplates[ability_template].hud_icon_small). Остальные слоты: resolve_weapon_handler_slot как раньше.
-	Полоса «в руках»: только алгоритм иконки из EquipmentCommandWheel_utils.collect_equipment_wheel_slots для текущего wielded_slot.
-]]
-
 local AbilityTemplates = require("scripts/settings/ability/ability_templates/ability_templates")
 local HudElementPlayerWeaponHandlerSettings = require("scripts/ui/hud/elements/player_weapon_handler/hud_element_player_weapon_handler_settings")
 

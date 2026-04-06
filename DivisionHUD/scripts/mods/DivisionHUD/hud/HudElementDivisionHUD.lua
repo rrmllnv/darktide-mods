@@ -661,7 +661,6 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 				"top"
 			)
 		elseif integrate_chud and chud_has_division_nodes and not chud_root_base then
-			-- Сохранены только дочерние узлы Custom HUD, не root — позицию root не трогаем.
 		else
 			self:set_scenegraph_position(
 				"root",
@@ -762,10 +761,6 @@ HudElementDivisionHUD._update_ability_bar = function(self, player_unit, widget, 
 	end
 
 	if max_charges > ABILITY_BAR_MAX_SEGMENTS then
-		--[[
-			При max_charges выше лимита сегментов (баффы) — одна полоса на всю ширину,
-			прогресс перезарядки как в HudElementPlayerAbility (без разбиения по зарядам).
-		]]
 		local seg1 = widget.style.segment_1
 
 		if active_partial_fill then

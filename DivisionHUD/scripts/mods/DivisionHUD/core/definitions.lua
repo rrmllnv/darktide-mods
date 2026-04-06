@@ -45,8 +45,6 @@ local BAR_LABEL_W = sc(44)
 local BAR_FILL_WIDTH = math.max(1, ROW_WIDTH - BAR_LABEL_W)
 local BIG_AMMO_W_LAYOUT = math.max(1, BIG_AMMO_W - BAR_LABEL_W)
 local BAR_WIDTH = BAR_FILL_WIDTH
--- Стойкость: как vanilla local player — toughness_bar_size[2] == 8 (personal_player_panel_definitions).
--- При LAYOUT_SCALE 0.8 даёт 8: sc(10); старая общая BAR_HEIGHT = sc(8) давала 6.
 local TOUGHNESS_BAR_HEIGHT = sc(10)
 local ABILITY_BAR_STRIP_HEIGHT = sc(8)
 local ABILITY_BAR_MAX_SEGMENTS = 4

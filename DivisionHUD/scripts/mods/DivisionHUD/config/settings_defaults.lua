@@ -1,4 +1,3 @@
--- Единый источник значений по умолчанию: data.lua, systems/settings.lua, сброс из DivisionHUD.lua
 return {
 	position_x = 400,
 	position_y = 200,
