@@ -261,6 +261,21 @@ local function division_hud_icon_must_skip_create_material(icon_path)
 	return false
 end
 
+local function division_hud_copy_wielded_display_entry(entry)
+	if not entry then
+		return nil
+	end
+
+	return {
+		slot_id = entry.slot_id,
+		wielded_source_slot_id = entry.wielded_source_slot_id,
+		icon = entry.icon,
+		has_equipment = entry.has_equipment,
+		weapon_template = entry.weapon_template,
+		item = entry.item,
+	}
+end
+
 HudElementDivisionHUD._apply_slot_icon_material = function(self, widget, entry)
 	if not widget or not widget.content then
 		return
@@ -524,6 +539,8 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 	local extensions = self:_build_extensions(player_unit)
 
 	if not extensions then
+		self._division_hud_wielded_strip_cache = nil
+
 		for i = 1, RIGHT_SLOT_COUNT do
 			local name = right_slot_widget_names[i]
 			local widget = widgets[name]
@@ -541,6 +558,7 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 	end
 
 	local row = SlotData.build_division_right_slots(extensions)
+	local inventory_component = extensions.unit_data:read_component("inventory")
 
 	for i = 1, RIGHT_SLOT_COUNT do
 		local name = right_slot_widget_names[i]
@@ -553,13 +571,26 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 			end
 		else
 			local slot_id = entry.slot_id
+			local display_entry = entry
+
+			if i == 1 and inventory_component then
+				local raw_wielded = inventory_component.wielded_slot
+
+				if SlotData.division_hud_inventory_wield_is_weapon_handler_slot(raw_wielded) then
+					self._division_hud_wielded_strip_cache = division_hud_copy_wielded_display_entry(entry)
+				else
+					if self._division_hud_wielded_strip_cache then
+						display_entry = self._division_hud_wielded_strip_cache
+					end
+				end
+			end
 
 			widget.content.visible = true
-			self:_apply_slot_icon_material(widget, entry)
+			self:_apply_slot_icon_material(widget, display_entry)
 			widget.style.icon.color[1] = 255 * opacity
 
 			if widget.style.text then
-				widget.content.text = self:_slot_numeric_text(slot_id, entry, player_unit)
+				widget.content.text = self:_slot_numeric_text(slot_id, display_entry, player_unit)
 				widget.style.text.text_color[1] = 255 * opacity
 			end
 
@@ -581,6 +612,8 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	VanillaToughnessHealth.init(self, Definitions)
 
 	self:_division_hud_reset_dynamic_offset_state()
+
+	self._division_hud_wielded_strip_cache = nil
 
 	local widgets = self._widgets_by_name
 	local skip_init_hide = Definitions.VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS
@@ -620,12 +653,14 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 
 	if is_in_hub then
 		self:_division_hud_reset_dynamic_offset_state()
+		self._division_hud_wielded_strip_cache = nil
 		self:_set_all_visible(false)
 		return
 	end
 
 	if not local_player or not player_unit then
 		self:_division_hud_reset_dynamic_offset_state()
+		self._division_hud_wielded_strip_cache = nil
 		self:_set_all_visible(false)
 		return
 	end
