@@ -438,7 +438,7 @@ local function build(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap)
 					vertical_alignment = "top",
 					size = {
 						stm_spacing,
-						6,
+						bar_h,
 					},
 					offset = {
 						0,

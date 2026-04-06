@@ -45,13 +45,16 @@ local BAR_LABEL_W = sc(44)
 local BAR_FILL_WIDTH = math.max(1, ROW_WIDTH - BAR_LABEL_W)
 local BIG_AMMO_W_LAYOUT = math.max(1, BIG_AMMO_W - BAR_LABEL_W)
 local BAR_WIDTH = BAR_FILL_WIDTH
-local BAR_HEIGHT = sc(8)
+-- Стойкость: как vanilla local player — toughness_bar_size[2] == 8 (personal_player_panel_definitions).
+-- При LAYOUT_SCALE 0.8 даёт 8: sc(10); старая общая BAR_HEIGHT = sc(8) давала 6.
+local TOUGHNESS_BAR_HEIGHT = sc(10)
+local ABILITY_BAR_STRIP_HEIGHT = sc(8)
 local ABILITY_BAR_MAX_SEGMENTS = 4
 local ABILITY_BAR_SEGMENT_GAP = sc(2)
 local HEALTH_BAR_HEIGHT = sc(16)
 local BAR_STACK_GAP = sc(2)
 local BOXES_ROW_TOP_GAP = sc(8)
-local ROOT_HEIGHT_BASE = sc(212) - sc(32) - sc(8)
+local ROOT_HEIGHT_BASE = sc(212) - sc(32) - sc(8) + sc(2)
 local SLOT_ICON_TEXTURE_SIZE = sc(22)
 local ECW_WEAPON_ICON_LAYOUT_SCALE = 0.5
 local _weapon_icon_sz = HudElementPlayerWeaponHandlerSettings.weapon_icon_size
@@ -165,7 +168,7 @@ local scenegraph_definition = {
 		parent = "health_bar",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
-		size = { BAR_WIDTH, BAR_HEIGHT },
+		size = { BAR_WIDTH, ABILITY_BAR_STRIP_HEIGHT },
 		position = { 0, HEALTH_BAR_HEIGHT + BAR_STACK_GAP, 0 },
 	},
 	boxes_row = {
@@ -173,7 +176,7 @@ local scenegraph_definition = {
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
 		size = { BAR_FILL_WIDTH, MAIN_ROW_HEIGHT },
-		position = { 0, BAR_HEIGHT + BOXES_ROW_TOP_GAP, 0 },
+		position = { 0, ABILITY_BAR_STRIP_HEIGHT + BOXES_ROW_TOP_GAP, 0 },
 	},
 	ammo_big = {
 		parent = "boxes_row",
@@ -220,7 +223,7 @@ local scenegraph_definition = {
 }
 
 local DivisionHUDVanillaToughnessHealthDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/vanilla_toughness_health_definitions")
-local _division_vanilla_th = DivisionHUDVanillaToughnessHealthDefs.build(BAR_WIDTH, BAR_HEIGHT, HEALTH_BAR_HEIGHT, BAR_LABEL_W, BAR_STACK_GAP)
+local _division_vanilla_th = DivisionHUDVanillaToughnessHealthDefs.build(BAR_WIDTH, TOUGHNESS_BAR_HEIGHT, HEALTH_BAR_HEIGHT, BAR_LABEL_W, BAR_STACK_GAP)
 
 for k, v in pairs(_division_vanilla_th.scenegraph_definition) do
 	scenegraph_definition[k] = v
@@ -248,7 +251,7 @@ local function create_combat_ability_bar_widget(scenegraph_id)
 			style = {
 				color = { 160, 0, 0, 0 },
 				offset = { 0, 0, 0 },
-				size = { BAR_WIDTH, BAR_HEIGHT },
+				size = { BAR_WIDTH, ABILITY_BAR_STRIP_HEIGHT },
 			},
 		},
 	}
@@ -263,7 +266,7 @@ local function create_combat_ability_bar_widget(scenegraph_id)
 				vertical_alignment = "center",
 				color = { 255, 231, 145, 26 },
 				offset = { 0, 0, i },
-				size = { 0, BAR_HEIGHT },
+				size = { 0, ABILITY_BAR_STRIP_HEIGHT },
 			},
 		}
 	end
@@ -427,7 +430,8 @@ return {
 	ROOT_LAYOUT_OFFSET_Z = ROOT_LAYOUT_OFFSET_Z,
 	HUD_LAYOUT_SCALE = LAYOUT_SCALE,
 	BAR_WIDTH = BAR_WIDTH,
-	BAR_HEIGHT = BAR_HEIGHT,
+	BAR_HEIGHT = ABILITY_BAR_STRIP_HEIGHT,
+	TOUGHNESS_BAR_HEIGHT = TOUGHNESS_BAR_HEIGHT,
 	ABILITY_BAR_MAX_SEGMENTS = ABILITY_BAR_MAX_SEGMENTS,
 	ABILITY_BAR_SEGMENT_GAP = ABILITY_BAR_SEGMENT_GAP,
 	BAR_LABEL_W = BAR_LABEL_W,
