@@ -136,8 +136,8 @@ local function build(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap)
 	return {
 		scenegraph_definition = build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap),
 		widget_definitions = {
-			toughness_value_label = create_value_label_widget("toughness_value_label", 0),
-			health_value_label = create_value_label_widget("health_value_label", bar_h + bar_stack_gap),
+		toughness_value_label = create_value_label_widget("toughness_value_label", -3),
+		health_value_label = create_value_label_widget("health_value_label", bar_h + bar_stack_gap - 3),
 			health = UIWidget.create_definition({
 				{
 					pass_type = "rect",
