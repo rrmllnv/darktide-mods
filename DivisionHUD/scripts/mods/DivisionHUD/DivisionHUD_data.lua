@@ -21,13 +21,6 @@ return {
 				decimals_number = 0,
 			},
 			{
-				setting_id = "scale",
-				type = "numeric",
-				default_value = 1.0,
-				range = {0.5, 2.0},
-				decimals_number = 1,
-			},
-			{
 				setting_id = "opacity",
 				type = "numeric",
 				default_value = 1.0,

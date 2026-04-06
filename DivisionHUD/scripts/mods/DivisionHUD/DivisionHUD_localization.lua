@@ -15,10 +15,6 @@ return {
 		en = "Position Y",
 		ru = "Позиция Y",
 	},
-	scale = {
-		en = "Scale",
-		ru = "Масштаб",
-	},
 	opacity = {
 		en = "Opacity",
 		ru = "Прозрачность",
