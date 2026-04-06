@@ -369,27 +369,29 @@ local function try_weapon_handler_wield_slot(slot_id, slots_settings)
 	return nil
 end
 
+local function try_weapon_strip_display_slot(slot_id, slots_settings)
+	if slot_id ~= "slot_primary" and slot_id ~= "slot_secondary" then
+		return nil
+	end
+
+	return try_weapon_handler_wield_slot(slot_id, slots_settings)
+end
+
 local function pick_division_hud_wielded_display_slot(inventory_component, slots_settings, default_wield_slot)
 	if not slots_settings then
 		return nil
 	end
 
 	if not inventory_component then
-		return try_weapon_handler_wield_slot(default_wield_slot, slots_settings)
-			or try_weapon_handler_wield_slot("slot_primary", slots_settings)
+		return try_weapon_strip_display_slot(default_wield_slot, slots_settings)
+			or try_weapon_strip_display_slot("slot_primary", slots_settings)
 	end
 
-	return try_weapon_handler_wield_slot(inventory_component.wielded_slot, slots_settings)
-		or try_weapon_handler_wield_slot(inventory_component.previously_wielded_weapon_slot, slots_settings)
-		or try_weapon_handler_wield_slot(inventory_component.previously_wielded_slot, slots_settings)
-		or try_weapon_handler_wield_slot(default_wield_slot, slots_settings)
-		or try_weapon_handler_wield_slot("slot_primary", slots_settings)
-end
-
-local function division_hud_inventory_wield_is_weapon_handler_slot(slot_id)
-	local slots_settings = HudElementPlayerWeaponHandlerSettings.slots_settings
-
-	return slot_id ~= nil and slot_id ~= "none" and slots_settings[slot_id] ~= nil
+	return try_weapon_strip_display_slot(inventory_component.wielded_slot, slots_settings)
+		or try_weapon_strip_display_slot(inventory_component.previously_wielded_weapon_slot, slots_settings)
+		or try_weapon_strip_display_slot(inventory_component.previously_wielded_slot, slots_settings)
+		or try_weapon_strip_display_slot(default_wield_slot, slots_settings)
+		or try_weapon_strip_display_slot("slot_primary", slots_settings)
 end
 
 local function resolve_wielded_weapon_display_entry(extensions)
@@ -488,7 +490,6 @@ end
 return {
 	build_division_right_slots = build_division_right_slots,
 	resolve_auspex_display_entry = resolve_auspex_display_entry,
-	division_hud_inventory_wield_is_weapon_handler_slot = division_hud_inventory_wield_is_weapon_handler_slot,
 	DEFAULT_GRENADE_FLAT_ICON = DEFAULT_GRENADE_FLAT_ICON,
 	HUD_WEAPON_ICON_CONTAINER_MATERIAL = "content/ui/materials/hud/icons/weapon_icon_container",
 	VALID_DEVICE_ITEM_NAMES = VALID_DEVICE_ITEM_NAMES,
