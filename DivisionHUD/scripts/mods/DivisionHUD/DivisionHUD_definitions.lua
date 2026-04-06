@@ -96,10 +96,7 @@ local WIELDED_STRIP_SQUARE_ICON = math.min(
 	math.max(1, WIELDED_ROW_HEIGHT - sc(2)),
 	math.max(1, WIELDED_STRIP_WIDTH - sc(4))
 )
-local AUSPEX_ICON_SIZE = math.min(
-	SLOT_ICON_TEXTURE_SIZE,
-	math.max(1, math.min(AUSPEX_SLOT_WIDTH - sc(6), WIELDED_ROW_HEIGHT - sc(6)))
-)
+local AUSPEX_ICON_SIZE = math.max(1, math.min(AUSPEX_SLOT_WIDTH - sc(6), WIELDED_ROW_HEIGHT - sc(6)))
 local SLOT_TEXT_FONT = sc(20)
 local SLOT_ICON_LEFT_INSET = sc(3)
 local SLOT_TEXT_AFTER_ICON_GAP = sc(2)

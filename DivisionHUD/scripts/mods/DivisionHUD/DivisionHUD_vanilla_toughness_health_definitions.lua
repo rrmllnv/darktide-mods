@@ -29,7 +29,7 @@ local STAMINA_BAR_COLOR = HudElementStaminaSettings.STAMINA_BAR_COLOR
 
 local HEALTH_BAR_FILL_COLOR = UIHudSettings.color_tint_1
 local TOUGHNESS_BAR_FILL_COLOR = UIHudSettings.color_tint_6
-local WOUNDS_BAR_FILL_COLOR = UIHudSettings.color_tint_3
+local WOUNDS_BAR_FILL_COLOR = UIHudSettings.color_tint_8
 
 local function build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap)
 	return {
@@ -96,7 +96,7 @@ local function create_value_label_style(y_offset)
 	local style = table.clone(UIFontSettings.body_small)
 
 	style.offset = {
-		0,
+		-4,
 		y_offset or 0,
 		3,
 	}
@@ -310,12 +310,12 @@ local function build(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap)
 			}, "toughness_bar"),
 			health_max = UIWidget.create_definition({
 				{
-					pass_type = "rect",
+					pass_type = "texture",
 					style_id = "bar_fill",
-					value = "content/ui/materials/hud/stamina_full",
+					value = "content/ui/materials/hud/backgrounds/player_health_fill",
 					style = {
 						horizontal_alignment = "right",
-						vertical_alignment = "bottom",
+						vertical_alignment = "center",
 						size = health_bar_size,
 						offset = {
 							0,
@@ -413,7 +413,7 @@ local function build(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap)
 					vertical_alignment = "top",
 					size = {
 						stm_spacing,
-						6,
+						health_bar_h,
 					},
 					offset = {
 						0,

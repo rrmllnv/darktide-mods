@@ -36,6 +36,7 @@ M.init = function(self, definitions)
 	self._effective_dodges_left = 0
 	self._consecutive_dodges_performed = 0
 	self._last_consecutive_dodges_performed = 0
+	self._consecutive_dodges_cooldown = 0
 	self._max_effective_dodges = 0
 
 	local save_data = Managers.save:account_data()
@@ -404,7 +405,7 @@ M._update_dodge_visibility = function(self, dt)
 	local visibility_setting = self._vstm_ddg_visibility_setting
 	local should_always_be_visible = visibility_setting == "always_dodge" or visibility_setting == "always_both"
 	local is_visibility_enabled = should_always_be_visible or visibility_setting ~= "dodge_disabled" and visibility_setting ~= "both_disabled"
-	local draw = should_always_be_visible or is_visibility_enabled and (consecutive_dodges_performed > 0 or fixed_t <= consecutive_dodges_cooldown + 1)
+	local draw = should_always_be_visible or is_visibility_enabled and (consecutive_dodges_performed > 0 or fixed_t <= (consecutive_dodges_cooldown or 0) + 1)
 
 	self._vddg_is_active = draw
 

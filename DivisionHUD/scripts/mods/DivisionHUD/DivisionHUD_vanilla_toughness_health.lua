@@ -16,6 +16,7 @@ local HudElementPlayerToughnessSettings = require("scripts/ui/hud/elements/playe
 local HudElementStaminaSettings = require("scripts/ui/hud/elements/blocking/hud_element_stamina_settings")
 local PlayerUnitStatus = require("scripts/utilities/attack/player_unit_status")
 local Stamina = require("scripts/utilities/attack/stamina")
+local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 
 local STAMINA_NODGES_COLOR = HudElementStaminaSettings.STAMINA_NODGES_COLOR
@@ -93,6 +94,7 @@ M.init = function(self, definitions)
 	self._vdth_health_bar_logic = HudHealthBarLogic:new(HudElementPlayerHealthSettings)
 	self._vdth_toughness_bar_logic = HudHealthBarLogic:new(HudElementPlayerToughnessSettings)
 	self._vdth_disabled = nil
+	self._vdth_knocked_down = nil
 
 	-- засечки стойкости: разделы по stamina chunks
 	self._vdth_num_stamina_chunks = 0
@@ -455,17 +457,37 @@ M.update = function(self, dt, t, player_unit, opacity)
 	local label_h = widgets.health_value_label
 	local unit_data_extension = ScriptUnit.has_extension(player_unit, "unit_data_system")
 	local disabled = false
+	local knocked_down = false
 
 	if unit_data_extension then
 		local character_state_component = unit_data_extension:read_component("character_state")
 
 		disabled = PlayerUnitStatus.is_disabled(character_state_component) or false
+		knocked_down = PlayerUnitStatus.is_knocked_down(character_state_component) or false
 	end
 
 	if disabled ~= self._vdth_disabled then
 		self._vdth_disabled = disabled
 
 		M._set_disabled(self, widgets, disabled)
+	end
+
+	if knocked_down ~= self._vdth_knocked_down then
+		self._vdth_knocked_down = knocked_down
+
+		local health_widget = widgets.health
+
+		if health_widget and health_widget.style and health_widget.style.bar_fill then
+			local target_color = knocked_down and UIHudSettings.color_tint_alert_2 or UIHudSettings.color_tint_1
+			local bar_fill_color = health_widget.style.bar_fill.color
+
+			bar_fill_color[1] = target_color[1]
+			bar_fill_color[2] = target_color[2]
+			bar_fill_color[3] = target_color[3]
+			bar_fill_color[4] = target_color[4]
+
+			health_widget.dirty = true
+		end
 	end
 
 	local show_toughness = mod:get("show_toughness_bar") ~= false and mod:get("show_toughness_bar") ~= 0
