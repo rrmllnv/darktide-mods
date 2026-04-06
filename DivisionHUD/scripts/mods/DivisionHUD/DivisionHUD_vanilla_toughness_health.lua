@@ -490,8 +490,11 @@ M.update = function(self, dt, t, player_unit, opacity)
 		end
 	end
 
-	local show_toughness = mod:get("show_toughness_bar") ~= false and mod:get("show_toughness_bar") ~= 0
-	local show_health = mod:get("show_health_bar") ~= false and mod:get("show_health_bar") ~= 0
+	local s = mod._settings
+	local show_tough = s and s.show_toughness_bar
+	local show_hp = s and s.show_health_bar
+	local show_toughness = show_tough ~= false and show_tough ~= 0
+	local show_health = show_hp ~= false and show_hp ~= 0
 
 	if not show_toughness then
 		M._set_toughness_row_visible(self, widgets, false)

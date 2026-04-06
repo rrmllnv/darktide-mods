@@ -16,21 +16,7 @@ if type(DivisionHUDSettingsDefaults) ~= "table" then
 	DivisionHUDSettingsDefaults = {}
 end
 
-local function division_hud_dynamic_enabled()
-	local v = mod:get("dynamic_hud")
-
-	if v == false or v == 0 then
-		return false
-	end
-
-	if v == true or v == 1 then
-		return true
-	end
-
-	local fb = DivisionHUDSettingsDefaults.dynamic_hud
-
-	return fb ~= false and fb ~= 0
-end
+local DynamicHudContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/dynamic_hud")
 
 local HudElementDivisionHUD = class("HudElementDivisionHUD", "HudElementBase")
 
@@ -48,7 +34,8 @@ local GRENADE_ABILITY_TYPE = "grenade_ability"
 local HUD_LAYOUT_SCALE = Definitions.HUD_LAYOUT_SCALE or 1
 
 local function division_hud_mod_numeric(key)
-	local v = mod:get(key)
+	local settings = mod._settings
+	local v = settings and settings[key]
 
 	if type(v) == "number" and v == v then
 		return v
@@ -502,11 +489,12 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 		local layout_unit = layout_player and layout_player.player_unit
 
 		if layout_player and layout_unit and ALIVE[layout_unit] then
-			local pos_x = mod:get("position_x") or 0
-			local pos_y = mod:get("position_y") or 0
+			local s = mod._settings
+			local pos_x = (s and type(s.position_x) == "number" and s.position_x) or 0
+			local pos_y = (s and type(s.position_y) == "number" and s.position_y) or 0
 			local dyn_x, dyn_y = 0, 0
 
-			if division_hud_dynamic_enabled() then
+			if DynamicHudContext.dynamic_hud_enabled(mod, DivisionHUDSettingsDefaults) then
 				dyn_x, dyn_y = self:_division_hud_compute_dynamic_root_offset(dt, layout_player)
 			else
 				self:_division_hud_reset_dynamic_offset_state()
@@ -545,7 +533,9 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 		return
 	end
 
-	local opacity = mod:get("opacity") or 1.0
+	local s_op = mod._settings
+	local opacity_raw = s_op and s_op.opacity
+	local opacity = (type(opacity_raw) == "number" and opacity_raw) or 1.0
 	local widgets = self._widgets_by_name
 
 	VanillaStaminaDodge.update(self, dt, t, ui_renderer, render_settings, input_service)
@@ -566,7 +556,10 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 end
 
 HudElementDivisionHUD._update_ability_bar = function(self, player_unit, widget, opacity)
-	if not mod:get("show_ability_timer") then
+	local s_ab = mod._settings
+	local show_ability = s_ab and s_ab.show_ability_timer
+
+	if not show_ability then
 		widget.content.visible = false
 		return
 	end
@@ -620,7 +613,10 @@ HudElementDivisionHUD._draw_widgets = function(self, dt, t, input_service, ui_re
 		end
 	end
 
-	if mod:get("show_stamina_bar") ~= false and mod:get("show_stamina_bar") ~= 0 then
+	local s_st = mod._settings
+	local show_stamina = s_st and s_st.show_stamina_bar
+
+	if show_stamina ~= false and show_stamina ~= 0 then
 		VanillaStaminaDodge.draw(self, dt, t, input_service, ui_renderer, render_settings)
 	end
 
