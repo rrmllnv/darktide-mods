@@ -101,7 +101,7 @@ return {
 					{
 						setting_id = "dynamic_hud_pitch_ratio",
 						type = "numeric",
-						default_value = d("dynamic_hud_pitch_ratio", 0.65),
+						default_value = d("dynamic_hud_pitch_ratio", 1),
 						range = { 0.0, 2.0 },
 						decimals_number = 2,
 					},
@@ -115,7 +115,7 @@ return {
 					{
 						setting_id = "dynamic_hud_max_offset",
 						type = "numeric",
-						default_value = d("dynamic_hud_max_offset", 72),
+						default_value = d("dynamic_hud_max_offset", 100),
 						range = { 8, 220 },
 						decimals_number = 0,
 					},

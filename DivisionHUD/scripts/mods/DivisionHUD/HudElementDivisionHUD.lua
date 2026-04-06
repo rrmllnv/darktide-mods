@@ -10,6 +10,11 @@ local Definitions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/Division
 local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_slot_data")
 local VanillaStaminaDodge = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_stamina_dodge")
 local VanillaToughnessHealth = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_toughness_health")
+local DivisionHUDSettingsDefaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_settings_defaults")
+
+if type(DivisionHUDSettingsDefaults) ~= "table" then
+	DivisionHUDSettingsDefaults = {}
+end
 
 local HudElementDivisionHUD = class("HudElementDivisionHUD", "HudElementBase")
 
@@ -26,14 +31,20 @@ local GRENADE_ABILITY_TYPE = "grenade_ability"
 
 local HUD_LAYOUT_SCALE = Definitions.HUD_LAYOUT_SCALE or 1
 
-local function division_hud_mod_numeric(key, default_val)
+local function division_hud_mod_numeric(key)
 	local v = mod:get(key)
 
 	if type(v) == "number" and v == v then
 		return v
 	end
 
-	return default_val
+	local fallback = DivisionHUDSettingsDefaults[key]
+
+	if type(fallback) == "number" and fallback == fallback then
+		return fallback
+	end
+
+	return 0
 end
 
 local function division_hud_wrapped_angle_delta(prev_rad, curr_rad)
@@ -48,10 +59,10 @@ HudElementDivisionHUD._division_hud_reset_dynamic_offset_state = function(self)
 end
 
 HudElementDivisionHUD._division_hud_compute_dynamic_root_offset = function(self, dt, player)
-	local strength = division_hud_mod_numeric("dynamic_hud_strength", 110)
-	local pitch_ratio = division_hud_mod_numeric("dynamic_hud_pitch_ratio", 0.65)
-	local decay_hz = division_hud_mod_numeric("dynamic_hud_decay", 11)
-	local max_off = division_hud_mod_numeric("dynamic_hud_max_offset", 72)
+	local strength = division_hud_mod_numeric("dynamic_hud_strength")
+	local pitch_ratio = division_hud_mod_numeric("dynamic_hud_pitch_ratio")
+	local decay_hz = division_hud_mod_numeric("dynamic_hud_decay")
+	local max_off = division_hud_mod_numeric("dynamic_hud_max_offset")
 
 	if not player or player.get_orientation == nil then
 		self:_division_hud_reset_dynamic_offset_state()

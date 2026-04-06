@@ -9,8 +9,8 @@ return {
 	show_ability_timer = true,
 	dynamic_hud = false,
 	dynamic_hud_strength = 110,
-	dynamic_hud_pitch_ratio = 0.65,
+	dynamic_hud_pitch_ratio = 1,
 	dynamic_hud_decay = 11,
-	dynamic_hud_max_offset = 72,
+	dynamic_hud_max_offset = 100,
 	divisionhud_reset_all_settings = 0,
 }
