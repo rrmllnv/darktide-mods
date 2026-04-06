@@ -102,20 +102,6 @@ HudElementDivisionHUD._division_hud_compute_dynamic_root_offset = function(self,
 	return ox * HUD_LAYOUT_SCALE, oy * HUD_LAYOUT_SCALE
 end
 
-HudElementDivisionHUD._slot_cell_visible = function(self, slot_id)
-	if slot_id == "slot_grenade_ability" then
-		return mod:get("show_grenades") ~= false and mod:get("show_grenades") ~= 0
-	elseif slot_id == "slot_pocketable" then
-		return mod:get("show_pickups") ~= false and mod:get("show_pickups") ~= 0
-	elseif slot_id == "slot_pocketable_small" then
-		return mod:get("show_stimm") ~= false and mod:get("show_stimm") ~= 0
-	elseif slot_id == "slot_wielded_display" then
-		return mod:get("show_wielded_weapon") ~= false and mod:get("show_wielded_weapon") ~= 0
-	end
-
-	return true
-end
-
 HudElementDivisionHUD._build_extensions = function(self, player_unit)
 	local unit_data = ScriptUnit.has_extension(player_unit, "unit_data_system")
 	local visual_loadout = ScriptUnit.has_extension(player_unit, "visual_loadout_system")
@@ -339,11 +325,6 @@ HudElementDivisionHUD._pick_ranged_ammo_slot_id = function(self, unit_data_exten
 end
 
 HudElementDivisionHUD._update_ammo_big = function(self, player_unit, widget, opacity)
-	if not mod:get("show_ammo") then
-		widget.content.visible = false
-		return
-	end
-
 	local unit_data_extension = ScriptUnit.has_extension(player_unit, "unit_data_system")
 	local visual_loadout_extension = ScriptUnit.has_extension(player_unit, "visual_loadout_system")
 
@@ -445,21 +426,17 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 			end
 		else
 			local slot_id = entry.slot_id
-			local visible = self:_slot_cell_visible(slot_id)
 
-			widget.content.visible = visible
+			widget.content.visible = true
+			self:_apply_slot_icon_material(widget, entry)
+			widget.style.icon.color[1] = 255 * opacity
 
-			if visible then
-				self:_apply_slot_icon_material(widget, entry)
-				widget.style.icon.color[1] = 255 * opacity
-
-				if widget.style.text then
-					widget.content.text = self:_slot_numeric_text(slot_id, entry, player_unit)
-					widget.style.text.text_color[1] = 255 * opacity
-				end
-
-				widget.dirty = true
+			if widget.style.text then
+				widget.content.text = self:_slot_numeric_text(slot_id, entry, player_unit)
+				widget.style.text.text_color[1] = 255 * opacity
 			end
+
+			widget.dirty = true
 		end
 	end
 end

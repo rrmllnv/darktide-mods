@@ -55,31 +55,6 @@ return {
 				default_value = true,
 			},
 			{
-				setting_id = "show_ammo",
-				type = "checkbox",
-				default_value = true,
-			},
-			{
-				setting_id = "show_wielded_weapon",
-				type = "checkbox",
-				default_value = true,
-			},
-			{
-				setting_id = "show_stimm",
-				type = "checkbox",
-				default_value = true,
-			},
-			{
-				setting_id = "show_grenades",
-				type = "checkbox",
-				default_value = true,
-			},
-			{
-				setting_id = "show_pickups",
-				type = "checkbox",
-				default_value = true,
-			},
-			{
 				setting_id = "dynamic_hud",
 				type = "checkbox",
 				default_value = false,
