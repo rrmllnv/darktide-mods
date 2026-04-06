@@ -20,28 +20,28 @@ return {
 		ru = "\238\129\135 ДИНАМИЧЕСКИЙ HUD",
 	},
 	divisionhud_super_vanilla_hide = {
-		en = "\238\128\161 VANILLA HUD (hide)",
-		ru = "\238\128\161 ВАНИЛЬНЫЙ HUD (скрыть)",
+		en = "\238\128\161 VANILLA HUD",
+		ru = "\238\128\161 ВАНИЛЬНЫЙ HUD",
 	},
 	hide_vanilla_team_panel_local = {
-		en = "Hide team panel (local player)",
-		ru = "Скрыть панель отряда (локальный игрок)",
+		en = "Hide local player panel",
+		ru = "Скрыть панель локального игрока",
 	},
 	hide_vanilla_stamina_area = {
-		en = "Hide vanilla stamina bar (area)",
-		ru = "Скрыть ванильную стамину (area)",
+		en = "Hide stamina",
+		ru = "Скрыть стамину",
 	},
 	hide_vanilla_dodge_area = {
-		en = "Hide vanilla dodge bar (area)",
-		ru = "Скрыть ванильные увороты (area)",
+		en = "Hide dodges",
+		ru = "Скрыть увороты",
 	},
 	hide_vanilla_weapon_pivot = {
-		en = "Hide vanilla weapon strip (weapon_pivot)",
-		ru = "Скрыть ванильное оружие (weapon_pivot)",
+		en = "Hide weapons",
+		ru = "Скрыть оружие",
 	},
 	hide_vanilla_combat_ability_slot = {
-		en = "Hide vanilla combat ability (slot_combat_ability)",
-		ru = "Скрыть ванильную боевую способность (slot_combat_ability)",
+		en = "Hide combat ability",
+		ru = "Скрыть боевую способность",
 	},
 	divisionhud_super_system = {
 		en = "\238\128\169 SYSTEM SETTINGS",
@@ -64,12 +64,20 @@ return {
 		ru = "Division HUD: настройки сброшены к значениям по умолчанию.",
 	},
 	position_x = {
-		en = "Position X",
-		ru = "Позиция X",
+		en = "Offset X",
+		ru = "Смещение по X",
+	},
+	position_x_description = {
+		en = "Horizontal offset from the screen center in logical pixels (reference canvas 1920×1080). Range ±960. Negative moves the HUD left, positive moves it right. The root block is center-aligned.",
+		ru = "Горизонтальное смещение от центра экрана в логических пикселях (эталонный холст 1920×1080). Диапазон ±960. Отрицательные значения — влево, положительные — вправо. Корневой блок привязан к центру экрана.",
 	},
 	position_y = {
-		en = "Position Y",
-		ru = "Позиция Y",
+		en = "Offset Y",
+		ru = "Смещение по Y",
+	},
+	position_y_description = {
+		en = "Vertical offset from the screen center in logical pixels (reference canvas 1920×1080). Range ±540. Negative moves the HUD up, positive moves it down. The root block is center-aligned.",
+		ru = "Вертикальное смещение от центра экрана в логических пикселях (эталонный холст 1920×1080). Диапазон ±540. Отрицательные значения — вверх, положительные — вниз. Корневой блок привязан к центру экрана.",
 	},
 	opacity = {
 		en = "Opacity",

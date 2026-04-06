@@ -142,8 +142,8 @@ local function text_style_slot_counter_after_icon(font_size, left_offset_x)
 	return style
 end
 
-local ROOT_LAYOUT_OFFSET_X = 300
-local ROOT_LAYOUT_OFFSET_Y = 200
+local ROOT_LAYOUT_OFFSET_X = 0
+local ROOT_LAYOUT_OFFSET_Y = 0
 local ROOT_LAYOUT_OFFSET_Z = 100
 
 local scenegraph_definition = {

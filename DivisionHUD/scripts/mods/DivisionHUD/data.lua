@@ -16,9 +16,9 @@ local function d(key, fallback)
 	return fallback
 end
 
--- Смещение HUD в пикселях логического холста, как в core/definitions (screen 1920×1080).
-local POSITION_RANGE_X = { 0, 1920 }
-local POSITION_RANGE_Y = { 0, 1080 }
+-- Смещение от центра экрана (root: center/center), логический холст 1920×1080: ±половина ширины/высоты.
+local POSITION_RANGE_X = { -960, 960 }
+local POSITION_RANGE_Y = { -540, 540 }
 
 return {
 	name = mod:localize("mod_name"),
@@ -34,14 +34,18 @@ return {
 					{
 						setting_id = "position_x",
 						type = "numeric",
-						default_value = d("position_x", 960),
+						title = "position_x",
+						tooltip_text = "position_x_description",
+						default_value = d("position_x", 400),
 						range = POSITION_RANGE_X,
 						decimals_number = 0,
 					},
 					{
 						setting_id = "position_y",
 						type = "numeric",
-						default_value = d("position_y", 540),
+						title = "position_y",
+						tooltip_text = "position_y_description",
+						default_value = d("position_y", 200),
 						range = POSITION_RANGE_Y,
 						decimals_number = 0,
 					},
@@ -82,38 +86,6 @@ return {
 				},
 			},
 			{
-				setting_id = "divisionhud_super_vanilla_hide",
-				type = "group",
-				title = "divisionhud_super_vanilla_hide",
-				sub_widgets = {
-					{
-						setting_id = "hide_vanilla_team_panel_local",
-						type = "checkbox",
-						default_value = d("hide_vanilla_team_panel_local", false),
-					},
-					{
-						setting_id = "hide_vanilla_stamina_area",
-						type = "checkbox",
-						default_value = d("hide_vanilla_stamina_area", false),
-					},
-					{
-						setting_id = "hide_vanilla_dodge_area",
-						type = "checkbox",
-						default_value = d("hide_vanilla_dodge_area", false),
-					},
-					{
-						setting_id = "hide_vanilla_weapon_pivot",
-						type = "checkbox",
-						default_value = d("hide_vanilla_weapon_pivot", false),
-					},
-					{
-						setting_id = "hide_vanilla_combat_ability_slot",
-						type = "checkbox",
-						default_value = d("hide_vanilla_combat_ability_slot", false),
-					},
-				},
-			},
-			{
 				setting_id = "divisionhud_super_dynamic",
 				type = "group",
 				title = "divisionhud_super_dynamic",
@@ -150,6 +122,38 @@ return {
 						default_value = d("dynamic_hud_max_offset", 100),
 						range = { 8, 220 },
 						decimals_number = 0,
+					},
+				},
+			},
+			{
+				setting_id = "divisionhud_super_vanilla_hide",
+				type = "group",
+				title = "divisionhud_super_vanilla_hide",
+				sub_widgets = {
+					{
+						setting_id = "hide_vanilla_team_panel_local",
+						type = "checkbox",
+						default_value = d("hide_vanilla_team_panel_local", false),
+					},
+					{
+						setting_id = "hide_vanilla_stamina_area",
+						type = "checkbox",
+						default_value = d("hide_vanilla_stamina_area", false),
+					},
+					{
+						setting_id = "hide_vanilla_dodge_area",
+						type = "checkbox",
+						default_value = d("hide_vanilla_dodge_area", false),
+					},
+					{
+						setting_id = "hide_vanilla_weapon_pivot",
+						type = "checkbox",
+						default_value = d("hide_vanilla_weapon_pivot", false),
+					},
+					{
+						setting_id = "hide_vanilla_combat_ability_slot",
+						type = "checkbox",
+						default_value = d("hide_vanilla_combat_ability_slot", false),
 					},
 				},
 			},

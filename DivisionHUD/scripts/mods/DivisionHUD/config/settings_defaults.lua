@@ -1,7 +1,7 @@
 -- Единый источник значений по умолчанию: data.lua, systems/settings.lua, сброс из DivisionHUD.lua
 return {
-	position_x = 960,
-	position_y = 540,
+	position_x = 400,
+	position_y = 200,
 	opacity = 1.0,
 	show_stamina_bar = true,
 	show_toughness_bar = true,
