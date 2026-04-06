@@ -138,12 +138,12 @@ return {
 					{
 						setting_id = "hide_vanilla_stamina_area",
 						type = "checkbox",
-						default_value = d("hide_vanilla_stamina_area", false),
+						default_value = d("hide_vanilla_stamina_area", true),
 					},
 					{
 						setting_id = "hide_vanilla_dodge_area",
 						type = "checkbox",
-						default_value = d("hide_vanilla_dodge_area", false),
+						default_value = d("hide_vanilla_dodge_area", true),
 					},
 					{
 						setting_id = "hide_vanilla_weapon_pivot",
