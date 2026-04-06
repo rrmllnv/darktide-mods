@@ -89,7 +89,7 @@ return {
 					{
 						setting_id = "dynamic_hud",
 						type = "checkbox",
-						default_value = d("dynamic_hud", false),
+						default_value = d("dynamic_hud", true),
 					},
 					{
 						setting_id = "dynamic_hud_strength",

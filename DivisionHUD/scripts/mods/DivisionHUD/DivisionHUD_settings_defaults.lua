@@ -7,7 +7,7 @@ return {
 	show_toughness_bar = true,
 	show_health_bar = true,
 	show_ability_timer = true,
-	dynamic_hud = false,
+	dynamic_hud = true,
 	dynamic_hud_strength = 110,
 	dynamic_hud_pitch_ratio = 1,
 	dynamic_hud_decay = 11,

@@ -16,6 +16,22 @@ if type(DivisionHUDSettingsDefaults) ~= "table" then
 	DivisionHUDSettingsDefaults = {}
 end
 
+local function division_hud_dynamic_enabled()
+	local v = mod:get("dynamic_hud")
+
+	if v == false or v == 0 then
+		return false
+	end
+
+	if v == true or v == 1 then
+		return true
+	end
+
+	local fb = DivisionHUDSettingsDefaults.dynamic_hud
+
+	return fb ~= false and fb ~= 0
+end
+
 local HudElementDivisionHUD = class("HudElementDivisionHUD", "HudElementBase")
 
 local ROOT_LAYOUT_OFFSET_X = Definitions.ROOT_LAYOUT_OFFSET_X
@@ -490,7 +506,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 			local pos_y = mod:get("position_y") or 0
 			local dyn_x, dyn_y = 0, 0
 
-			if mod:get("dynamic_hud") ~= false and mod:get("dynamic_hud") ~= 0 then
+			if division_hud_dynamic_enabled() then
 				dyn_x, dyn_y = self:_division_hud_compute_dynamic_root_offset(dt, layout_player)
 			else
 				self:_division_hud_reset_dynamic_offset_state()
