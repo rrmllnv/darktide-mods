@@ -20,16 +20,24 @@ mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_s
 mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_vanilla_stamina_dodge")
 
 mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, params)
-	for _, hud_element in ipairs(hud_elements) do
-		if not table.find_by_key(elements, "class_name", hud_element.class_name) then
-			table.insert(elements, {
-				class_name = hud_element.class_name,
-				filename = hud_element.filename,
-				use_hud_scale = true,
-				visibility_groups = hud_element.visibility_groups or {
-					"alive",
-				},
-			})
+	-- UIManager.create_spectator_hud задаёт params.renderer_name == "spectator_hud_ui_renderer"
+	-- (scripts/managers/ui/ui_manager.lua). Иначе DivisionHUD попадает в spectator HUD: группа
+	-- "alive" смотрит на здоровье наблюдаемого игрока, а данные берутся с local_player — HUD
+	-- остаётся видимым при смерти и наблюдении за союзниками.
+	local is_spectator_hud = params and params.renderer_name == "spectator_hud_ui_renderer"
+
+	if not is_spectator_hud then
+		for _, hud_element in ipairs(hud_elements) do
+			if not table.find_by_key(elements, "class_name", hud_element.class_name) then
+				table.insert(elements, {
+					class_name = hud_element.class_name,
+					filename = hud_element.filename,
+					use_hud_scale = true,
+					visibility_groups = hud_element.visibility_groups or {
+						"alive",
+					},
+				})
+			end
 		end
 	end
 
