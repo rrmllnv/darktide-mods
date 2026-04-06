@@ -12,5 +12,10 @@ return {
 	dynamic_hud_pitch_ratio = 1,
 	dynamic_hud_decay = 11,
 	dynamic_hud_max_offset = 100,
+	hide_vanilla_team_panel_local = false,
+	hide_vanilla_stamina_area = false,
+	hide_vanilla_dodge_area = false,
+	hide_vanilla_weapon_pivot = false,
+	hide_vanilla_combat_ability_slot = false,
 	divisionhud_reset_all_settings = 0,
 }

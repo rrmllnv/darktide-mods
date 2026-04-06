@@ -82,6 +82,38 @@ return {
 				},
 			},
 			{
+				setting_id = "divisionhud_super_vanilla_hide",
+				type = "group",
+				title = "divisionhud_super_vanilla_hide",
+				sub_widgets = {
+					{
+						setting_id = "hide_vanilla_team_panel_local",
+						type = "checkbox",
+						default_value = d("hide_vanilla_team_panel_local", false),
+					},
+					{
+						setting_id = "hide_vanilla_stamina_area",
+						type = "checkbox",
+						default_value = d("hide_vanilla_stamina_area", false),
+					},
+					{
+						setting_id = "hide_vanilla_dodge_area",
+						type = "checkbox",
+						default_value = d("hide_vanilla_dodge_area", false),
+					},
+					{
+						setting_id = "hide_vanilla_weapon_pivot",
+						type = "checkbox",
+						default_value = d("hide_vanilla_weapon_pivot", false),
+					},
+					{
+						setting_id = "hide_vanilla_combat_ability_slot",
+						type = "checkbox",
+						default_value = d("hide_vanilla_combat_ability_slot", false),
+					},
+				},
+			},
+			{
 				setting_id = "divisionhud_super_dynamic",
 				type = "group",
 				title = "divisionhud_super_dynamic",

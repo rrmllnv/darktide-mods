@@ -19,6 +19,30 @@ return {
 		en = "\238\129\135 DYNAMIC HUD",
 		ru = "\238\129\135 ДИНАМИЧЕСКИЙ HUD",
 	},
+	divisionhud_super_vanilla_hide = {
+		en = "\238\128\161 VANILLA HUD (hide)",
+		ru = "\238\128\161 ВАНИЛЬНЫЙ HUD (скрыть)",
+	},
+	hide_vanilla_team_panel_local = {
+		en = "Hide team panel (local player)",
+		ru = "Скрыть панель отряда (локальный игрок)",
+	},
+	hide_vanilla_stamina_area = {
+		en = "Hide vanilla stamina bar (area)",
+		ru = "Скрыть ванильную стамину (area)",
+	},
+	hide_vanilla_dodge_area = {
+		en = "Hide vanilla dodge bar (area)",
+		ru = "Скрыть ванильные увороты (area)",
+	},
+	hide_vanilla_weapon_pivot = {
+		en = "Hide vanilla weapon strip (weapon_pivot)",
+		ru = "Скрыть ванильное оружие (weapon_pivot)",
+	},
+	hide_vanilla_combat_ability_slot = {
+		en = "Hide vanilla combat ability (slot_combat_ability)",
+		ru = "Скрыть ванильную боевую способность (slot_combat_ability)",
+	},
 	divisionhud_super_system = {
 		en = "\238\128\169 SYSTEM SETTINGS",
 		ru = "\238\128\169 СИСТЕМНЫЕ НАСТРОЙКИ",

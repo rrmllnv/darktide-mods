@@ -45,5 +45,6 @@ mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, para
 end)
 
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/hud_utils")
+mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/vanilla_hud_suppression")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/settings")
 
