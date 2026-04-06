@@ -44,3 +44,27 @@ mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, para
 	return func(self, elements, visibility_groups, params)
 end)
 
+local DivisionHUD_settings_defaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/DivisionHUD_settings_defaults")
+
+mod.on_setting_changed = function(setting_id)
+	if setting_id ~= "divisionhud_reset_all_settings" then
+		return
+	end
+
+	if mod:get("divisionhud_reset_all_settings") ~= 1 then
+		return
+	end
+
+	mod:set("divisionhud_reset_all_settings", 0, true)
+
+	if type(DivisionHUD_settings_defaults) ~= "table" then
+		return
+	end
+
+	for key, value in pairs(DivisionHUD_settings_defaults) do
+		mod:set(key, value, true)
+	end
+
+	mod:notify(mod:localize("divisionhud_reset_done"))
+end
+
