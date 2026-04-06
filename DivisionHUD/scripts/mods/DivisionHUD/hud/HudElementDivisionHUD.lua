@@ -658,7 +658,9 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 				"root",
 				ROOT_LAYOUT_OFFSET_X + pos_x + dyn_x,
 				ROOT_LAYOUT_OFFSET_Y + pos_y + dyn_y,
-				ROOT_LAYOUT_OFFSET_Z
+				ROOT_LAYOUT_OFFSET_Z,
+				"center",
+				"center"
 			)
 		end
 	end
