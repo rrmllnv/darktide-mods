@@ -27,4 +27,37 @@ function HudUtils.resolve_element_instance(hud, const, class_name)
 	return inst
 end
 
+local DIVISION_HUD_ELEMENT_CLASS_NAME = "HudElementDivisionHUD"
+local DIVISION_HUD_CUSTOM_HUD_SAVED_PREFIX = DIVISION_HUD_ELEMENT_CLASS_NAME .. "|"
+
+function HudUtils.custom_hud_has_saved_node_settings_for_division_hud()
+	local get_mod_fn = rawget(_G, "get_mod")
+
+	if type(get_mod_fn) ~= "function" then
+		return false
+	end
+
+	local custom_hud_mod = get_mod_fn("custom_hud")
+
+	if not custom_hud_mod or type(custom_hud_mod.get) ~= "function" then
+		return false
+	end
+
+	local saved = custom_hud_mod:get("saved_node_settings")
+
+	if type(saved) ~= "table" then
+		return false
+	end
+
+	local prefix_len = #DIVISION_HUD_CUSTOM_HUD_SAVED_PREFIX
+
+	for node_name in pairs(saved) do
+		if type(node_name) == "string" and string.sub(node_name, 1, prefix_len) == DIVISION_HUD_CUSTOM_HUD_SAVED_PREFIX then
+			return true
+		end
+	end
+
+	return false
+end
+
 return HudUtils

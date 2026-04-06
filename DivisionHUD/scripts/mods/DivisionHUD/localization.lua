@@ -47,6 +47,18 @@ return {
 		en = "Hide buffs",
 		ru = "Скрыть баффы",
 	},
+	divisionhud_integrations = {
+		en = "\238\128\172 INTEGRATIONS",
+		ru = "\238\128\172 ИНТЕГРАЦИИ",
+	},
+	integration_custom_hud = {
+		en = "Custom HUD",
+		ru = "Custom HUD",
+	},
+	integration_custom_hud_description = {
+		en = "When enabled and Custom HUD has saved layout for this HUD, Division HUD stops repositioning the block every frame so your Custom HUD placement stays. Offset X/Y and Dynamic HUD root motion are ignored then. Until you save a layout in Custom HUD, the X/Y sliders still move the block.",
+		ru = "Если включено и в Custom HUD сохранена раскладка для этого HUD, Division HUD перестаёт каждый кадр двигать блок — остаётся позиция из Custom HUD. Смещения X/Y и динамика корня тогда не применяются. Пока в Custom HUD ничего не сохранено — блок двигают слайдеры X/Y.",
+	},
 	divisionhud_super_system = {
 		en = "\238\128\169 SYSTEM SETTINGS",
 		ru = "\238\128\169 СИСТЕМНЫЕ НАСТРОЙКИ",

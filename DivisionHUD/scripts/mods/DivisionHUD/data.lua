@@ -163,6 +163,20 @@ return {
 				},
 			},
 			{
+				setting_id = "divisionhud_super_integrations",
+				type = "group",
+				title = "divisionhud_integrations",
+				sub_widgets = {
+					{
+						setting_id = "integration_custom_hud",
+						type = "checkbox",
+						title = "integration_custom_hud",
+						tooltip_text = "integration_custom_hud_description",
+						default_value = d("integration_custom_hud", false),
+					},
+				},
+			},
+			{
 				setting_id = "divisionhud_super_system",
 				type = "group",
 				title = "divisionhud_super_system",
