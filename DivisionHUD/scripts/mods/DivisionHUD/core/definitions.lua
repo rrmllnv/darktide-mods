@@ -46,6 +46,8 @@ local BAR_FILL_WIDTH = math.max(1, ROW_WIDTH - BAR_LABEL_W)
 local BIG_AMMO_W_LAYOUT = math.max(1, BIG_AMMO_W - BAR_LABEL_W)
 local BAR_WIDTH = BAR_FILL_WIDTH
 local BAR_HEIGHT = sc(8)
+local ABILITY_BAR_MAX_SEGMENTS = 4
+local ABILITY_BAR_SEGMENT_GAP = sc(2)
 local HEALTH_BAR_HEIGHT = sc(16)
 local BAR_STACK_GAP = sc(2)
 local BOXES_ROW_TOP_GAP = sc(8)
@@ -237,8 +239,8 @@ local ROOT_HEIGHT = ROOT_HEIGHT_BASE + _division_vanilla_stm_ddg.extend_below_ma
 
 scenegraph_definition.root.size[2] = ROOT_HEIGHT
 
-local function create_bar_widget(scenegraph_id, color)
-	return UIWidget.create_definition({
+local function create_combat_ability_bar_widget(scenegraph_id)
+	local passes = {
 		{
 			pass_type = "rect",
 			style_id = "background",
@@ -249,18 +251,24 @@ local function create_bar_widget(scenegraph_id, color)
 				size = { BAR_WIDTH, BAR_HEIGHT },
 			},
 		},
-		{
+	}
+
+	for i = 1, ABILITY_BAR_MAX_SEGMENTS do
+		passes[#passes + 1] = {
 			pass_type = "rect",
-			style_id = "fill",
-			value_id = "fill",
+			style_id = "segment_" .. i,
+			value_id = "segment_" .. i,
 			style = {
 				horizontal_alignment = "left",
-				color = color or { 255, 100, 200, 100 },
-				offset = { 0, 0, 1 },
-				size = { BAR_WIDTH, BAR_HEIGHT },
+				vertical_alignment = "center",
+				color = { 255, 231, 145, 26 },
+				offset = { 0, 0, i },
+				size = { 0, BAR_HEIGHT },
 			},
-		},
-	}, scenegraph_id)
+		}
+	end
+
+	return UIWidget.create_definition(passes, scenegraph_id)
 end
 
 local function create_slots_bg_widget(scenegraph_id, w, h)
@@ -371,7 +379,7 @@ end
 
 local widget_definitions = {
 	boxes_bg = create_slots_bg_widget("boxes_row", BAR_FILL_WIDTH, MAIN_ROW_HEIGHT),
-	ability_bar = create_bar_widget("ability_bar", { 255, 255, 50, 50 }),
+	ability_bar = create_combat_ability_bar_widget("ability_bar"),
 	ammo_big = create_ammo_big_widget("ammo_big"),
 	slot_auspex = create_auspex_slot_widget("slot_auspex"),
 	slot_weapon_wielded = create_weapon_wielded_slot_widget("slot_weapon_wielded"),
@@ -419,6 +427,9 @@ return {
 	ROOT_LAYOUT_OFFSET_Z = ROOT_LAYOUT_OFFSET_Z,
 	HUD_LAYOUT_SCALE = LAYOUT_SCALE,
 	BAR_WIDTH = BAR_WIDTH,
+	BAR_HEIGHT = BAR_HEIGHT,
+	ABILITY_BAR_MAX_SEGMENTS = ABILITY_BAR_MAX_SEGMENTS,
+	ABILITY_BAR_SEGMENT_GAP = ABILITY_BAR_SEGMENT_GAP,
 	BAR_LABEL_W = BAR_LABEL_W,
 	BAR_FILL_WIDTH = BAR_FILL_WIDTH,
 	ROW_WIDTH = ROW_WIDTH,
