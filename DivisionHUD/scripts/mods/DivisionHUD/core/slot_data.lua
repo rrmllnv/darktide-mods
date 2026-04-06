@@ -4,7 +4,7 @@
 	- DEFAULT_POCKETABLE_ICON_AMMO … ammo_cache_pocketable и т.п.
 	- DEFAULT_STIM_ICON_HEAL … syringe_corruption_pocketable
 	Материал пасса: content/ui/materials/hud/icons/weapon_icon_container … hud_element_player_weapon_definitions.lua
-	Нижний ряд (блиц / стим / ящик): resolve_weapon_handler_slot (hide_slot, шаблон+item, граната, фолбэки).
+	Нижний ряд: slot_grenade_ability — иконка как HudElementPlayerPanelBase._get_grenade_ability_status (weapon_template.hud_icon_small слота, иначе AbilityTemplates[ability_template].hud_icon_small). Остальные слоты: resolve_weapon_handler_slot как раньше.
 	Полоса «в руках»: только алгоритм иконки из EquipmentCommandWheel_utils.collect_equipment_wheel_slots для текущего wielded_slot.
 ]]
 
@@ -106,6 +106,30 @@ local function override_slot_icon(slot_id, weapon_name)
 	end
 
 	return nil
+end
+
+local function resolve_team_player_panel_grenade_throwable_hud_icon(inventory_component, visual_loadout_extension, ability_extension)
+	local hud_icon
+
+	if inventory_component and visual_loadout_extension then
+		local item_name = inventory_component.slot_grenade_ability
+		local weapon_template = item_name and select(1, visual_loadout_extension:weapon_template_from_slot("slot_grenade_ability"))
+
+		if weapon_template then
+			hud_icon = weapon_template.hud_icon_small
+		end
+	end
+
+	if not hud_icon and ability_extension then
+		local equipped_abilities = ability_extension:equipped_abilities()
+		local ability = equipped_abilities and equipped_abilities.grenade_ability
+		local ability_template_name = ability and ability.ability_template
+		local ability_template = ability_template_name and AbilityTemplates[ability_template_name]
+
+		hud_icon = ability_template and ability_template.hud_icon_small
+	end
+
+	return hud_icon
 end
 
 local function resolve_grenade_ability_icon(grenade_ability, settings)
@@ -260,6 +284,21 @@ local function resolve_weapon_handler_slot(slot_id, settings, extensions)
 		weapon_name = inventory_component[slot_id] ~= "not_equipped" and inventory_component[slot_id] or ability_name or "not_equipped"
 	else
 		weapon_name = inventory_component[slot_id]
+	end
+
+	if slot_id == "slot_grenade_ability" then
+		local team_panel_hud_icon = resolve_team_player_panel_grenade_throwable_hud_icon(inventory_component, visual_loadout_extension, ability_extension)
+		local icon = guaranteed_icon(team_panel_hud_icon, slot_id, settings)
+		local weapon_template = select(1, visual_loadout_extension:weapon_template_from_slot(slot_id))
+		local item = visual_loadout_extension:item_from_slot(slot_id)
+
+		return {
+			slot_id = slot_id,
+			icon = icon,
+			has_equipment = weapon_name ~= nil and weapon_name ~= "not_equipped",
+			weapon_template = weapon_template,
+			item = item,
+		}
 	end
 
 	local weapon_template = weapon_name and visual_loadout_extension:weapon_template_from_slot(slot_id)
