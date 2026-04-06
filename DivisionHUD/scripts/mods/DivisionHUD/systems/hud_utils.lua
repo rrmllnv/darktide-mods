@@ -60,4 +60,38 @@ function HudUtils.custom_hud_has_saved_node_settings_for_division_hud()
 	return false
 end
 
+local DIVISION_HUD_CUSTOM_HUD_ROOT_NODE_NAME = DIVISION_HUD_ELEMENT_CLASS_NAME .. "|root"
+
+function HudUtils.custom_hud_get_saved_root_position_for_division_hud()
+	local get_mod_fn = rawget(_G, "get_mod")
+
+	if type(get_mod_fn) ~= "function" then
+		return nil
+	end
+
+	local custom_hud_mod = get_mod_fn("custom_hud")
+
+	if not custom_hud_mod or type(custom_hud_mod.get) ~= "function" then
+		return nil
+	end
+
+	local saved = custom_hud_mod:get("saved_node_settings")
+
+	if type(saved) ~= "table" then
+		return nil
+	end
+
+	local node = saved[DIVISION_HUD_CUSTOM_HUD_ROOT_NODE_NAME]
+
+	if not node or type(node.x) ~= "number" or type(node.y) ~= "number" then
+		return nil
+	end
+
+	return {
+		x = node.x,
+		y = node.y,
+		z = type(node.z) == "number" and node.z or 0,
+	}
+end
+
 return HudUtils

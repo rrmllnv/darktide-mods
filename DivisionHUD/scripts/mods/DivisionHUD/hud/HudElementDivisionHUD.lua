@@ -633,27 +633,36 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 		local s = mod._settings
 		local pos_x = (s and type(s.position_x) == "number" and s.position_x) or 0
 		local pos_y = (s and type(s.position_y) == "number" and s.position_y) or 0
-		local skip_root_scenegraph_for_custom_hud = false
+		local dyn_x, dyn_y = 0, 0
 
-		if type(s) == "table" and s.integration_custom_hud == true then
-			local HudUtils = mod.hud_utils
-
-			if HudUtils and HudUtils.custom_hud_has_saved_node_settings_for_division_hud and HudUtils.custom_hud_has_saved_node_settings_for_division_hud() then
-				skip_root_scenegraph_for_custom_hud = true
-			end
+		if DynamicHudContext.dynamic_hud_enabled(mod, DivisionHUDSettingsDefaults) then
+			dyn_x, dyn_y = self:_division_hud_compute_dynamic_root_offset(dt, local_player)
+		else
+			self:_division_hud_reset_dynamic_offset_state()
 		end
 
-		if skip_root_scenegraph_for_custom_hud then
-			self:_division_hud_reset_dynamic_offset_state()
+		local integrate_chud = type(s) == "table" and s.integration_custom_hud == true
+		local HudUtils = mod.hud_utils
+		local chud_has_division_nodes = integrate_chud
+			and HudUtils
+			and HudUtils.custom_hud_has_saved_node_settings_for_division_hud
+			and HudUtils.custom_hud_has_saved_node_settings_for_division_hud()
+		local chud_root_base = chud_has_division_nodes
+			and HudUtils.custom_hud_get_saved_root_position_for_division_hud
+			and HudUtils.custom_hud_get_saved_root_position_for_division_hud()
+
+		if integrate_chud and chud_has_division_nodes and chud_root_base then
+			self:set_scenegraph_position(
+				"root",
+				chud_root_base.x + dyn_x,
+				chud_root_base.y + dyn_y,
+				chud_root_base.z,
+				"left",
+				"top"
+			)
+		elseif integrate_chud and chud_has_division_nodes and not chud_root_base then
+			-- Сохранены только дочерние узлы Custom HUD, не root — позицию root не трогаем.
 		else
-			local dyn_x, dyn_y = 0, 0
-
-			if DynamicHudContext.dynamic_hud_enabled(mod, DivisionHUDSettingsDefaults) then
-				dyn_x, dyn_y = self:_division_hud_compute_dynamic_root_offset(dt, local_player)
-			else
-				self:_division_hud_reset_dynamic_offset_state()
-			end
-
 			self:set_scenegraph_position(
 				"root",
 				ROOT_LAYOUT_OFFSET_X + pos_x + dyn_x,

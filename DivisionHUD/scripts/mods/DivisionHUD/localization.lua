@@ -56,8 +56,8 @@ return {
 		ru = "Custom HUD",
 	},
 	integration_custom_hud_description = {
-		en = "When enabled and Custom HUD has saved layout for this HUD, Division HUD stops repositioning the block every frame so your Custom HUD placement stays. Offset X/Y and Dynamic HUD root motion are ignored then. Until you save a layout in Custom HUD, the X/Y sliders still move the block.",
-		ru = "Если включено и в Custom HUD сохранена раскладка для этого HUD, Division HUD перестаёт каждый кадр двигать блок — остаётся позиция из Custom HUD. Смещения X/Y и динамика корня тогда не применяются. Пока в Custom HUD ничего не сохранено — блок двигают слайдеры X/Y.",
+		en = "When enabled and Custom HUD has saved layout for this HUD (including root), Division HUD applies that position every frame and adds Dynamic HUD motion on top. Offset X/Y sliders are ignored for root. If only inner nodes are saved, root is left unchanged. Until anything is saved in Custom HUD, the X/Y sliders still move the block.",
+		ru = "Если включено и в Custom HUD сохранена раскладка этого HUD (в т.ч. root), Division HUD каждый кадр ставит эту позицию и при необходимости добавляет смещение Dynamic HUD. Слайдеры X/Y для root не используются. Если в Custom HUD сохранены только внутренние узлы, root не трогаем. Пока в Custom HUD нет сохранений — блок двигают слайдеры X/Y.",
 	},
 	divisionhud_super_system = {
 		en = "\238\128\169 SYSTEM SETTINGS",
