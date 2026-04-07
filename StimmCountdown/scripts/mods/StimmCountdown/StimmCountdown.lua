@@ -91,8 +91,16 @@ mod.stimm_countdown_pocketable_profiles = {
 	},
 }
 
-mod.division_hud_stimm = {
-	get_timer_display_for_unit = function(player_unit)
+mod.stimm_countdown_consumer_buff_entries = {
+	{ template = "syringe_broker_buff", archetype_name = "broker" },
+	{ template = "syringe_speed_boost_buff" },
+	{ template = "syringe_power_boost_buff" },
+	{ template = "syringe_ability_boost_buff" },
+	{ template = "syringe_heal_corruption_buff" },
+}
+
+mod.stimm_countdown_timer_api = {
+	get_display_for_unit = function(player_unit)
 		if mod.is_enabled and not mod:is_enabled() then
 			return nil
 		end
@@ -103,7 +111,22 @@ mod.division_hud_stimm = {
 			show_decimals = mod:get("show_decimals") ~= false,
 		}
 
-		return StimmCountdownCore.compute_pocketable_stimm_timer_state(player_unit, settings, mod.stimm_countdown_pocketable_profiles)
+		return StimmCountdownCore.compute_timer_display_for_consuming_mods(
+			player_unit,
+			settings,
+			mod.stimm_countdown_pocketable_profiles,
+			mod.stimm_countdown_consumer_buff_entries
+		)
+	end,
+}
+
+mod.division_hud_stimm = {
+	get_timer_display_for_unit = function(player_unit)
+		if mod.stimm_countdown_timer_api and mod.stimm_countdown_timer_api.get_display_for_unit then
+			return mod.stimm_countdown_timer_api.get_display_for_unit(player_unit)
+		end
+
+		return nil
 	end,
 }
 

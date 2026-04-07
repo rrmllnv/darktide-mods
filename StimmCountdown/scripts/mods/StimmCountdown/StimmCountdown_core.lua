@@ -160,4 +160,100 @@ function StimmCountdownCore.compute_pocketable_stimm_timer_state(player_unit, se
 	return result
 end
 
+function StimmCountdownCore.compute_timer_display_for_consuming_mods(player_unit, settings, pocketable_profiles, consumer_buff_entries)
+	local player = Managers.player and Managers.player:local_player(1)
+
+	if not player_unit or not player or not player:unit_is_alive() or player.player_unit ~= player_unit then
+		return empty_timer_result()
+	end
+
+	local buff_extension = ScriptUnit.has_extension(player_unit, "buff_system")
+
+	if not buff_extension then
+		return empty_timer_result()
+	end
+
+	local ability_extension = ScriptUnit.has_extension(player_unit, "ability_system")
+
+	if not ability_extension then
+		return empty_timer_result()
+	end
+
+	local show_decimals = not settings or settings.show_decimals ~= false
+	local show_active = not settings or settings.show_active ~= false
+	local show_cooldown = not settings or settings.show_cooldown ~= false
+	local player_archetype = player:archetype_name()
+
+	local function format_seconds(seconds)
+		if show_decimals then
+			return string.format("%.1f", seconds)
+		end
+
+		return string.format("%.0f", math.ceil(seconds))
+	end
+
+	if player_archetype == "broker" and show_cooldown then
+		local raw_cd = ability_extension:remaining_ability_cooldown("pocketable_ability")
+		local remaining_cooldown = is_finite_cooldown_seconds_for_ui(raw_cd) and raw_cd or nil
+
+		if remaining_cooldown then
+			local r = empty_timer_result()
+
+			r.has_matched_pocketable = true
+			r.profile_id = "broker_pocketable_cooldown"
+			r.has_cooldown = true
+			r.has_active_buff = false
+			r.is_ready = false
+			r.text = format_seconds(remaining_cooldown)
+			r.visible = true
+			r.phase = "cooldown"
+
+			return r
+		end
+	end
+
+	local pocket_result = StimmCountdownCore.compute_pocketable_stimm_timer_state(player_unit, settings, pocketable_profiles)
+
+	if pocket_result.visible and pocket_result.text ~= "" then
+		return pocket_result
+	end
+
+	if show_active and type(consumer_buff_entries) == "table" then
+		local best_time = 0
+		local best_template = nil
+
+		for _, entry in ipairs(consumer_buff_entries) do
+			if type(entry) == "table" and type(entry.template) == "string" then
+				local arch_ok = not entry.archetype_name or entry.archetype_name == player_archetype
+
+				if arch_ok then
+					local t = StimmCountdownCore.get_buff_remaining_time(buff_extension, entry.template)
+
+					if t >= 0.05 and t > best_time then
+						best_time = t
+						best_template = entry.template
+					end
+				end
+			end
+		end
+
+		if best_time > 0 and best_template then
+			local r = empty_timer_result()
+
+			r.has_matched_pocketable = true
+			r.profile_id = best_template
+			r.has_active_buff = true
+			r.has_cooldown = false
+			r.is_ready = false
+			r.text = format_seconds(best_time)
+			r.visible = true
+			r.phase = "active"
+
+			return r
+		end
+	end
+
+	return empty_timer_result()
+end
+
 return StimmCountdownCore
