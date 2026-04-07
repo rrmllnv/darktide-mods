@@ -1,16 +1,15 @@
 local StimmCountdownCore = {}
 
-StimmCountdownCore.STIMM_BUFF_NAME = "syringe_broker_buff"
-StimmCountdownCore.STIMM_ABILITY_TYPE = "pocketable_ability"
-
-function StimmCountdownCore.is_broker_class(player)
-	if not player then
+local function is_finite_cooldown_seconds_for_ui(t)
+	if type(t) ~= "number" or t ~= t then
 		return false
 	end
 
-	local archetype_name = player:archetype_name()
+	if t == math.huge or t == -math.huge then
+		return false
+	end
 
-	return archetype_name == "broker"
+	return t >= 0.05
 end
 
 function StimmCountdownCore.get_buff_remaining_time(buff_extension, buff_template_name)
@@ -42,18 +41,27 @@ function StimmCountdownCore.get_buff_remaining_time(buff_extension, buff_templat
 	return timer
 end
 
-function StimmCountdownCore.compute_broker_syringe_timer_state(player_unit, settings)
-	local result = {
+local function empty_timer_result()
+	return {
 		visible = false,
 		text = "",
 		phase = "none",
-		has_broker_syringe = false,
+		has_matched_pocketable = false,
 		has_active_buff = false,
 		has_cooldown = false,
 		is_ready = false,
+		profile_id = nil,
 	}
+end
+
+function StimmCountdownCore.compute_pocketable_stimm_timer_state(player_unit, settings, profiles)
+	local result = empty_timer_result()
 
 	if not player_unit then
+		return result
+	end
+
+	if type(profiles) ~= "table" then
 		return result
 	end
 
@@ -67,10 +75,6 @@ function StimmCountdownCore.compute_broker_syringe_timer_state(player_unit, sett
 		return result
 	end
 
-	if not StimmCountdownCore.is_broker_class(player) then
-		return result
-	end
-
 	local buff_extension = ScriptUnit.has_extension(player_unit, "buff_system")
 
 	if not buff_extension then
@@ -78,27 +82,51 @@ function StimmCountdownCore.compute_broker_syringe_timer_state(player_unit, sett
 	end
 
 	local ability_extension = ScriptUnit.has_extension(player_unit, "ability_system")
-	local equipped_abilities = ability_extension and ability_extension:equipped_abilities()
-	local pocketable_ability = equipped_abilities and equipped_abilities[StimmCountdownCore.STIMM_ABILITY_TYPE]
-	local has_broker_syringe = pocketable_ability and pocketable_ability.ability_group == "broker_syringe"
 
-	result.has_broker_syringe = not not has_broker_syringe
-
-	if not has_broker_syringe then
+	if not ability_extension then
 		return result
 	end
 
-	local remaining_cooldown = ability_extension and ability_extension:remaining_ability_cooldown(StimmCountdownCore.STIMM_ABILITY_TYPE)
-	local has_cooldown = remaining_cooldown and remaining_cooldown >= 0.05
+	local equipped_abilities = ability_extension:equipped_abilities()
+	local player_archetype = player:archetype_name()
+	local matched_profile = nil
 
-	result.has_cooldown = not not has_cooldown
+	for _, profile in ipairs(profiles) do
+		if type(profile) == "table" and type(profile.archetype_name) == "string" and type(profile.ability_group) == "string" and type(profile.active_buff_template) == "string" then
+			if player_archetype == profile.archetype_name then
+				local ability_type = type(profile.ability_type) == "string" and profile.ability_type or "pocketable_ability"
+				local pocketable_ability = equipped_abilities and equipped_abilities[ability_type]
+				local group_ok = pocketable_ability and pocketable_ability.ability_group == profile.ability_group
 
-	local remaining_buff_time = StimmCountdownCore.get_buff_remaining_time(buff_extension, StimmCountdownCore.STIMM_BUFF_NAME)
+				if group_ok then
+					matched_profile = profile
+
+					break
+				end
+			end
+		end
+	end
+
+	if not matched_profile then
+		return result
+	end
+
+	result.has_matched_pocketable = true
+	result.profile_id = matched_profile.id or matched_profile.ability_group
+
+	local ability_type = type(matched_profile.ability_type) == "string" and matched_profile.ability_type or "pocketable_ability"
+	local raw_remaining_cooldown = ability_extension:remaining_ability_cooldown(ability_type)
+	local remaining_cooldown = is_finite_cooldown_seconds_for_ui(raw_remaining_cooldown) and raw_remaining_cooldown or nil
+	local has_cooldown = remaining_cooldown ~= nil
+
+	result.has_cooldown = has_cooldown
+
+	local remaining_buff_time = StimmCountdownCore.get_buff_remaining_time(buff_extension, matched_profile.active_buff_template)
 	local has_active_buff = remaining_buff_time and remaining_buff_time >= 0.05
 
 	result.has_active_buff = not not has_active_buff
 
-	local is_ready = has_broker_syringe and not has_active_buff and not has_cooldown
+	local is_ready = result.has_matched_pocketable and not has_active_buff and not has_cooldown
 
 	result.is_ready = not not is_ready
 
@@ -118,7 +146,7 @@ function StimmCountdownCore.compute_broker_syringe_timer_state(player_unit, sett
 	elseif is_ready then
 		result.visible = false
 		result.phase = "none"
-	elseif show_cooldown and has_cooldown then
+	elseif show_cooldown and has_cooldown and remaining_cooldown then
 		if show_decimals then
 			result.text = string.format("%.1f", remaining_cooldown)
 		else

@@ -81,6 +81,16 @@ end
 
 refresh_settings()
 
+mod.stimm_countdown_pocketable_profiles = {
+	{
+		id = "broker_syringe",
+		archetype_name = "broker",
+		ability_type = "pocketable_ability",
+		ability_group = "broker_syringe",
+		active_buff_template = "syringe_broker_buff",
+	},
+}
+
 mod.division_hud_stimm = {
 	get_timer_display_for_unit = function(player_unit)
 		if mod.is_enabled and not mod:is_enabled() then
@@ -93,7 +103,7 @@ mod.division_hud_stimm = {
 			show_decimals = mod:get("show_decimals") ~= false,
 		}
 
-		return StimmCountdownCore.compute_broker_syringe_timer_state(player_unit, settings)
+		return StimmCountdownCore.compute_pocketable_stimm_timer_state(player_unit, settings, mod.stimm_countdown_pocketable_profiles)
 	end,
 }
 
@@ -511,12 +521,6 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 		return
 	end
 
-	if not StimmCountdownCore.is_broker_class(player) then
-		restore_original_colors(self, icon_widget, background_widget)
-		widget.content.visible = false
-		return
-	end
-
 	local player_unit = player.player_unit
 
 	local buff_extension = ScriptUnit.has_extension(player_unit, "buff_system")
@@ -526,13 +530,13 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 		return
 	end
 
-	local tr = StimmCountdownCore.compute_broker_syringe_timer_state(player_unit, {
+	local tr = StimmCountdownCore.compute_pocketable_stimm_timer_state(player_unit, {
 		show_active = settings_cache.show_active,
 		show_cooldown = settings_cache.show_cooldown,
 		show_decimals = settings_cache.show_decimals,
-	})
+	}, mod.stimm_countdown_pocketable_profiles)
 
-	if not tr.has_broker_syringe then
+	if not tr.has_matched_pocketable then
 		restore_original_colors(self, icon_widget, background_widget)
 		widget.content.text = ""
 		widget.content.visible = false
