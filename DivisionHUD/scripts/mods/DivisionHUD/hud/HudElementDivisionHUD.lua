@@ -182,7 +182,13 @@ local function division_hud_format_stimm_timer_text_as_whole_seconds(text)
 		return text
 	end
 
-	return string.format("%.0f", math.ceil(n))
+	local whole = math.ceil(n)
+
+	if whole < 0 then
+		return string.format("%.0f", whole)
+	end
+
+	return string.format("%02d", whole)
 end
 
 HudElementDivisionHUD._division_hud_reset_dynamic_offset_state = function(self)
