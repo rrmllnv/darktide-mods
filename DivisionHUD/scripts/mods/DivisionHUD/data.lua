@@ -82,6 +82,13 @@ return {
 						type = "checkbox",
 						default_value = d("show_ability_timer", true),
 					},
+					{
+						setting_id = "stimm_slot_icon_tint_by_type",
+						type = "checkbox",
+						title = "stimm_slot_icon_tint_by_type",
+						tooltip_text = "stimm_slot_icon_tint_by_type_description",
+						default_value = d("stimm_slot_icon_tint_by_type", true),
+					},
 				},
 			},
 			{
@@ -179,13 +186,6 @@ return {
 						title = "integration_stimm_countdown",
 						tooltip_text = "integration_stimm_countdown_description",
 						default_value = d("integration_stimm_countdown", true),
-					},
-					{
-						setting_id = "stimm_slot_icon_tint_by_type",
-						type = "checkbox",
-						title = "stimm_slot_icon_tint_by_type",
-						tooltip_text = "stimm_slot_icon_tint_by_type_description",
-						default_value = d("stimm_slot_icon_tint_by_type", true),
 					},
 					{
 						setting_id = "integration_recolor_stimms",

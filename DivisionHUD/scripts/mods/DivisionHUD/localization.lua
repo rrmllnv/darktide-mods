@@ -85,9 +85,9 @@ return {
 		["zh-cn"] = "启用后，若 StimmCountdown 模组已加载并启用，Division HUD 条带中的口袋注射器槽位将按该模组显示倒计时（生效中/冷却中）。关闭时，槽位仅显示常规的 01/00 计数。",
 	},
 	stimm_slot_icon_tint_by_type = {
-		en = "Tint pocket stimm icon by syringe type",
-		ru = "Тон иконки шприца по типу",
-		["zh-cn"] = "按注射器类型着色口袋注射器图标",
+		en = "Color pocket stimm icon",
+		ru = "Цвет иконки шприца",
+		["zh-cn"] = "口袋注射器着色",
 	},
 	stimm_slot_icon_tint_by_type_description = {
 		en = "When enabled, the pocket stimm icon in the Division HUD strip is tinted by syringe template (speed, power, corruption cleanse, ability boost, broker syringe, etc.) using built-in colors. When off, the icon uses the default white tint.",
