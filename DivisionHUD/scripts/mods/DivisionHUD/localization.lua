@@ -165,18 +165,18 @@ return {
 		["zh-cn"] = "界面偏移强度",
 	},
 	dynamic_hud_pitch_ratio = {
-		en = "Dynamic HUD vertical ratio",
+		en = "Vertical ratio",
 		ru = "Вертикаль относительно горизонтали",
 		["zh-cn"] = "垂直/水平偏移比例",
 	},
 	dynamic_hud_decay = {
-		en = "Dynamic HUD return speed",
-		ru = "Скорость возврата HUD",
+		en = "Return speed",
+		ru = "Скорость возврата",
 		["zh-cn"] = "界面回弹速度",
 	},
 	dynamic_hud_max_offset = {
-		en = "Dynamic HUD max offset",
-		ru = "Макс. смещение HUD",
+		en = "Max offset",
+		ru = "Макс. смещение",
 		["zh-cn"] = "界面最大偏移量",
 	},
 }
