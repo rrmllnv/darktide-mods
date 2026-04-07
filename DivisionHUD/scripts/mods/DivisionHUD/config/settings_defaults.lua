@@ -6,6 +6,7 @@ return {
 	show_toughness_bar = true,
 	show_health_bar = true,
 	show_ability_timer = true,
+	stimm_slot_icon_tint_by_type = true,
 	dynamic_hud = true,
 	dynamic_hud_strength = 110,
 	dynamic_hud_pitch_ratio = 1,
@@ -19,7 +20,6 @@ return {
 	hide_vanilla_player_buffs_background = false,
 	integration_custom_hud = false,
 	integration_stimm_countdown = true,
-	stimm_slot_icon_tint_by_type = true,
 	integration_recolor_stimms = false,
 	divisionhud_reset_all_settings = 0,
 }
