@@ -593,11 +593,18 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 					if type(s_cfg) == "table" and s_cfg.integration_stimm_countdown ~= false then
 						local get_mod_fn = rawget(_G, "get_mod")
 						local sm = type(get_mod_fn) == "function" and get_mod_fn("StimmCountdown") or nil
+						local stimm_api = sm and type(sm.division_hud_stimm) == "table" and sm.division_hud_stimm or nil
+						local get_timer_fn = stimm_api and stimm_api.get_timer_display_for_unit
 
-						if sm and sm.division_hud_stimm and sm.is_enabled and sm:is_enabled() then
-							local r = sm.division_hud_stimm.get_timer_display_for_unit(player_unit)
+						if
+							stimm_api
+							and type(get_timer_fn) == "function"
+							and type(sm.is_enabled) == "function"
+							and sm:is_enabled()
+						then
+							local r = get_timer_fn(player_unit)
 
-							if r and r.visible and r.text ~= "" then
+							if type(r) == "table" and r.visible and r.text ~= "" then
 								widget.content.text = division_hud_format_stimm_timer_text_as_whole_seconds(r.text)
 
 								local base = r.phase == "active" and DIVISION_STIMM_TIMER_ACTIVE_COLOR or DIVISION_STIMM_TIMER_COOLDOWN_COLOR
