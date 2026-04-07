@@ -6,6 +6,10 @@ local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local Ammo = require("scripts/utilities/ammo")
 local PlayerCharacterConstants = require("scripts/settings/player_character/player_character_constants")
 
+local DIVISION_STIMM_TIMER_ACTIVE_COLOR = UIHudSettings.color_tint_main_2
+local DIVISION_STIMM_TIMER_COOLDOWN_COLOR = UIHudSettings.color_tint_alert_2
+local DIVISION_SLOT_COUNTER_TEXT_COLOR_DEFAULT = UIHudSettings.color_tint_main_1
+
 local Definitions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/definitions")
 local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/slot_data")
 local VanillaStaminaDodge = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/vanilla_stamina_dodge")
@@ -165,6 +169,20 @@ end
 
 local function division_hud_wrapped_angle_delta(prev_rad, curr_rad)
 	return (curr_rad - prev_rad + math.pi) % (math.pi * 2) - math.pi
+end
+
+local function division_hud_format_stimm_timer_text_as_whole_seconds(text)
+	if type(text) ~= "string" or text == "" then
+		return text
+	end
+
+	local n = tonumber(text)
+
+	if n == nil or n ~= n then
+		return text
+	end
+
+	return string.format("%.0f", math.ceil(n))
 end
 
 HudElementDivisionHUD._division_hud_reset_dynamic_offset_state = function(self)
@@ -560,7 +578,40 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 
 			if widget.style.text then
 				widget.content.text = self:_slot_numeric_text(slot_id, entry, player_unit)
-				widget.style.text.text_color[1] = 255 * opacity
+
+				if name == "slot_stimm" then
+					local tc = widget.style.text.text_color
+					local default_tc = DIVISION_SLOT_COUNTER_TEXT_COLOR_DEFAULT
+
+					tc[1] = math.floor((default_tc[1] or 255) * opacity)
+					tc[2] = default_tc[2]
+					tc[3] = default_tc[3]
+					tc[4] = default_tc[4]
+
+					local s_cfg = mod._settings
+
+					if type(s_cfg) == "table" and s_cfg.integration_stimm_countdown ~= false then
+						local get_mod_fn = rawget(_G, "get_mod")
+						local sm = type(get_mod_fn) == "function" and get_mod_fn("StimmCountdown") or nil
+
+						if sm and sm.division_hud_stimm and sm.is_enabled and sm:is_enabled() then
+							local r = sm.division_hud_stimm.get_timer_display_for_unit(player_unit)
+
+							if r and r.visible and r.text ~= "" then
+								widget.content.text = division_hud_format_stimm_timer_text_as_whole_seconds(r.text)
+
+								local base = r.phase == "active" and DIVISION_STIMM_TIMER_ACTIVE_COLOR or DIVISION_STIMM_TIMER_COOLDOWN_COLOR
+
+								tc[1] = math.floor((base[1] or 255) * opacity)
+								tc[2] = base[2]
+								tc[3] = base[3]
+								tc[4] = base[4]
+							end
+						end
+					end
+				else
+					widget.style.text.text_color[1] = 255 * opacity
+				end
 			end
 
 			widget.dirty = true

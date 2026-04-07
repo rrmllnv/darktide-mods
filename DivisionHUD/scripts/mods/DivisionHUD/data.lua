@@ -173,6 +173,13 @@ return {
 						tooltip_text = "integration_custom_hud_description",
 						default_value = d("integration_custom_hud", false),
 					},
+					{
+						setting_id = "integration_stimm_countdown",
+						type = "checkbox",
+						title = "integration_stimm_countdown",
+						tooltip_text = "integration_stimm_countdown_description",
+						default_value = d("integration_stimm_countdown", true),
+					},
 				},
 			},
 			{
