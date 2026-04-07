@@ -80,9 +80,29 @@ return {
 		["zh-cn"] = "StimmCountdown",
 	},
 	integration_stimm_countdown_description = {
-		en = "When enabled and the StimmCountdown mod is loaded and enabled, the broker stimm slot shows its countdown (active / cooldown) using that mod’s display options. When off, the slot uses the usual 01/00 counter only.",
-		ru = "Если включено и мод StimmCountdown загружен и включён, в слоте шприца брокера показывается отсчёт (действие / перезарядка) с учётом настроек того мода. Если выключено — только обычные 01/00.",
-		["zh-cn"] = "启用后，若 StimmCountdown 模组已加载并启用，经纪人注射器槽位将按该模组的显示选项显示倒计时（生效中/冷却中）。关闭时，槽位仅显示常规的 01/00 计数。",
+		en = "When enabled and the StimmCountdown mod is loaded and enabled, the pocket stimm slot in the Division HUD strip shows its countdown (active / cooldown) using that mod’s display options. When off, the slot uses the usual 01/00 counter only.",
+		ru = "Если включено и мод StimmCountdown загружен и включён, в слоте карманного шприца в полоске Division HUD показывается отсчёт (действие / перезарядка) с учётом настроек того мода. Если выключено — только обычные 01/00.",
+		["zh-cn"] = "启用后，若 StimmCountdown 模组已加载并启用，Division HUD 条带中的口袋注射器槽位将按该模组显示倒计时（生效中/冷却中）。关闭时，槽位仅显示常规的 01/00 计数。",
+	},
+	stimm_slot_icon_tint_by_type = {
+		en = "Tint pocket stimm icon by syringe type",
+		ru = "Тон иконки шприца по типу",
+		["zh-cn"] = "按注射器类型着色口袋注射器图标",
+	},
+	stimm_slot_icon_tint_by_type_description = {
+		en = "When enabled, the pocket stimm icon in the Division HUD strip is tinted by syringe template (speed, power, corruption cleanse, ability boost, broker syringe, etc.) using built-in colors. When off, the icon uses the default white tint.",
+		ru = "Если включено, иконка карманного шприца в полоске Division HUD окрашивается по шаблону шприца (скорость, сила, снятие порчи, усиление способности, шприц брокера и т.д.) встроенными цветами. Если выключено — обычный белый тон.",
+		["zh-cn"] = "启用后，按注射器模板（速度、力量、腐蚀治疗、技能强化、经纪人注射器等）用内置颜色为 Division HUD 条带中的口袋注射器图标着色。关闭时使用默认白色。",
+	},
+	integration_recolor_stimms = {
+		en = "RecolorStimms",
+		ru = "RecolorStimms",
+		["zh-cn"] = "RecolorStimms",
+	},
+	integration_recolor_stimms_description = {
+		en = "When enabled and the RecolorStimms mod is loaded and enabled, pocket stimm icon colors are taken from that mod (get_stimm_argb_255). When off or the mod is unavailable, built-in syringe colors are used.",
+		ru = "Если включено и мод RecolorStimms загружен и включён, цвета иконки карманного шприца берутся из него (get_stimm_argb_255). Иначе используются встроенные цвета шприцев.",
+		["zh-cn"] = "启用后，若 RecolorStimms 模组已加载并启用，口袋注射器图标颜色从该模组读取（get_stimm_argb_255）。关闭或模组不可用时使用内置注射器颜色。",
 	},
 	divisionhud_super_system = {
 		en = "\238\128\169 SYSTEM SETTINGS",

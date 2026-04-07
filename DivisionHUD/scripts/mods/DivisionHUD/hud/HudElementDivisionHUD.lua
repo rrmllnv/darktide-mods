@@ -10,6 +10,14 @@ local DIVISION_STIMM_TIMER_ACTIVE_COLOR = UIHudSettings.color_tint_main_2
 local DIVISION_STIMM_TIMER_COOLDOWN_COLOR = UIHudSettings.color_tint_alert_2
 local DIVISION_SLOT_COUNTER_TEXT_COLOR_DEFAULT = UIHudSettings.color_tint_main_1
 
+local DIVISION_STIMM_SLOT_TYPE_COLORS = {
+	syringe_corruption_pocketable = { 255, 38, 205, 26 },
+	syringe_ability_boost_pocketable = { 255, 230, 192, 13 },
+	syringe_power_boost_pocketable = { 255, 205, 51, 26 },
+	syringe_speed_boost_pocketable = { 255, 0, 127, 218 },
+	syringe_broker_pocketable = { 255, 208, 69, 255 },
+}
+
 local Definitions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/definitions")
 local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/slot_data")
 local VanillaStaminaDodge = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/vanilla_stamina_dodge")
@@ -189,6 +197,85 @@ local function division_hud_format_stimm_timer_text_as_whole_seconds(text)
 	end
 
 	return string.format("%02d", whole)
+end
+
+local function division_hud_is_valid_argb_255(c)
+	return type(c) == "table"
+		and type(c[1]) == "number"
+		and type(c[2]) == "number"
+		and type(c[3]) == "number"
+		and type(c[4]) == "number"
+end
+
+local function division_hud_resolve_stimm_slot_main_argb_255(stimm_template_id, s_cfg)
+	if type(stimm_template_id) ~= "string" or stimm_template_id == "" then
+		return nil
+	end
+
+	local use_recolor = type(s_cfg) == "table" and s_cfg.integration_recolor_stimms == true
+	local rm = mod._division_hud_recolor_stimms_mod
+
+	if
+		use_recolor
+		and rm
+		and type(rm.is_enabled) == "function"
+		and rm:is_enabled()
+		and type(rm.get_stimm_argb_255) == "function"
+	then
+		local from_recolor = rm.get_stimm_argb_255(stimm_template_id)
+
+		if division_hud_is_valid_argb_255(from_recolor) then
+			return from_recolor
+		end
+	end
+
+	return DIVISION_STIMM_SLOT_TYPE_COLORS[stimm_template_id]
+end
+
+local function division_hud_apply_right_slot_icon_color(widget, widget_name, entry, opacity, s_cfg)
+	local icon_style = widget and widget.style and widget.style.icon
+
+	if not icon_style or not icon_style.color then
+		return
+	end
+
+	local c = icon_style.color
+
+	if widget_name ~= "slot_stimm" then
+		c[1] = math.floor(255 * opacity)
+		c[2] = 255
+		c[3] = 255
+		c[4] = 255
+
+		return
+	end
+
+	local tint_on = type(s_cfg) ~= "table" or s_cfg.stimm_slot_icon_tint_by_type ~= false
+
+	if not tint_on or not entry or entry.slot_id ~= "slot_pocketable_small" or not entry.has_equipment then
+		c[1] = math.floor(255 * opacity)
+		c[2] = 255
+		c[3] = 255
+		c[4] = 255
+
+		return
+	end
+
+	local item = entry.item
+	local stimm_id = item and type(item.weapon_template) == "string" and item.weapon_template or nil
+	local main = stimm_id and division_hud_resolve_stimm_slot_main_argb_255(stimm_id, s_cfg) or nil
+
+	if division_hud_is_valid_argb_255(main) then
+		c[1] = math.floor((main[1] or 255) * opacity)
+		c[2] = main[2] or 255
+		c[3] = main[3] or 255
+		c[4] = main[4] or 255
+	else
+		c[1] = math.floor(255 * opacity)
+		c[2] = 255
+		c[3] = 255
+		c[4] = 255
+	end
 end
 
 HudElementDivisionHUD._division_hud_reset_dynamic_offset_state = function(self)
@@ -580,7 +667,7 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 
 			widget.content.visible = true
 			self:_apply_slot_icon_material(widget, entry)
-			widget.style.icon.color[1] = 255 * opacity
+			division_hud_apply_right_slot_icon_color(widget, name, entry, opacity, mod._settings)
 
 			if widget.style.text then
 				widget.content.text = self:_slot_numeric_text(slot_id, entry, player_unit)

@@ -1,5 +1,13 @@
 local mod = get_mod("DivisionHUD")
 
+mod._division_hud_recolor_stimms_mod = nil
+
+mod.on_all_mods_loaded = function()
+	local get_mod_fn = rawget(_G, "get_mod")
+
+	mod._division_hud_recolor_stimms_mod = type(get_mod_fn) == "function" and get_mod_fn("RecolorStimms") or nil
+end
+
 local hud_elements = {
 	{
 		filename = "DivisionHUD/scripts/mods/DivisionHUD/hud/HudElementDivisionHUD",

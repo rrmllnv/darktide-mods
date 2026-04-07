@@ -180,6 +180,20 @@ return {
 						tooltip_text = "integration_stimm_countdown_description",
 						default_value = d("integration_stimm_countdown", true),
 					},
+					{
+						setting_id = "stimm_slot_icon_tint_by_type",
+						type = "checkbox",
+						title = "stimm_slot_icon_tint_by_type",
+						tooltip_text = "stimm_slot_icon_tint_by_type_description",
+						default_value = d("stimm_slot_icon_tint_by_type", true),
+					},
+					{
+						setting_id = "integration_recolor_stimms",
+						type = "checkbox",
+						title = "integration_recolor_stimms",
+						tooltip_text = "integration_recolor_stimms_description",
+						default_value = d("integration_recolor_stimms", false),
+					},
 				},
 			},
 			{
