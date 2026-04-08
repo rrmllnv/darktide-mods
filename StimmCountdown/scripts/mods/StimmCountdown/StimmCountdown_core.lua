@@ -160,7 +160,7 @@ function StimmCountdownCore.compute_pocketable_stimm_timer_state(player_unit, se
 	return result
 end
 
-function StimmCountdownCore.compute_timer_display_for_consuming_mods(player_unit, settings, pocketable_profiles, consumer_buff_entries)
+function StimmCountdownCore.compute_timer_display_for_consuming_mods(player_unit, settings, pocketable_profiles, buff_entries)
 	local player = Managers.player and Managers.player:local_player(1)
 
 	if not player_unit or not player or not player:unit_is_alive() or player.player_unit ~= player_unit then
@@ -218,11 +218,11 @@ function StimmCountdownCore.compute_timer_display_for_consuming_mods(player_unit
 		return pocket_result
 	end
 
-	if show_active and type(consumer_buff_entries) == "table" then
+	if show_active and type(buff_entries) == "table" then
 		local best_time = 0
 		local best_template = nil
 
-		for _, entry in ipairs(consumer_buff_entries) do
+		for _, entry in ipairs(buff_entries) do
 			if type(entry) == "table" and type(entry.template) == "string" then
 				local arch_ok = not entry.archetype_name or entry.archetype_name == player_archetype
 

@@ -686,7 +686,7 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 					if type(s_cfg) == "table" and s_cfg.integration_stimm_countdown ~= false then
 						local get_mod_fn = rawget(_G, "get_mod")
 						local sm = type(get_mod_fn) == "function" and get_mod_fn("StimmCountdown") or nil
-						local stimm_api = sm and type(sm.stimm_countdown_timer_api) == "table" and sm.stimm_countdown_timer_api or nil
+						local stimm_api = sm and type(sm.stimm_countdown_api) == "table" and sm.stimm_countdown_api or nil
 						local get_timer_fn = stimm_api and stimm_api.get_display_for_unit
 
 						if

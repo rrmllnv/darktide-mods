@@ -81,30 +81,29 @@ end
 
 refresh_settings()
 
-mod.stimm_countdown_pocketable_profiles = {
-	{
-		id = "broker_syringe",
-		archetype_name = "broker",
-		ability_type = "pocketable_ability",
-		ability_group = "broker_syringe",
-		active_buff_template = "syringe_broker_buff",
+mod.stimm_countdown_api = {
+	pocketable_profiles = {
+		{
+			id = "broker_syringe",
+			archetype_name = "broker",
+			ability_type = "pocketable_ability",
+			ability_group = "broker_syringe",
+			active_buff_template = "syringe_broker_buff",
+		},
 	},
-}
-
-mod.stimm_countdown_consumer_buff_entries = {
-	{ template = "syringe_broker_buff", archetype_name = "broker" },
-	{ template = "syringe_speed_boost_buff" },
-	{ template = "syringe_power_boost_buff" },
-	{ template = "syringe_ability_boost_buff" },
-	{ template = "syringe_heal_corruption_buff" },
-}
-
-mod.stimm_countdown_timer_api = {
+	buff_entries = {
+		{ template = "syringe_broker_buff", archetype_name = "broker" },
+		{ template = "syringe_speed_boost_buff" },
+		{ template = "syringe_power_boost_buff" },
+		{ template = "syringe_ability_boost_buff" },
+		{ template = "syringe_heal_corruption_buff" },
+	},
 	get_display_for_unit = function(player_unit)
 		if mod.is_enabled and not mod:is_enabled() then
 			return nil
 		end
 
+		local api = mod.stimm_countdown_api
 		local settings = {
 			show_active = mod:get("show_active") ~= false,
 			show_cooldown = mod:get("show_cooldown") ~= false,
@@ -114,8 +113,8 @@ mod.stimm_countdown_timer_api = {
 		return StimmCountdownCore.compute_timer_display_for_consuming_mods(
 			player_unit,
 			settings,
-			mod.stimm_countdown_pocketable_profiles,
-			mod.stimm_countdown_consumer_buff_entries
+			api.pocketable_profiles,
+			api.buff_entries
 		)
 	end,
 }
@@ -547,7 +546,7 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 		show_active = settings_cache.show_active,
 		show_cooldown = settings_cache.show_cooldown,
 		show_decimals = settings_cache.show_decimals,
-	}, mod.stimm_countdown_pocketable_profiles)
+	}, mod.stimm_countdown_api.pocketable_profiles)
 
 	if not tr.has_matched_pocketable then
 		restore_original_colors(self, icon_widget, background_widget)
