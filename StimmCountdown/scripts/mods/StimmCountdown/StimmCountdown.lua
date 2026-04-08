@@ -120,16 +120,6 @@ mod.stimm_countdown_timer_api = {
 	end,
 }
 
-mod.division_hud_stimm = {
-	get_timer_display_for_unit = function(player_unit)
-		if mod.stimm_countdown_timer_api and mod.stimm_countdown_timer_api.get_display_for_unit then
-			return mod.stimm_countdown_timer_api.get_display_for_unit(player_unit)
-		end
-
-		return nil
-	end,
-}
-
 mod.on_setting_changed = function(setting_id)
 	if setting_id == "reset_color_settings" then
 		if mod:get("reset_color_settings") == 1 then
