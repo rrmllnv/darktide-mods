@@ -121,6 +121,10 @@ local RIGHT_SLOT_ICON_FALLBACK = "content/ui/materials/icons/weapons/flat/grenad
 local RIGHT_GRID_ORIGIN_X = BIG_AMMO_W_LAYOUT + GAP_LEFT_TO_GRID
 local RIGHT_BOTTOM_ROW_Y = WIELDED_ROW_HEIGHT + RIGHT_BOTTOM_ROW_GAP
 
+local EXPEDITION_SALVAGE_SLOT_W = RIGHT_BOTTOM_SLOT_WIDTH
+local EXPEDITION_SALVAGE_TO_AMMO_GAP = RIGHT_GAP
+local EXPEDITION_SALVAGE_SLOT_X = -(EXPEDITION_SALVAGE_SLOT_W + EXPEDITION_SALVAGE_TO_AMMO_GAP)
+
 local function text_style_from_hud_body(font_size, offset)
 	local style = table.clone(UIFontSettings.hud_body)
 	style.font_size = font_size
@@ -175,6 +179,13 @@ local scenegraph_definition = {
 		vertical_alignment = "top",
 		size = { BAR_FILL_WIDTH, MAIN_ROW_HEIGHT },
 		position = { 0, ABILITY_BAR_STRIP_HEIGHT + BOXES_ROW_TOP_GAP, 0 },
+	},
+	division_expedition_salvage_slot = {
+		parent = "boxes_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { EXPEDITION_SALVAGE_SLOT_W, RIGHT_BOTTOM_SLOT_HEIGHT },
+		position = { EXPEDITION_SALVAGE_SLOT_X, RIGHT_BOTTOM_ROW_Y, 0 },
 	},
 	ammo_big = {
 		parent = "boxes_row",
@@ -311,6 +322,30 @@ local function create_ammo_big_widget(scenegraph_id)
 	}, scenegraph_id)
 end
 
+local function create_expedition_salvage_widget(scenegraph_id)
+	local text_style = table.clone(UIFontSettings.hud_body)
+
+	text_style.font_size = SLOT_TEXT_FONT
+	text_style.drop_shadow = true
+	text_style.horizontal_alignment = "right"
+	text_style.vertical_alignment = "center"
+	text_style.text_horizontal_alignment = "right"
+	text_style.text_vertical_alignment = "center"
+	text_style.text_color = table.clone(UIHudSettings.color_tint_main_1)
+	text_style.size = { EXPEDITION_SALVAGE_SLOT_W, RIGHT_BOTTOM_SLOT_HEIGHT }
+	text_style.offset = { 0, 0, 3 }
+
+	return UIWidget.create_definition({
+		{
+			pass_type = "text",
+			value_id = "text",
+			value = "0",
+			style_id = "text",
+			style = text_style,
+		},
+	}, scenegraph_id)
+end
+
 local function create_right_slot_widget(scenegraph_id)
 	local text_left_x = SLOT_ICON_LEFT_INSET + SLOT_ICON_TEXTURE_SIZE + SLOT_TEXT_AFTER_ICON_GAP
 	local text_style = text_style_slot_counter_after_icon(SLOT_TEXT_FONT, text_left_x)
@@ -381,6 +416,7 @@ end
 local widget_definitions = {
 	boxes_bg = create_slots_bg_widget("boxes_row", BAR_FILL_WIDTH, MAIN_ROW_HEIGHT),
 	ability_bar = create_combat_ability_bar_widget("ability_bar"),
+	expedition_salvage = create_expedition_salvage_widget("division_expedition_salvage_slot"),
 	ammo_big = create_ammo_big_widget("ammo_big"),
 	slot_auspex = create_auspex_slot_widget("slot_auspex"),
 	slot_weapon_wielded = create_weapon_wielded_slot_widget("slot_weapon_wielded"),

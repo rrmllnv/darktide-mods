@@ -5,6 +5,8 @@ local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local Ammo = require("scripts/utilities/ammo")
 local PlayerCharacterConstants = require("scripts/settings/player_character/player_character_constants")
+local Text = require("scripts/utilities/ui/text")
+local WalletSettings = require("scripts/settings/wallet_settings")
 
 local DIVISION_STIMM_TIMER_ACTIVE_COLOR = UIHudSettings.color_tint_main_2
 local DIVISION_STIMM_TIMER_COOLDOWN_COLOR = UIHudSettings.color_tint_alert_2
@@ -593,6 +595,59 @@ HudElementDivisionHUD._update_ammo_big = function(self, player_unit, widget, opa
 	widget.dirty = true
 end
 
+HudElementDivisionHUD._update_expedition_salvage = function(self, local_player, widget, opacity)
+	if not widget or not widget.content or not widget.style then
+		return
+	end
+
+	local game_mode_manager = Managers.state and Managers.state.game_mode
+	local game_mode = game_mode_manager and game_mode_manager:game_mode()
+	local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
+
+	if game_mode_name ~= "expedition" or not game_mode or not game_mode.expedition_currency then
+		widget.content.visible = false
+		widget.dirty = true
+
+		return
+	end
+
+	if not local_player or not local_player.is_human_controlled or not local_player:is_human_controlled() then
+		widget.content.visible = false
+		widget.dirty = true
+
+		return
+	end
+
+	local peer_id = local_player.peer_id and local_player:peer_id()
+	local amount = 0
+
+	if peer_id then
+		local ok, v = pcall(function()
+			return game_mode:expedition_currency(peer_id)
+		end)
+
+		if ok and type(v) == "number" then
+			amount = v
+		elseif ok and v ~= nil then
+			amount = tonumber(v) or 0
+		end
+	end
+
+	local salvage_settings = WalletSettings.expedition_salvage
+	local string_symbol = salvage_settings and salvage_settings.string_symbol or ""
+
+	widget.content.visible = true
+	widget.content.text = string.format("%s %s", Text.format_currency(math.floor(amount + 0.5)), string_symbol)
+
+	local text_color = widget.style.text and widget.style.text.text_color
+
+	if text_color then
+		text_color[1] = 255 * opacity
+	end
+
+	widget.dirty = true
+end
+
 HudElementDivisionHUD._update_auspex_slot = function(self, player_unit, widgets, opacity)
 	local widget = widgets.slot_auspex
 
@@ -822,6 +877,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	end
 
 	self:_update_ability_bar(player_unit, widgets.ability_bar, opacity)
+	self:_update_expedition_salvage(local_player, widgets.expedition_salvage, opacity)
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
 	self:_update_auspex_slot(player_unit, widgets, opacity)
 	self:_update_right_slot_grid(player_unit, widgets, opacity)
