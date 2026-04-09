@@ -255,7 +255,7 @@ M.draw = function(self, dt, t, input_service, ui_renderer, render_settings)
 	local health_w = widgets.health
 	local toughness_w = widgets.toughness
 
-	if health_w and health_w.content and health_w.content.visible and self._vdth_health_stamina_nodge_widget then
+	if health_w and health_w.content and health_w.content.visible and self._vdth_health_stamina_nodge_widget and not self._vdth_knocked_down then
 		M._draw_style_nodges(
 			self,
 			ui_renderer,
