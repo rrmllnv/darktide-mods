@@ -24,6 +24,7 @@ local Definitions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/def
 local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/slot_data")
 local VanillaStaminaDodge = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/vanilla_stamina_dodge")
 local VanillaToughnessHealth = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/vanilla_toughness_health")
+local CombatAbilityBar = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/combat_ability_bar")
 local DivisionHUDSettingsDefaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/settings_defaults")
 
 if type(DivisionHUDSettingsDefaults) ~= "table" then
@@ -39,9 +40,6 @@ local ROOT_LAYOUT_OFFSET_X = Definitions.ROOT_LAYOUT_OFFSET_X
 local ROOT_LAYOUT_OFFSET_Y = Definitions.ROOT_LAYOUT_OFFSET_Y
 local ROOT_LAYOUT_OFFSET_Z = Definitions.ROOT_LAYOUT_OFFSET_Z
 
-local BAR_WIDTH = Definitions.BAR_WIDTH
-local ABILITY_BAR_MAX_SEGMENTS = Definitions.ABILITY_BAR_MAX_SEGMENTS
-local ABILITY_BAR_SEGMENT_GAP = Definitions.ABILITY_BAR_SEGMENT_GAP
 local RIGHT_SLOT_COUNT = Definitions.RIGHT_SLOT_COUNT
 local right_slot_widget_names = Definitions.right_slot_widget_names
 
@@ -49,116 +47,6 @@ local COMBAT_ABILITY_TYPE = "combat_ability"
 local GRENADE_ABILITY_TYPE = "grenade_ability"
 
 local HUD_LAYOUT_SCALE = Definitions.HUD_LAYOUT_SCALE or 1
-
-local ABILITY_BAR_READY_COLOR = { 255, 231, 145, 26 }
-local ABILITY_BAR_COOLDOWN_COLOR = { 255, 215, 80, 80 }
-
-local function division_hud_compute_combat_ability_cooldown_state(ability_extension, buff_extension, ability_id)
-	local state = {
-		equipped = false,
-		cooldown_progress = 0,
-		uses_charges = false,
-		has_charges_left = true,
-		in_process_of_going_on_cooldown = false,
-		force_on_cooldown = false,
-		remaining_ability_charges = 0,
-		max_ability_charges = 0,
-		max_ability_cooldown = 0,
-	}
-
-	if not ability_extension or not ability_extension:ability_is_equipped(ability_id) then
-		return state
-	end
-
-	state.equipped = true
-
-	local remaining_ability_cooldown = ability_extension:remaining_ability_cooldown(ability_id)
-	local max_ability_cooldown = ability_extension:max_ability_cooldown(ability_id)
-	local is_paused = ability_extension:is_cooldown_paused(ability_id)
-	local remaining_ability_charges = ability_extension:remaining_ability_charges(ability_id)
-	local max_ability_charges = ability_extension:max_ability_charges(ability_id)
-
-	state.remaining_ability_charges = remaining_ability_charges
-	state.max_ability_charges = max_ability_charges
-	state.max_ability_cooldown = max_ability_cooldown
-
-	state.uses_charges = max_ability_charges and max_ability_charges > 1
-	state.has_charges_left = remaining_ability_charges > 0
-
-	local cooldown_progress
-	local in_process_of_going_on_cooldown = false
-	local force_on_cooldown = false
-	local should_show_empty_cooldown = is_paused
-
-	if should_show_empty_cooldown then
-		cooldown_progress = 0
-	elseif max_ability_cooldown and max_ability_cooldown > 0 then
-		cooldown_progress = 1 - math.lerp(0, 1, remaining_ability_cooldown / max_ability_cooldown)
-
-		if cooldown_progress == 0 then
-			cooldown_progress = 1
-		end
-	else
-		cooldown_progress = state.uses_charges and 1 or 0
-	end
-
-	local pause_cooldown_settings = ability_extension:ability_pause_cooldown_settings(ability_id)
-
-	if pause_cooldown_settings and buff_extension then
-		local duration_tracking_buff = pause_cooldown_settings.duration_tracking_buff
-
-		if duration_tracking_buff then
-			if type(duration_tracking_buff) == "table" then
-				for _, duration_tracking_buff_name in ipairs(duration_tracking_buff) do
-					if buff_extension:current_stacks(duration_tracking_buff_name) > 0 then
-						cooldown_progress = buff_extension:buff_duration_progress(duration_tracking_buff_name)
-						in_process_of_going_on_cooldown = cooldown_progress > 0
-
-						break
-					end
-				end
-			elseif buff_extension:current_stacks(duration_tracking_buff) > 0 then
-				cooldown_progress = buff_extension:buff_duration_progress(duration_tracking_buff)
-				in_process_of_going_on_cooldown = cooldown_progress > 0
-			end
-		end
-
-		local on_cooldown_tracking_buff = pause_cooldown_settings.on_cooldown_tracking_buff
-
-		if on_cooldown_tracking_buff then
-			if type(on_cooldown_tracking_buff) == "table" then
-				for i = 1, #on_cooldown_tracking_buff do
-					if buff_extension:current_stacks(on_cooldown_tracking_buff[i]) > 0 then
-						force_on_cooldown = true
-
-						break
-					end
-				end
-			else
-				force_on_cooldown = buff_extension:current_stacks(on_cooldown_tracking_buff) > 0
-			end
-		end
-	end
-
-	state.cooldown_progress = cooldown_progress
-	state.in_process_of_going_on_cooldown = in_process_of_going_on_cooldown
-	state.force_on_cooldown = force_on_cooldown
-
-	return state
-end
-
-local function division_hud_apply_ability_segment_style(seg_style, offset_x, width, rgba, opacity)
-	if not seg_style then
-		return
-	end
-
-	seg_style.offset[1] = offset_x
-	seg_style.size[1] = math.max(0, math.floor(width))
-	seg_style.color[1] = math.floor((rgba[1] or 255) * opacity)
-	seg_style.color[2] = rgba[2] or 255
-	seg_style.color[3] = rgba[3] or 255
-	seg_style.color[4] = rgba[4] or 255
-end
 
 local function division_hud_mod_numeric(key)
 	local settings = mod._settings
@@ -884,110 +772,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 end
 
 HudElementDivisionHUD._update_ability_bar = function(self, player_unit, widget, opacity)
-	local s_ab = mod._settings
-	local show_ability = s_ab and s_ab.show_ability_timer
-
-	if not show_ability then
-		widget.content.visible = false
-		return
-	end
-
-	local ability_extension = ScriptUnit.has_extension(player_unit, "ability_system")
-	local buff_extension = ScriptUnit.has_extension(player_unit, "buff_system")
-
-	if not ability_extension then
-		widget.content.visible = false
-		return
-	end
-
-	local st = division_hud_compute_combat_ability_cooldown_state(ability_extension, buff_extension, COMBAT_ABILITY_TYPE)
-
-	if not st.equipped then
-		widget.content.visible = false
-		return
-	end
-
-	if (st.max_ability_charges or 0) <= 0 and (st.max_ability_cooldown or 0) <= 0 then
-		widget.content.visible = false
-		return
-	end
-
-	local cooldown_progress = st.cooldown_progress or 0
-	local vanilla_on_cooldown = cooldown_progress ~= 1 and not st.in_process_of_going_on_cooldown or st.force_on_cooldown
-	local active_partial_fill = vanilla_on_cooldown or st.in_process_of_going_on_cooldown
-	local remaining = st.remaining_ability_charges or 0
-	local max_charges = st.max_ability_charges or 0
-
-	widget.content.visible = true
-
-	if widget.style.background then
-		widget.style.background.color[1] = math.floor(160 * opacity)
-	end
-
-	local function clear_segments_from(idx)
-		for j = idx, ABILITY_BAR_MAX_SEGMENTS do
-			local seg_style = widget.style["segment_" .. j]
-
-			division_hud_apply_ability_segment_style(seg_style, 0, 0, ABILITY_BAR_READY_COLOR, opacity)
-		end
-	end
-
-	if max_charges > ABILITY_BAR_MAX_SEGMENTS then
-		local seg1 = widget.style.segment_1
-
-		if active_partial_fill then
-			division_hud_apply_ability_segment_style(seg1, 0, BAR_WIDTH * cooldown_progress, ABILITY_BAR_COOLDOWN_COLOR, opacity)
-		else
-			division_hud_apply_ability_segment_style(seg1, 0, BAR_WIDTH, ABILITY_BAR_READY_COLOR, opacity)
-		end
-
-		clear_segments_from(2)
-	else
-		local use_segments = max_charges > 1
-		local n = use_segments and math.min(max_charges, ABILITY_BAR_MAX_SEGMENTS) or 1
-		local total_gap = (n - 1) * ABILITY_BAR_SEGMENT_GAP
-		local seg_w = n > 0 and math.max(1, math.floor((BAR_WIDTH - total_gap) / n)) or BAR_WIDTH
-		local ox = 0
-
-		if use_segments then
-			for i = 1, ABILITY_BAR_MAX_SEGMENTS do
-				local seg_style = widget.style["segment_" .. i]
-
-				if i > n then
-					division_hud_apply_ability_segment_style(seg_style, 0, 0, ABILITY_BAR_READY_COLOR, opacity)
-				elseif i <= remaining then
-					division_hud_apply_ability_segment_style(seg_style, ox, seg_w, ABILITY_BAR_READY_COLOR, opacity)
-					ox = ox + seg_w + ABILITY_BAR_SEGMENT_GAP
-				elseif i == remaining + 1 then
-					local w_fill = active_partial_fill and seg_w * cooldown_progress or seg_w
-
-					division_hud_apply_ability_segment_style(
-						seg_style,
-						ox,
-						w_fill,
-						active_partial_fill and ABILITY_BAR_COOLDOWN_COLOR or ABILITY_BAR_READY_COLOR,
-						opacity
-					)
-					ox = ox + seg_w + ABILITY_BAR_SEGMENT_GAP
-				else
-					division_hud_apply_ability_segment_style(seg_style, ox, 0, ABILITY_BAR_READY_COLOR, opacity)
-					ox = ox + seg_w + ABILITY_BAR_SEGMENT_GAP
-				end
-			end
-		else
-			local seg1 = widget.style.segment_1
-
-			if active_partial_fill then
-				division_hud_apply_ability_segment_style(seg1, 0, BAR_WIDTH * cooldown_progress, ABILITY_BAR_COOLDOWN_COLOR, opacity)
-			else
-				division_hud_apply_ability_segment_style(seg1, 0, BAR_WIDTH, ABILITY_BAR_READY_COLOR, opacity)
-			end
-
-			clear_segments_from(2)
-		end
-	end
-
-	widget.dirty = true
+	CombatAbilityBar.update(player_unit, widget, opacity, Definitions, COMBAT_ABILITY_TYPE)
 end
 
 HudElementDivisionHUD._set_all_visible = function(self, visible)

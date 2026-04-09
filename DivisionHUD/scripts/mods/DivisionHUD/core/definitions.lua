@@ -245,6 +245,8 @@ for k, v in pairs(_division_vanilla_stm_ddg.scenegraph_definition) do
 	scenegraph_definition[k] = v
 end
 
+local DivisionHUDCombatAbilityBarDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/combat_ability_bar_definitions")
+
 scenegraph_definition.boxes_row.size[2] = MAIN_ROW_HEIGHT + _division_vanilla_stm_ddg.extend_below_main_row
 
 local ROOT_HEIGHT = ROOT_HEIGHT_BASE + _division_vanilla_stm_ddg.extend_below_main_row
@@ -468,6 +470,8 @@ return {
 	TOUGHNESS_BAR_HEIGHT = TOUGHNESS_BAR_HEIGHT,
 	ABILITY_BAR_MAX_SEGMENTS = ABILITY_BAR_MAX_SEGMENTS,
 	ABILITY_BAR_SEGMENT_GAP = ABILITY_BAR_SEGMENT_GAP,
+	ABILITY_BAR_READY_COLOR = DivisionHUDCombatAbilityBarDefs.ABILITY_BAR_READY_COLOR,
+	ABILITY_BAR_COOLDOWN_COLOR = DivisionHUDCombatAbilityBarDefs.ABILITY_BAR_COOLDOWN_COLOR,
 	BAR_LABEL_W = BAR_LABEL_W,
 	BAR_FILL_WIDTH = BAR_FILL_WIDTH,
 	ROW_WIDTH = ROW_WIDTH,
