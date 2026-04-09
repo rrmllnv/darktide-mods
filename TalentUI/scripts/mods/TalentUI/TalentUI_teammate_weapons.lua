@@ -80,18 +80,26 @@ local function get_player_weapon_by_slot(player, extensions, slot_name)
 	}
 end
 
+local function set_team_weapon_widget_visible(widget, visible)
+	if not widget or not widget.content then
+		return
+	end
+
+	widget.visible = true
+
+	if widget.content.visible ~= visible then
+		widget.content.visible = visible
+		widget.dirty = true
+	end
+end
+
 local function hide_all_weapon_widgets(self)
 	for _, weapon_slot in ipairs(WEAPON_SLOTS) do
 		local icon_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_icon"]
-		if icon_widget then
-			icon_widget.visible = false
-			icon_widget.dirty = true
-		end
 		local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
-		if text_widget then
-			text_widget.visible = false
-			text_widget.dirty = true
-		end
+
+		set_team_weapon_widget_visible(icon_widget, false)
+		set_team_weapon_widget_visible(text_widget, false)
 	end
 end
 
@@ -173,15 +181,11 @@ local function update_teammate_weapons(self, player, dt)
 			
 			-- Проверяем состояние смерти в цикле и скрываем иконки явно
 			if self._show_as_dead or self._dead or self._hogtied then
-				if icon_widget and icon_widget.visible then
-					icon_widget.visible = false
-					icon_widget.dirty = true
-				end
-				local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
-				if text_widget and text_widget.visible then
-					text_widget.visible = false
-					text_widget.dirty = true
-				end
+				set_team_weapon_widget_visible(icon_widget, false)
+
+				local text_widget_dead = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
+
+				set_team_weapon_widget_visible(text_widget_dead, false)
 			elseif has_weapon and show_weapon_icon then
 				local icon = teammate_weapons_data[data_key].icon
 				local needs_icon_update = false
@@ -203,8 +207,8 @@ local function update_teammate_weapons(self, player, dt)
 					end
 				end
 				
-				if icon_widget.visible ~= true then
-					icon_widget.visible = true
+				if icon_widget.content.visible ~= true then
+					set_team_weapon_widget_visible(icon_widget, true)
 					needs_icon_update = true
 				end
 				
@@ -221,7 +225,7 @@ local function update_teammate_weapons(self, player, dt)
 					
 					if show_ammo then
 						local unit_data_extension = extensions.unit_data
-						local inventory_component = unit_data_extension and unit_data_extension:read_component(weapon_slot.slot)
+						local inventory_component = unit_data_extension and unit_data_extension:has_component(weapon_slot.slot) and unit_data_extension:read_component(weapon_slot.slot)
 						
 						if inventory_component then
 							local max_clip = Ammo.max_ammo_in_clips(inventory_component) or 0
@@ -252,8 +256,8 @@ local function update_teammate_weapons(self, player, dt)
 						needs_text_update = true
 					end
 					
-					if text_widget.visible ~= new_visible then
-						text_widget.visible = new_visible
+					if text_widget.content.visible ~= new_visible then
+						set_team_weapon_widget_visible(text_widget, new_visible)
 						needs_text_update = true
 					end
 					
@@ -262,18 +266,11 @@ local function update_teammate_weapons(self, player, dt)
 					end
 				end
 			else
-				if icon_widget.visible ~= false then
-					icon_widget.visible = false
-					icon_widget.dirty = true
-				end
-				
-				local text_widget = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
-				if text_widget then
-					if text_widget.visible ~= false then
-						text_widget.visible = false
-						text_widget.dirty = true
-					end
-				end
+				set_team_weapon_widget_visible(icon_widget, false)
+
+				local text_widget_hide = self._widgets_by_name["talent_ui_weapon_" .. weapon_slot.id .. "_text"]
+
+				set_team_weapon_widget_visible(text_widget_hide, false)
 			end
 		end
 	end

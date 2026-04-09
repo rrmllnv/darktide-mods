@@ -85,6 +85,9 @@ local function get_player_ability_by_type(player, extensions, slot_type)
 	local ability_configuration = PlayerCharacterConstants.ability_configuration
 	
 	for ability_id, ability_settings in pairs(equipped_abilities) do
+		if not ability_settings then
+			-- empty slot entry from ability extension; skip (avoids errors after loadout sync changes)
+		else
 		local slot_id = ability_configuration[ability_id]
 		if slot_id == slot_type then
 			local ability_type
@@ -131,6 +134,7 @@ local function get_player_ability_by_type(player, extensions, slot_type)
 					name = ability_settings.name,
 				}
 			end
+		end
 		end
 	end
 	
@@ -276,18 +280,26 @@ local function get_ability_material_settings(ability_id, on_cooldown, uses_charg
 	return {intensity = 0, saturation = 1}
 end
 
+local function set_team_talent_widget_visible(widget, visible)
+	if not widget or not widget.content then
+		return
+	end
+
+	widget.visible = true
+
+	if widget.content.visible ~= visible then
+		widget.content.visible = visible
+		widget.dirty = true
+	end
+end
+
 local function hide_all_ability_widgets(self)
 	for _, ability_type in ipairs(TALENT_ABILITY_METADATA) do
 		local icon_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_icon"]
 		local text_widget = self._widgets_by_name["talent_ui_all_" .. ability_type.id .. "_text"]
-		if icon_widget then
-			icon_widget.visible = false
-			icon_widget.dirty = true
-		end
-		if text_widget then
-			text_widget.visible = false
-			text_widget.dirty = true
-		end
+
+		set_team_talent_widget_visible(icon_widget, false)
+		set_team_talent_widget_visible(text_widget, false)
 	end
 end
 
@@ -399,14 +411,8 @@ local function update_teammate_all_abilities(self, player, dt)
 			
 			-- Проверяем состояние смерти в цикле и скрываем иконки явно
 			if self._show_as_dead or self._dead or self._hogtied then
-				if icon_widget and icon_widget.visible then
-					icon_widget.visible = false
-					icon_widget.dirty = true
-				end
-				if text_widget and text_widget.visible then
-					text_widget.visible = false
-					text_widget.dirty = true
-				end
+				set_team_talent_widget_visible(icon_widget, false)
+				set_team_talent_widget_visible(text_widget, false)
 			elseif has_ability and show_icon then
 				local ability_type = teammate_abilities_data[data_key].ability_type
 				local icon = teammate_abilities_data[data_key].icon
@@ -460,11 +466,12 @@ local function update_teammate_all_abilities(self, player, dt)
 				end
 				
 				local needs_icon_update = false
-				if icon_widget.visible ~= true then
-					icon_widget.visible = true
+
+				if icon_widget.content.visible ~= true then
+					set_team_talent_widget_visible(icon_widget, true)
 					needs_icon_update = true
 				end
-				
+
 				if needs_icon_update then
 					icon_widget.dirty = true
 				end
@@ -506,8 +513,8 @@ local function update_teammate_all_abilities(self, player, dt)
 						needs_text_update = true
 					end
 					
-					if text_widget.visible ~= new_visible then
-						text_widget.visible = new_visible
+					if text_widget.content.visible ~= new_visible then
+						set_team_talent_widget_visible(text_widget, new_visible)
 						needs_text_update = true
 					end
 					
@@ -516,15 +523,10 @@ local function update_teammate_all_abilities(self, player, dt)
 					end
 				end
 			else
-				if icon_widget.visible ~= false then
-					icon_widget.visible = false
-					icon_widget.dirty = true
-				end
+				set_team_talent_widget_visible(icon_widget, false)
+
 				if text_widget then
-					if text_widget.visible ~= false then
-						text_widget.visible = false
-						text_widget.dirty = true
-					end
+					set_team_talent_widget_visible(text_widget, false)
 				end
 			end
 		end
