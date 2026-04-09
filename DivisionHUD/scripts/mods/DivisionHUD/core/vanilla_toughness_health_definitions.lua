@@ -243,6 +243,7 @@ local function build(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap)
 							0,
 							0,
 						},
+						-- Базовый цвет; золотая заливка (неуязвимость/невидимость) и убывание по duration_progress задаются в widgets/vanilla_toughness_health.lua.
 						color = {
 							TOUGHNESS_BAR_FILL_COLOR[1],
 							TOUGHNESS_BAR_FILL_COLOR[2],

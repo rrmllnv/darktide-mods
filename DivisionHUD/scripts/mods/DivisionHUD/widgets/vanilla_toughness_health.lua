@@ -4,10 +4,13 @@ local HudHealthBarLogic = require("scripts/ui/hud/elements/hud_health_bar_logic"
 local HudElementPlayerHealthSettings = require("scripts/ui/hud/elements/player_health/hud_element_player_health_settings")
 local HudElementPlayerToughnessSettings = require("scripts/ui/hud/elements/player_health/hud_element_player_toughness_settings")
 local HudElementStaminaSettings = require("scripts/ui/hud/elements/blocking/hud_element_stamina_settings")
+local BuffSettings = require("scripts/settings/buff/buff_settings")
 local PlayerUnitStatus = require("scripts/utilities/attack/player_unit_status")
 local Stamina = require("scripts/utilities/attack/stamina")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")
+
+local buff_keywords = BuffSettings.keywords
 
 local STAMINA_NODGES_COLOR = HudElementStaminaSettings.STAMINA_NODGES_COLOR
 
@@ -80,6 +83,62 @@ local function update_value_label_widget(widget, current_val, opacity)
 	if changed then
 		widget.dirty = true
 	end
+end
+
+-- Proc-родитель «не умру» всегда висит на юните; off_cooldown_keywords трогать нельзя — duration_progress вне окна даёт ~1 и ломает цвет/ширину.
+local INVULN_RESIST_DEATH_PROC_PARENT_NAMES = {
+	zealot_resist_death = true,
+	zealot_resist_death_improved_with_leech = true,
+}
+
+local function buff_template_is_invulnerability_visual(buff_template)
+	if type(buff_template) ~= "table" then
+		return false
+	end
+
+	local kw = buff_template.keywords
+
+	return type(kw) == "table" and (kw[buff_keywords.invisible] or kw[buff_keywords.resist_death])
+end
+
+-- Доля заливки полоски по оставшемуся времени эффекта (1 = полная, к 0 сужается). Только реально активные окна.
+local function invulnerability_toughness_bar_fill_fraction(buff_extension)
+	if not buff_extension then
+		return nil
+	end
+
+	local buff_instances = buff_extension._buffs
+
+	if type(buff_instances) ~= "table" then
+		return nil
+	end
+
+	local best_min = nil
+
+	for i = 1, #buff_instances do
+		local buff_instance = buff_instances[i]
+		local template = buff_instance:template()
+
+		if type(template) == "table" and buff_template_is_invulnerability_visual(template) then
+			local template_name = template.name
+
+			if INVULN_RESIST_DEATH_PROC_PARENT_NAMES[template_name] then
+				if type(buff_instance.is_proc_active) ~= "function" or not buff_instance:is_proc_active() then
+					template_name = nil
+				end
+			end
+
+			if template_name then
+				local progress = buff_instance:duration_progress()
+
+				if type(progress) == "number" and progress == progress and progress > 0 and progress <= 1 then
+					best_min = best_min and math.min(best_min, progress) or progress
+				end
+			end
+		end
+	end
+
+	return best_min
 end
 
 local function apply_toughness_bar_fill_color(toughness_widget, target_color)
@@ -536,6 +595,9 @@ M.update = function(self, dt, t, player_unit, opacity)
 			else
 				toughness_percentage = math.clamp(toughness_percentage, 0, 1)
 
+				local buff_extension = ScriptUnit.has_extension(player_unit, "buff_system")
+				local invuln_bar_fill = invulnerability_toughness_bar_fill_fraction(buff_extension)
+
 				local max_toughness = toughness_extension.max_toughness and toughness_extension:max_toughness() or 0
 				local max_toughness_visual = toughness_extension.max_toughness_visual and toughness_extension:max_toughness_visual() or 0
 				local current_toughness = toughness_percentage * max_toughness
@@ -551,13 +613,16 @@ M.update = function(self, dt, t, player_unit, opacity)
 				end
 
 				local toughness_w = widgets.toughness
-				local fill_target = self._vdth_has_toughness_overshield and OVERSHIELDED_TOUGHNESS_BAR_FILL_COLOR or DEFAULT_TOUGHNESS_BAR_FILL_COLOR
+				local use_invuln_fill = invuln_bar_fill ~= nil
+				local show_gold_fill = use_invuln_fill or self._vdth_has_toughness_overshield
+				local fill_target = show_gold_fill and OVERSHIELDED_TOUGHNESS_BAR_FILL_COLOR or DEFAULT_TOUGHNESS_BAR_FILL_COLOR
+				local bar_progress = use_invuln_fill and invuln_bar_fill or toughness_percentage
 
 				apply_toughness_bar_fill_color(toughness_w, fill_target)
 
 				local bar_logic = self._vdth_toughness_bar_logic
 
-				bar_logic:update(dt, t, toughness_percentage, 1)
+				bar_logic:update(dt, t, bar_progress, 1)
 
 				local alpha = opacity
 
