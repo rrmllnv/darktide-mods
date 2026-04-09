@@ -11,6 +11,9 @@ local UIWidget = require("scripts/managers/ui/ui_widget")
 
 local STAMINA_NODGES_COLOR = HudElementStaminaSettings.STAMINA_NODGES_COLOR
 
+local DEFAULT_TOUGHNESS_BAR_FILL_COLOR = UIHudSettings.color_tint_6
+local OVERSHIELDED_TOUGHNESS_BAR_FILL_COLOR = UIHudSettings.color_tint_10
+
 local M = {}
 
 local HEALTH_WIDGETS_ALPHA = {
@@ -79,12 +82,37 @@ local function update_value_label_widget(widget, current_val, opacity)
 	end
 end
 
+local function apply_toughness_bar_fill_color(toughness_widget, target_color)
+	if not toughness_widget or not toughness_widget.style or not toughness_widget.style.bar_fill or not target_color then
+		return
+	end
+
+	local c = toughness_widget.style.bar_fill.color
+
+	if c[1] ~= target_color[1] or c[2] ~= target_color[2] or c[3] ~= target_color[3] or c[4] ~= target_color[4] then
+		c[1] = target_color[1]
+		c[2] = target_color[2]
+		c[3] = target_color[3]
+		c[4] = target_color[4]
+		toughness_widget.dirty = true
+	end
+end
+
+local function reset_toughness_overshield_visual_state(self, widgets)
+	self._vdth_has_toughness_overshield = false
+
+	local tw = widgets and widgets.toughness
+
+	apply_toughness_bar_fill_color(tw, DEFAULT_TOUGHNESS_BAR_FILL_COLOR)
+end
+
 M.init = function(self, definitions)
 	self._vdth_bar_width = definitions.BAR_WIDTH
 	self._vdth_health_bar_logic = HudHealthBarLogic:new(HudElementPlayerHealthSettings)
 	self._vdth_toughness_bar_logic = HudHealthBarLogic:new(HudElementPlayerToughnessSettings)
 	self._vdth_disabled = nil
 	self._vdth_knocked_down = nil
+	self._vdth_has_toughness_overshield = false
 
 	self._vdth_num_stamina_chunks = 0
 	self._vdth_stamina_chunk_width = 0
@@ -476,6 +504,7 @@ M.update = function(self, dt, t, player_unit, opacity)
 	local show_health = show_hp ~= false and show_hp ~= 0
 
 	if not show_toughness then
+		reset_toughness_overshield_visual_state(self, widgets)
 		M._set_toughness_row_visible(self, widgets, false)
 
 		if label_t and label_t.content then
@@ -486,6 +515,7 @@ M.update = function(self, dt, t, player_unit, opacity)
 		local toughness_extension = ScriptUnit.has_extension(player_unit, "toughness_system")
 
 		if not toughness_extension then
+			reset_toughness_overshield_visual_state(self, widgets)
 			M._set_toughness_row_visible(self, widgets, false)
 
 			if label_t and label_t.content then
@@ -496,6 +526,7 @@ M.update = function(self, dt, t, player_unit, opacity)
 			local toughness_percentage = toughness_extension:current_toughness_percent()
 
 			if toughness_percentage == nil then
+				reset_toughness_overshield_visual_state(self, widgets)
 				M._set_toughness_row_visible(self, widgets, false)
 
 				if label_t and label_t.content then
@@ -504,6 +535,25 @@ M.update = function(self, dt, t, player_unit, opacity)
 				end
 			else
 				toughness_percentage = math.clamp(toughness_percentage, 0, 1)
+
+				local max_toughness = toughness_extension.max_toughness and toughness_extension:max_toughness() or 0
+				local max_toughness_visual = toughness_extension.max_toughness_visual and toughness_extension:max_toughness_visual() or 0
+				local current_toughness = toughness_percentage * max_toughness
+				local current_toughness_visual = toughness_percentage * max_toughness_visual
+				local overshield_amount = current_toughness_visual < max_toughness and math.max(current_toughness - max_toughness_visual, 0) or 0
+				local has_overshield = math.floor(overshield_amount) > 0
+				local toughness_percentage_bar = toughness_extension.current_toughness_percent_visual and toughness_extension:current_toughness_percent_visual() or 0
+
+				if has_overshield and not self._vdth_has_toughness_overshield and toughness_percentage_bar >= 1 then
+					self._vdth_has_toughness_overshield = true
+				elseif (not has_overshield and self._vdth_has_toughness_overshield) or toughness_percentage_bar and toughness_percentage_bar < 1 then
+					self._vdth_has_toughness_overshield = false
+				end
+
+				local toughness_w = widgets.toughness
+				local fill_target = self._vdth_has_toughness_overshield and OVERSHIELDED_TOUGHNESS_BAR_FILL_COLOR or DEFAULT_TOUGHNESS_BAR_FILL_COLOR
+
+				apply_toughness_bar_fill_color(toughness_w, fill_target)
 
 				local bar_logic = self._vdth_toughness_bar_logic
 
