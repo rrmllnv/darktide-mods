@@ -30,7 +30,7 @@ local defaults = {
 	alerts_enabled = true,
 	alerts_max_visible = 3,
 	alerts_duration_sec = 6,
-	alerts_show_duration_bar = false,
+	alerts_show_duration_bar = true,
 }
 
 if type(AlertsBossBreeds) == "table" and type(AlertsBossBreeds.list) == "table" then
