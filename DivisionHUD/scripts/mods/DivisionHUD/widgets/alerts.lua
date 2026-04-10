@@ -347,14 +347,10 @@ local function alerts_spawn_line_text(category, display_name, count)
 		return alerts_specialist_approach_message(display_name)
 	end
 
-	local pat = mod:localize("alerts_message_spawn_grouped")
+	local loc = mod:localize("alerts_message_spawn_grouped", display_name, count)
 
-	if type(pat) == "string" and pat ~= "" and not string.find(pat, "^<unlocalized") then
-		local ok, formatted = pcall(string.format, pat, display_name, count)
-
-		if ok and type(formatted) == "string" and formatted ~= "" then
-			return formatted
-		end
+	if type(loc) == "string" and loc ~= "" and not string.find(loc, "^<unlocalized") then
+		return loc
 	end
 
 	return string.format("Detected %s x%d", display_name, count)
