@@ -11,6 +11,65 @@ local M = {}
 -- Не показывать оверлей по total_time длиннее этого (в т.ч. отсекает math.huge у фазы прицеливания рывка).
 local TIMED_OVERLAY_MAX_TOTAL_TIME = 120
 
+local MANUAL_ABILITY_GROUP_BUFF_TEMPLATES = {
+	volley_fire_stance = {
+		"veteran_combat_ability_stance_master",
+		"veteran_combat_ability_stance_master_increased_duration",
+	},
+	veteran_stealth = {
+		"veteran_invisibility",
+	},
+	voice_of_command = {
+		"veteran_combat_ability_increase_toughness_to_coherency",
+	},
+	zealot_dash = {
+		"zealot_dash_buff",
+		"zealot_combat_ability_attack_speed_increase",
+		"zealot_combat_ability_attack_speed_increased_duration",
+	},
+	bolstering_prayer = {
+		"zealot_channel_toughness_bonus",
+	},
+	zealot_invisibility = {
+		"zealot_invisibility",
+		"zealot_invisibility_increased_duration",
+	},
+	psyker_shout = {
+		"psyker_shout_warp_generation_reduction",
+	},
+	psyker_overcharge_stance = {
+		"psyker_overcharge_stance_damage",
+		"psyker_overcharge_stance_finesse_damage",
+	},
+	ogryn_charge = {
+		"ogryn_charge_speed_on_lunge",
+	},
+	ogryn_gunlugger_stance = {
+		"ogryn_ranged_stance",
+	},
+	ogryn_taunt_shout = {
+		"ogryn_repeat_taunt",
+	},
+	adamant_charge = {
+		"adamant_post_charge_buff",
+	},
+	adamant_stance = {
+		"adamant_hunt_stance",
+	},
+	broker_focus_stance = {
+		"broker_focus_stance",
+		"broker_focus_stance_improved",
+	},
+	broker_punk_rage_stance = {
+		"broker_punk_rage_stance",
+	},
+}
+
+local DEPLOYABLE_ABILITY_GROUP_TO_TRACKED_NAME = {
+	adamant_area_buff_drone = "adamant_drone",
+	broker_stimm_field = "broker_stimm_field",
+}
+
 local function append_unique(candidate_list, buff_template_name)
 	if type(buff_template_name) ~= "string" or buff_template_name == "" then
 		return
@@ -82,6 +141,25 @@ local function collect_duration_buff_candidates(ability_template, ability_templa
 			append_unique(candidate_list, lunge_template.add_buff)
 			append_delayed_buffs(candidate_list, lunge_template.add_delayed_buff)
 		end
+	end
+
+	return candidate_list
+end
+
+local function append_manual_ability_group_buff_candidates(ability_row, candidate_list)
+	if type(candidate_list) ~= "table" or type(ability_row) ~= "table" then
+		return candidate_list
+	end
+
+	local ability_group = ability_row.ability_group
+	local manual_templates = ability_group and MANUAL_ABILITY_GROUP_BUFF_TEMPLATES[ability_group]
+
+	if type(manual_templates) ~= "table" then
+		return candidate_list
+	end
+
+	for i = 1, #manual_templates do
+		append_unique(candidate_list, manual_templates[i])
 	end
 
 	return candidate_list
@@ -283,6 +361,128 @@ local function weapon_zealot_channel_bar_fill_progress(player_unit)
 	return math.clamp01(time_left / total_time)
 end
 
+local function psyker_force_field_bar_fill_progress(player_unit, ability_row)
+	if not player_unit or type(ability_row) ~= "table" then
+		return nil
+	end
+
+	if ability_row.ability_group ~= "psyker_shield" then
+		return nil
+	end
+
+	local extension_manager = Managers.state.extension
+
+	if not extension_manager then
+		return nil
+	end
+
+	local force_field_system = extension_manager:system("force_field_system")
+
+	if not force_field_system or type(force_field_system.get_extensions_by_owner_unit) ~= "function" then
+		return nil
+	end
+
+	local extensions = force_field_system:get_extensions_by_owner_unit(player_unit)
+
+	if type(extensions) ~= "table" or #extensions == 0 then
+		return nil
+	end
+
+	local best_progress = nil
+	local best_time_left = nil
+
+	for i = 1, #extensions do
+		local extension = extensions[i]
+		local remaining_duration = extension and extension:remaining_duration()
+		local max_duration = extension and extension._max_duration
+
+		if type(remaining_duration) == "number" and remaining_duration > 0 and type(max_duration) == "number" and max_duration > 0 then
+			local progress = math.clamp01(remaining_duration / max_duration)
+
+			if best_time_left == nil or remaining_duration > best_time_left then
+				best_time_left = remaining_duration
+				best_progress = progress
+			end
+		end
+	end
+
+	return best_progress
+end
+
+local function psyker_overcharge_stance_bar_fill_progress(player_unit, ability_row, buff_extension)
+	if not player_unit or type(ability_row) ~= "table" or not buff_extension then
+		return nil
+	end
+
+	if ability_row.ability_group ~= "psyker_overcharge_stance" then
+		return nil
+	end
+
+	if not buff_extension:has_buff_using_buff_template("psyker_overcharge_stance") then
+		return nil
+	end
+
+	local unit_data_extension = ScriptUnit.has_extension(player_unit, "unit_data_system")
+
+	if not unit_data_extension then
+		return nil
+	end
+
+	local warp_charge_component = unit_data_extension:read_component("warp_charge")
+	local current_percentage = warp_charge_component and warp_charge_component.current_percentage
+
+	if type(current_percentage) ~= "number" or current_percentage ~= current_percentage then
+		return nil
+	end
+
+	return math.clamp01(1 - current_percentage)
+end
+
+local function tracked_deployable_bar_fill_progress(ability_row)
+	if type(ability_row) ~= "table" then
+		return nil
+	end
+
+	local tracked_name = DEPLOYABLE_ABILITY_GROUP_TO_TRACKED_NAME[ability_row.ability_group]
+	local tracked_deployables = mod.tracked_deployables
+
+	if type(tracked_name) ~= "string" or type(tracked_deployables) ~= "table" then
+		return nil
+	end
+
+	local gameplay_time = Managers.time and Managers.time:time("gameplay")
+
+	if type(gameplay_time) ~= "number" then
+		return nil
+	end
+
+	local best_progress = nil
+	local best_remaining = nil
+
+	for unit, data in pairs(tracked_deployables) do
+		local duration = data and data.duration
+		local start_time = data and data.start_time
+
+		if data and data.name == tracked_name and type(duration) == "number" and duration > 0 and type(start_time) == "number" then
+			local elapsed = gameplay_time - start_time
+			local remaining = duration - elapsed
+
+			if remaining > 0 then
+				local progress = math.clamp01(remaining / duration)
+
+				if best_remaining == nil or remaining > best_remaining then
+					best_remaining = remaining
+					best_progress = progress
+				end
+			else
+				tracked_deployables[unit] = nil
+			end
+		end
+	end
+
+	return best_progress
+end
+
 local function compute_combat_ability_cooldown_state(ability_extension, buff_extension, ability_id)
 	local state = {
 		equipped = false,
@@ -439,13 +639,31 @@ function M.update(player_unit, widget, opacity, definitions, combat_ability_type
 	local tweak_data = ability_row and ability_row.ability_template_tweak_data
 	local ability_template = template_key and AbilityTemplates[template_key]
 	local buff_candidates = collect_duration_buff_candidates(ability_template, tweak_data, {})
+
+	append_manual_ability_group_buff_candidates(ability_row, buff_candidates)
+
 	local buff_overlay_progress = buff_extension and best_buff_overlay_progress(buff_extension, buff_candidates)
+	local psyker_force_field_overlay_progress = psyker_force_field_bar_fill_progress(player_unit, ability_row)
+	local psyker_overcharge_overlay_progress = psyker_overcharge_stance_bar_fill_progress(player_unit, ability_row, buff_extension)
+	local tracked_deployable_overlay_progress = tracked_deployable_bar_fill_progress(ability_row)
 	local relic_channel_fill = weapon_zealot_channel_bar_fill_progress(player_unit)
 	local lunge_overlay_progress = lunge_remaining_progress(player_unit)
 	local timed_overlay_progress = timed_action_remaining_progress(player_unit, ability_extension)
 
-	if buff_overlay_progress then
+	if psyker_overcharge_overlay_progress and psyker_overcharge_overlay_progress > 0 then
+		cooldown_progress = psyker_overcharge_overlay_progress
+		active_partial_fill = true
+		partial_fill_color = ready_color
+	elseif buff_overlay_progress then
 		cooldown_progress = buff_overlay_progress
+		active_partial_fill = true
+		partial_fill_color = ready_color
+	elseif psyker_force_field_overlay_progress and psyker_force_field_overlay_progress > 0 then
+		cooldown_progress = psyker_force_field_overlay_progress
+		active_partial_fill = true
+		partial_fill_color = ready_color
+	elseif tracked_deployable_overlay_progress and tracked_deployable_overlay_progress > 0 then
+		cooldown_progress = tracked_deployable_overlay_progress
 		active_partial_fill = true
 		partial_fill_color = ready_color
 	elseif relic_channel_fill and relic_channel_fill > 0 then
