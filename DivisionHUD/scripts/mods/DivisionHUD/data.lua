@@ -244,17 +244,33 @@ return {
 							sub_widgets = {},
 						}
 
-						if type(AlertsSpecialistBreeds) == "table" and type(AlertsSpecialistBreeds.list) == "table" then
-							for i = 1, #AlertsSpecialistBreeds.list do
-								local breed_id = AlertsSpecialistBreeds.list[i]
+						if type(AlertsSpecialistBreeds) == "table" and type(AlertsSpecialistBreeds.settings_rows) == "table" then
+							for ri = 1, #AlertsSpecialistBreeds.settings_rows do
+								local row = AlertsSpecialistBreeds.settings_rows[ri]
 
-								specialist_sub.sub_widgets[#specialist_sub.sub_widgets + 1] = {
-									setting_id = "alert_specialist_" .. breed_id,
-									type = "checkbox",
-									localize = false,
-									title = alert_settings_breed_title(breed_id),
-									default_value = d("alert_specialist_" .. breed_id, true),
-								}
+								if type(row) == "table" and row.kind == "single" and type(row.breed_id) == "string" and row.breed_id ~= "" then
+									local breed_id = row.breed_id
+
+									specialist_sub.sub_widgets[#specialist_sub.sub_widgets + 1] = {
+										setting_id = "alert_specialist_" .. breed_id,
+										type = "checkbox",
+										localize = false,
+										title = alert_settings_breed_title(breed_id),
+										default_value = d("alert_specialist_" .. breed_id, true),
+									}
+								elseif type(row) == "table" and row.kind == "merged" and type(row.group) == "table" then
+									local g = row.group
+
+									if type(g.setting_id) == "string" and g.setting_id ~= "" and type(g.title_breed_id) == "string" and g.title_breed_id ~= "" then
+										specialist_sub.sub_widgets[#specialist_sub.sub_widgets + 1] = {
+											setting_id = g.setting_id,
+											type = "checkbox",
+											localize = false,
+											title = alert_settings_breed_title(g.title_breed_id),
+											default_value = d(g.setting_id, true),
+										}
+									end
+								end
 							end
 						end
 

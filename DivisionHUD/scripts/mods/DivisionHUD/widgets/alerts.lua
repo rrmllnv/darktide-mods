@@ -24,14 +24,6 @@ if type(AlertsBossBreeds) == "table" and type(AlertsBossBreeds.list) == "table" 
 	end
 end
 
-local specialists_with_menu_toggle = {}
-
-if type(AlertsSpecialistBreeds) == "table" and type(AlertsSpecialistBreeds.list) == "table" then
-	for i = 1, #AlertsSpecialistBreeds.list do
-		specialists_with_menu_toggle[AlertsSpecialistBreeds.list[i]] = true
-	end
-end
-
 local spawn_util = {}
 
 spawn_util.is_monster = function(clean_brd_name)
@@ -246,10 +238,6 @@ local function alerts_specialist_category_allowed(stripped_raw)
 		return false
 	end
 
-	if not specialists_with_menu_toggle[stripped_raw] then
-		return false
-	end
-
 	local b = Breeds[stripped_raw]
 
 	if not b or b.is_boss == true then
@@ -260,9 +248,14 @@ local function alerts_specialist_category_allowed(stripped_raw)
 		return false
 	end
 
+	local setting_id = type(AlertsSpecialistBreeds.alert_setting_id_for_stripped) == "function" and AlertsSpecialistBreeds.alert_setting_id_for_stripped(stripped_raw) or nil
+
+	if type(setting_id) ~= "string" or setting_id == "" then
+		return false
+	end
+
 	local s = mod._settings
-	local key = "alert_specialist_" .. stripped_raw
-	local v = type(s) == "table" and s[key]
+	local v = type(s) == "table" and s[setting_id]
 
 	if v == false or v == 0 then
 		return false
@@ -606,13 +599,40 @@ local function alerts_try_enqueue_specialist_approach_from_spawn(unit, raw_breed
 		return
 	end
 
-	local display_name = alerts_specialist_display_name(unit, stripped, raw_breed_name)
+	local mg = type(AlertsSpecialistBreeds.merge_group_for_stripped) == "function" and AlertsSpecialistBreeds.merge_group_for_stripped(stripped) or nil
+	local display_name
+	local spawn_key
+
+	if type(mg) == "table" and type(mg.title_breed_id) == "string" and mg.title_breed_id ~= "" and type(mg.spawn_group_key) == "string" and mg.spawn_group_key ~= "" then
+		if type(AlertsBreedTitle) == "table" and type(AlertsBreedTitle.resolve) == "function" then
+			display_name = AlertsBreedTitle.resolve(mod, mg.title_breed_id)
+		else
+			display_name = ""
+		end
+
+		if type(display_name) ~= "string" or display_name == "" then
+			local tb = Breeds[mg.title_breed_id]
+
+			if tb and type(tb.display_name) == "string" and tb.display_name ~= "" then
+				display_name = Localize(tb.display_name)
+			end
+		end
+
+		if type(display_name) ~= "string" or display_name == "" then
+			display_name = mg.title_breed_id
+		end
+
+		spawn_key = "spec:" .. mg.spawn_group_key
+	else
+		display_name = alerts_specialist_display_name(unit, stripped, raw_breed_name)
+		spawn_key = "spec:" .. stripped
+	end
 
 	if alerts_specialist_approach_message(display_name) == "" then
 		return
 	end
 
-	mod.alerts_enqueue_spawn_grouped("spec:" .. stripped, "specialist", display_name, game_t)
+	mod.alerts_enqueue_spawn_grouped(spawn_key, "specialist", display_name, game_t)
 end
 
 local function alerts_on_unit_spawn_for_alert_categories(raw_breed_name, unit, game_t)

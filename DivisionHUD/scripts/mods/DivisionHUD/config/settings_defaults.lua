@@ -41,11 +41,15 @@ if type(AlertsBossBreeds) == "table" and type(AlertsBossBreeds.list) == "table" 
 	end
 end
 
-if type(AlertsSpecialistBreeds) == "table" and type(AlertsSpecialistBreeds.list) == "table" then
-	for i = 1, #AlertsSpecialistBreeds.list do
-		local breed_id = AlertsSpecialistBreeds.list[i]
+if type(AlertsSpecialistBreeds) == "table" and type(AlertsSpecialistBreeds.settings_rows) == "table" then
+	for i = 1, #AlertsSpecialistBreeds.settings_rows do
+		local row = AlertsSpecialistBreeds.settings_rows[i]
 
-		defaults["alert_specialist_" .. breed_id] = true
+		if type(row) == "table" and row.kind == "single" and type(row.breed_id) == "string" and row.breed_id ~= "" then
+			defaults["alert_specialist_" .. row.breed_id] = true
+		elseif type(row) == "table" and row.kind == "merged" and type(row.group) == "table" and type(row.group.setting_id) == "string" and row.group.setting_id ~= "" then
+			defaults[row.group.setting_id] = true
+		end
 	end
 end
 

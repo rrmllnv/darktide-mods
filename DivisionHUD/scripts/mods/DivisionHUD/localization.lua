@@ -264,16 +264,8 @@ return {
 		ru = "Чумная гончая (мутатор)",
 		["zh-cn"] = "瘟疫猎犬（异变）",
 	},
-	alerts_breed_title_override_cultist_mutant_mutator = {
-		en = "Mutant (mutator)",
-		ru = "Мутант (мутатор)",
-		["zh-cn"] = "变种人（异变）",
-	},
 	alerts_breed_title_override_cultist_grenadier = {
-		ru = "Токсичный взрывун",
-	},
-	alerts_breed_title_override_chaos_poxwalker_bomber = {
-		ru = "Дрег токсичный взрывун",
+		ru = "Чумной взрывун",
 	},
 	alerts_breed_title_override_renegade_grenadier = {
 		ru = "Скаб-Бомбардир",
