@@ -10,6 +10,7 @@ local M = {}
 
 -- Не показывать оверлей по total_time длиннее этого (в т.ч. отсекает math.huge у фазы прицеливания рывка).
 local TIMED_OVERLAY_MAX_TOTAL_TIME = 120
+local OVERLAY_GROUP_START_TIME_EPSILON = 0.05
 
 local MANUAL_ABILITY_GROUP_BUFF_TEMPLATES = {
 	volley_fire_stance = {
@@ -237,6 +238,217 @@ local function best_buff_overlay_progress(buff_extension, candidate_list)
 	return best_progress
 end
 
+local function append_overlay_entry(entry_list, progress, remaining_time, start_time, color, key)
+	if type(entry_list) ~= "table" then
+		return
+	end
+
+	if type(progress) ~= "number" or progress ~= progress or progress <= 0 then
+		return
+	end
+
+	entry_list[#entry_list + 1] = {
+		progress = math.clamp01(progress),
+		remaining_time = type(remaining_time) == "number" and remaining_time or nil,
+		start_time = type(start_time) == "number" and start_time or nil,
+		color = color,
+		key = key,
+	}
+end
+
+local function sort_overlay_entries(entry_list)
+	if type(entry_list) ~= "table" or #entry_list <= 1 then
+		return entry_list
+	end
+
+	table.sort(entry_list, function(a, b)
+		local a_start = a.start_time
+		local b_start = b.start_time
+
+		if a_start ~= nil and b_start ~= nil and a_start ~= b_start then
+			return a_start < b_start
+		end
+
+		local a_remaining = a.remaining_time
+		local b_remaining = b.remaining_time
+
+		if a_remaining ~= nil and b_remaining ~= nil and a_remaining ~= b_remaining then
+			return a_remaining < b_remaining
+		end
+
+		return (a.progress or 0) < (b.progress or 0)
+	end)
+
+	return entry_list
+end
+
+local function compact_overlay_entries(entry_list)
+	if type(entry_list) ~= "table" or #entry_list <= 1 then
+		return entry_list
+	end
+
+	local compacted_entries = {}
+
+	for i = 1, #entry_list do
+		local current_entry = entry_list[i]
+		local last_entry = compacted_entries[#compacted_entries]
+		local current_start = current_entry and current_entry.start_time
+		local last_start = last_entry and last_entry.start_time
+		local should_merge = false
+
+		if type(current_start) == "number" and type(last_start) == "number" then
+			should_merge = math.abs(current_start - last_start) <= OVERLAY_GROUP_START_TIME_EPSILON
+		end
+
+		if should_merge then
+			local current_remaining = current_entry.remaining_time
+			local last_remaining = last_entry.remaining_time
+			local should_replace_progress = false
+
+			if type(current_remaining) == "number" and type(last_remaining) == "number" then
+				should_replace_progress = current_remaining > last_remaining
+			elseif type(current_remaining) == "number" then
+				should_replace_progress = true
+			elseif type(current_entry.progress) == "number" and type(last_entry.progress) == "number" then
+				should_replace_progress = current_entry.progress > last_entry.progress
+			end
+
+			if should_replace_progress then
+				last_entry.progress = current_entry.progress
+				last_entry.remaining_time = current_entry.remaining_time
+			end
+
+			if last_entry.color == nil then
+				last_entry.color = current_entry.color
+			end
+
+			if last_entry.key == nil then
+				last_entry.key = current_entry.key
+			end
+		else
+			compacted_entries[#compacted_entries + 1] = current_entry
+		end
+	end
+
+	table.clear(entry_list)
+
+	for i = 1, #compacted_entries do
+		entry_list[i] = compacted_entries[i]
+	end
+
+	return entry_list
+end
+
+local function assign_overlay_entries_to_slots(entry_list, spent_segments, slot_keys)
+	if spent_segments <= 0 then
+		if type(slot_keys) == "table" then
+			table.clear(slot_keys)
+		end
+
+		return {}
+	end
+
+	local assigned_entries = {}
+	local next_slot_keys = {}
+	local entry_by_key = {}
+	local unassigned_entries = {}
+
+	if type(entry_list) == "table" then
+		for i = 1, #entry_list do
+			local entry = entry_list[i]
+			local entry_key = entry and entry.key
+
+			if type(entry_key) == "string" and entry_by_key[entry_key] == nil then
+				entry_by_key[entry_key] = entry
+			else
+				unassigned_entries[#unassigned_entries + 1] = entry
+			end
+		end
+	end
+
+	if type(slot_keys) == "table" then
+		for slot_index = 1, spent_segments do
+			local slot_key = slot_keys[slot_index]
+			local existing_entry = type(slot_key) == "string" and entry_by_key[slot_key] or nil
+
+			if existing_entry then
+				assigned_entries[slot_index] = existing_entry
+				next_slot_keys[slot_index] = slot_key
+				entry_by_key[slot_key] = nil
+			end
+		end
+	end
+
+	if type(entry_list) == "table" then
+		for i = 1, #entry_list do
+			local entry = entry_list[i]
+			local entry_key = entry and entry.key
+
+			if type(entry_key) == "string" and entry_by_key[entry_key] ~= nil then
+				unassigned_entries[#unassigned_entries + 1] = entry
+				entry_by_key[entry_key] = nil
+			end
+		end
+	end
+
+	local unassigned_index = 1
+
+	for slot_index = 1, spent_segments do
+		if assigned_entries[slot_index] == nil then
+			local entry = unassigned_entries[unassigned_index]
+			unassigned_index = unassigned_index + 1
+			assigned_entries[slot_index] = entry
+			next_slot_keys[slot_index] = entry and entry.key or nil
+		end
+	end
+
+	if type(slot_keys) == "table" then
+		table.clear(slot_keys)
+
+		for i = 1, spent_segments do
+			slot_keys[i] = next_slot_keys[i]
+		end
+	end
+
+	return assigned_entries
+end
+
+local function collect_buff_overlay_entries(buff_extension, candidate_list, entry_list)
+	if not buff_extension or type(candidate_list) ~= "table" or type(entry_list) ~= "table" or #candidate_list == 0 then
+		return entry_list
+	end
+
+	local wanted_templates = {}
+
+	for i = 1, #candidate_list do
+		wanted_templates[candidate_list[i]] = true
+	end
+
+	local buff_instances = buff_extension._buffs
+
+	if type(buff_instances) ~= "table" then
+		return entry_list
+	end
+
+	for i = 1, #buff_instances do
+		local buff_instance = buff_instances[i]
+		local template = buff_instance and buff_instance:template()
+		local template_name = template and template.name
+
+		if template_name and wanted_templates[template_name] and buff_template_supports_timed_bar(template) then
+			local progress = buff_instance:duration_progress()
+			local duration = type(buff_instance.duration) == "function" and buff_instance:duration() or nil
+			local remaining_time = type(duration) == "number" and duration > 0 and progress * duration or nil
+			local start_time = type(buff_instance.start_time) == "function" and buff_instance:start_time() or nil
+			local entry_key = string.format("buff:%s:%s", template_name, tostring(buff_instance))
+
+			append_overlay_entry(entry_list, progress, remaining_time, start_time, nil, entry_key)
+		end
+	end
+
+	return entry_list
+end
+
 local function lunge_remaining_progress(player_unit)
 	local unit_data_extension = ScriptUnit.has_extension(player_unit, "unit_data_system")
 
@@ -409,6 +621,51 @@ local function psyker_force_field_bar_fill_progress(player_unit, ability_row)
 	return best_progress
 end
 
+local function collect_psyker_force_field_overlay_entries(player_unit, ability_row, entry_list)
+	if not player_unit or type(ability_row) ~= "table" or type(entry_list) ~= "table" then
+		return entry_list
+	end
+
+	if ability_row.ability_group ~= "psyker_shield" then
+		return entry_list
+	end
+
+	local extension_manager = Managers.state.extension
+
+	if not extension_manager then
+		return entry_list
+	end
+
+	local force_field_system = extension_manager:system("force_field_system")
+
+	if not force_field_system or type(force_field_system.get_extensions_by_owner_unit) ~= "function" then
+		return entry_list
+	end
+
+	local gameplay_time = Managers.time and Managers.time:time("gameplay")
+	local extensions = force_field_system:get_extensions_by_owner_unit(player_unit)
+
+	if type(extensions) ~= "table" or #extensions == 0 then
+		return entry_list
+	end
+
+	for i = 1, #extensions do
+		local extension = extensions[i]
+		local remaining_duration = extension and extension:remaining_duration()
+		local max_duration = extension and extension._max_duration
+
+		if type(remaining_duration) == "number" and remaining_duration > 0 and type(max_duration) == "number" and max_duration > 0 then
+			local progress = math.clamp01(remaining_duration / max_duration)
+			local start_time = type(gameplay_time) == "number" and gameplay_time - (max_duration - remaining_duration) or nil
+			local entry_key = string.format("force_field:%s", tostring(extension))
+
+			append_overlay_entry(entry_list, progress, remaining_duration, start_time, nil, entry_key)
+		end
+	end
+
+	return entry_list
+end
+
 local function psyker_overcharge_stance_bar_fill_progress(player_unit, ability_row, buff_extension)
 	if not player_unit or type(ability_row) ~= "table" or not buff_extension then
 		return nil
@@ -436,6 +693,18 @@ local function psyker_overcharge_stance_bar_fill_progress(player_unit, ability_r
 	end
 
 	return math.clamp01(1 - current_percentage)
+end
+
+local function collect_psyker_overcharge_overlay_entries(player_unit, ability_row, buff_extension, entry_list)
+	if type(entry_list) ~= "table" then
+		return entry_list
+	end
+
+	local progress = psyker_overcharge_stance_bar_fill_progress(player_unit, ability_row, buff_extension)
+
+	append_overlay_entry(entry_list, progress, progress, nil, nil, "psyker_overcharge_stance")
+
+	return entry_list
 end
 
 local function tracked_deployable_bar_fill_progress(ability_row)
@@ -481,6 +750,45 @@ local function tracked_deployable_bar_fill_progress(ability_row)
 	end
 
 	return best_progress
+end
+
+local function collect_tracked_deployable_overlay_entries(ability_row, entry_list)
+	if type(ability_row) ~= "table" or type(entry_list) ~= "table" then
+		return entry_list
+	end
+
+	local tracked_name = DEPLOYABLE_ABILITY_GROUP_TO_TRACKED_NAME[ability_row.ability_group]
+	local tracked_deployables = mod.tracked_deployables
+
+	if type(tracked_name) ~= "string" or type(tracked_deployables) ~= "table" then
+		return entry_list
+	end
+
+	local gameplay_time = Managers.time and Managers.time:time("gameplay")
+
+	if type(gameplay_time) ~= "number" then
+		return entry_list
+	end
+
+	for unit, data in pairs(tracked_deployables) do
+		local duration = data and data.duration
+		local start_time = data and data.start_time
+
+		if data and data.name == tracked_name and type(duration) == "number" and duration > 0 and type(start_time) == "number" then
+			local elapsed = gameplay_time - start_time
+			local remaining = duration - elapsed
+
+			if remaining > 0 then
+				local entry_key = string.format("deployable:%s", tostring(unit))
+
+				append_overlay_entry(entry_list, remaining / duration, remaining, start_time, nil, entry_key)
+			else
+				tracked_deployables[unit] = nil
+			end
+		end
+	end
+
+	return entry_list
 end
 
 local function compute_combat_ability_cooldown_state(ability_extension, buff_extension, ability_id)
@@ -631,7 +939,10 @@ function M.update(player_unit, widget, opacity, definitions, combat_ability_type
 
 	local ready_color = definitions.ABILITY_BAR_READY_COLOR
 	local cooldown_color = definitions.ABILITY_BAR_COOLDOWN_COLOR
-	local partial_fill_color = cooldown_color
+	local base_cooldown_progress = cooldown_progress
+	local base_active_partial_fill = active_partial_fill
+	local base_partial_fill_color = st.in_process_of_going_on_cooldown and ready_color or cooldown_color
+	local partial_fill_color = base_partial_fill_color
 
 	local equipped_abilities = ability_extension:equipped_abilities()
 	local ability_row = equipped_abilities and equipped_abilities[combat_ability_type]
@@ -642,6 +953,7 @@ function M.update(player_unit, widget, opacity, definitions, combat_ability_type
 
 	append_manual_ability_group_buff_candidates(ability_row, buff_candidates)
 
+	local active_overlay_entries = {}
 	local buff_overlay_progress = buff_extension and best_buff_overlay_progress(buff_extension, buff_candidates)
 	local psyker_force_field_overlay_progress = psyker_force_field_bar_fill_progress(player_unit, ability_row)
 	local psyker_overcharge_overlay_progress = psyker_overcharge_stance_bar_fill_progress(player_unit, ability_row, buff_extension)
@@ -649,6 +961,13 @@ function M.update(player_unit, widget, opacity, definitions, combat_ability_type
 	local relic_channel_fill = weapon_zealot_channel_bar_fill_progress(player_unit)
 	local lunge_overlay_progress = lunge_remaining_progress(player_unit)
 	local timed_overlay_progress = timed_action_remaining_progress(player_unit, ability_extension)
+
+	collect_buff_overlay_entries(buff_extension, buff_candidates, active_overlay_entries)
+	collect_psyker_force_field_overlay_entries(player_unit, ability_row, active_overlay_entries)
+	collect_psyker_overcharge_overlay_entries(player_unit, ability_row, buff_extension, active_overlay_entries)
+	collect_tracked_deployable_overlay_entries(ability_row, active_overlay_entries)
+	sort_overlay_entries(active_overlay_entries)
+	compact_overlay_entries(active_overlay_entries)
 
 	if psyker_overcharge_overlay_progress and psyker_overcharge_overlay_progress > 0 then
 		cooldown_progress = psyker_overcharge_overlay_progress
@@ -716,6 +1035,20 @@ function M.update(player_unit, widget, opacity, definitions, combat_ability_type
 		local total_gap = (n - 1) * segment_gap
 		local seg_w = n > 0 and math.max(1, math.floor((bar_width - total_gap) / n)) or bar_width
 		local ox = 0
+		local spent_segments = math.max(n - remaining, 0)
+		local overlay_slot_keys = widget.content.overlay_slot_keys or {}
+		local slotted_overlay_entries = assign_overlay_entries_to_slots(active_overlay_entries, spent_segments, overlay_slot_keys)
+		local recharge_slot_index = nil
+
+		for slot_index = 1, spent_segments do
+			if slotted_overlay_entries[slot_index] == nil then
+				recharge_slot_index = slot_index
+
+				break
+			end
+		end
+
+		widget.content.overlay_slot_keys = overlay_slot_keys
 
 		if use_segments then
 			for i = 1, max_segments do
@@ -723,18 +1056,32 @@ function M.update(player_unit, widget, opacity, definitions, combat_ability_type
 
 				if i > n then
 					apply_ability_segment_style(seg_style, 0, 0, ready_color, opacity)
-				elseif i <= remaining then
-					apply_ability_segment_style(seg_style, ox, seg_w, ready_color, opacity)
-					ox = ox + seg_w + segment_gap
-				elseif i == remaining + 1 then
-					local w_fill = active_partial_fill and seg_w * cooldown_progress or seg_w
-					local seg_color = active_partial_fill and partial_fill_color or ready_color
-
-					apply_ability_segment_style(seg_style, ox, w_fill, seg_color, opacity)
-					ox = ox + seg_w + segment_gap
 				else
-					apply_ability_segment_style(seg_style, ox, 0, ready_color, opacity)
-					ox = ox + seg_w + segment_gap
+					local spent_slot_index = n - i + 1
+
+					if spent_slot_index <= spent_segments then
+						local overlay_entry = slotted_overlay_entries[spent_slot_index]
+
+						if overlay_entry then
+							local overlay_progress = overlay_entry.progress or 0
+							local overlay_color = overlay_entry.color or ready_color
+
+							apply_ability_segment_style(seg_style, ox, seg_w * overlay_progress, overlay_color, opacity)
+							ox = ox + seg_w + segment_gap
+						elseif recharge_slot_index == spent_slot_index then
+							local w_fill = base_active_partial_fill and seg_w * base_cooldown_progress or seg_w
+							local seg_color = base_active_partial_fill and base_partial_fill_color or ready_color
+
+							apply_ability_segment_style(seg_style, ox, w_fill, seg_color, opacity)
+							ox = ox + seg_w + segment_gap
+						else
+							apply_ability_segment_style(seg_style, ox, 0, ready_color, opacity)
+							ox = ox + seg_w + segment_gap
+						end
+					else
+						apply_ability_segment_style(seg_style, ox, seg_w, ready_color, opacity)
+						ox = ox + seg_w + segment_gap
+					end
 				end
 			end
 		else
