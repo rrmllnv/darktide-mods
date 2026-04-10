@@ -219,6 +219,11 @@ return {
 		ru = "Время показа оповещения (сек.)",
 		["zh-cn"] = "警报显示时长（秒）",
 	},
+	alerts_show_duration_bar = {
+		en = "Alert display time bar",
+		ru = "Полоса времени показа оповещения",
+		["zh-cn"] = "警报剩余时间条",
+	},
 	alerts_group_bosses = {
 		en = "Bosses",
 		ru = "Боссы",
@@ -235,14 +240,14 @@ return {
 		["zh-cn"] = "警报",
 	},
 	alerts_message_specialist_approach = {
-		en = "Approaching %s",
-		ru = "Приближение %s",
-		["zh-cn"] = "接近：%s",
+		en = "Detected %s",
+		ru = "Обнаружен %s",
+		["zh-cn"] = "侦测到：%s",
 	},
 	alerts_message_boss_approach = {
-		en = "Approaching %s",
-		ru = "Приближение %s",
-		["zh-cn"] = "接近：%s",
+		en = "Detected %s",
+		ru = "Обнаружен %s",
+		["zh-cn"] = "侦测到：%s",
 	},
 	alerts_breed_title_override_chaos_mutator_daemonhost = {
 		en = "Daemonhost (mutator)",

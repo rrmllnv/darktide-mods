@@ -206,6 +206,12 @@ return {
 						range = { 1, 60 },
 						decimals_number = 1,
 					},
+					{
+						setting_id = "alerts_show_duration_bar",
+						type = "checkbox",
+						title = "alerts_show_duration_bar",
+						default_value = d("alerts_show_duration_bar", false),
+					},
 					(function()
 						local boss_sub = {
 							setting_id = "alerts_group_bosses",

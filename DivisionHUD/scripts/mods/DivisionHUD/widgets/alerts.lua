@@ -227,7 +227,7 @@ local function alerts_boss_approach_message(display_name)
 	local text = mod:localize("alerts_message_boss_approach", display_name)
 
 	if type(text) ~= "string" or text == "" then
-		return string.format("Approaching %s", display_name)
+		return string.format("Detected %s", display_name)
 	end
 
 	return text
@@ -329,7 +329,7 @@ local function alerts_specialist_approach_message(display_name)
 	local text = mod:localize("alerts_message_specialist_approach", display_name)
 
 	if type(text) ~= "string" or text == "" then
-		return string.format("Approaching %s", display_name)
+		return string.format("Detected %s", display_name)
 	end
 
 	return text
@@ -348,6 +348,7 @@ local function alerts_promote_from_pending(game_t)
 			state.active[#state.active + 1] = {
 				text = p.text,
 				expire_t = game_t + dur,
+				duration_sec = dur,
 			}
 		end
 	end
@@ -413,6 +414,7 @@ mod.alerts_enqueue = function(text, game_t)
 		state.active[#state.active + 1] = {
 			text = text,
 			expire_t = game_t + duration,
+			duration_sec = duration,
 		}
 	else
 		state.pending[#state.pending + 1] = entry

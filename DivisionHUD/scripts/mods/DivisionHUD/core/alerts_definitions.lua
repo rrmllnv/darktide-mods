@@ -8,6 +8,7 @@ function M.build(bar_width, bar_label_w, sc)
 	local ALERTS_SLOT_GAP = sc(4)
 	local ALERTS_STRIP_HEIGHT = sc(30)
 	local ALERTS_BODY_HEIGHT = sc(48)
+	local ALERT_DURATION_BAR_H = sc(3)
 	local ALERTS_SLOT_HEIGHT = ALERTS_BODY_HEIGHT + ALERTS_STRIP_HEIGHT
 	local ALERT_FEED_ORANGE = {
 		230,
@@ -20,6 +21,12 @@ function M.build(bar_width, bar_label_w, sc)
 		70,
 		38,
 		0,
+	}
+	local ALERT_DURATION_BAR_COLOR = {
+		230,
+		98,
+		48,
+		14,
 	}
 	local ALERTS_MAX_SLOTS = 5
 	local ALERTS_STACK_TOTAL_HEIGHT = ALERTS_MAX_SLOTS * (ALERTS_SLOT_HEIGHT + ALERTS_SLOT_GAP) - ALERTS_SLOT_GAP
@@ -130,6 +137,22 @@ function M.build(bar_width, bar_label_w, sc)
 						ALERT_FEED_ORANGE[2],
 						ALERT_FEED_ORANGE[3],
 						ALERT_FEED_ORANGE[4],
+					},
+				},
+			},
+			{
+				pass_type = "rect",
+				style_id = "alert_duration_bar",
+				style = {
+					horizontal_alignment = "left",
+					vertical_alignment = "bottom",
+					size = { bar_width, ALERT_DURATION_BAR_H },
+					offset = { 0, 0, 2 },
+					color = {
+						ALERT_DURATION_BAR_COLOR[1],
+						ALERT_DURATION_BAR_COLOR[2],
+						ALERT_DURATION_BAR_COLOR[3],
+						ALERT_DURATION_BAR_COLOR[4],
 					},
 				},
 			},

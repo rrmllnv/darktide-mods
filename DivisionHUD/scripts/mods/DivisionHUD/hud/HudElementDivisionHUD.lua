@@ -44,6 +44,7 @@ local RIGHT_SLOT_COUNT = Definitions.RIGHT_SLOT_COUNT
 local right_slot_widget_names = Definitions.right_slot_widget_names
 local ALERTS_MAX_SLOTS = Definitions.ALERTS_MAX_SLOTS or 5
 local alert_slot_widget_names = Definitions.alert_slot_widget_names or {}
+local ALERT_BAR_WIDTH = Definitions.BAR_WIDTH or 1
 
 local COMBAT_ABILITY_TYPE = "combat_ability"
 local GRENADE_ABILITY_TYPE = "grenade_ability"
@@ -738,6 +739,14 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 
 			if w and w.content then
 				w.content.visible = false
+
+				local st = w.style
+				local dur_bar_sz = st and st.alert_duration_bar and st.alert_duration_bar.size
+
+				if dur_bar_sz and type(dur_bar_sz[1]) == "number" then
+					dur_bar_sz[1] = 0
+				end
+
 				w.dirty = true
 			end
 		end
@@ -767,6 +776,8 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 		banner_upper = Utf8.upper(mod:localize("alerts_ui_banner_alert"))
 	end
 
+	local show_alert_duration_bar = type(s_cfg) == "table" and (s_cfg.alerts_show_duration_bar == true or s_cfg.alerts_show_duration_bar == 1)
+
 	for si = 1, ALERTS_MAX_SLOTS do
 		local wname = alert_slot_widget_names[si]
 		local w = wname and widgets[wname]
@@ -779,9 +790,10 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 			end
 
 			if idx and lines[idx] and type(lines[idx].text) == "string" and lines[idx].text ~= "" then
+				local line = lines[idx]
 				w.content.visible = true
 				w.content.alert_strip_label_text = banner_upper
-				w.content.alert_message_text = lines[idx].text
+				w.content.alert_message_text = line.text
 				w.alpha_multiplier = opacity
 
 				local st = w.style
@@ -813,11 +825,45 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 					if sb and type(sb[1]) == "number" then
 						sb[1] = math.floor(230 * opacity)
 					end
+
+					local dur_bar = st.alert_duration_bar
+					local dur_bar_sz = dur_bar and dur_bar.size
+
+					if show_alert_duration_bar then
+						local line_dur = type(line.duration_sec) == "number" and line.duration_sec > 0 and line.duration_sec or nil
+						local rem_t = type(line.expire_t) == "number" and (line.expire_t - gt) or 0
+						local frac = 1
+
+						if line_dur then
+							frac = math.clamp(rem_t / line_dur, 0, 1)
+						end
+
+						if dur_bar_sz and type(dur_bar_sz[1]) == "number" and type(dur_bar_sz[2]) == "number" then
+							dur_bar_sz[1] = math.max(0, math.floor(ALERT_BAR_WIDTH * frac + 0.5))
+						end
+
+						local dbc = dur_bar and dur_bar.color
+
+						if dbc and type(dbc[1]) == "number" then
+							dbc[1] = math.floor(230 * opacity)
+						end
+					elseif dur_bar_sz and type(dur_bar_sz[1]) == "number" then
+						dur_bar_sz[1] = 0
+					end
 				end
 
 				w.dirty = true
 			else
 				w.content.visible = false
+
+				local st = w.style
+				local dur_bar = st and st.alert_duration_bar
+				local dur_bar_sz = dur_bar and dur_bar.size
+
+				if dur_bar_sz and type(dur_bar_sz[1]) == "number" then
+					dur_bar_sz[1] = 0
+				end
+
 				w.dirty = true
 			end
 		end
