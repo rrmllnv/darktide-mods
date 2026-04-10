@@ -102,6 +102,41 @@ local function buff_template_is_timed_gold_bar_visual(buff_template)
 	return false
 end
 
+local function timed_gold_bar_template_progress(buff_extension, buff_template_name)
+	if not buff_extension or type(buff_template_name) ~= "string" then
+		return nil
+	end
+
+	if type(buff_extension.current_stacks) == "function" and buff_extension:current_stacks(buff_template_name) > 0 and type(buff_extension.buff_duration_progress) == "function" then
+		local progress = buff_extension:buff_duration_progress(buff_template_name)
+
+		if type(progress) == "number" and progress == progress and progress > 0 and progress <= 1 then
+			return progress
+		end
+	end
+
+	local buff_instances = buff_extension._buffs
+
+	if type(buff_instances) ~= "table" then
+		return nil
+	end
+
+	for i = 1, #buff_instances do
+		local buff_instance = buff_instances[i]
+		local template = buff_instance and buff_instance:template()
+
+		if type(template) == "table" and template.name == buff_template_name then
+			local progress = buff_instance:duration_progress()
+
+			if type(progress) == "number" and progress == progress and progress > 0 and progress <= 1 then
+				return progress
+			end
+		end
+	end
+
+	return nil
+end
+
 local function buff_instance_remaining_time(buff_instance, progress, template)
 	if type(progress) ~= "number" or progress ~= progress or progress <= 0 or progress > 1 then
 		return nil
@@ -122,30 +157,14 @@ local function timed_gold_toughness_bar_fill_fraction(buff_extension)
 		return nil
 	end
 
-	local buff_instances = buff_extension._buffs
-
-	if type(buff_instances) ~= "table" then
-		return nil
-	end
-
 	local best_progress = nil
-	local best_time_left = nil
 
-	for i = 1, #buff_instances do
-		local buff_instance = buff_instances[i]
-		local template = buff_instance:template()
-
-		if type(template) == "table" and buff_template_is_timed_gold_bar_visual(template) then
-			local progress = buff_instance:duration_progress()
-			local time_left = buff_instance_remaining_time(buff_instance, progress, template)
+	for buff_template_name, enabled in pairs(TIMED_GOLD_BAR_BUFF_TEMPLATE_NAMES) do
+		if enabled then
+			local progress = timed_gold_bar_template_progress(buff_extension, buff_template_name)
 
 			if type(progress) == "number" and progress == progress and progress > 0 and progress <= 1 then
-				if type(time_left) == "number" and time_left > 0 then
-					if best_time_left == nil or time_left > best_time_left then
-						best_time_left = time_left
-						best_progress = progress
-					end
-				elseif best_time_left == nil and (best_progress == nil or progress > best_progress) then
+				if best_progress == nil or progress > best_progress then
 					best_progress = progress
 				end
 			end
