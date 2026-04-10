@@ -121,12 +121,12 @@ end
 local value_text_style = table.clone(UIFontSettings.body_small)
 
 value_text_style.offset = {
-	-54,
+	-82,
 	-12,
 	3,
 }
 value_text_style.size = {
-	50,
+	78,
 	30,
 }
 value_text_style.vertical_alignment = "top"
