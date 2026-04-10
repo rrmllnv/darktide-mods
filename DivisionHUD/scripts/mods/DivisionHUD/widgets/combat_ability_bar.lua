@@ -658,7 +658,8 @@ local function collect_psyker_force_field_overlay_entries(player_unit, ability_r
 		return entry_list
 	end
 
-	local gameplay_time = Managers.time and Managers.time:time("gameplay")
+	local Hu = mod.hud_utils
+	local gameplay_time = Hu and type(Hu.safe_gameplay_time) == "function" and Hu.safe_gameplay_time() or nil
 	local extensions = force_field_system:get_extensions_by_owner_unit(player_unit)
 
 	if type(extensions) ~= "table" or #extensions == 0 then
@@ -735,7 +736,8 @@ local function tracked_deployable_bar_fill_progress(ability_row)
 		return nil
 	end
 
-	local gameplay_time = Managers.time and Managers.time:time("gameplay")
+	local Hu = mod.hud_utils
+	local gameplay_time = Hu and type(Hu.safe_gameplay_time) == "function" and Hu.safe_gameplay_time() or nil
 
 	if type(gameplay_time) ~= "number" then
 		return nil
@@ -780,7 +782,8 @@ local function collect_tracked_deployable_overlay_entries(ability_row, entry_lis
 		return entry_list
 	end
 
-	local gameplay_time = Managers.time and Managers.time:time("gameplay")
+	local Hu = mod.hud_utils
+	local gameplay_time = Hu and type(Hu.safe_gameplay_time) == "function" and Hu.safe_gameplay_time() or nil
 
 	if type(gameplay_time) ~= "number" then
 		return entry_list

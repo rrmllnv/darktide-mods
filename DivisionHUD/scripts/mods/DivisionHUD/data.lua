@@ -1,6 +1,8 @@
 local mod = get_mod("DivisionHUD")
 
 local Defaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/settings_defaults")
+local AlertsBossBreeds = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_boss_breeds")
+local AlertsSpecialistBreeds = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_specialist_breeds")
 
 if type(Defaults) ~= "table" then
 	Defaults = {}
@@ -166,6 +168,81 @@ return {
 						type = "checkbox",
 						default_value = d("hide_vanilla_player_buffs_background", false),
 					},
+				},
+			},
+			{
+				setting_id = "alerts_super",
+				type = "group",
+				title = "alerts_super",
+				sub_widgets = {
+					{
+						setting_id = "alerts_enabled",
+						type = "checkbox",
+						title = "alerts_enabled",
+						default_value = d("alerts_enabled", true),
+					},
+					{
+						setting_id = "alerts_max_visible",
+						type = "numeric",
+						title = "alerts_max_visible",
+						default_value = d("alerts_max_visible", 3),
+						range = { 1, 5 },
+						decimals_number = 0,
+					},
+					{
+						setting_id = "alerts_duration_sec",
+						type = "numeric",
+						title = "alerts_duration_sec",
+						default_value = d("alerts_duration_sec", 6),
+						range = { 1, 60 },
+						decimals_number = 1,
+					},
+					(function()
+						local boss_sub = {
+							setting_id = "alerts_group_bosses",
+							type = "group",
+							title = "alerts_group_bosses",
+							sub_widgets = {},
+						}
+
+						if type(AlertsBossBreeds) == "table" and type(AlertsBossBreeds.list) == "table" then
+							for i = 1, #AlertsBossBreeds.list do
+								local breed_id = AlertsBossBreeds.list[i]
+
+								boss_sub.sub_widgets[#boss_sub.sub_widgets + 1] = {
+									setting_id = "alert_boss_" .. breed_id,
+									type = "checkbox",
+									title = "alerts_ui_boss_" .. breed_id,
+									default_value = d("alert_boss_" .. breed_id, true),
+								}
+							end
+						end
+
+						return boss_sub
+					end)(),
+					(function()
+						local specialist_sub = {
+							setting_id = "alerts_group_specialists",
+							type = "group",
+							title = "alerts_group_specialists",
+							sub_widgets = {},
+						}
+
+						if type(AlertsSpecialistBreeds) == "table" and type(AlertsSpecialistBreeds.list) == "table" then
+							for i = 1, #AlertsSpecialistBreeds.list do
+								local breed_id = AlertsSpecialistBreeds.list[i]
+
+								specialist_sub.sub_widgets[#specialist_sub.sub_widgets + 1] = {
+									setting_id = "alert_specialist_" .. breed_id,
+									type = "checkbox",
+									title = "alerts_ui_specialist_" .. breed_id,
+									default_value = d("alert_specialist_" .. breed_id, true),
+								}
+							end
+						end
+
+						return specialist_sub
+					end)(),
 				},
 			},
 			{

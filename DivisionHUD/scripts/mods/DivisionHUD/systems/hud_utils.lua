@@ -94,4 +94,22 @@ function HudUtils.custom_hud_get_saved_root_position_for_division_hud()
 	}
 end
 
+function HudUtils.safe_gameplay_time()
+	local tm = Managers and Managers.time
+
+	if not tm or type(tm.time) ~= "function" then
+		return nil
+	end
+
+	local ok, t = pcall(function()
+		return tm:time("gameplay")
+	end)
+
+	if ok and type(t) == "number" and t == t then
+		return t
+	end
+
+	return nil
+end
+
 return HudUtils

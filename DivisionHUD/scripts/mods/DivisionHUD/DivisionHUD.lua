@@ -14,9 +14,15 @@ local function division_hud_add_tracked_deployable(unit, name, duration)
 		return
 	end
 
+	local start_t = mod.hud_utils and mod.hud_utils.safe_gameplay_time and mod.hud_utils.safe_gameplay_time()
+
+	if not start_t then
+		return
+	end
+
 	mod.tracked_deployables[unit] = {
 		name = name,
-		start_time = Managers.time:time("gameplay"),
+		start_time = start_t,
 		duration = duration,
 	}
 end
@@ -83,6 +89,10 @@ mod:hook_safe("UnitSpawnerManager", "spawn_husk_unit", function(self, game_objec
 				end
 			end
 		end
+	end
+
+	if mod.alerts_on_unit_spawner_spawn_husk then
+		mod.alerts_on_unit_spawner_spawn_husk(self, game_object_id)
 	end
 end)
 
@@ -151,4 +161,5 @@ end)
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/hud_utils")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/vanilla_hud_suppression")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/settings")
+mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/alerts")
 

@@ -42,6 +42,8 @@ local ROOT_LAYOUT_OFFSET_Z = Definitions.ROOT_LAYOUT_OFFSET_Z
 
 local RIGHT_SLOT_COUNT = Definitions.RIGHT_SLOT_COUNT
 local right_slot_widget_names = Definitions.right_slot_widget_names
+local ALERTS_MAX_SLOTS = Definitions.ALERTS_MAX_SLOTS or 5
+local alert_slot_widget_names = Definitions.alert_slot_widget_names or {}
 
 local COMBAT_ABILITY_TYPE = "combat_ability"
 local GRENADE_ABILITY_TYPE = "grenade_ability"
@@ -722,6 +724,106 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 	end
 end
 
+HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
+	local s_cfg = mod._settings
+
+	if type(s_cfg) ~= "table" or s_cfg.alerts_enabled == false or s_cfg.alerts_enabled == 0 then
+		if mod.alerts_clear then
+			mod.alerts_clear()
+		end
+
+		for si = 1, ALERTS_MAX_SLOTS do
+			local wname = alert_slot_widget_names[si]
+			local w = wname and widgets[wname]
+
+			if w and w.content then
+				w.content.visible = false
+				w.dirty = true
+			end
+		end
+
+		return
+	end
+
+	local Hu = mod.hud_utils
+	local gt = Hu and type(Hu.safe_gameplay_time) == "function" and Hu.safe_gameplay_time() or nil
+
+	if type(gt) ~= "number" or gt ~= gt then
+		return
+	end
+
+	if mod.alerts_sync then
+		mod.alerts_sync(gt)
+	end
+
+	local lines = mod.alerts_get_lines and mod.alerts_get_lines() or {}
+	local n = #lines
+	local banner_raw = Localize("loc_objective_op_train_alert_header")
+	local banner_upper = ""
+
+	if type(banner_raw) == "string" and banner_raw ~= "" and not string.find(banner_raw, "^<unlocalized") then
+		banner_upper = Utf8.upper(banner_raw)
+	else
+		banner_upper = Utf8.upper(mod:localize("alerts_ui_banner_alert"))
+	end
+
+	for si = 1, ALERTS_MAX_SLOTS do
+		local wname = alert_slot_widget_names[si]
+		local w = wname and widgets[wname]
+
+		if w and w.content then
+			local idx = nil
+
+			if n > 0 and si >= ALERTS_MAX_SLOTS - n + 1 then
+				idx = ALERTS_MAX_SLOTS + 1 - si
+			end
+
+			if idx and lines[idx] and type(lines[idx].text) == "string" and lines[idx].text ~= "" then
+				w.content.visible = true
+				w.content.alert_strip_label_text = banner_upper
+				w.content.alert_message_text = lines[idx].text
+				w.alpha_multiplier = opacity
+
+				local st = w.style
+
+				if st then
+					local strip_tc = st.alert_strip_label_text and st.alert_strip_label_text.text_color
+					local msg_tc = st.alert_message_text and st.alert_message_text.text_color
+
+					if strip_tc and type(strip_tc[1]) == "number" then
+						strip_tc[1] = math.floor(255 * opacity)
+					end
+
+					if msg_tc and type(msg_tc[1]) == "number" then
+						msg_tc[1] = math.floor(255 * opacity)
+					end
+
+					local ub = st.alert_slot_upper_background and st.alert_slot_upper_background.color
+					local ue = st.alert_slot_upper_emitter and st.alert_slot_upper_emitter.color
+					local sb = st.alert_strip_background and st.alert_strip_background.color
+
+					if ub and type(ub[1]) == "number" then
+						ub[1] = math.floor(230 * opacity)
+					end
+
+					if ue and type(ue[1]) == "number" then
+						ue[1] = math.floor(230 * opacity)
+					end
+
+					if sb and type(sb[1]) == "number" then
+						sb[1] = math.floor(230 * opacity)
+					end
+				end
+
+				w.dirty = true
+			else
+				w.content.visible = false
+				w.dirty = true
+			end
+		end
+	end
+end
+
 HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	local definitions = {
 		scenegraph_definition = Definitions.scenegraph_definition,
@@ -798,12 +900,22 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 
 	if is_in_hub then
 		self:_division_hud_reset_dynamic_offset_state()
+
+		if mod.alerts_clear then
+			mod.alerts_clear()
+		end
+
 		self:_set_all_visible(false)
 		return
 	end
 
 	if not local_player or not player_unit then
 		self:_division_hud_reset_dynamic_offset_state()
+
+		if mod.alerts_clear then
+			mod.alerts_clear()
+		end
+
 		self:_set_all_visible(false)
 		return
 	end
@@ -829,6 +941,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
 	self:_update_auspex_slot(player_unit, widgets, opacity)
 	self:_update_right_slot_grid(player_unit, widgets, opacity)
+	self:_update_alert_slots(widgets, opacity)
 end
 
 HudElementDivisionHUD._update_ability_bar = function(self, player_unit, widget, opacity)

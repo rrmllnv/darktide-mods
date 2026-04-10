@@ -199,4 +199,134 @@ return {
 		ru = "Макс. смещение",
 		["zh-cn"] = "界面最大偏移量",
 	},
+	alerts_super = {
+		en = "\238\128\161 ALERTS",
+		ru = "\238\128\161 ОПОВЕЩЕНИЯ",
+		["zh-cn"] = "\238\128\161 警报",
+	},
+	alerts_enabled = {
+		en = "Enable approach alerts",
+		ru = "Включить оповещения о приближении",
+		["zh-cn"] = "启用接近警报",
+	},
+	alerts_max_visible = {
+		en = "Maximum simultaneous alerts",
+		ru = "Максимум одновременных оповещений",
+		["zh-cn"] = "同时显示的警报数量上限",
+	},
+	alerts_duration_sec = {
+		en = "Alert duration (seconds)",
+		ru = "Время показа оповещения (сек.)",
+		["zh-cn"] = "警报显示时长（秒）",
+	},
+	alerts_group_bosses = {
+		en = "Bosses",
+		ru = "Боссы",
+		["zh-cn"] = "首领",
+	},
+	alerts_group_specialists = {
+		en = "Specialists",
+		ru = "Специалисты",
+		["zh-cn"] = "专家单位",
+	},
+	alerts_ui_banner_alert = {
+		en = "ALERT",
+		ru = "ВНИМАНИЕ",
+		["zh-cn"] = "警报",
+	},
+	alerts_message_specialist_approach = {
+		en = "Approaching %s",
+		ru = "Приближение %s",
+		["zh-cn"] = "接近：%s",
+	},
+	alerts_message_boss_approach = {
+		en = "Approaching %s",
+		ru = "Приближение %s",
+		["zh-cn"] = "接近：%s",
+	},
+	alerts_ui_boss_chaos_beast_of_nurgle = {
+		en = "Beast of Nurgle",
+		ru = "Тварь Нургла",
+		["zh-cn"] = "纳垢巨兽",
+	},
+	alerts_ui_boss_chaos_daemonhost = {
+		en = "Daemonhost",
+		ru = "Демонхост",
+		["zh-cn"] = "恶魔宿主",
+	},
+	alerts_ui_boss_chaos_mutator_daemonhost = {
+		en = "Mutator Daemonhost",
+		ru = "Демонхост (мутатор)",
+		["zh-cn"] = "异变恶魔宿主",
+	},
+	alerts_ui_boss_chaos_plague_ogryn = {
+		en = "Plague Ogryn",
+		ru = "Чумной огрин",
+		["zh-cn"] = "瘟疫欧格林",
+	},
+	alerts_ui_boss_chaos_spawn = {
+		en = "Chaos Spawn",
+		ru = "Порождение Хаоса",
+		["zh-cn"] = "混沌魔种",
+	},
+	alerts_ui_boss_renegade_captain = {
+		en = "Rogue Captain",
+		ru = "Капитан-предатель",
+		["zh-cn"] = "叛变队长",
+	},
+	alerts_ui_boss_renegade_twin_captain = {
+		en = "Twin Captains",
+		ru = "Капитаны-близнецы",
+		["zh-cn"] = "双生队长",
+	},
+	alerts_ui_specialist_chaos_hound = {
+		en = "Pox Hound",
+		ru = "Чумная гончая",
+		["zh-cn"] = "瘟疫猎犬",
+	},
+	alerts_ui_specialist_chaos_hound_mutator = {
+		en = "Pox Hound (mutator)",
+		ru = "Чумная гончая (мутатор)",
+		["zh-cn"] = "瘟疫猎犬（异变）",
+	},
+	alerts_ui_specialist_chaos_armored_hound = {
+		en = "Armored Pox Hound",
+		ru = "Бронированная чумная гончая",
+		["zh-cn"] = "装甲瘟疫猎犬",
+	},
+	alerts_ui_specialist_renegade_sniper = {
+		en = "Sniper",
+		ru = "Снайпер",
+		["zh-cn"] = "狙击手",
+	},
+	alerts_ui_specialist_renegade_netgunner = {
+		en = "Netgunner",
+		ru = "Ловушечник",
+		["zh-cn"] = "网枪兵",
+	},
+	alerts_ui_specialist_chaos_poxwalker_bomber = {
+		en = "Bomber",
+		ru = "Взрывун",
+		["zh-cn"] = "自爆尸",
+	},
+	alerts_ui_specialist_cultist_mutant = {
+		en = "Mutant",
+		ru = "Мутант",
+		["zh-cn"] = "变种人",
+	},
+	alerts_ui_specialist_cultist_mutant_mutator = {
+		en = "Mutant (mutator)",
+		ru = "Мутант (мутатор)",
+		["zh-cn"] = "变种人（异变）",
+	},
+	alerts_ui_specialist_cultist_grenadier = {
+		en = "Grenadier (cultist)",
+		ru = "Бомбардир (сектант)",
+		["zh-cn"] = "掷弹兵（邪教徒）",
+	},
+	alerts_ui_specialist_renegade_grenadier = {
+		en = "Grenadier (renegade)",
+		ru = "Бомбардир (предатель)",
+		["zh-cn"] = "掷弹兵（叛变）",
+	},
 }

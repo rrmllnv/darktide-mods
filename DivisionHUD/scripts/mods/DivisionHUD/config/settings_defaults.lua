@@ -1,4 +1,9 @@
-return {
+local mod = get_mod("DivisionHUD")
+
+local AlertsBossBreeds = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_boss_breeds")
+local AlertsSpecialistBreeds = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_specialist_breeds")
+
+local defaults = {
 	position_x = 400,
 	position_y = 200,
 	opacity = 1.0,
@@ -22,4 +27,25 @@ return {
 	integration_stimm_countdown = true,
 	integration_recolor_stimms = false,
 	divisionhud_reset_all_settings = 0,
+	alerts_enabled = true,
+	alerts_max_visible = 3,
+	alerts_duration_sec = 6,
 }
+
+if type(AlertsBossBreeds) == "table" and type(AlertsBossBreeds.list) == "table" then
+	for i = 1, #AlertsBossBreeds.list do
+		local breed_id = AlertsBossBreeds.list[i]
+
+		defaults["alert_boss_" .. breed_id] = true
+	end
+end
+
+if type(AlertsSpecialistBreeds) == "table" and type(AlertsSpecialistBreeds.list) == "table" then
+	for i = 1, #AlertsSpecialistBreeds.list do
+		local breed_id = AlertsSpecialistBreeds.list[i]
+
+		defaults["alert_specialist_" .. breed_id] = true
+	end
+end
+
+return defaults
