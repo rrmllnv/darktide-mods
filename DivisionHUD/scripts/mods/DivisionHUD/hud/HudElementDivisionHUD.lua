@@ -376,6 +376,62 @@ HudElementDivisionHUD._slot_numeric_text = function(self, slot_id, entry, player
 	return "0"
 end
 
+HudElementDivisionHUD._wielded_weapon_counter_text = function(self, extensions, entry)
+	if type(entry) ~= "table" or entry.slot_id ~= "slot_wielded_display" or not entry.has_equipment then
+		return ""
+	end
+
+	local wielded_slot_id = entry.wielded_source_slot_id
+	local weapon_template = entry.weapon_template
+	local hud_configuration = weapon_template and weapon_template.hud_configuration
+	local uses_weapon_special_charges = hud_configuration and hud_configuration.uses_weapon_special_charges
+	local hud_ammo_icon = hud_configuration and hud_configuration.hud_ammo_icon
+
+	if wielded_slot_id == nil or type(hud_configuration) ~= "table" or hud_configuration.uses_ammunition ~= true then
+		return ""
+	end
+
+	if wielded_slot_id ~= "slot_primary" then
+		return ""
+	end
+
+	if hud_ammo_icon ~= "content/ui/materials/icons/throwables/hud/zealot_throwing_knives_ammo_counter" then
+		return ""
+	end
+
+	local unit_data_extension = extensions and extensions.unit_data
+
+	if not unit_data_extension then
+		return ""
+	end
+
+	local slot_component = unit_data_extension:read_component(wielded_slot_id)
+
+	if not slot_component then
+		return ""
+	end
+
+	if uses_weapon_special_charges == true then
+		local num_special_charges = slot_component.num_special_charges
+
+		if type(num_special_charges) ~= "number" then
+			return ""
+		end
+
+		return string.format("x%d", math.max(0, num_special_charges))
+	end
+
+	local ok, current_clip = pcall(function()
+		return Ammo.current_ammo_in_clips(slot_component)
+	end)
+
+	if not ok then
+		return ""
+	end
+
+	return string.format("x%d", math.max(0, current_clip or 0))
+end
+
 HudElementDivisionHUD._slot_has_ranged_ammunition = function(self, unit_data_extension, visual_loadout_extension, slot_id)
 	if not unit_data_extension or not visual_loadout_extension then
 		return false
@@ -613,17 +669,21 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 			division_hud_apply_right_slot_icon_color(widget, name, entry, opacity, mod._settings)
 
 			if widget.style.text then
-				widget.content.text = self:_slot_numeric_text(slot_id, entry, player_unit)
+				if name == "slot_weapon_wielded" then
+					widget.content.text = self:_wielded_weapon_counter_text(extensions, entry)
+				else
+					widget.content.text = self:_slot_numeric_text(slot_id, entry, player_unit)
+				end
+
+				local tc = widget.style.text.text_color
+				local default_tc = DIVISION_SLOT_COUNTER_TEXT_COLOR_DEFAULT
+
+				tc[1] = math.floor((default_tc[1] or 255) * opacity)
+				tc[2] = default_tc[2]
+				tc[3] = default_tc[3]
+				tc[4] = default_tc[4]
 
 				if name == "slot_stimm" then
-					local tc = widget.style.text.text_color
-					local default_tc = DIVISION_SLOT_COUNTER_TEXT_COLOR_DEFAULT
-
-					tc[1] = math.floor((default_tc[1] or 255) * opacity)
-					tc[2] = default_tc[2]
-					tc[3] = default_tc[3]
-					tc[4] = default_tc[4]
-
 					local s_cfg = mod._settings
 
 					if type(s_cfg) == "table" and s_cfg.integration_stimm_countdown ~= false then
