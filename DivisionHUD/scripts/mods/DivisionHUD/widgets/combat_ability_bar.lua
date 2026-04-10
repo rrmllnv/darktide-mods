@@ -479,7 +479,11 @@ local function lunge_remaining_progress(player_unit)
 	return math.clamp01(distance_left / max_distance)
 end
 
-local function timed_action_remaining_progress(player_unit, ability_extension)
+local function timed_action_remaining_progress(player_unit, ability_extension, ability_row)
+	if type(ability_row) == "table" and ability_row.ability_group == "psyker_shout" then
+		return nil
+	end
+
 	local running_settings = ability_extension:running_action_settings()
 
 	if type(running_settings) ~= "table" then
@@ -518,6 +522,18 @@ local function timed_action_remaining_progress(player_unit, ability_extension)
 	end
 
 	return math.clamp01(time_left / total_time)
+end
+
+local function combat_ability_is_active(player_unit)
+	local unit_data_extension = ScriptUnit.has_extension(player_unit, "unit_data_system")
+
+	if not unit_data_extension then
+		return false
+	end
+
+	local combat_ability_component = unit_data_extension:read_component("combat_ability")
+
+	return combat_ability_component ~= nil and combat_ability_component.active == true
 end
 
 -- Заполнение полоски по каналу реликвии (Bolstering Prayer): идёт через weapon_action, не combat_ability_action.
@@ -950,6 +966,7 @@ function M.update(player_unit, widget, opacity, definitions, combat_ability_type
 	local tweak_data = ability_row and ability_row.ability_template_tweak_data
 	local ability_template = template_key and AbilityTemplates[template_key]
 	local buff_candidates = collect_duration_buff_candidates(ability_template, tweak_data, {})
+	local suppress_base_cooldown_visual = ability_row and ability_row.ability_group == "psyker_shout" and combat_ability_is_active(player_unit)
 
 	append_manual_ability_group_buff_candidates(ability_row, buff_candidates)
 
@@ -960,7 +977,14 @@ function M.update(player_unit, widget, opacity, definitions, combat_ability_type
 	local tracked_deployable_overlay_progress = tracked_deployable_bar_fill_progress(ability_row)
 	local relic_channel_fill = weapon_zealot_channel_bar_fill_progress(player_unit)
 	local lunge_overlay_progress = lunge_remaining_progress(player_unit)
-	local timed_overlay_progress = timed_action_remaining_progress(player_unit, ability_extension)
+	local timed_overlay_progress = timed_action_remaining_progress(player_unit, ability_extension, ability_row)
+
+	if suppress_base_cooldown_visual then
+		cooldown_progress = 0
+		active_partial_fill = false
+		base_cooldown_progress = 0
+		base_active_partial_fill = false
+	end
 
 	collect_buff_overlay_entries(buff_extension, buff_candidates, active_overlay_entries)
 	collect_psyker_force_field_overlay_entries(player_unit, ability_row, active_overlay_entries)
