@@ -1,5 +1,6 @@
 local mod = get_mod("DivisionHUD")
 
+local Breeds = require("scripts/settings/breed/breeds")
 local Defaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/settings_defaults")
 local AlertsBossBreeds = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_boss_breeds")
 local AlertsSpecialistBreeds = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_specialist_breeds")
@@ -16,6 +17,24 @@ local function d(key, fallback)
 	end
 
 	return fallback
+end
+
+local function alert_settings_breed_title(breed_id)
+	if type(breed_id) ~= "string" or breed_id == "" then
+		return ""
+	end
+
+	local b = Breeds[breed_id]
+
+	if b and type(b.display_name) == "string" and b.display_name ~= "" then
+		local localized = Localize(b.display_name)
+
+		if type(localized) == "string" and localized ~= "" then
+			return localized
+		end
+	end
+
+	return breed_id
 end
 
 local POSITION_RANGE_X = { -960, 960 }
@@ -212,7 +231,8 @@ return {
 								boss_sub.sub_widgets[#boss_sub.sub_widgets + 1] = {
 									setting_id = "alert_boss_" .. breed_id,
 									type = "checkbox",
-									title = "alerts_ui_boss_" .. breed_id,
+									localize = false,
+									title = alert_settings_breed_title(breed_id),
 									default_value = d("alert_boss_" .. breed_id, true),
 								}
 							end
@@ -235,7 +255,8 @@ return {
 								specialist_sub.sub_widgets[#specialist_sub.sub_widgets + 1] = {
 									setting_id = "alert_specialist_" .. breed_id,
 									type = "checkbox",
-									title = "alerts_ui_specialist_" .. breed_id,
+									localize = false,
+									title = alert_settings_breed_title(breed_id),
 									default_value = d("alert_specialist_" .. breed_id, true),
 								}
 							end
