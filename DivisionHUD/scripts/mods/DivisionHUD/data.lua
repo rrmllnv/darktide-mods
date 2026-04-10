@@ -256,7 +256,7 @@ return {
 										type = "checkbox",
 										localize = false,
 										title = alert_settings_breed_title(breed_id),
-										default_value = d("alert_specialist_" .. breed_id, true),
+										default_value = d("alert_specialist_" .. breed_id, false),
 									}
 								elseif type(row) == "table" and row.kind == "merged" and type(row.group) == "table" then
 									local g = row.group
@@ -267,7 +267,7 @@ return {
 											type = "checkbox",
 											localize = false,
 											title = alert_settings_breed_title(g.title_breed_id),
-											default_value = d(g.setting_id, true),
+											default_value = d(g.setting_id, false),
 										}
 									end
 								end
