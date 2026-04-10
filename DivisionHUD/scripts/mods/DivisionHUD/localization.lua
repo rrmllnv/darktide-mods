@@ -249,6 +249,11 @@ return {
 		ru = "Обнаружен %s",
 		["zh-cn"] = "侦测到：%s",
 	},
+	alerts_message_spawn_grouped = {
+		en = "Detected %s x%d",
+		ru = "Обнаружен %s x%d",
+		["zh-cn"] = "侦测到：%s x%d",
+	},
 	alerts_breed_title_override_chaos_mutator_daemonhost = {
 		en = "Daemonhost (mutator)",
 		ru = "Демонхост (мутатор)",

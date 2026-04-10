@@ -335,6 +335,85 @@ local function alerts_specialist_approach_message(display_name)
 	return text
 end
 
+local function alerts_spawn_line_text(category, display_name, count)
+	if type(display_name) ~= "string" or display_name == "" then
+		return ""
+	end
+
+	if type(count) ~= "number" or count ~= count or count < 1 then
+		count = 1
+	end
+
+	count = math.floor(count + 0.5)
+
+	if count <= 1 then
+		if category == "boss" then
+			return alerts_boss_approach_message(display_name)
+		end
+
+		return alerts_specialist_approach_message(display_name)
+	end
+
+	local pat = mod:localize("alerts_message_spawn_grouped")
+
+	if type(pat) == "string" and pat ~= "" and not string.find(pat, "^<unlocalized") then
+		local ok, formatted = pcall(string.format, pat, display_name, count)
+
+		if ok and type(formatted) == "string" and formatted ~= "" then
+			return formatted
+		end
+	end
+
+	return string.format("Detected %s x%d", display_name, count)
+end
+
+local function alerts_try_merge_spawn_group(group_key, category, display_name, game_t, duration)
+	if type(group_key) ~= "string" or group_key == "" then
+		return false
+	end
+
+	if type(game_t) ~= "number" or game_t ~= game_t then
+		return false
+	end
+
+	if type(duration) ~= "number" or duration ~= duration or duration <= 0 then
+		return false
+	end
+
+	for i = #state.active, 1, -1 do
+		local e = state.active[i]
+
+		if type(e) == "table" and e.group_key == group_key and type(e.expire_t) == "number" and game_t < e.expire_t then
+			local prev = type(e.spawn_count) == "number" and e.spawn_count or 1
+			local next_count = prev + 1
+
+			e.spawn_count = next_count
+			e.text = alerts_spawn_line_text(category, display_name, next_count)
+			e.expire_t = game_t + duration
+			e.duration_sec = duration
+
+			return true
+		end
+	end
+
+	for i = #state.pending, 1, -1 do
+		local e = state.pending[i]
+
+		if type(e) == "table" and e.group_key == group_key then
+			local prev = type(e.spawn_count) == "number" and e.spawn_count or 1
+			local next_count = prev + 1
+
+			e.spawn_count = next_count
+			e.text = alerts_spawn_line_text(category, display_name, next_count)
+			e.duration = duration
+
+			return true
+		end
+	end
+
+	return false
+end
+
 local function alerts_promote_from_pending(game_t)
 	local max_vis = alerts_max_visible_clamped()
 	local duration = alerts_duration_sec_clamped()
@@ -344,11 +423,14 @@ local function alerts_promote_from_pending(game_t)
 
 		if type(p) == "table" and type(p.text) == "string" and p.text ~= "" then
 			local dur = type(p.duration) == "number" and p.duration or duration
+			local sc = type(p.spawn_count) == "number" and p.spawn_count or 1
 
 			state.active[#state.active + 1] = {
 				text = p.text,
 				expire_t = game_t + dur,
 				duration_sec = dur,
+				group_key = p.group_key,
+				spawn_count = sc,
 			}
 		end
 	end
@@ -421,6 +503,63 @@ mod.alerts_enqueue = function(text, game_t)
 	end
 end
 
+mod.alerts_enqueue_spawn_grouped = function(group_key, category, display_name, game_t)
+	if not alerts_globally_enabled() then
+		return
+	end
+
+	if type(group_key) ~= "string" or group_key == "" then
+		return
+	end
+
+	if category ~= "boss" and category ~= "specialist" then
+		return
+	end
+
+	if type(display_name) ~= "string" or display_name == "" then
+		return
+	end
+
+	if type(game_t) ~= "number" or game_t ~= game_t then
+		return
+	end
+
+	local duration = alerts_duration_sec_clamped()
+	local max_vis = alerts_max_visible_clamped()
+
+	alerts_prune_expired(game_t)
+	alerts_promote_from_pending(game_t)
+
+	if alerts_try_merge_spawn_group(group_key, category, display_name, game_t, duration) then
+		return
+	end
+
+	local line_text = alerts_spawn_line_text(category, display_name, 1)
+
+	if line_text == "" then
+		return
+	end
+
+	local entry = {
+		text = line_text,
+		duration = duration,
+		group_key = group_key,
+		spawn_count = 1,
+	}
+
+	if #state.active < max_vis then
+		state.active[#state.active + 1] = {
+			text = line_text,
+			expire_t = game_t + duration,
+			duration_sec = duration,
+			group_key = group_key,
+			spawn_count = 1,
+		}
+	else
+		state.pending[#state.pending + 1] = entry
+	end
+end
+
 local function alerts_try_enqueue_boss_approach_from_spawn(unit, raw_breed_name, clean_breed_name, game_t)
 	if not alerts_globally_enabled() then
 		return
@@ -441,13 +580,11 @@ local function alerts_try_enqueue_boss_approach_from_spawn(unit, raw_breed_name,
 	end
 
 	local display_name = alerts_boss_display_name(unit, raw_breed_name)
-	local text = alerts_boss_approach_message(display_name)
-
-	if text == "" then
+	if alerts_boss_approach_message(display_name) == "" then
 		return
 	end
 
-	mod.alerts_enqueue(text, game_t)
+	mod.alerts_enqueue_spawn_grouped("boss:" .. clean_breed_name, "boss", display_name, game_t)
 end
 
 local function alerts_try_enqueue_specialist_approach_from_spawn(unit, raw_breed_name, game_t)
@@ -470,13 +607,12 @@ local function alerts_try_enqueue_specialist_approach_from_spawn(unit, raw_breed
 	end
 
 	local display_name = alerts_specialist_display_name(unit, stripped, raw_breed_name)
-	local text = alerts_specialist_approach_message(display_name)
 
-	if text == "" then
+	if alerts_specialist_approach_message(display_name) == "" then
 		return
 	end
 
-	mod.alerts_enqueue(text, game_t)
+	mod.alerts_enqueue_spawn_grouped("spec:" .. stripped, "specialist", display_name, game_t)
 end
 
 local function alerts_on_unit_spawn_for_alert_categories(raw_breed_name, unit, game_t)
