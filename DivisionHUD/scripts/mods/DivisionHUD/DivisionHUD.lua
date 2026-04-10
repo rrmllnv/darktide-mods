@@ -134,6 +134,7 @@ end
 
 mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/core/definitions")
 mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/core/slot_data")
+mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/core/alerts_definitions")
 mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/core/vanilla_stamina_dodge_definitions")
 mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/widgets/vanilla_stamina_dodge")
 
@@ -161,5 +162,5 @@ end)
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/hud_utils")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/vanilla_hud_suppression")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/settings")
-mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/alerts")
+mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/alerts")
 

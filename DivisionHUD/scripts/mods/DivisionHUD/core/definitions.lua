@@ -52,25 +52,6 @@ local ABILITY_BAR_SEGMENT_GAP = sc(2)
 local HEALTH_BAR_HEIGHT = sc(16)
 local BAR_STACK_GAP = sc(2)
 local BOXES_ROW_TOP_GAP = sc(8)
-local ALERTS_SLOT_GAP = sc(4)
-local ALERTS_STRIP_HEIGHT = sc(30)
-local ALERTS_BODY_HEIGHT = sc(48)
-local ALERTS_SLOT_HEIGHT = ALERTS_BODY_HEIGHT + ALERTS_STRIP_HEIGHT
-local ALERT_FEED_ORANGE = {
-	230,
-	255,
-	151,
-	29,
-}
-local ALERT_FEED_ORANGE_TEXT = {
-	255,
-	70,
-	38,
-	0,
-}
-local ALERTS_MAX_SLOTS = 5
-local ALERTS_STACK_TOTAL_HEIGHT = ALERTS_MAX_SLOTS * (ALERTS_SLOT_HEIGHT + ALERTS_SLOT_GAP) - ALERTS_SLOT_GAP
-local ALERTS_TOUGHNESS_GAP = sc(8)
 local ROOT_HEIGHT_BASE = sc(212) - sc(32) - sc(8) + sc(2)
 local SLOT_ICON_TEXTURE_SIZE = sc(22)
 local ECW_WEAPON_ICON_LAYOUT_SCALE = 0.5
@@ -248,25 +229,13 @@ local scenegraph_definition = {
 		size = { RIGHT_BOTTOM_SLOT_WIDTH, RIGHT_BOTTOM_SLOT_HEIGHT },
 		position = { RIGHT_GRID_ORIGIN_X + (RIGHT_BOTTOM_SLOT_WIDTH + RIGHT_GAP) * 2, RIGHT_BOTTOM_ROW_Y, 0 },
 	},
-	alerts_column = {
-		parent = "root",
-		horizontal_alignment = "left",
-		vertical_alignment = "top",
-		size = { BAR_WIDTH, ALERTS_STACK_TOTAL_HEIGHT },
-		position = { BAR_LABEL_W, -(ALERTS_STACK_TOTAL_HEIGHT + ALERTS_TOUGHNESS_GAP), 0 },
-	},
 }
 
-for alert_slot_index = 1, ALERTS_MAX_SLOTS do
-	local y_offset = (alert_slot_index - 1) * (ALERTS_SLOT_HEIGHT + ALERTS_SLOT_GAP)
+local DivisionHUDAlertsDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/alerts_definitions")
+local _division_alerts = DivisionHUDAlertsDefs.build(BAR_WIDTH, BAR_LABEL_W, sc)
 
-	scenegraph_definition["alert_slot_" .. alert_slot_index] = {
-		parent = "alerts_column",
-		horizontal_alignment = "left",
-		vertical_alignment = "top",
-		size = { BAR_WIDTH, ALERTS_SLOT_HEIGHT },
-		position = { 0, y_offset, 0 },
-	}
+for k, v in pairs(_division_alerts.scenegraph_definition) do
+	scenegraph_definition[k] = v
 end
 
 local DivisionHUDVanillaToughnessHealthDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/vanilla_toughness_health_definitions")
@@ -321,109 +290,6 @@ local function create_combat_ability_bar_widget(scenegraph_id)
 	end
 
 	return UIWidget.create_definition(passes, scenegraph_id)
-end
-
-local function create_alerts_slot_widget(scenegraph_id)
-	local upper_bg_color = {
-		ALERT_FEED_ORANGE[1],
-		ALERT_FEED_ORANGE[2],
-		ALERT_FEED_ORANGE[3],
-		ALERT_FEED_ORANGE[4],
-	}
-	local upper_emitter_color = {
-		ALERT_FEED_ORANGE[1],
-		ALERT_FEED_ORANGE[2],
-		ALERT_FEED_ORANGE[3],
-		ALERT_FEED_ORANGE[4],
-	}
-
-	local message_text_style = table.clone(UIFontSettings.hud_body)
-
-	message_text_style.horizontal_alignment = "left"
-	message_text_style.vertical_alignment = "top"
-	message_text_style.text_horizontal_alignment = "left"
-	message_text_style.text_vertical_alignment = "top"
-	message_text_style.font_size = sc(17)
-	message_text_style.drop_shadow = true
-	message_text_style.text_color = table.clone(UIHudSettings.color_tint_main_1)
-	message_text_style.size = { BAR_WIDTH - sc(10), ALERTS_BODY_HEIGHT - sc(6) }
-	message_text_style.offset = { sc(5), sc(2), 6 }
-
-	local strip_label_style = table.clone(UIFontSettings.hud_body)
-
-	strip_label_style.horizontal_alignment = "left"
-	strip_label_style.vertical_alignment = "bottom"
-	strip_label_style.text_horizontal_alignment = "center"
-	strip_label_style.text_vertical_alignment = "center"
-	strip_label_style.font_size = sc(20)
-	strip_label_style.drop_shadow = true
-	strip_label_style.text_color = {
-		ALERT_FEED_ORANGE_TEXT[1],
-		ALERT_FEED_ORANGE_TEXT[2],
-		ALERT_FEED_ORANGE_TEXT[3],
-		ALERT_FEED_ORANGE_TEXT[4],
-	}
-	strip_label_style.size = { BAR_WIDTH, ALERTS_STRIP_HEIGHT }
-	strip_label_style.offset = { 0, -1, 7 }
-
-	return UIWidget.create_definition({
-		{
-			pass_type = "texture",
-			style_id = "alert_slot_upper_background",
-			value = "content/ui/materials/hud/backgrounds/terminal_background_weapon",
-			style = {
-				horizontal_alignment = "left",
-				vertical_alignment = "top",
-				color = table.clone(upper_bg_color),
-				default_color = table.clone(Color.terminal_background_gradient(255, true)),
-				size = { BAR_WIDTH, ALERTS_BODY_HEIGHT },
-				offset = { 0, 0, 0 },
-			},
-		},
-		{
-			pass_type = "texture",
-			style_id = "alert_slot_upper_emitter",
-			value = "content/ui/materials/backgrounds/default_square",
-			style = {
-				horizontal_alignment = "right",
-				vertical_alignment = "top",
-				size = { sc(4), ALERTS_BODY_HEIGHT },
-				offset = { 0, 0, 5 },
-				color = table.clone(upper_emitter_color),
-				default_color = table.clone(Color.terminal_corner_hover(nil, true)),
-			},
-		},
-		{
-			pass_type = "rect",
-			style_id = "alert_strip_background",
-			style = {
-				horizontal_alignment = "left",
-				vertical_alignment = "bottom",
-				size = { BAR_WIDTH, ALERTS_STRIP_HEIGHT },
-				offset = { 0, 0, 1 },
-				color = {
-					ALERT_FEED_ORANGE[1],
-					ALERT_FEED_ORANGE[2],
-					ALERT_FEED_ORANGE[3],
-					ALERT_FEED_ORANGE[4],
-				},
-			},
-		},
-		{
-			pass_type = "text",
-			style_id = "alert_message_text",
-			value_id = "alert_message_text",
-			value = "",
-			style = message_text_style,
-		},
-		{
-			pass_type = "text",
-			style_id = "alert_strip_label_text",
-			value_id = "alert_strip_label_text",
-			value = "",
-			style = strip_label_style,
-		},
-	}, scenegraph_id, nil, { BAR_WIDTH, ALERTS_SLOT_HEIGHT })
 end
 
 local function create_slots_bg_widget(scenegraph_id, w, h)
@@ -586,10 +452,8 @@ local widget_definitions = {
 	slot_pickup = create_right_slot_widget("slot_pickup"),
 }
 
-for alert_slot_index = 1, ALERTS_MAX_SLOTS do
-	local slot_key = "alert_slot_" .. alert_slot_index
-
-	widget_definitions[slot_key] = create_alerts_slot_widget(slot_key)
+for k, v in pairs(_division_alerts.widget_definitions) do
+	widget_definitions[k] = v
 end
 
 for k, v in pairs(_division_vanilla_th.widget_definitions) do
@@ -616,12 +480,6 @@ local right_slot_widget_names = {
 	"slot_stimm",
 	"slot_pickup",
 }
-
-local alert_slot_widget_names = {}
-
-for alert_slot_index = 1, ALERTS_MAX_SLOTS do
-	alert_slot_widget_names[alert_slot_index] = "alert_slot_" .. alert_slot_index
-end
 
 return {
 	scenegraph_definition = scenegraph_definition,
@@ -657,8 +515,8 @@ return {
 	WEAPON_STRIP_ICON_ASPECT_RATIO = WEAPON_STRIP_ICON_ASPECT_RATIO,
 	WIELDED_STRIP_SQUARE_ICON = WIELDED_STRIP_SQUARE_ICON,
 	AUSPEX_ICON_SIZE = AUSPEX_ICON_SIZE,
-	ALERTS_MAX_SLOTS = ALERTS_MAX_SLOTS,
-	ALERTS_SLOT_HEIGHT = ALERTS_SLOT_HEIGHT,
-	ALERTS_STACK_TOTAL_HEIGHT = ALERTS_STACK_TOTAL_HEIGHT,
-	alert_slot_widget_names = alert_slot_widget_names,
+	ALERTS_MAX_SLOTS = _division_alerts.ALERTS_MAX_SLOTS,
+	ALERTS_SLOT_HEIGHT = _division_alerts.ALERTS_SLOT_HEIGHT,
+	ALERTS_STACK_TOTAL_HEIGHT = _division_alerts.ALERTS_STACK_TOTAL_HEIGHT,
+	alert_slot_widget_names = _division_alerts.alert_slot_widget_names,
 }
