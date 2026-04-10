@@ -1,7 +1,7 @@
 local mod = get_mod("DivisionHUD")
 
-local Breeds = require("scripts/settings/breed/breeds")
 local Defaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/settings_defaults")
+local AlertsBreedTitle = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_breed_title")
 local AlertsBossBreeds = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_boss_breeds")
 local AlertsSpecialistBreeds = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_specialist_breeds")
 
@@ -20,31 +20,11 @@ local function d(key, fallback)
 end
 
 local function alert_settings_breed_title(breed_id)
-	if type(breed_id) ~= "string" or breed_id == "" then
-		return ""
+	if type(AlertsBreedTitle) == "table" and type(AlertsBreedTitle.resolve) == "function" then
+		return AlertsBreedTitle.resolve(mod, breed_id)
 	end
 
-	local dmf_mod = rawget(_G, "get_mod") and get_mod("DMF")
-
-	if dmf_mod and type(dmf_mod.quick_localize) == "function" then
-		local custom = dmf_mod.quick_localize(mod, "alerts_breed_title_override_" .. breed_id)
-
-		if type(custom) == "string" and custom ~= "" then
-			return custom
-		end
-	end
-
-	local b = Breeds[breed_id]
-
-	if b and type(b.display_name) == "string" and b.display_name ~= "" then
-		local localized = Localize(b.display_name)
-
-		if type(localized) == "string" and localized ~= "" then
-			return localized
-		end
-	end
-
-	return breed_id
+	return type(breed_id) == "string" and breed_id or ""
 end
 
 local POSITION_RANGE_X = { -960, 960 }

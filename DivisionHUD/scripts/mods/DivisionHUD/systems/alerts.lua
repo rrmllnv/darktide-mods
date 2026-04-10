@@ -12,6 +12,7 @@ end
 
 local Breeds = require("scripts/settings/breed/breeds")
 
+local AlertsBreedTitle = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_breed_title")
 local AlertsBossBreeds = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_boss_breeds")
 local AlertsSpecialistBreeds = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_specialist_breeds")
 
@@ -181,6 +182,14 @@ local function alerts_boss_display_name(unit, raw_breed_name)
 		return ""
 	end
 
+	if type(AlertsBreedTitle) == "table" and type(AlertsBreedTitle.try_override) == "function" then
+		local from_override = AlertsBreedTitle.try_override(mod, raw_breed_name)
+
+		if from_override then
+			return from_override
+		end
+	end
+
 	local b = Breeds[raw_breed_name]
 
 	if unit and ScriptUnit.has_extension(unit, "boss_system") then
@@ -262,9 +271,25 @@ local function alerts_specialist_category_allowed(stripped_raw)
 	return true
 end
 
-local function alerts_specialist_display_name(unit, stripped_raw)
+local function alerts_specialist_display_name(unit, stripped_raw, raw_breed_name)
 	if type(stripped_raw) ~= "string" or stripped_raw == "" then
 		return ""
+	end
+
+	if type(AlertsBreedTitle) == "table" and type(AlertsBreedTitle.try_override) == "function" then
+		if type(raw_breed_name) == "string" and raw_breed_name ~= "" then
+			local from_raw = AlertsBreedTitle.try_override(mod, raw_breed_name)
+
+			if from_raw then
+				return from_raw
+			end
+		end
+
+		local from_stripped = AlertsBreedTitle.try_override(mod, stripped_raw)
+
+		if from_stripped then
+			return from_stripped
+		end
 	end
 
 	local b = Breeds[stripped_raw]
@@ -442,7 +467,7 @@ local function alerts_try_enqueue_specialist_approach_from_spawn(unit, raw_breed
 		return
 	end
 
-	local display_name = alerts_specialist_display_name(unit, stripped)
+	local display_name = alerts_specialist_display_name(unit, stripped, raw_breed_name)
 	local text = alerts_specialist_approach_message(display_name)
 
 	if text == "" then

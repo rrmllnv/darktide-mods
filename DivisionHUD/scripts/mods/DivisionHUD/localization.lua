@@ -263,9 +263,7 @@ return {
 		ru = "Токсичный взрывун",
 	},
 	alerts_breed_title_override_chaos_poxwalker_bomber = {
-		en = "Dreg Tox Bomber",
-		ru = "Дрег — токсичный взрывун",
-		["zh-cn"] = "堕落者剧毒爆弹手",
+		ru = "Дрег токсичный взрывун",
 	},
 	alerts_breed_title_override_renegade_grenadier = {
 		ru = "Скаб-Бомбардир",
