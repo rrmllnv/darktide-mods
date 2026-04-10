@@ -24,6 +24,16 @@ local function alert_settings_breed_title(breed_id)
 		return ""
 	end
 
+	local dmf_mod = rawget(_G, "get_mod") and get_mod("DMF")
+
+	if dmf_mod and type(dmf_mod.quick_localize) == "function" then
+		local custom = dmf_mod.quick_localize(mod, "alerts_breed_title_override_" .. breed_id)
+
+		if type(custom) == "string" and custom ~= "" then
+			return custom
+		end
+	end
+
 	local b = Breeds[breed_id]
 
 	if b and type(b.display_name) == "string" and b.display_name ~= "" then

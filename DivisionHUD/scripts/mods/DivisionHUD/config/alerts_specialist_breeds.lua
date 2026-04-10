@@ -24,8 +24,6 @@ for i = 1, #CANDIDATE_BREED_IDS do
 	end
 end
 
-table.sort(list)
-
 return {
 	list = list,
 }
