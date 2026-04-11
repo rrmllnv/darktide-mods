@@ -151,7 +151,6 @@ local function buff_instance_remaining_time(buff_instance, progress, template)
 	return type(duration) == "number" and duration > 0 and progress * duration or nil
 end
 
--- Доля заливки полоски по оставшемуся времени эффекта (1 = полная, к 0 сужается). Только реально активные окна.
 local function timed_gold_toughness_bar_fill_fraction(buff_extension)
 	if not buff_extension then
 		return nil

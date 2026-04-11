@@ -108,10 +108,17 @@ local AMMO_RESERVE_FONT = sc(26)
 local AMMO_CLIP_OFFSET_Y = sc(14)
 local AMMO_RESERVE_OFFSET_Y = sc(30)
 
--- Доля (текущий / макс) боезапаса для цвета текста ammo_big: >75% main_1; (50%,75%] low; (25%,50%] medium; [0,25%] high.
-local AMMO_TEXT_COLOR_FRACTION_GT_MAIN = 0.75
-local AMMO_TEXT_COLOR_FRACTION_GT_LOW_BAND = 0.5
-local AMMO_TEXT_COLOR_FRACTION_GT_MEDIUM_BAND = 0.25
+local TextColorFractions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/text_color_fractions")
+
+if type(TextColorFractions) ~= "table" then
+	TextColorFractions = {}
+end
+
+local AMMO_TEXT_COLOR_FRACTION_GT_MAIN = TextColorFractions.AMMO_TEXT_COLOR_FRACTION_GT_MAIN or 0.75
+local AMMO_TEXT_COLOR_FRACTION_GT_LOW_BAND = TextColorFractions.AMMO_TEXT_COLOR_FRACTION_GT_LOW_BAND or 0.5
+local AMMO_TEXT_COLOR_FRACTION_GT_MEDIUM_BAND = TextColorFractions.AMMO_TEXT_COLOR_FRACTION_GT_MEDIUM_BAND or 0.25
+local ABILITY_BAR_READY_COLOR = TextColorFractions.ABILITY_BAR_READY_COLOR or { 255, 231, 145, 26 }
+local ABILITY_BAR_COOLDOWN_COLOR = TextColorFractions.ABILITY_BAR_COOLDOWN_COLOR or { 255, 215, 80, 80 }
 
 local HUD_GLASS_PLATE_ALPHA_BASE = 48
 local HUD_GLASS_PLATE_COLOR = {
@@ -257,8 +264,6 @@ for k, v in pairs(_division_vanilla_stm_ddg.scenegraph_definition) do
 	scenegraph_definition[k] = v
 end
 
-local DivisionHUDCombatAbilityBarDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/combat_ability_bar_definitions")
-
 scenegraph_definition.boxes_row.size[2] = MAIN_ROW_HEIGHT + _division_vanilla_stm_ddg.extend_below_main_row
 
 local ROOT_HEIGHT = ROOT_HEIGHT_BASE + _division_vanilla_stm_ddg.extend_below_main_row
@@ -287,7 +292,7 @@ local function create_combat_ability_bar_widget(scenegraph_id)
 			style = {
 				horizontal_alignment = "left",
 				vertical_alignment = "center",
-				color = { 255, 231, 145, 26 },
+				color = table.clone(ABILITY_BAR_READY_COLOR),
 				offset = { 0, 0, i },
 				size = { 0, ABILITY_BAR_STRIP_HEIGHT },
 			},
@@ -504,8 +509,8 @@ return {
 	TOUGHNESS_BAR_HEIGHT = TOUGHNESS_BAR_HEIGHT,
 	ABILITY_BAR_MAX_SEGMENTS = ABILITY_BAR_MAX_SEGMENTS,
 	ABILITY_BAR_SEGMENT_GAP = ABILITY_BAR_SEGMENT_GAP,
-	ABILITY_BAR_READY_COLOR = DivisionHUDCombatAbilityBarDefs.ABILITY_BAR_READY_COLOR,
-	ABILITY_BAR_COOLDOWN_COLOR = DivisionHUDCombatAbilityBarDefs.ABILITY_BAR_COOLDOWN_COLOR,
+	ABILITY_BAR_READY_COLOR = ABILITY_BAR_READY_COLOR,
+	ABILITY_BAR_COOLDOWN_COLOR = ABILITY_BAR_COOLDOWN_COLOR,
 	BAR_LABEL_W = BAR_LABEL_W,
 	BAR_FILL_WIDTH = BAR_FILL_WIDTH,
 	ROW_WIDTH = ROW_WIDTH,

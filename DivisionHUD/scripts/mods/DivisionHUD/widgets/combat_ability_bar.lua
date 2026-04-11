@@ -8,7 +8,6 @@ local PlayerUnitVisualLoadout = require("scripts/extension_systems/visual_loadou
 
 local M = {}
 
--- Не показывать оверлей по total_time длиннее этого (в т.ч. отсекает math.huge у фазы прицеливания рывка).
 local TIMED_OVERLAY_MAX_TOTAL_TIME = 120
 local OVERLAY_GROUP_START_TIME_EPSILON = 0.05
 
@@ -536,7 +535,6 @@ local function combat_ability_is_active(player_unit)
 	return combat_ability_component ~= nil and combat_ability_component.active == true
 end
 
--- Заполнение полоски по каналу реликвии (Bolstering Prayer): идёт через weapon_action, не combat_ability_action.
 local function weapon_zealot_channel_bar_fill_progress(player_unit)
 	local unit_data_extension = ScriptUnit.has_extension(player_unit, "unit_data_system")
 

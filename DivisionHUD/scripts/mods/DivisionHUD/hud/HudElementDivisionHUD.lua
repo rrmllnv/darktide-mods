@@ -52,9 +52,9 @@ local COMBAT_ABILITY_TYPE = "combat_ability"
 local GRENADE_ABILITY_TYPE = "grenade_ability"
 
 local HUD_LAYOUT_SCALE = Definitions.HUD_LAYOUT_SCALE or 1
-local AMMO_FR_GT_MAIN = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_MAIN or 0.75
-local AMMO_FR_GT_LOW_BAND = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_LOW_BAND or 0.5
-local AMMO_FR_GT_MEDIUM_BAND = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_MEDIUM_BAND or 0.25
+local FRACTION_COLOR_GT_MAIN = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_MAIN or 0.75
+local FRACTION_COLOR_GT_LOW_BAND = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_LOW_BAND or 0.5
+local FRACTION_COLOR_GT_MEDIUM_BAND = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_MEDIUM_BAND or 0.25
 
 local function read_mod_numeric_setting(key)
 	local settings = mod._settings
@@ -149,11 +149,11 @@ local function ammo_text_fraction_coloring_enabled()
 end
 
 local function resolve_ammo_palette_color_from_fraction(fraction)
-	if fraction > AMMO_FR_GT_MAIN then
+	if fraction > FRACTION_COLOR_GT_MAIN then
 		return UIHudSettings.color_tint_main_1
-	elseif fraction > AMMO_FR_GT_LOW_BAND then
+	elseif fraction > FRACTION_COLOR_GT_LOW_BAND then
 		return UIHudSettings.color_tint_ammo_low
-	elseif fraction > AMMO_FR_GT_MEDIUM_BAND then
+	elseif fraction > FRACTION_COLOR_GT_MEDIUM_BAND then
 		return UIHudSettings.color_tint_ammo_medium
 	else
 		return UIHudSettings.color_tint_ammo_high
