@@ -201,7 +201,7 @@ return {
 						setting_id = "alerts_max_visible",
 						type = "numeric",
 						title = "alerts_max_visible",
-						default_value = d("alerts_max_visible", 3),
+						default_value = d("alerts_max_visible", 2),
 						range = { 1, 5 },
 						decimals_number = 0,
 					},

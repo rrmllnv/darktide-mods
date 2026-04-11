@@ -126,7 +126,7 @@ local function alerts_max_visible_clamped()
 	local n = type(s) == "table" and s.alerts_max_visible
 
 	if type(n) ~= "number" or n ~= n then
-		n = 3
+		n = 2
 	end
 
 	return math.clamp(math.floor(n + 0.5), 1, 5)
