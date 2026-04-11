@@ -94,6 +94,16 @@ return {
 		ru = "Если включено, крупные цифры патронов окрашиваются по доле боезапаса: выше 75% — основной цвет; выше 50% и не выше 75% — низкий запас; выше 25% и не выше 50% — средний; 25% и ниже — критический. Если выключено — обычный основной цвет.",
 		["zh-cn"] = "启用后，大号弹药数字按总弹药比例着色：高于 75% 主色；高于 50% 且不高于 75% 为低弹药色；高于 25% 且不高于 50% 为中档；25% 及以下为高警示色。关闭时使用默认主色。",
 	},
+	grenade_color_by_fraction = {
+		en = "Grenade slot color by charge fraction",
+		ru = "Цвет гранаты по доле зарядов",
+		["zh-cn"] = "手雷槽按充能比例着色",
+	},
+	grenade_color_by_fraction_description = {
+		en = "When enabled, the grenade ability slot icon and counter tint by remaining charges, using the same color bands and fraction thresholds as the large ammo numbers. When off, the slot uses the default colors.",
+		ru = "Если включено, иконка и счётчик слота гранаты окрашиваются по доле оставшихся зарядов — те же цветовые полосы и пороги доли, что у крупного текста патронов. Если выключено — цвета по умолчанию.",
+		["zh-cn"] = "启用后，手雷技能槽的图标与数字按剩余充能比例着色，色带与比例阈值与大号弹药文字一致。关闭时使用默认颜色。",
+	},
 	stimm_slot_icon_tint_by_type = {
 		en = "Color pocket stimm icon",
 		ru = "Цвет иконки шприца",

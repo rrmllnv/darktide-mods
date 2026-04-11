@@ -107,6 +107,13 @@ return {
 						tooltip_text = "ammo_text_color_by_fraction_description",
 						default_value = d("ammo_text_color_by_fraction", true),
 					},
+					{
+						setting_id = "grenade_color_by_fraction",
+						type = "checkbox",
+						title = "grenade_color_by_fraction",
+						tooltip_text = "grenade_color_by_fraction_description",
+						default_value = d("grenade_color_by_fraction", true),
+					},
 				},
 			},
 			{

@@ -12,6 +12,7 @@ local defaults = {
 	show_health_bar = true,
 	show_ability_timer = true,
 	ammo_text_color_by_fraction = true,
+	grenade_color_by_fraction = true,
 	stimm_slot_icon_tint_by_type = true,
 	dynamic_hud = true,
 	dynamic_hud_strength = 110,

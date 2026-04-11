@@ -148,6 +148,22 @@ local function ammo_text_fraction_coloring_enabled()
 	return true
 end
 
+local function grenade_slot_fraction_coloring_enabled()
+	local s = mod._settings
+
+	if type(s) ~= "table" then
+		return true
+	end
+
+	local v = s.grenade_color_by_fraction
+
+	if v == false or v == 0 then
+		return false
+	end
+
+	return true
+end
+
 local function resolve_ammo_palette_color_from_fraction(fraction)
 	if fraction > FRACTION_COLOR_GT_MAIN then
 		return UIHudSettings.color_tint_main_1
@@ -158,6 +174,27 @@ local function resolve_ammo_palette_color_from_fraction(fraction)
 	else
 		return UIHudSettings.color_tint_ammo_high
 	end
+end
+
+local function resolve_grenade_charge_fraction_from_player_unit(player_unit)
+	if not player_unit then
+		return 1
+	end
+
+	local ability_extension = ScriptUnit.has_extension(player_unit, "ability_system")
+
+	if not ability_extension then
+		return 1
+	end
+
+	local max_charges = ability_extension:max_ability_charges(GRENADE_ABILITY_TYPE)
+	local remaining_charges = ability_extension:remaining_ability_charges(GRENADE_ABILITY_TYPE)
+
+	if type(max_charges) ~= "number" or max_charges <= 0 or type(remaining_charges) ~= "number" then
+		return 1
+	end
+
+	return math.clamp(remaining_charges / max_charges, 0, 1)
 end
 
 local function apply_ammo_big_text_colors(widget, opacity, palette_argb)
@@ -215,7 +252,7 @@ local function resolve_stimm_slot_main_argb_255(stimm_template_id, s_cfg)
 	return DIVISION_STIMM_SLOT_TYPE_COLORS[stimm_template_id]
 end
 
-local function apply_right_slot_icon_color(widget, widget_name, entry, opacity, s_cfg)
+local function apply_right_slot_icon_color(widget, widget_name, entry, opacity, s_cfg, player_unit)
 	local icon_style = widget and widget.style and widget.style.icon
 
 	if not icon_style or not icon_style.color then
@@ -224,41 +261,61 @@ local function apply_right_slot_icon_color(widget, widget_name, entry, opacity, 
 
 	local c = icon_style.color
 
-	if widget_name ~= "slot_stimm" then
-		c[1] = math.floor(255 * opacity)
-		c[2] = 255
-		c[3] = 255
-		c[4] = 255
+	if widget_name == "slot_stimm" then
+		local tint_on = type(s_cfg) ~= "table" or s_cfg.stimm_slot_icon_tint_by_type ~= false
+
+		if not tint_on or not entry or entry.slot_id ~= "slot_pocketable_small" or not entry.has_equipment then
+			c[1] = math.floor(255 * opacity)
+			c[2] = 255
+			c[3] = 255
+			c[4] = 255
+
+			return
+		end
+
+		local item = entry.item
+		local stimm_id = item and type(item.weapon_template) == "string" and item.weapon_template or nil
+		local main = stimm_id and resolve_stimm_slot_main_argb_255(stimm_id, s_cfg) or nil
+
+		if is_valid_argb_255(main) then
+			c[1] = math.floor((main[1] or 255) * opacity)
+			c[2] = main[2] or 255
+			c[3] = main[3] or 255
+			c[4] = main[4] or 255
+		else
+			c[1] = math.floor(255 * opacity)
+			c[2] = 255
+			c[3] = 255
+			c[4] = 255
+		end
 
 		return
 	end
 
-	local tint_on = type(s_cfg) ~= "table" or s_cfg.stimm_slot_icon_tint_by_type ~= false
+	if
+		widget_name == "slot_blitz"
+		and entry
+		and entry.slot_id == "slot_grenade_ability"
+		and grenade_slot_fraction_coloring_enabled()
+		and player_unit
+	then
+		local fraction = resolve_grenade_charge_fraction_from_player_unit(player_unit)
+		local palette_argb = resolve_ammo_palette_color_from_fraction(fraction)
 
-	if not tint_on or not entry or entry.slot_id ~= "slot_pocketable_small" or not entry.has_equipment then
-		c[1] = math.floor(255 * opacity)
-		c[2] = 255
-		c[3] = 255
-		c[4] = 255
+		if is_valid_argb_255(palette_argb) then
+			c[1] = math.floor((palette_argb[1] or 255) * opacity)
+			c[2] = palette_argb[2] or 255
+			c[3] = palette_argb[3] or 255
+			c[4] = palette_argb[4] or 255
 
-		return
+			return
+		end
 	end
 
-	local item = entry.item
-	local stimm_id = item and type(item.weapon_template) == "string" and item.weapon_template or nil
-	local main = stimm_id and resolve_stimm_slot_main_argb_255(stimm_id, s_cfg) or nil
-
-	if is_valid_argb_255(main) then
-		c[1] = math.floor((main[1] or 255) * opacity)
-		c[2] = main[2] or 255
-		c[3] = main[3] or 255
-		c[4] = main[4] or 255
-	else
-		c[1] = math.floor(255 * opacity)
-		c[2] = 255
-		c[3] = 255
-		c[4] = 255
-	end
+	c[1] = math.floor(255 * opacity)
+	c[2] = 255
+	c[3] = 255
+	c[4] = 255
 end
 
 HudElementDivisionHUD._reset_dynamic_offset_state = function(self)
@@ -763,7 +820,7 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 
 			widget.content.visible = true
 			self:_apply_slot_icon_material(widget, entry)
-			apply_right_slot_icon_color(widget, name, entry, opacity, mod._settings)
+			apply_right_slot_icon_color(widget, name, entry, opacity, mod._settings, player_unit)
 
 			if widget.style.text then
 				if name == "slot_weapon_wielded" then
@@ -808,6 +865,16 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 								tc[4] = base[4]
 							end
 						end
+					end
+				elseif name == "slot_blitz" and slot_id == "slot_grenade_ability" and grenade_slot_fraction_coloring_enabled() then
+					local fraction = resolve_grenade_charge_fraction_from_player_unit(player_unit)
+					local palette_argb = resolve_ammo_palette_color_from_fraction(fraction)
+
+					if is_valid_argb_255(palette_argb) then
+						tc[1] = math.floor((palette_argb[1] or 255) * opacity)
+						tc[2] = palette_argb[2] or 255
+						tc[3] = palette_argb[3] or 255
+						tc[4] = palette_argb[4] or 255
 					end
 				else
 					widget.style.text.text_color[1] = 255 * opacity
