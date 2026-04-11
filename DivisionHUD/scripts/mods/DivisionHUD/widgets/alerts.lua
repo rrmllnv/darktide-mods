@@ -380,6 +380,7 @@ local function alerts_try_merge_spawn_group(group_key, category, display_name, g
 			e.text = alerts_spawn_line_text(category, display_name, next_count)
 			e.expire_t = game_t + duration
 			e.duration_sec = duration
+			e.alert_line_category = category
 
 			return true
 		end
@@ -395,6 +396,7 @@ local function alerts_try_merge_spawn_group(group_key, category, display_name, g
 			e.spawn_count = next_count
 			e.text = alerts_spawn_line_text(category, display_name, next_count)
 			e.duration = duration
+			e.alert_line_category = category
 
 			return true
 		end
@@ -420,6 +422,7 @@ local function alerts_promote_from_pending(game_t)
 				duration_sec = dur,
 				group_key = p.group_key,
 				spawn_count = sc,
+				alert_line_category = p.alert_line_category,
 			}
 		end
 	end
@@ -479,6 +482,7 @@ mod.alerts_enqueue = function(text, game_t)
 	local entry = {
 		text = text,
 		duration = duration,
+		alert_line_category = "default",
 	}
 
 	if #state.active < max_vis then
@@ -486,6 +490,7 @@ mod.alerts_enqueue = function(text, game_t)
 			text = text,
 			expire_t = game_t + duration,
 			duration_sec = duration,
+			alert_line_category = "default",
 		}
 	else
 		state.pending[#state.pending + 1] = entry
@@ -534,6 +539,7 @@ mod.alerts_enqueue_spawn_grouped = function(group_key, category, display_name, g
 		duration = duration,
 		group_key = group_key,
 		spawn_count = 1,
+		alert_line_category = category,
 	}
 
 	if #state.active < max_vis then
@@ -543,6 +549,7 @@ mod.alerts_enqueue_spawn_grouped = function(group_key, category, display_name, g
 			duration_sec = duration,
 			group_key = group_key,
 			spawn_count = 1,
+			alert_line_category = category,
 		}
 	else
 		state.pending[#state.pending + 1] = entry

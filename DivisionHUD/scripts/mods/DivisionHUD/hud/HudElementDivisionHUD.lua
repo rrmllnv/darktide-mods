@@ -45,6 +45,8 @@ local right_slot_widget_names = Definitions.right_slot_widget_names
 local ALERTS_MAX_SLOTS = Definitions.ALERTS_MAX_SLOTS or 5
 local alert_slot_widget_names = Definitions.alert_slot_widget_names or {}
 local ALERT_BAR_WIDTH = Definitions.BAR_WIDTH or 1
+local ALERT_PALETTE_DEFAULT = Definitions.ALERT_PALETTE_DEFAULT
+local ALERT_PALETTE_BOSS = Definitions.ALERT_PALETTE_BOSS
 
 local COMBAT_ABILITY_TYPE = "combat_ability"
 local GRENADE_ABILITY_TYPE = "grenade_ability"
@@ -725,6 +727,50 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 	end
 end
 
+local function division_hud_apply_alert_pass_colors(st, palette, opacity)
+	if not st or type(palette) ~= "table" or type(opacity) ~= "number" then
+		return
+	end
+
+	local function apply_channel4(dst, src)
+		if not dst or type(src) ~= "table" then
+			return
+		end
+
+		local a = type(src[1]) == "number" and src[1] or 230
+		local r = type(src[2]) == "number" and src[2] or 255
+		local gch = type(src[3]) == "number" and src[3] or 255
+		local bch = type(src[4]) == "number" and src[4] or 255
+
+		dst[1] = math.floor(a * opacity)
+		dst[2] = r
+		dst[3] = gch
+		dst[4] = bch
+	end
+
+	if type(palette.upper) == "table" then
+		apply_channel4(st.alert_slot_upper_background and st.alert_slot_upper_background.color, palette.upper)
+	end
+
+	if type(palette.emitter) == "table" then
+		apply_channel4(st.alert_slot_upper_emitter and st.alert_slot_upper_emitter.color, palette.emitter)
+	elseif type(palette.upper) == "table" then
+		apply_channel4(st.alert_slot_upper_emitter and st.alert_slot_upper_emitter.color, palette.upper)
+	end
+
+	if type(palette.strip) == "table" then
+		apply_channel4(st.alert_strip_background and st.alert_strip_background.color, palette.strip)
+	end
+
+	if type(palette.strip_text) == "table" then
+		apply_channel4(st.alert_strip_label_text and st.alert_strip_label_text.text_color, palette.strip_text)
+	end
+
+	if type(palette.duration_bar) == "table" then
+		apply_channel4(st.alert_duration_bar and st.alert_duration_bar.color, palette.duration_bar)
+	end
+end
+
 HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 	local s_cfg = mod._settings
 
@@ -799,31 +845,16 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 				local st = w.style
 
 				if st then
-					local strip_tc = st.alert_strip_label_text and st.alert_strip_label_text.text_color
 					local msg_tc = st.alert_message_text and st.alert_message_text.text_color
+					local cat = line.alert_line_category
+					local pal = cat == "boss" and ALERT_PALETTE_BOSS or ALERT_PALETTE_DEFAULT
 
-					if strip_tc and type(strip_tc[1]) == "number" then
-						strip_tc[1] = math.floor(255 * opacity)
+					if type(pal) == "table" then
+						division_hud_apply_alert_pass_colors(st, pal, opacity)
 					end
 
 					if msg_tc and type(msg_tc[1]) == "number" then
 						msg_tc[1] = math.floor(255 * opacity)
-					end
-
-					local ub = st.alert_slot_upper_background and st.alert_slot_upper_background.color
-					local ue = st.alert_slot_upper_emitter and st.alert_slot_upper_emitter.color
-					local sb = st.alert_strip_background and st.alert_strip_background.color
-
-					if ub and type(ub[1]) == "number" then
-						ub[1] = math.floor(230 * opacity)
-					end
-
-					if ue and type(ue[1]) == "number" then
-						ue[1] = math.floor(230 * opacity)
-					end
-
-					if sb and type(sb[1]) == "number" then
-						sb[1] = math.floor(230 * opacity)
 					end
 
 					local dur_bar = st.alert_duration_bar
@@ -844,7 +875,9 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 
 						local dbc = dur_bar and dur_bar.color
 
-						if dbc and type(dbc[1]) == "number" then
+						if dbc and type(pal) == "table" and type(pal.duration_bar) == "table" and type(pal.duration_bar[1]) == "number" then
+							dbc[1] = math.floor(pal.duration_bar[1] * opacity)
+						elseif dbc and type(dbc[1]) == "number" then
 							dbc[1] = math.floor(230 * opacity)
 						end
 					elseif dur_bar_sz and type(dur_bar_sz[1]) == "number" then

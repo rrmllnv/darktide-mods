@@ -518,5 +518,7 @@ return {
 	ALERTS_MAX_SLOTS = _division_alerts.ALERTS_MAX_SLOTS,
 	ALERTS_SLOT_HEIGHT = _division_alerts.ALERTS_SLOT_HEIGHT,
 	ALERTS_STACK_TOTAL_HEIGHT = _division_alerts.ALERTS_STACK_TOTAL_HEIGHT,
+	ALERT_PALETTE_DEFAULT = _division_alerts.ALERT_PALETTE_DEFAULT,
+	ALERT_PALETTE_BOSS = _division_alerts.ALERT_PALETTE_BOSS,
 	alert_slot_widget_names = _division_alerts.alert_slot_widget_names,
 }
