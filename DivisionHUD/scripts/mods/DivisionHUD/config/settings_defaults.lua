@@ -48,9 +48,9 @@ if type(AlertsSpecialistBreeds) == "table" and type(AlertsSpecialistBreeds.setti
 		local row = AlertsSpecialistBreeds.settings_rows[i]
 
 		if type(row) == "table" and row.kind == "single" and type(row.breed_id) == "string" and row.breed_id ~= "" then
-			defaults["alert_specialist_" .. row.breed_id] = false
+			defaults["alert_specialist_" .. row.breed_id] = true
 		elseif type(row) == "table" and row.kind == "merged" and type(row.group) == "table" and type(row.group.setting_id) == "string" and row.group.setting_id ~= "" then
-			defaults[row.group.setting_id] = false
+			defaults[row.group.setting_id] = true
 		end
 	end
 end
