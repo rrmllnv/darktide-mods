@@ -245,14 +245,14 @@ return {
 		["zh-cn"] = "警报剩余时间条",
 	},
 	alerts_group_bosses = {
-		en = "Bosses",
-		ru = "Боссы",
-		["zh-cn"] = "首领",
+		en = string.rep("\194\160", 8) .. "Bosses",
+		ru = string.rep("\194\160", 8) .. "Боссы",
+		["zh-cn"] = string.rep("\194\160", 8) .. "首领",
 	},
 	alerts_group_specialists = {
-		en = "Specialists",
-		ru = "Специалисты",
-		["zh-cn"] = "专家单位",
+		en = string.rep("\194\160", 8) .. "Specialists",
+		ru = string.rep("\194\160", 8) .. "Специалисты",
+		["zh-cn"] = string.rep("\194\160", 8) .. "专家单位",
 	},
 	alerts_ui_banner_alert = {
 		en = "ALERT",
