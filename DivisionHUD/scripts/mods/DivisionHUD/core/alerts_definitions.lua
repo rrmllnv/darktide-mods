@@ -174,7 +174,7 @@ function M.build(bar_width, bar_label_w, sc)
 		strip_label_style.vertical_alignment = "bottom"
 		strip_label_style.text_horizontal_alignment = "center"
 		strip_label_style.text_vertical_alignment = "center"
-		strip_label_style.font_size = sc(20)
+		strip_label_style.font_size = sc(18)
 		strip_label_style.drop_shadow = true
 		strip_label_style.text_color = {
 			ALERT_FEED_ORANGE_TEXT[1],
