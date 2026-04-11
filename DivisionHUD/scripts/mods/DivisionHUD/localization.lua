@@ -284,9 +284,6 @@ return {
 		ru = "Чумная гончая (мутатор)",
 		["zh-cn"] = "瘟疫猎犬（异变）",
 	},
-	alerts_breed_title_override_cultist_grenadier = {
-		ru = "Чумной взрывун",
-	},
 	alerts_breed_title_override_renegade_grenadier = {
 		ru = "Скаб-Бомбардир",
 	},
