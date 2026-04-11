@@ -56,6 +56,20 @@ local FRACTION_COLOR_GT_MAIN = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_MAIN or 0
 local FRACTION_COLOR_GT_LOW_BAND = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_LOW_BAND or 0.5
 local FRACTION_COLOR_GT_MEDIUM_BAND = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_MEDIUM_BAND or 0.25
 
+local RESOURCE_ZERO_DIM_ALPHA_MUL = 0.45
+
+local function resource_stack_effective_opacity(hud_row_opacity, is_at_zero)
+	if type(hud_row_opacity) ~= "number" or hud_row_opacity ~= hud_row_opacity then
+		return 0
+	end
+
+	if is_at_zero then
+		return hud_row_opacity * RESOURCE_ZERO_DIM_ALPHA_MUL
+	end
+
+	return hud_row_opacity
+end
+
 local function read_mod_numeric_setting(key)
 	local settings = mod._settings
 	local v = settings and settings[key]
@@ -176,6 +190,19 @@ local function resolve_ammo_palette_color_from_fraction(fraction)
 	end
 end
 
+local function apply_tinted_icon_color_from_palette(c, palette_argb, hud_row_opacity, is_at_zero)
+	if not c or not is_valid_argb_255(palette_argb) then
+		return
+	end
+
+	local eff = resource_stack_effective_opacity(hud_row_opacity, is_at_zero)
+
+	c[1] = math.floor((palette_argb[1] or 255) * eff)
+	c[2] = palette_argb[2] or 255
+	c[3] = palette_argb[3] or 255
+	c[4] = palette_argb[4] or 255
+end
+
 local function resolve_grenade_charge_fraction_from_player_unit(player_unit)
 	if not player_unit then
 		return 1
@@ -252,6 +279,40 @@ local function resolve_stimm_slot_main_argb_255(stimm_template_id, s_cfg)
 	return DIVISION_STIMM_SLOT_TYPE_COLORS[stimm_template_id]
 end
 
+local function get_stimm_countdown_display_for_player_unit(player_unit)
+	if not player_unit then
+		return nil
+	end
+
+	local s_cfg = mod._settings
+
+	if type(s_cfg) ~= "table" or s_cfg.integration_stimm_countdown == false or s_cfg.integration_stimm_countdown == 0 then
+		return nil
+	end
+
+	local get_mod_fn = rawget(_G, "get_mod")
+	local sm = type(get_mod_fn) == "function" and get_mod_fn("StimmCountdown") or nil
+	local stimm_api = sm and type(sm.stimm_countdown_api) == "table" and sm.stimm_countdown_api or nil
+	local get_timer_fn = stimm_api and stimm_api.get_display_for_unit
+
+	if
+		not stimm_api
+		or type(get_timer_fn) ~= "function"
+		or type(sm.is_enabled) ~= "function"
+		or not sm:is_enabled()
+	then
+		return nil
+	end
+
+	local r = get_timer_fn(player_unit)
+
+	if type(r) == "table" and r.visible and type(r.text) == "string" and r.text ~= "" then
+		return r
+	end
+
+	return nil
+end
+
 local function apply_right_slot_icon_color(widget, widget_name, entry, opacity, s_cfg, player_unit)
 	local icon_style = widget and widget.style and widget.style.icon
 
@@ -262,9 +323,28 @@ local function apply_right_slot_icon_color(widget, widget_name, entry, opacity, 
 	local c = icon_style.color
 
 	if widget_name == "slot_stimm" then
+		local is_pocket_small = entry and entry.slot_id == "slot_pocketable_small"
+		local has_stimm = is_pocket_small and entry.has_equipment
+		local stimm_cd = get_stimm_countdown_display_for_player_unit(player_unit)
+
+		if not has_stimm and not stimm_cd then
+			apply_tinted_icon_color_from_palette(c, UIHudSettings.color_tint_main_1, opacity, true)
+
+			return
+		end
+
+		if not has_stimm and stimm_cd then
+			c[1] = math.floor(255 * opacity)
+			c[2] = 255
+			c[3] = 255
+			c[4] = 255
+
+			return
+		end
+
 		local tint_on = type(s_cfg) ~= "table" or s_cfg.stimm_slot_icon_tint_by_type ~= false
 
-		if not tint_on or not entry or entry.slot_id ~= "slot_pocketable_small" or not entry.has_equipment then
+		if not tint_on then
 			c[1] = math.floor(255 * opacity)
 			c[2] = 255
 			c[3] = 255
@@ -292,24 +372,43 @@ local function apply_right_slot_icon_color(widget, widget_name, entry, opacity, 
 		return
 	end
 
-	if
-		widget_name == "slot_blitz"
-		and entry
-		and entry.slot_id == "slot_grenade_ability"
-		and grenade_slot_fraction_coloring_enabled()
-		and player_unit
-	then
-		local fraction = resolve_grenade_charge_fraction_from_player_unit(player_unit)
-		local palette_argb = resolve_ammo_palette_color_from_fraction(fraction)
-
-		if is_valid_argb_255(palette_argb) then
-			c[1] = math.floor((palette_argb[1] or 255) * opacity)
-			c[2] = palette_argb[2] or 255
-			c[3] = palette_argb[3] or 255
-			c[4] = palette_argb[4] or 255
-
-			return
+	if widget_name == "slot_pickup" and entry and entry.slot_id == "slot_pocketable" then
+		if not entry.has_equipment then
+			apply_tinted_icon_color_from_palette(c, UIHudSettings.color_tint_main_1, opacity, true)
+		else
+			c[1] = math.floor(255 * opacity)
+			c[2] = 255
+			c[3] = 255
+			c[4] = 255
 		end
+
+		return
+	end
+
+	if widget_name == "slot_blitz" and entry and entry.slot_id == "slot_grenade_ability" and player_unit then
+		local fraction = resolve_grenade_charge_fraction_from_player_unit(player_unit)
+		local is_zero = fraction <= 0
+
+		if grenade_slot_fraction_coloring_enabled() then
+			if is_zero then
+				apply_tinted_icon_color_from_palette(c, UIHudSettings.color_tint_main_1, opacity, true)
+			else
+				local palette_argb = resolve_ammo_palette_color_from_fraction(fraction)
+
+				apply_tinted_icon_color_from_palette(c, palette_argb, opacity, false)
+			end
+		else
+			if is_zero then
+				apply_tinted_icon_color_from_palette(c, UIHudSettings.color_tint_main_1, opacity, true)
+			else
+				c[1] = math.floor(255 * opacity)
+				c[2] = 255
+				c[3] = 255
+				c[4] = 255
+			end
+		end
+
+		return
 	end
 
 	c[1] = math.floor(255 * opacity)
@@ -686,10 +785,19 @@ HudElementDivisionHUD._update_ammo_big = function(self, player_unit, widget, opa
 
 	local slot_component = unit_data_extension:read_component(ammo_slot_id)
 	local fraction = resolve_ammo_total_fraction(slot_component)
-	local palette = ammo_text_fraction_coloring_enabled() and resolve_ammo_palette_color_from_fraction(fraction)
-		or UIHudSettings.color_tint_main_1
+	local is_zero = fraction <= 0
+	local eff_opacity = resource_stack_effective_opacity(opacity, is_zero)
+	local palette
 
-	apply_ammo_big_text_colors(widget, opacity, palette)
+	if is_zero then
+		palette = UIHudSettings.color_tint_main_1
+	elseif ammo_text_fraction_coloring_enabled() then
+		palette = resolve_ammo_palette_color_from_fraction(fraction)
+	else
+		palette = UIHudSettings.color_tint_main_1
+	end
+
+	apply_ammo_big_text_colors(widget, eff_opacity, palette)
 	widget.dirty = true
 end
 
@@ -740,7 +848,14 @@ HudElementDivisionHUD._update_expedition_salvage = function(self, local_player, 
 	local text_color = widget.style.text and widget.style.text.text_color
 
 	if text_color then
-		text_color[1] = 255 * opacity
+		local is_zero = amount <= 0
+		local base = is_zero and UIHudSettings.color_tint_ammo_high or UIHudSettings.color_tint_main_1
+		local eff = resource_stack_effective_opacity(opacity, is_zero)
+
+		text_color[1] = math.floor((base[1] or 255) * eff)
+		text_color[2] = base[2] or 255
+		text_color[3] = base[3] or 255
+		text_color[4] = base[4] or 255
 	end
 
 	widget.dirty = true
@@ -838,44 +953,67 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 				tc[4] = default_tc[4]
 
 				if name == "slot_stimm" then
-					local s_cfg = mod._settings
+					local stimm_cd = get_stimm_countdown_display_for_player_unit(player_unit)
 
-					if type(s_cfg) == "table" and s_cfg.integration_stimm_countdown ~= false then
-						local get_mod_fn = rawget(_G, "get_mod")
-						local sm = type(get_mod_fn) == "function" and get_mod_fn("StimmCountdown") or nil
-						local stimm_api = sm and type(sm.stimm_countdown_api) == "table" and sm.stimm_countdown_api or nil
-						local get_timer_fn = stimm_api and stimm_api.get_display_for_unit
+					if stimm_cd then
+						widget.content.text = format_stimm_timer_text_as_whole_seconds(stimm_cd.text)
 
-						if
-							stimm_api
-							and type(get_timer_fn) == "function"
-							and type(sm.is_enabled) == "function"
-							and sm:is_enabled()
-						then
-							local r = get_timer_fn(player_unit)
+						local base = stimm_cd.phase == "active" and DIVISION_STIMM_TIMER_ACTIVE_COLOR or DIVISION_STIMM_TIMER_COOLDOWN_COLOR
 
-							if type(r) == "table" and r.visible and r.text ~= "" then
-								widget.content.text = format_stimm_timer_text_as_whole_seconds(r.text)
+						tc[1] = math.floor((base[1] or 255) * opacity)
+						tc[2] = base[2]
+						tc[3] = base[3]
+						tc[4] = base[4]
+					elseif slot_id == "slot_pocketable_small" and not entry.has_equipment then
+						local pal = UIHudSettings.color_tint_main_1
+						local eff = resource_stack_effective_opacity(opacity, true)
 
-								local base = r.phase == "active" and DIVISION_STIMM_TIMER_ACTIVE_COLOR or DIVISION_STIMM_TIMER_COOLDOWN_COLOR
+						tc[1] = math.floor((pal[1] or 255) * eff)
+						tc[2] = pal[2] or 255
+						tc[3] = pal[3] or 255
+						tc[4] = pal[4] or 255
+					end
+				elseif name == "slot_blitz" and slot_id == "slot_grenade_ability" then
+					local fraction = resolve_grenade_charge_fraction_from_player_unit(player_unit)
+					local is_zero = fraction <= 0
 
-								tc[1] = math.floor((base[1] or 255) * opacity)
-								tc[2] = base[2]
-								tc[3] = base[3]
-								tc[4] = base[4]
+					if grenade_slot_fraction_coloring_enabled() then
+						if is_zero then
+							local pal = UIHudSettings.color_tint_main_1
+							local eff = resource_stack_effective_opacity(opacity, true)
+
+							tc[1] = math.floor((pal[1] or 255) * eff)
+							tc[2] = pal[2] or 255
+							tc[3] = pal[3] or 255
+							tc[4] = pal[4] or 255
+						else
+							local palette_argb = resolve_ammo_palette_color_from_fraction(fraction)
+							local eff = resource_stack_effective_opacity(opacity, false)
+
+							if is_valid_argb_255(palette_argb) then
+								tc[1] = math.floor((palette_argb[1] or 255) * eff)
+								tc[2] = palette_argb[2] or 255
+								tc[3] = palette_argb[3] or 255
+								tc[4] = palette_argb[4] or 255
 							end
 						end
-					end
-				elseif name == "slot_blitz" and slot_id == "slot_grenade_ability" and grenade_slot_fraction_coloring_enabled() then
-					local fraction = resolve_grenade_charge_fraction_from_player_unit(player_unit)
-					local palette_argb = resolve_ammo_palette_color_from_fraction(fraction)
+					elseif is_zero then
+						local pal = UIHudSettings.color_tint_main_1
+						local eff = resource_stack_effective_opacity(opacity, true)
 
-					if is_valid_argb_255(palette_argb) then
-						tc[1] = math.floor((palette_argb[1] or 255) * opacity)
-						tc[2] = palette_argb[2] or 255
-						tc[3] = palette_argb[3] or 255
-						tc[4] = palette_argb[4] or 255
+						tc[1] = math.floor((pal[1] or 255) * eff)
+						tc[2] = pal[2] or 255
+						tc[3] = pal[3] or 255
+						tc[4] = pal[4] or 255
 					end
+				elseif name == "slot_pickup" and slot_id == "slot_pocketable" and not entry.has_equipment then
+					local pal = UIHudSettings.color_tint_main_1
+					local eff = resource_stack_effective_opacity(opacity, true)
+
+					tc[1] = math.floor((pal[1] or 255) * eff)
+					tc[2] = pal[2] or 255
+					tc[3] = pal[3] or 255
+					tc[4] = pal[4] or 255
 				else
 					widget.style.text.text_color[1] = 255 * opacity
 				end
