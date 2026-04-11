@@ -84,6 +84,16 @@ return {
 		ru = "Если включено и мод StimmCountdown загружен и включён, в слоте карманного шприца в полоске Division HUD показывается отсчёт (действие / перезарядка) с учётом настроек того мода. Если выключено — только обычные 01/00.",
 		["zh-cn"] = "启用后，若 StimmCountdown 模组已加载并启用，Division HUD 条带中的口袋注射器槽位将按该模组显示倒计时（生效中/冷却中）。关闭时，槽位仅显示常规的 01/00 计数。",
 	},
+	ammo_text_color_by_fraction = {
+		en = "Ammo text color by remaining fraction",
+		ru = "Цвет патронов по доле боезапаса",
+		["zh-cn"] = "按弹药比例着色弹药文字",
+	},
+	ammo_text_color_by_fraction_description = {
+		en = "When enabled, the large ammo numbers tint by total ammo fraction: above 75% main, above 50% low, above 25% medium, 25% or less high. When off, they use the default main color.",
+		ru = "Если включено, крупные цифры патронов окрашиваются по доле боезапаса: выше 75% — основной цвет; выше 50% и не выше 75% — низкий запас; выше 25% и не выше 50% — средний; 25% и ниже — критический. Если выключено — обычный основной цвет.",
+		["zh-cn"] = "启用后，大号弹药数字按总弹药比例着色：高于 75% 主色；高于 50% 且不高于 75% 为低弹药色；高于 25% 且不高于 50% 为中档；25% 及以下为高警示色。关闭时使用默认主色。",
+	},
 	stimm_slot_icon_tint_by_type = {
 		en = "Color pocket stimm icon",
 		ru = "Цвет иконки шприца",

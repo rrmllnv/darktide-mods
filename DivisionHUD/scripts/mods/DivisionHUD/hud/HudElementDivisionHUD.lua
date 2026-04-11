@@ -52,8 +52,11 @@ local COMBAT_ABILITY_TYPE = "combat_ability"
 local GRENADE_ABILITY_TYPE = "grenade_ability"
 
 local HUD_LAYOUT_SCALE = Definitions.HUD_LAYOUT_SCALE or 1
+local AMMO_FR_GT_MAIN = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_MAIN or 0.75
+local AMMO_FR_GT_LOW_BAND = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_LOW_BAND or 0.5
+local AMMO_FR_GT_MEDIUM_BAND = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_MEDIUM_BAND or 0.25
 
-local function division_hud_mod_numeric(key)
+local function read_mod_numeric_setting(key)
 	local settings = mod._settings
 	local v = settings and settings[key]
 
@@ -70,11 +73,11 @@ local function division_hud_mod_numeric(key)
 	return 0
 end
 
-local function division_hud_wrapped_angle_delta(prev_rad, curr_rad)
+local function wrapped_angle_delta(prev_rad, curr_rad)
 	return (curr_rad - prev_rad + math.pi) % (math.pi * 2) - math.pi
 end
 
-local function division_hud_format_stimm_timer_text_as_whole_seconds(text)
+local function format_stimm_timer_text_as_whole_seconds(text)
 	if type(text) ~= "string" or text == "" then
 		return text
 	end
@@ -94,7 +97,7 @@ local function division_hud_format_stimm_timer_text_as_whole_seconds(text)
 	return string.format("%02d", whole)
 end
 
-local function division_hud_is_valid_argb_255(c)
+local function is_valid_argb_255(c)
 	return type(c) == "table"
 		and type(c[1]) == "number"
 		and type(c[2]) == "number"
@@ -102,7 +105,92 @@ local function division_hud_is_valid_argb_255(c)
 		and type(c[4]) == "number"
 end
 
-local function division_hud_resolve_stimm_slot_main_argb_255(stimm_template_id, s_cfg)
+local function resolve_ammo_total_fraction(slot_component)
+	if not slot_component then
+		return 0
+	end
+
+	local max_reserve = Ammo.max_ammo_in_reserve(slot_component) or 0
+	local current_reserve = Ammo.current_ammo_in_reserve(slot_component) or 0
+	local total_current_ammo = current_reserve
+	local total_max_ammo = max_reserve
+
+	for i = 1, NetworkConstants.clips_in_use.max_size do
+		local max_clip = Ammo.max_ammo_in_clips(slot_component, i) or 0
+		local current_clip = Ammo.current_ammo_in_clips(slot_component, i) or 0
+
+		total_current_ammo = total_current_ammo + current_clip
+		total_max_ammo = total_max_ammo + max_clip
+	end
+
+	local weapon_ammo_fraction = 0
+
+	if total_max_ammo > 0 then
+		weapon_ammo_fraction = total_current_ammo / total_max_ammo
+	end
+
+	return weapon_ammo_fraction
+end
+
+local function ammo_text_fraction_coloring_enabled()
+	local s = mod._settings
+
+	if type(s) ~= "table" then
+		return true
+	end
+
+	local v = s.ammo_text_color_by_fraction
+
+	if v == false or v == 0 then
+		return false
+	end
+
+	return true
+end
+
+local function resolve_ammo_palette_color_from_fraction(fraction)
+	if fraction > AMMO_FR_GT_MAIN then
+		return UIHudSettings.color_tint_main_1
+	elseif fraction > AMMO_FR_GT_LOW_BAND then
+		return UIHudSettings.color_tint_ammo_low
+	elseif fraction > AMMO_FR_GT_MEDIUM_BAND then
+		return UIHudSettings.color_tint_ammo_medium
+	else
+		return UIHudSettings.color_tint_ammo_high
+	end
+end
+
+local function apply_ammo_big_text_colors(widget, opacity, palette_argb)
+	local st = widget and widget.style
+
+	if not st or not is_valid_argb_255(palette_argb) then
+		return
+	end
+
+	local a = palette_argb[1] or 255
+	local r = palette_argb[2] or 255
+	local g = palette_argb[3] or 255
+	local bch = palette_argb[4] or 255
+	local alpha_scaled = math.floor(a * opacity)
+
+	local function apply_pass(pass_name)
+		local tc = st[pass_name] and st[pass_name].text_color
+
+		if not tc then
+			return
+		end
+
+		tc[1] = alpha_scaled
+		tc[2] = r
+		tc[3] = g
+		tc[4] = bch
+	end
+
+	apply_pass("text")
+	apply_pass("text_reserve")
+end
+
+local function resolve_stimm_slot_main_argb_255(stimm_template_id, s_cfg)
 	if type(stimm_template_id) ~= "string" or stimm_template_id == "" then
 		return nil
 	end
@@ -119,7 +207,7 @@ local function division_hud_resolve_stimm_slot_main_argb_255(stimm_template_id, 
 	then
 		local from_recolor = rm.get_stimm_argb_255(stimm_template_id)
 
-		if division_hud_is_valid_argb_255(from_recolor) then
+		if is_valid_argb_255(from_recolor) then
 			return from_recolor
 		end
 	end
@@ -127,7 +215,7 @@ local function division_hud_resolve_stimm_slot_main_argb_255(stimm_template_id, 
 	return DIVISION_STIMM_SLOT_TYPE_COLORS[stimm_template_id]
 end
 
-local function division_hud_apply_right_slot_icon_color(widget, widget_name, entry, opacity, s_cfg)
+local function apply_right_slot_icon_color(widget, widget_name, entry, opacity, s_cfg)
 	local icon_style = widget and widget.style and widget.style.icon
 
 	if not icon_style or not icon_style.color then
@@ -158,9 +246,9 @@ local function division_hud_apply_right_slot_icon_color(widget, widget_name, ent
 
 	local item = entry.item
 	local stimm_id = item and type(item.weapon_template) == "string" and item.weapon_template or nil
-	local main = stimm_id and division_hud_resolve_stimm_slot_main_argb_255(stimm_id, s_cfg) or nil
+	local main = stimm_id and resolve_stimm_slot_main_argb_255(stimm_id, s_cfg) or nil
 
-	if division_hud_is_valid_argb_255(main) then
+	if is_valid_argb_255(main) then
 		c[1] = math.floor((main[1] or 255) * opacity)
 		c[2] = main[2] or 255
 		c[3] = main[3] or 255
@@ -173,21 +261,21 @@ local function division_hud_apply_right_slot_icon_color(widget, widget_name, ent
 	end
 end
 
-HudElementDivisionHUD._division_hud_reset_dynamic_offset_state = function(self)
-	self._division_hud_dyn_prev_yaw = nil
-	self._division_hud_dyn_prev_pitch = nil
-	self._division_hud_dyn_ox = 0
-	self._division_hud_dyn_oy = 0
+HudElementDivisionHUD._reset_dynamic_offset_state = function(self)
+	self._dyn_prev_yaw = nil
+	self._dyn_prev_pitch = nil
+	self._dyn_ox = 0
+	self._dyn_oy = 0
 end
 
-HudElementDivisionHUD._division_hud_compute_dynamic_root_offset = function(self, dt, player)
-	local strength = division_hud_mod_numeric("dynamic_hud_strength")
-	local pitch_ratio = division_hud_mod_numeric("dynamic_hud_pitch_ratio")
-	local decay_hz = division_hud_mod_numeric("dynamic_hud_decay")
-	local max_off = division_hud_mod_numeric("dynamic_hud_max_offset")
+HudElementDivisionHUD._compute_dynamic_root_offset = function(self, dt, player)
+	local strength = read_mod_numeric_setting("dynamic_hud_strength")
+	local pitch_ratio = read_mod_numeric_setting("dynamic_hud_pitch_ratio")
+	local decay_hz = read_mod_numeric_setting("dynamic_hud_decay")
+	local max_off = read_mod_numeric_setting("dynamic_hud_max_offset")
 
 	if not player or player.get_orientation == nil then
-		self:_division_hud_reset_dynamic_offset_state()
+		self:_reset_dynamic_offset_state()
 
 		return 0, 0
 	end
@@ -195,42 +283,42 @@ HudElementDivisionHUD._division_hud_compute_dynamic_root_offset = function(self,
 	local orientation = player:get_orientation()
 
 	if not orientation or type(orientation.yaw) ~= "number" or type(orientation.pitch) ~= "number" then
-		self:_division_hud_reset_dynamic_offset_state()
+		self:_reset_dynamic_offset_state()
 
 		return 0, 0
 	end
 
 	local yaw = orientation.yaw
 	local pitch = orientation.pitch
-	local ox = self._division_hud_dyn_ox or 0
-	local oy = self._division_hud_dyn_oy or 0
+	local ox = self._dyn_ox or 0
+	local oy = self._dyn_oy or 0
 	local decay = math.exp(-decay_hz * dt)
 
 	ox = ox * decay
 	oy = oy * decay
 
-	local prev_yaw = self._division_hud_dyn_prev_yaw
+	local prev_yaw = self._dyn_prev_yaw
 
 	if prev_yaw then
-		local dyaw = division_hud_wrapped_angle_delta(prev_yaw, yaw)
+		local dyaw = wrapped_angle_delta(prev_yaw, yaw)
 
 		ox = ox - strength * dyaw
 	end
 
-	local prev_pitch = self._division_hud_dyn_prev_pitch
+	local prev_pitch = self._dyn_prev_pitch
 
 	if prev_pitch then
-		local dpitch = division_hud_wrapped_angle_delta(prev_pitch, pitch)
+		local dpitch = wrapped_angle_delta(prev_pitch, pitch)
 
 		oy = oy + strength * pitch_ratio * dpitch
 	end
 
-	self._division_hud_dyn_prev_yaw = yaw
-	self._division_hud_dyn_prev_pitch = pitch
+	self._dyn_prev_yaw = yaw
+	self._dyn_prev_pitch = pitch
 	ox = math.clamp(ox, -max_off, max_off)
 	oy = math.clamp(oy, -max_off, max_off)
-	self._division_hud_dyn_ox = ox
-	self._division_hud_dyn_oy = oy
+	self._dyn_ox = ox
+	self._dyn_oy = oy
 
 	return ox * HUD_LAYOUT_SCALE, oy * HUD_LAYOUT_SCALE
 end
@@ -251,11 +339,11 @@ HudElementDivisionHUD._build_extensions = function(self, player_unit)
 	}
 end
 
-local function division_hud_icon_is_texture_bitmap_path(icon_path)
+local function icon_is_texture_bitmap_path(icon_path)
 	return type(icon_path) == "string" and string.find(icon_path, "/textures/", 1, true) ~= nil
 end
 
-local function division_hud_icon_must_skip_create_material(icon_path)
+local function icon_must_skip_create_material(icon_path)
 	if type(icon_path) ~= "string" then
 		return false
 	end
@@ -286,7 +374,7 @@ HudElementDivisionHUD._apply_slot_icon_material = function(self, widget, entry)
 	local icon_style = widget.style and widget.style.icon
 
 	if slot_id == "slot_auspex_display" and icon_style then
-		if division_hud_icon_is_texture_bitmap_path(icon) then
+		if icon_is_texture_bitmap_path(icon) then
 			widget.content.icon = Definitions.HUD_WEAPON_ICON_CONTAINER
 
 			if not icon_style.material_values then
@@ -295,7 +383,7 @@ HudElementDivisionHUD._apply_slot_icon_material = function(self, widget, entry)
 
 			icon_style.material_values.texture_map = icon
 			icon_style.material_values.use_placeholder_texture = 0
-		elseif division_hud_icon_must_skip_create_material(icon) then
+		elseif icon_must_skip_create_material(icon) then
 			widget.content.icon = icon
 			icon_style.material_values = nil
 		else
@@ -311,7 +399,7 @@ HudElementDivisionHUD._apply_slot_icon_material = function(self, widget, entry)
 		icon_style.default_size[2] = auspex_sz
 		icon_style.aspect_ratio = 1
 	elseif slot_id == "slot_wielded_display" and icon_style then
-		if division_hud_icon_is_texture_bitmap_path(icon) then
+		if icon_is_texture_bitmap_path(icon) then
 			widget.content.icon = Definitions.HUD_WEAPON_ICON_CONTAINER
 
 			if not icon_style.material_values then
@@ -320,7 +408,7 @@ HudElementDivisionHUD._apply_slot_icon_material = function(self, widget, entry)
 
 			icon_style.material_values.texture_map = icon
 			icon_style.material_values.use_placeholder_texture = 0
-		elseif division_hud_icon_must_skip_create_material(icon) then
+		elseif icon_must_skip_create_material(icon) then
 			widget.content.icon = icon
 			icon_style.material_values = nil
 		else
@@ -529,8 +617,7 @@ HudElementDivisionHUD._update_ammo_big = function(self, player_unit, widget, opa
 	if not ammo_slot_id then
 		widget.content.text = ""
 		widget.content.text_reserve = ""
-		widget.style.text.text_color[1] = 255 * opacity
-		widget.style.text_reserve.text_color[1] = 255 * opacity
+		apply_ammo_big_text_colors(widget, opacity, UIHudSettings.color_tint_main_1)
 		widget.dirty = true
 		return
 	end
@@ -539,8 +626,13 @@ HudElementDivisionHUD._update_ammo_big = function(self, player_unit, widget, opa
 
 	widget.content.text = string.format("%d", clip)
 	widget.content.text_reserve = string.format("%d", reserve)
-	widget.style.text.text_color[1] = 255 * opacity
-	widget.style.text_reserve.text_color[1] = 255 * opacity
+
+	local slot_component = unit_data_extension:read_component(ammo_slot_id)
+	local fraction = resolve_ammo_total_fraction(slot_component)
+	local palette = ammo_text_fraction_coloring_enabled() and resolve_ammo_palette_color_from_fraction(fraction)
+		or UIHudSettings.color_tint_main_1
+
+	apply_ammo_big_text_colors(widget, opacity, palette)
 	widget.dirty = true
 end
 
@@ -671,7 +763,7 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 
 			widget.content.visible = true
 			self:_apply_slot_icon_material(widget, entry)
-			division_hud_apply_right_slot_icon_color(widget, name, entry, opacity, mod._settings)
+			apply_right_slot_icon_color(widget, name, entry, opacity, mod._settings)
 
 			if widget.style.text then
 				if name == "slot_weapon_wielded" then
@@ -706,7 +798,7 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 							local r = get_timer_fn(player_unit)
 
 							if type(r) == "table" and r.visible and r.text ~= "" then
-								widget.content.text = division_hud_format_stimm_timer_text_as_whole_seconds(r.text)
+								widget.content.text = format_stimm_timer_text_as_whole_seconds(r.text)
 
 								local base = r.phase == "active" and DIVISION_STIMM_TIMER_ACTIVE_COLOR or DIVISION_STIMM_TIMER_COOLDOWN_COLOR
 
@@ -727,7 +819,7 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 	end
 end
 
-local function division_hud_apply_alert_pass_colors(st, palette, opacity)
+local function apply_alert_pass_colors(st, palette, opacity)
 	if not st or type(palette) ~= "table" or type(opacity) ~= "number" then
 		return
 	end
@@ -850,7 +942,7 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 					local pal = cat == "boss" and ALERT_PALETTE_BOSS or ALERT_PALETTE_DEFAULT
 
 					if type(pal) == "table" then
-						division_hud_apply_alert_pass_colors(st, pal, opacity)
+						apply_alert_pass_colors(st, pal, opacity)
 					end
 
 					if msg_tc and type(msg_tc[1]) == "number" then
@@ -915,7 +1007,7 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	VanillaStaminaDodge.init(self, Definitions)
 	VanillaToughnessHealth.init(self, Definitions)
 
-	self:_division_hud_reset_dynamic_offset_state()
+	self:_reset_dynamic_offset_state()
 
 	local widgets = self._widgets_by_name
 	local skip_init_hide = Definitions.VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS
@@ -938,9 +1030,9 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 		local dyn_x, dyn_y = 0, 0
 
 		if DynamicHudContext.dynamic_hud_enabled(mod, DivisionHUDSettingsDefaults) then
-			dyn_x, dyn_y = self:_division_hud_compute_dynamic_root_offset(dt, local_player)
+			dyn_x, dyn_y = self:_compute_dynamic_root_offset(dt, local_player)
 		else
-			self:_division_hud_reset_dynamic_offset_state()
+			self:_reset_dynamic_offset_state()
 		end
 
 		local integrate_chud = type(s) == "table" and s.integration_custom_hud == true
@@ -978,7 +1070,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	HudElementDivisionHUD.super.update(self, dt, t, ui_renderer, render_settings, input_service)
 
 	if is_in_hub then
-		self:_division_hud_reset_dynamic_offset_state()
+		self:_reset_dynamic_offset_state()
 
 		if mod.alerts_clear then
 			mod.alerts_clear()
@@ -989,7 +1081,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	end
 
 	if not local_player or not player_unit then
-		self:_division_hud_reset_dynamic_offset_state()
+		self:_reset_dynamic_offset_state()
 
 		if mod.alerts_clear then
 			mod.alerts_clear()
@@ -1066,7 +1158,7 @@ HudElementDivisionHUD.draw = function(self, dt, t, ui_renderer, render_settings,
 end
 
 HudElementDivisionHUD.destroy = function(self, ui_renderer)
-	self:_division_hud_reset_dynamic_offset_state()
+	self:_reset_dynamic_offset_state()
 
 	VanillaStaminaDodge.destroy(self, ui_renderer)
 	VanillaToughnessHealth.destroy(self, ui_renderer)

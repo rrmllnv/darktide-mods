@@ -100,6 +100,13 @@ return {
 						tooltip_text = "stimm_slot_icon_tint_by_type_description",
 						default_value = d("stimm_slot_icon_tint_by_type", true),
 					},
+					{
+						setting_id = "ammo_text_color_by_fraction",
+						type = "checkbox",
+						title = "ammo_text_color_by_fraction",
+						tooltip_text = "ammo_text_color_by_fraction_description",
+						default_value = d("ammo_text_color_by_fraction", true),
+					},
 				},
 			},
 			{
