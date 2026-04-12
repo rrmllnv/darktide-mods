@@ -319,6 +319,81 @@ return {
 		ru = string.rep("\194\160", 8) .. "Специалисты",
 		["zh-cn"] = string.rep("\194\160", 8) .. "专家单位",
 	},
+	alerts_group_team = {
+		en = string.rep("\194\160", 8) .. "Team",
+		ru = string.rep("\194\160", 8) .. "Команда",
+		["zh-cn"] = string.rep("\194\160", 8) .. "小队",
+	},
+	alerts_group_team_description = {
+		en = "Show teammate knockdowns, trapper net, Pox Hound pin, and deaths in the Division HUD alert strip (same layout as other alerts). The player name uses the squad slot color.",
+		ru = "Показывать нокдауны, сеть ловушечника, схват чумной гончей и смерти союзников в полоске оповещений Division HUD (как остальные алерты). Ник окрашивается цветом слота отряда.",
+		["zh-cn"] = "在小队警报条中显示队友倒地、陷阱网、瘟疫猎犬压制与死亡（样式与其他警报一致）。玩家昵称使用队伍槽位颜色。",
+	},
+	alerts_team_knock = {
+		en = "Knockdowns",
+		ru = "Кнок",
+		["zh-cn"] = "倒地",
+	},
+	alerts_team_knock_description = {
+		en = "When a teammate enters the knocked down state, enqueue an alert line.",
+		ru = "Когда союзник падает в нокдаун, добавлять строку в оповещения.",
+		["zh-cn"] = "队友进入倒地状态时加入一条警报。",
+	},
+	alerts_team_net = {
+		en = "Trapper net",
+		ru = "Сеть",
+		["zh-cn"] = "陷阱网",
+	},
+	alerts_team_net_description = {
+		en = "When a teammate enters the netted state (Scab Trapper net), enqueue an alert line. Uses the same disabled_character_state check as the vanilla player panel.",
+		ru = "Когда союзник попадает в состояние «в сети» (сеть Скаб-ловушечника), добавлять строку. Проверка disabled_character_state + PlayerUnitStatus.is_netted, как у ванильной панели игрока.",
+		["zh-cn"] = "队友进入“被网住”状态（陷阱兵网）时加入一条警报；与游戏内玩家面板一致读取 disabled_character_state 与 is_netted。",
+	},
+	alerts_team_hound = {
+		en = "Hound pin",
+		ru = "Собака",
+		["zh-cn"] = "猎犬压制",
+	},
+	alerts_team_hound_description = {
+		en = "When a teammate enters the pounced disabled state (Pox Hound pin), enqueue an alert line. Uses the same disabled_character_state check as the vanilla player panel.",
+		ru = "Когда союзник в состоянии «схвачен» с типом pounced (чумная гончая), добавлять строку. Проверка disabled_character_state + PlayerUnitStatus.is_pounced, как у ванильной панели игрока.",
+		["zh-cn"] = "队友进入 pounced 压制（瘟疫猎犬）时加入一条警报；与游戏内玩家面板一致读取 disabled_character_state 与 is_pounced。",
+	},
+	alerts_team_death = {
+		en = "Deaths",
+		ru = "Смерти",
+		["zh-cn"] = "死亡",
+	},
+	alerts_team_death_description = {
+		en = "When a teammate dies, enqueue an alert line.",
+		ru = "Когда союзник умирает, добавлять строку в оповещения.",
+		["zh-cn"] = "队友死亡时加入一条警报。",
+	},
+	alerts_team_strip = {
+		en = "Team",
+		ru = "Команда",
+		["zh-cn"] = "小队",
+	},
+	alerts_team_suffix_knock = {
+		en = "knocked down",
+		ru = "упал",
+		["zh-cn"] = "倒地",
+	},
+	alerts_team_suffix_death = {
+		en = "died",
+		ru = "умер",
+		["zh-cn"] = "阵亡",
+	},
+	alerts_team_suffix_trapper_net = {
+		en = "caught in a trapper net",
+		ru = "попал в сеть ловушечника",
+		["zh-cn"] = "被陷阱兵网住",
+	},
+	alerts_team_suffix_hound_pounce = {
+		en = "pinned by a Pox Hound",
+		ru = "его схватила чумная гончая",
+		["zh-cn"] = "被瘟疫猎犬扑倒",
+	},
 	alerts_ui_banner_alert = {
 		en = "ALERT",
 		ru = "ВНИМАНИЕ",

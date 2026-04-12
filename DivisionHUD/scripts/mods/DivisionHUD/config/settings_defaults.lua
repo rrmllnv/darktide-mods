@@ -38,6 +38,10 @@ local defaults = {
 	alerts_max_visible = 2,
 	alerts_duration_sec = 6,
 	alerts_show_duration_bar = true,
+	alerts_team_knock = true,
+	alerts_team_net = true,
+	alerts_team_hound = true,
+	alerts_team_death = true,
 }
 
 if type(AlertsBossBreeds) == "table" and type(AlertsBossBreeds.list) == "table" then

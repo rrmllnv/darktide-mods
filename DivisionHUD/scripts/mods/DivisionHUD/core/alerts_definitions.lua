@@ -140,6 +140,43 @@ function M.build(bar_width, bar_label_w, sc)
 		strip_text = ColorUtilities.clone(UIHudSettings.color_tint_main_1),
 		duration_bar = ColorUtilities.clone(UIHudSettings.get_hud_color("color_tint_main_2", 255)),
 	}
+	local ALERT_TEAM_UPPER_RGBA = {
+		230,
+		48,
+		56,
+		72,
+	}
+	local ALERT_TEAM_EMITTER_RGBA = {
+		230,
+		64,
+		98,
+		118,
+	}
+	local ALERT_TEAM_STRIP_RGBA = {
+		230,
+		52,
+		88,
+		118,
+	}
+	local ALERT_TEAM_STRIP_TEXT_RGBA = {
+		255,
+		232,
+		240,
+		252,
+	}
+	local ALERT_TEAM_DURATION_RGBA = {
+		230,
+		72,
+		118,
+		158,
+	}
+	local ALERT_PALETTE_TEAM = {
+		upper = table.clone(ALERT_TEAM_UPPER_RGBA),
+		emitter = table.clone(ALERT_TEAM_EMITTER_RGBA),
+		strip = table.clone(ALERT_TEAM_STRIP_RGBA),
+		strip_text = table.clone(ALERT_TEAM_STRIP_TEXT_RGBA),
+		duration_bar = table.clone(ALERT_TEAM_DURATION_RGBA),
+	}
 	local ALERTS_STACK_TOTAL_HEIGHT = ALERTS_MAX_SLOTS * (ALERTS_SLOT_HEIGHT + ALERTS_SLOT_GAP) - ALERTS_SLOT_GAP
 
 	local scenegraph_definition = {
@@ -315,6 +352,7 @@ function M.build(bar_width, bar_label_w, sc)
 		ALERT_PALETTE_DEFAULT = ALERT_PALETTE_DEFAULT,
 		ALERT_PALETTE_BOSS = ALERT_PALETTE_BOSS,
 		ALERT_PALETTE_MISSION_OBJECTIVE = ALERT_PALETTE_MISSION_OBJECTIVE,
+		ALERT_PALETTE_TEAM = ALERT_PALETTE_TEAM,
 	}
 end
 

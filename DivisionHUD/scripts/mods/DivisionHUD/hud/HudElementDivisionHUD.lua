@@ -48,6 +48,7 @@ local ALERT_BAR_WIDTH = Definitions.BAR_WIDTH or 1
 local ALERT_PALETTE_DEFAULT = Definitions.ALERT_PALETTE_DEFAULT
 local ALERT_PALETTE_BOSS = Definitions.ALERT_PALETTE_BOSS
 local ALERT_PALETTE_MISSION_OBJECTIVE = Definitions.ALERT_PALETTE_MISSION_OBJECTIVE
+local ALERT_PALETTE_TEAM = Definitions.ALERT_PALETTE_TEAM
 local ALERTS_STRIP_HEIGHT = Definitions.ALERTS_STRIP_HEIGHT
 local ALERTS_SLOT_GAP = Definitions.ALERTS_SLOT_GAP
 local ALERTS_TOUGHNESS_GAP = Definitions.ALERTS_TOUGHNESS_GAP
@@ -1228,6 +1229,8 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 						pal = ALERT_PALETTE_BOSS
 					elseif cat == "mission" and type(ALERT_PALETTE_MISSION_OBJECTIVE) == "table" then
 						pal = ALERT_PALETTE_MISSION_OBJECTIVE
+					elseif cat == "team" and type(ALERT_PALETTE_TEAM) == "table" then
+						pal = ALERT_PALETTE_TEAM
 					end
 
 					if type(pal) == "table" then

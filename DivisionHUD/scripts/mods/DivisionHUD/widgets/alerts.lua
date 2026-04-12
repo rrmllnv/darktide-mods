@@ -614,6 +614,8 @@ mod.alerts_enqueue_strip_body = function(strip_label, body_text, game_t, alert_l
 		cat = "boss"
 	elseif alert_line_category == "mission" then
 		cat = "mission"
+	elseif alert_line_category == "team" then
+		cat = "team"
 	end
 
 	alerts_prune_expired(game_t)

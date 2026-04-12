@@ -333,6 +333,42 @@ return {
 							},
 						},
 					},
+					{
+						setting_id = "alerts_group_team",
+						type = "group",
+						title = "alerts_group_team",
+						tooltip_text = "alerts_group_team_description",
+						sub_widgets = {
+							{
+								setting_id = "alerts_team_knock",
+								type = "checkbox",
+								title = "alerts_team_knock",
+								tooltip_text = "alerts_team_knock_description",
+								default_value = d("alerts_team_knock", true),
+							},
+							{
+								setting_id = "alerts_team_net",
+								type = "checkbox",
+								title = "alerts_team_net",
+								tooltip_text = "alerts_team_net_description",
+								default_value = d("alerts_team_net", true),
+							},
+							{
+								setting_id = "alerts_team_hound",
+								type = "checkbox",
+								title = "alerts_team_hound",
+								tooltip_text = "alerts_team_hound_description",
+								default_value = d("alerts_team_hound", true),
+							},
+							{
+								setting_id = "alerts_team_death",
+								type = "checkbox",
+								title = "alerts_team_death",
+								tooltip_text = "alerts_team_death_description",
+								default_value = d("alerts_team_death", true),
+							},
+						},
+					},
 				},
 			},
 			{
