@@ -8,9 +8,19 @@ local M = {}
 function M.build(bar_width, bar_label_w, sc)
 	local ALERTS_SLOT_GAP = sc(4)
 	local ALERTS_STRIP_HEIGHT = sc(30)
-	local ALERTS_BODY_HEIGHT = sc(48)
 	local ALERT_DURATION_BAR_H = sc(3)
-	local ALERTS_SLOT_HEIGHT = ALERTS_BODY_HEIGHT + ALERTS_STRIP_HEIGHT
+	local ALERTS_MAX_SLOTS = 5
+	local ALERTS_TOUGHNESS_GAP = sc(8)
+	local hud_body_line_spacing = (UIFontSettings.hud_body and UIFontSettings.hud_body.line_spacing) or 1.2
+	local ALERT_MSG_FONT_SIZE = sc(17)
+	local ALERTS_MESSAGE_TEXT_VERTICAL_INSET = sc(10)
+	local ALERTS_MESSAGE_TEXT_OFFSET_Y = sc(5)
+	local ALERTS_MESSAGE_TEXT_WRAP_WIDTH = bar_width - sc(10)
+	local ALERTS_BODY_TEXT_HEIGHT_1LINE = math.ceil(ALERT_MSG_FONT_SIZE * hud_body_line_spacing)
+	local ALERTS_BODY_TEXT_HEIGHT_3LINES = math.ceil(ALERT_MSG_FONT_SIZE * hud_body_line_spacing * 3)
+	local ALERTS_BODY_HEIGHT_MIN = ALERTS_BODY_TEXT_HEIGHT_1LINE + ALERTS_MESSAGE_TEXT_VERTICAL_INSET + ALERTS_MESSAGE_TEXT_OFFSET_Y
+	local ALERTS_BODY_HEIGHT_MAX = ALERTS_BODY_TEXT_HEIGHT_3LINES + ALERTS_MESSAGE_TEXT_VERTICAL_INSET + ALERTS_MESSAGE_TEXT_OFFSET_Y
+	local ALERTS_SLOT_HEIGHT = ALERTS_BODY_HEIGHT_MAX + ALERTS_STRIP_HEIGHT
 	local ALERT_FEED_ORANGE = {
 		230,
 		255,
@@ -130,9 +140,7 @@ function M.build(bar_width, bar_label_w, sc)
 		strip_text = ColorUtilities.clone(UIHudSettings.color_tint_main_1),
 		duration_bar = ColorUtilities.clone(UIHudSettings.get_hud_color("color_tint_main_2", 255)),
 	}
-	local ALERTS_MAX_SLOTS = 5
 	local ALERTS_STACK_TOTAL_HEIGHT = ALERTS_MAX_SLOTS * (ALERTS_SLOT_HEIGHT + ALERTS_SLOT_GAP) - ALERTS_SLOT_GAP
-	local ALERTS_TOUGHNESS_GAP = sc(8)
 
 	local scenegraph_definition = {
 		alerts_column = {
@@ -179,8 +187,8 @@ function M.build(bar_width, bar_label_w, sc)
 		message_text_style.font_size = sc(17)
 		message_text_style.drop_shadow = true
 		message_text_style.text_color = table.clone(UIHudSettings.color_tint_main_1)
-		message_text_style.size = { bar_width - sc(10), ALERTS_BODY_HEIGHT - sc(6) }
-		message_text_style.offset = { sc(5), sc(2), 6 }
+		message_text_style.size = { ALERTS_MESSAGE_TEXT_WRAP_WIDTH, ALERTS_BODY_TEXT_HEIGHT_3LINES }
+		message_text_style.offset = { sc(5), ALERTS_MESSAGE_TEXT_OFFSET_Y, 6 }
 
 		local strip_label_style = table.clone(UIFontSettings.hud_body)
 
@@ -209,7 +217,7 @@ function M.build(bar_width, bar_label_w, sc)
 					vertical_alignment = "top",
 					color = table.clone(upper_bg_color),
 					default_color = table.clone(Color.terminal_background_gradient(255, true)),
-					size = { bar_width, ALERTS_BODY_HEIGHT },
+					size = { bar_width, ALERTS_BODY_HEIGHT_MAX },
 					offset = { 0, 0, 0 },
 				},
 			},
@@ -220,7 +228,7 @@ function M.build(bar_width, bar_label_w, sc)
 				style = {
 					horizontal_alignment = "right",
 					vertical_alignment = "top",
-					size = { sc(4), ALERTS_BODY_HEIGHT },
+					size = { sc(4), ALERTS_BODY_HEIGHT_MAX },
 					offset = { 0, 0, 5 },
 					color = table.clone(upper_emitter_color),
 					default_color = table.clone(Color.terminal_corner_hover(nil, true)),
@@ -296,6 +304,14 @@ function M.build(bar_width, bar_label_w, sc)
 		ALERTS_MAX_SLOTS = ALERTS_MAX_SLOTS,
 		ALERTS_SLOT_HEIGHT = ALERTS_SLOT_HEIGHT,
 		ALERTS_STACK_TOTAL_HEIGHT = ALERTS_STACK_TOTAL_HEIGHT,
+		ALERTS_STRIP_HEIGHT = ALERTS_STRIP_HEIGHT,
+		ALERTS_SLOT_GAP = ALERTS_SLOT_GAP,
+		ALERTS_TOUGHNESS_GAP = ALERTS_TOUGHNESS_GAP,
+		ALERTS_BODY_HEIGHT_MIN = ALERTS_BODY_HEIGHT_MIN,
+		ALERTS_BODY_HEIGHT_MAX = ALERTS_BODY_HEIGHT_MAX,
+		ALERTS_MESSAGE_TEXT_VERTICAL_INSET = ALERTS_MESSAGE_TEXT_VERTICAL_INSET,
+		ALERTS_MESSAGE_TEXT_OFFSET_Y = ALERTS_MESSAGE_TEXT_OFFSET_Y,
+		ALERTS_MESSAGE_TEXT_WRAP_WIDTH = ALERTS_MESSAGE_TEXT_WRAP_WIDTH,
 		ALERT_PALETTE_DEFAULT = ALERT_PALETTE_DEFAULT,
 		ALERT_PALETTE_BOSS = ALERT_PALETTE_BOSS,
 		ALERT_PALETTE_MISSION_OBJECTIVE = ALERT_PALETTE_MISSION_OBJECTIVE,

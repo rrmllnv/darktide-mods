@@ -48,6 +48,14 @@ local ALERT_BAR_WIDTH = Definitions.BAR_WIDTH or 1
 local ALERT_PALETTE_DEFAULT = Definitions.ALERT_PALETTE_DEFAULT
 local ALERT_PALETTE_BOSS = Definitions.ALERT_PALETTE_BOSS
 local ALERT_PALETTE_MISSION_OBJECTIVE = Definitions.ALERT_PALETTE_MISSION_OBJECTIVE
+local ALERTS_STRIP_HEIGHT = Definitions.ALERTS_STRIP_HEIGHT
+local ALERTS_SLOT_GAP = Definitions.ALERTS_SLOT_GAP
+local ALERTS_TOUGHNESS_GAP = Definitions.ALERTS_TOUGHNESS_GAP
+local ALERTS_BODY_HEIGHT_MIN = Definitions.ALERTS_BODY_HEIGHT_MIN
+local ALERTS_BODY_HEIGHT_MAX = Definitions.ALERTS_BODY_HEIGHT_MAX
+local ALERTS_MESSAGE_TEXT_VERTICAL_INSET = Definitions.ALERTS_MESSAGE_TEXT_VERTICAL_INSET
+local ALERTS_MESSAGE_TEXT_OFFSET_Y = Definitions.ALERTS_MESSAGE_TEXT_OFFSET_Y or 0
+local ALERTS_MESSAGE_TEXT_WRAP_WIDTH = Definitions.ALERTS_MESSAGE_TEXT_WRAP_WIDTH
 
 local COMBAT_ABILITY_TYPE = "combat_ability"
 local GRENADE_ABILITY_TYPE = "grenade_ability"
@@ -1069,7 +1077,43 @@ local function apply_alert_pass_colors(st, palette, opacity)
 	end
 end
 
-HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
+local function apply_alerts_column_layout(self, widgets, slot_heights, column_width)
+	local y_cursor = 0
+
+	for si = 1, ALERTS_MAX_SLOTS do
+		local h = (type(slot_heights) == "table" and type(slot_heights[si]) == "number" and slot_heights[si]) or 0
+		local slot_id = "alert_slot_" .. si
+		local wname = alert_slot_widget_names[si]
+		local w = wname and widgets[wname]
+
+		if h > 0 then
+			self:set_scenegraph_position(slot_id, nil, y_cursor)
+			self:_set_scenegraph_size(slot_id, column_width, h)
+
+			if w and w.content and w.content.size then
+				w.content.size[1] = column_width
+				w.content.size[2] = h
+			end
+
+			y_cursor = y_cursor + h + ALERTS_SLOT_GAP
+		else
+			self:set_scenegraph_position(slot_id, nil, 0)
+			self:_set_scenegraph_size(slot_id, column_width, 0)
+
+			if w and w.content and w.content.size then
+				w.content.size[1] = column_width
+				w.content.size[2] = 0
+			end
+		end
+	end
+
+	local total_h = (y_cursor > 0) and (y_cursor - ALERTS_SLOT_GAP) or 0
+
+	self:_set_scenegraph_size("alerts_column", column_width, total_h)
+	self:set_scenegraph_position("alerts_column", nil, -(total_h + ALERTS_TOUGHNESS_GAP))
+end
+
+HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_renderer)
 	local s_cfg = mod._settings
 	local alerts_master_off = type(s_cfg) == "table" and (s_cfg.alerts_enabled == false or s_cfg.alerts_enabled == 0)
 	local mission_mirror = mod.mission_objective_mirror_wants_alerts_ui and mod.mission_objective_mirror_wants_alerts_ui()
@@ -1097,6 +1141,14 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 			end
 		end
 
+		local slot_heights_off = {}
+
+		for si_off = 1, ALERTS_MAX_SLOTS do
+			slot_heights_off[si_off] = 0
+		end
+
+		apply_alerts_column_layout(self, widgets, slot_heights_off, ALERT_BAR_WIDTH)
+
 		return
 	end
 
@@ -1119,6 +1171,12 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 
 	if mod.alerts_sync then
 		mod.alerts_sync(gt)
+	end
+
+	local slot_heights = {}
+
+	for si_h = 1, ALERTS_MAX_SLOTS do
+		slot_heights[si_h] = 0
 	end
 
 	local lines = mod.alerts_get_lines and mod.alerts_get_lines() or {}
@@ -1206,6 +1264,40 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 					elseif dur_bar_sz and type(dur_bar_sz[1]) == "number" then
 						dur_bar_sz[1] = 0
 					end
+
+					local msg_st = st.alert_message_text
+					local body_h = ALERTS_BODY_HEIGHT_MIN
+
+					if ui_renderer and msg_st and type(ALERTS_MESSAGE_TEXT_WRAP_WIDTH) == "number" and type(ALERTS_MESSAGE_TEXT_VERTICAL_INSET) == "number" then
+						local measured = Text.text_height(ui_renderer, line.text, msg_st, {
+							ALERTS_MESSAGE_TEXT_WRAP_WIDTH,
+							4096,
+						}, true)
+
+						body_h = math.ceil(measured + ALERTS_MESSAGE_TEXT_VERTICAL_INSET + ALERTS_MESSAGE_TEXT_OFFSET_Y)
+						body_h = math.clamp(body_h, ALERTS_BODY_HEIGHT_MIN, ALERTS_BODY_HEIGHT_MAX)
+					end
+
+					local text_box_h = body_h - ALERTS_MESSAGE_TEXT_VERTICAL_INSET - ALERTS_MESSAGE_TEXT_OFFSET_Y
+
+					if msg_st and msg_st.size then
+						msg_st.size[2] = text_box_h
+					end
+
+					local ub = st.alert_slot_upper_background
+					local ue = st.alert_slot_upper_emitter
+
+					if ub and ub.size then
+						ub.size[2] = body_h
+					end
+
+					if ue and ue.size then
+						ue.size[2] = body_h
+					end
+
+					slot_heights[si] = body_h + ALERTS_STRIP_HEIGHT
+				else
+					slot_heights[si] = ALERTS_BODY_HEIGHT_MIN + ALERTS_STRIP_HEIGHT
 				end
 
 				w.dirty = true
@@ -1220,10 +1312,31 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 					dur_bar_sz[1] = 0
 				end
 
+				if st then
+					local msg_st_h = st.alert_message_text
+					local ub_h = st.alert_slot_upper_background
+					local ue_h = st.alert_slot_upper_emitter
+
+					if msg_st_h and msg_st_h.size then
+						msg_st_h.size[2] = 0
+					end
+
+					if ub_h and ub_h.size then
+						ub_h.size[2] = 0
+					end
+
+					if ue_h and ue_h.size then
+						ue_h.size[2] = 0
+					end
+				end
+
+				slot_heights[si] = 0
 				w.dirty = true
 			end
 		end
 	end
+
+	apply_alerts_column_layout(self, widgets, slot_heights, ALERT_BAR_WIDTH)
 end
 
 HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
@@ -1343,7 +1456,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
 	self:_update_auspex_slot(player_unit, widgets, opacity)
 	self:_update_right_slot_grid(player_unit, widgets, opacity)
-	self:_update_alert_slots(widgets, opacity)
+	self:_update_alert_slots(widgets, opacity, ui_renderer)
 end
 
 HudElementDivisionHUD._update_ability_bar = function(self, player_unit, widget, opacity)
