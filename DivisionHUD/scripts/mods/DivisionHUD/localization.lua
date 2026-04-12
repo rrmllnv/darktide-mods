@@ -325,9 +325,9 @@ return {
 		["zh-cn"] = string.rep("\194\160", 8) .. "小队",
 	},
 	alerts_group_team_description = {
-		en = "Show teammate knockdowns, trapper net, Pox Hound pin, ledge hang, Beast of Nurgle consume, deaths, and «can be rescued» (when the vanilla respawn timer reaches zero) in the Division HUD alert strip. The player name uses the squad slot color.",
-		ru = "Показывать нокдауны, сеть ловушечника, схват чумной гончей, висение на уступе, поглощение зверем Нургла, смерти и «можно спасти» (когда ванильный таймер респауна доходит до нуля) в полоске оповещений Division HUD. Ник окрашивается цветом слота отряда.",
-		["zh-cn"] = "在小队警报条中显示队友倒地、陷阱网、瘟疫猎犬压制、悬崖悬挂、纳垢巨兽吞噬、死亡，以及「可救援」（与原生复活倒计时归零一致）。玩家昵称使用队伍槽位颜色。",
+		en = "Show teammate knockdowns, trapper net, Pox Hound pin, ledge hang, Beast of Nurgle consume, and deaths in the Division HUD alert strip. The player name uses the squad slot color.",
+		ru = "Показывать нокдауны, сеть ловушечника, схват чумной гончей, висение на уступе, поглощение зверем Нургла и смерти в полоске оповещений Division HUD. Ник окрашивается цветом слота отряда.",
+		["zh-cn"] = "在小队警报条中显示队友倒地、陷阱网、瘟疫猎犬压制、悬崖悬挂、纳垢巨兽吞噬、死亡。玩家昵称使用队伍槽位颜色。",
 	},
 	alerts_team_knock = {
 		en = "Knockdowns",
@@ -389,21 +389,6 @@ return {
 		ru = "Когда союзник умирает, добавлять строку в оповещения.",
 		["zh-cn"] = "队友死亡时加入一条警报。",
 	},
-	alerts_team_rescue_ready = {
-		en = "Rescue zone ready",
-		ru = "Можно спасти",
-		["zh-cn"] = "可救援",
-	},
-	alerts_team_rescue_ready_description = {
-		en = "When the vanilla team panel finishes the dead-player respawn countdown and shows the «can be rescued» line, enqueue one alert using the same localized text as the panel.",
-		ru = "Когда на панели отряда у мёртвого союзника заканчивается обратный отсчёт до появления в зоне спасения и показывается строка «можно спасти» (тот же текст локализации, что в игре), один раз добавить оповещение.",
-		["zh-cn"] = "当原生队伍面板上死亡队友的复活倒计时结束并显示可救援文案时，加入一条使用与面板相同本地化字符串的警报。",
-	},
-	alerts_team_suffix_rescue_ready_fallback = {
-		en = "Can be rescued",
-		ru = "Можно спасти",
-		["zh-cn"] = "可救援",
-	},
 	alerts_team_strip = {
 		en = "Team",
 		ru = "Команда",
@@ -416,12 +401,12 @@ return {
 	},
 	alerts_team_suffix_death = {
 		en = "died",
-		ru = "умер",
+		ru = "погиб",
 		["zh-cn"] = "阵亡",
 	},
 	alerts_team_suffix_trapper_net = {
 		en = "was ensnared by a Scab Trapper",
-		ru = "в сеть Скаб Ловушечника",
+		ru = "пойман в сеть Скаб Ловушечника",
 		["zh-cn"] = "陷入斯卡布陷阱兵的网中",
 	},
 	alerts_team_suffix_hound_pounce = {
@@ -436,7 +421,7 @@ return {
 	},
 	alerts_team_suffix_consumed = {
 		en = "consumed by a Beast of Nurgle",
-		ru = "поглощен Beast of Nurgle",
+		ru = "поглощён зверем Нургла",
 		["zh-cn"] = "被纳垢巨兽吞噬",
 	},
 	alerts_ui_banner_alert = {

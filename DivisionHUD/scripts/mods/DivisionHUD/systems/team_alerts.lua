@@ -15,8 +15,6 @@ local Text = require("scripts/utilities/ui/text")
 local UISettings = require("scripts/settings/ui/ui_settings")
 
 local already_reported = {}
-local rescue_ready_fired = {}
-local RESCUE_READY_REMAINING_MAX = 0.001
 
 local special_alert_cooldown_until = {}
 local SPECIAL_ALERT_COOLDOWN_SEC = 2.5
@@ -388,59 +386,6 @@ mod:hook_safe("AttackReportManager", "_process_attack_result", function(self, bu
 	end)
 end)
 
-mod:hook("HudElementPlayerPanelBase", "_set_player_respawn_timer", function(func, self, t, timer, is_dead)
-	func(self, t, timer, is_dead)
-
-	if not mod.alerts_enqueue_strip_body then
-		return
-	end
-
-	if not setting_enabled("alerts_team_rescue_ready") then
-		return
-	end
-
-	local data = self and self._data
-	local player = type(data) == "table" and data.player
-	local key = type(player) == "table" and player_identity_key(player) or nil
-	if type(key) ~= "string" or key == "" then
-		return
-	end
-
-	if not is_dead then
-		rescue_ready_fired[key] = nil
-		return
-	end
-
-	if type(timer) ~= "number" or timer ~= timer or type(t) ~= "number" or t ~= t then
-		rescue_ready_fired[key] = nil
-		return
-	end
-
-	local local_player = Managers.player and Managers.player:local_player(1)
-	if player == local_player then
-		return
-	end
-
-	local remaining = math.max(0, timer - t)
-	if remaining > 1.0 then
-		rescue_ready_fired[key] = nil
-	end
-
-	if remaining > RESCUE_READY_REMAINING_MAX or rescue_ready_fired[key] then
-		return
-	end
-
-	local suffix = Localize("loc_hud_resurrectable")
-	if type(suffix) ~= "string" or suffix == "" or string.find(suffix, "^<unlocalized") then
-		suffix = mod_localize_or_fallback("alerts_team_suffix_rescue_ready_fallback", "Can be rescued")
-	end
-
-	local cd = "team_rescue_ready:" .. key
-	if enqueue_team_alert(player, player and player.player_unit, suffix, cd) then
-		rescue_ready_fired[key] = true
-	end
-end)
-
 mod.team_alerts_wants_alerts_ui = function()
 	return setting_enabled("alerts_team_net")
 		or setting_enabled("alerts_team_hound")
@@ -448,7 +393,6 @@ mod.team_alerts_wants_alerts_ui = function()
 		or setting_enabled("alerts_team_consumed")
 		or setting_enabled("alerts_team_knock")
 		or setting_enabled("alerts_team_death")
-		or setting_enabled("alerts_team_rescue_ready")
 end
 
 return mod

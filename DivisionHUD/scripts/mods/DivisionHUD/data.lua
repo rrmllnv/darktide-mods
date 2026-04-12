@@ -381,13 +381,6 @@ return {
 								tooltip_text = "alerts_team_death_description",
 								default_value = d("alerts_team_death", true),
 							},
-							{
-								setting_id = "alerts_team_rescue_ready",
-								type = "checkbox",
-								title = "alerts_team_rescue_ready",
-								tooltip_text = "alerts_team_rescue_ready_description",
-								default_value = d("alerts_team_rescue_ready", true),
-							},
 						},
 					},
 				},
