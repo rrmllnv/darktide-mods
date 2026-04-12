@@ -15,8 +15,8 @@ local Text = require("scripts/utilities/ui/text")
 local UISettings = require("scripts/settings/ui/ui_settings")
 
 local already_reported = {}
-local rescue_spawn_countdown_prev = {}
-local RESCUE_COUNTDOWN_REMAINING_EPS = 0.12
+local rescue_ready_fired = {}
+local RESCUE_READY_REMAINING_MAX = 0.001
 
 local special_alert_cooldown_until = {}
 local SPECIAL_ALERT_COOLDOWN_SEC = 2.5
@@ -144,25 +144,25 @@ end
 
 local function enqueue_team_alert(player, unit, suffix_text, cooldown_key)
 	if not mod.alerts_enqueue_strip_body then
-		return
+		return false
 	end
 
 	local local_player = Managers.player and Managers.player:local_player(1)
 	if player == local_player then
-		return
+		return false
 	end
 
 	if type(suffix_text) ~= "string" or suffix_text == "" then
-		return
+		return false
 	end
 
 	local gt = gameplay_time()
 	if type(gt) ~= "number" or gt ~= gt then
-		return
+		return false
 	end
 
 	if not consume_cooldown(cooldown_key, gt) then
-		return
+		return false
 	end
 
 	local display = player_display_name(player, unit)
@@ -170,7 +170,7 @@ local function enqueue_team_alert(player, unit, suffix_text, cooldown_key)
 		display = type(player.name) == "function" and player:name() or ""
 	end
 	if type(display) ~= "string" or display == "" then
-		return
+		return false
 	end
 
 	local strip = mod:localize("alerts_team_strip")
@@ -179,6 +179,7 @@ local function enqueue_team_alert(player, unit, suffix_text, cooldown_key)
 	end
 
 	mod.alerts_enqueue_strip_body(strip, display .. " " .. suffix_text, gt, "team")
+	return true
 end
 
 local function captive_status_token(unit)
@@ -384,11 +385,12 @@ mod:hook("HudElementPlayerPanelBase", "_set_player_respawn_timer", function(func
 	end
 
 	if not is_dead then
-		rescue_spawn_countdown_prev[key] = nil
+		rescue_ready_fired[key] = nil
 		return
 	end
 
 	if type(timer) ~= "number" or timer ~= timer or type(t) ~= "number" or t ~= t then
+		rescue_ready_fired[key] = nil
 		return
 	end
 
@@ -398,10 +400,11 @@ mod:hook("HudElementPlayerPanelBase", "_set_player_respawn_timer", function(func
 	end
 
 	local remaining = math.max(0, timer - t)
-	local prev_remaining = rescue_spawn_countdown_prev[key]
-	local crossed = remaining <= RESCUE_COUNTDOWN_REMAINING_EPS and (type(prev_remaining) ~= "number" or prev_remaining > remaining + 0.0001)
-	rescue_spawn_countdown_prev[key] = remaining
-	if not crossed then
+	if remaining > 1.0 then
+		rescue_ready_fired[key] = nil
+	end
+
+	if remaining > RESCUE_READY_REMAINING_MAX or rescue_ready_fired[key] then
 		return
 	end
 
@@ -411,7 +414,9 @@ mod:hook("HudElementPlayerPanelBase", "_set_player_respawn_timer", function(func
 	end
 
 	local cd = "team_rescue_ready:" .. key
-	enqueue_team_alert(player, player and player.player_unit, suffix, cd)
+	if enqueue_team_alert(player, player and player.player_unit, suffix, cd) then
+		rescue_ready_fired[key] = true
+	end
 end)
 
 mod.team_alerts_wants_alerts_ui = function()
