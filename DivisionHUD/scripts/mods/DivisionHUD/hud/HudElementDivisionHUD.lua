@@ -47,6 +47,7 @@ local alert_slot_widget_names = Definitions.alert_slot_widget_names or {}
 local ALERT_BAR_WIDTH = Definitions.BAR_WIDTH or 1
 local ALERT_PALETTE_DEFAULT = Definitions.ALERT_PALETTE_DEFAULT
 local ALERT_PALETTE_BOSS = Definitions.ALERT_PALETTE_BOSS
+local ALERT_PALETTE_MISSION_OBJECTIVE = Definitions.ALERT_PALETTE_MISSION_OBJECTIVE
 
 local COMBAT_ABILITY_TYPE = "combat_ability"
 local GRENADE_ABILITY_TYPE = "grenade_ability"
@@ -1024,54 +1025,56 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 	end
 end
 
+local function apply_alert_color_channel4(dst, src, opacity)
+	if not dst or type(src) ~= "table" or type(opacity) ~= "number" then
+		return
+	end
+
+	local a = type(src[1]) == "number" and src[1] or 230
+	local r = type(src[2]) == "number" and src[2] or 255
+	local gch = type(src[3]) == "number" and src[3] or 255
+	local bch = type(src[4]) == "number" and src[4] or 255
+
+	dst[1] = math.floor(a * opacity)
+	dst[2] = r
+	dst[3] = gch
+	dst[4] = bch
+end
+
 local function apply_alert_pass_colors(st, palette, opacity)
 	if not st or type(palette) ~= "table" or type(opacity) ~= "number" then
 		return
 	end
 
-	local function apply_channel4(dst, src)
-		if not dst or type(src) ~= "table" then
-			return
-		end
-
-		local a = type(src[1]) == "number" and src[1] or 230
-		local r = type(src[2]) == "number" and src[2] or 255
-		local gch = type(src[3]) == "number" and src[3] or 255
-		local bch = type(src[4]) == "number" and src[4] or 255
-
-		dst[1] = math.floor(a * opacity)
-		dst[2] = r
-		dst[3] = gch
-		dst[4] = bch
-	end
-
 	if type(palette.upper) == "table" then
-		apply_channel4(st.alert_slot_upper_background and st.alert_slot_upper_background.color, palette.upper)
+		apply_alert_color_channel4(st.alert_slot_upper_background and st.alert_slot_upper_background.color, palette.upper, opacity)
 	end
 
 	if type(palette.emitter) == "table" then
-		apply_channel4(st.alert_slot_upper_emitter and st.alert_slot_upper_emitter.color, palette.emitter)
+		apply_alert_color_channel4(st.alert_slot_upper_emitter and st.alert_slot_upper_emitter.color, palette.emitter, opacity)
 	elseif type(palette.upper) == "table" then
-		apply_channel4(st.alert_slot_upper_emitter and st.alert_slot_upper_emitter.color, palette.upper)
+		apply_alert_color_channel4(st.alert_slot_upper_emitter and st.alert_slot_upper_emitter.color, palette.upper, opacity)
 	end
 
 	if type(palette.strip) == "table" then
-		apply_channel4(st.alert_strip_background and st.alert_strip_background.color, palette.strip)
+		apply_alert_color_channel4(st.alert_strip_background and st.alert_strip_background.color, palette.strip, opacity)
 	end
 
 	if type(palette.strip_text) == "table" then
-		apply_channel4(st.alert_strip_label_text and st.alert_strip_label_text.text_color, palette.strip_text)
+		apply_alert_color_channel4(st.alert_strip_label_text and st.alert_strip_label_text.text_color, palette.strip_text, opacity)
 	end
 
 	if type(palette.duration_bar) == "table" then
-		apply_channel4(st.alert_duration_bar and st.alert_duration_bar.color, palette.duration_bar)
+		apply_alert_color_channel4(st.alert_duration_bar and st.alert_duration_bar.color, palette.duration_bar, opacity)
 	end
 end
 
 HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 	local s_cfg = mod._settings
+	local alerts_master_off = type(s_cfg) == "table" and (s_cfg.alerts_enabled == false or s_cfg.alerts_enabled == 0)
+	local mission_mirror = mod.mission_objective_mirror_wants_alerts_ui and mod.mission_objective_mirror_wants_alerts_ui()
 
-	if type(s_cfg) ~= "table" or s_cfg.alerts_enabled == false or s_cfg.alerts_enabled == 0 then
+	if alerts_master_off and not mission_mirror then
 		if mod.alerts_clear then
 			mod.alerts_clear()
 		end
@@ -1097,8 +1100,18 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 		return
 	end
 
+	if alerts_master_off and mission_mirror and mod.alerts_prune_non_mission_lines then
+		mod.alerts_prune_non_mission_lines()
+	end
+
 	local Hu = mod.hud_utils
-	local gt = Hu and type(Hu.safe_gameplay_time) == "function" and Hu.safe_gameplay_time() or nil
+	local gt = nil
+
+	if Hu and type(Hu.safe_time_for_alerts) == "function" then
+		gt = Hu.safe_time_for_alerts()
+	elseif Hu and type(Hu.safe_gameplay_time) == "function" then
+		gt = Hu.safe_gameplay_time()
+	end
 
 	if type(gt) ~= "number" or gt ~= gt then
 		return
@@ -1134,8 +1147,15 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 
 			if idx and lines[idx] and type(lines[idx].text) == "string" and lines[idx].text ~= "" then
 				local line = lines[idx]
+				local strip_raw = line.strip_label
+
+				if type(strip_raw) == "string" and strip_raw ~= "" then
+					w.content.alert_strip_label_text = Utf8.upper(strip_raw)
+				else
+					w.content.alert_strip_label_text = banner_upper
+				end
+
 				w.content.visible = true
-				w.content.alert_strip_label_text = banner_upper
 				w.content.alert_message_text = line.text
 				w.alpha_multiplier = opacity
 
@@ -1144,7 +1164,13 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity)
 				if st then
 					local msg_tc = st.alert_message_text and st.alert_message_text.text_color
 					local cat = line.alert_line_category
-					local pal = cat == "boss" and ALERT_PALETTE_BOSS or ALERT_PALETTE_DEFAULT
+					local pal = ALERT_PALETTE_DEFAULT
+
+					if cat == "boss" then
+						pal = ALERT_PALETTE_BOSS
+					elseif cat == "mission" and type(ALERT_PALETTE_MISSION_OBJECTIVE) == "table" then
+						pal = ALERT_PALETTE_MISSION_OBJECTIVE
+					end
 
 					if type(pal) == "table" then
 						apply_alert_pass_colors(st, pal, opacity)

@@ -191,6 +191,13 @@ return {
 						type = "checkbox",
 						default_value = d("hide_vanilla_player_buffs_background", false),
 					},
+					{
+						setting_id = "hide_vanilla_mission_objectives",
+						type = "checkbox",
+						title = "hide_vanilla_mission_objectives",
+						tooltip_text = "hide_vanilla_mission_objectives_description",
+						default_value = d("hide_vanilla_mission_objectives", true),
+					},
 				},
 			},
 			{
@@ -290,6 +297,42 @@ return {
 
 						return specialist_sub
 					end)(),
+					{
+						setting_id = "mission_objectives_super",
+						type = "group",
+						title = "mission_objectives_super",
+						tooltip_text = "mission_objectives_super_description",
+						sub_widgets = {
+							{
+								setting_id = "alert_mission_objective_start",
+								type = "checkbox",
+								title = "alert_mission_objective_start",
+								tooltip_text = "alert_mission_objective_start_description",
+								default_value = d("alert_mission_objective_start", true),
+							},
+							{
+								setting_id = "alert_mission_objective_progress",
+								type = "checkbox",
+								title = "alert_mission_objective_progress",
+								tooltip_text = "alert_mission_objective_progress_description",
+								default_value = d("alert_mission_objective_progress", true),
+							},
+							{
+								setting_id = "alert_mission_objective_complete",
+								type = "checkbox",
+								title = "alert_mission_objective_complete",
+								tooltip_text = "alert_mission_objective_complete_description",
+								default_value = d("alert_mission_objective_complete", true),
+							},
+							{
+								setting_id = "alert_mission_objective_custom_popup",
+								type = "checkbox",
+								title = "alert_mission_objective_custom_popup",
+								tooltip_text = "alert_mission_objective_custom_popup_description",
+								default_value = d("alert_mission_objective_custom_popup", true),
+							},
+						},
+					},
 				},
 			},
 			{

@@ -3,6 +3,10 @@ local mod = get_mod("DivisionHUD")
 local function alerts_gameplay_time()
 	local Hu = mod.hud_utils
 
+	if Hu and type(Hu.safe_time_for_alerts) == "function" then
+		return Hu.safe_time_for_alerts()
+	end
+
 	if Hu and type(Hu.safe_gameplay_time) == "function" then
 		return Hu.safe_gameplay_time()
 	end
@@ -423,6 +427,7 @@ local function alerts_promote_from_pending(game_t)
 				group_key = p.group_key,
 				spawn_count = sc,
 				alert_line_category = p.alert_line_category,
+				strip_label = p.strip_label,
 			}
 		end
 	end
@@ -443,6 +448,32 @@ end
 mod.alerts_clear = function()
 	state.active = {}
 	state.pending = {}
+end
+
+mod.alerts_prune_non_mission_lines = function()
+	local i = 1
+
+	while i <= #state.active do
+		local e = state.active[i]
+
+		if type(e) == "table" and e.alert_line_category ~= "mission" then
+			table.remove(state.active, i)
+		else
+			i = i + 1
+		end
+	end
+
+	i = 1
+
+	while i <= #state.pending do
+		local e = state.pending[i]
+
+		if type(e) == "table" and e.alert_line_category ~= "mission" then
+			table.remove(state.pending, i)
+		else
+			i = i + 1
+		end
+	end
 end
 
 mod.alerts_sync = function(game_t)
@@ -550,6 +581,58 @@ mod.alerts_enqueue_spawn_grouped = function(group_key, category, display_name, g
 			group_key = group_key,
 			spawn_count = 1,
 			alert_line_category = category,
+		}
+	else
+		state.pending[#state.pending + 1] = entry
+	end
+end
+
+mod.alerts_enqueue_strip_body = function(strip_label, body_text, game_t, alert_line_category)
+	local allow_strip = alerts_globally_enabled()
+
+	if not allow_strip and alert_line_category == "mission" and mod.mission_objective_mirror_wants_alerts_ui and mod.mission_objective_mirror_wants_alerts_ui() then
+		allow_strip = true
+	end
+
+	if not allow_strip then
+		return
+	end
+
+	if type(body_text) ~= "string" or body_text == "" then
+		return
+	end
+
+	if type(game_t) ~= "number" or game_t ~= game_t then
+		return
+	end
+
+	local duration = alerts_duration_sec_clamped()
+	local max_vis = alerts_max_visible_clamped()
+	local cat = "default"
+
+	if alert_line_category == "boss" then
+		cat = "boss"
+	elseif alert_line_category == "mission" then
+		cat = "mission"
+	end
+
+	alerts_prune_expired(game_t)
+	alerts_promote_from_pending(game_t)
+
+	local entry = {
+		text = body_text,
+		duration = duration,
+		alert_line_category = cat,
+		strip_label = type(strip_label) == "string" and strip_label ~= "" and strip_label or nil,
+	}
+
+	if #state.active < max_vis then
+		state.active[#state.active + 1] = {
+			text = body_text,
+			expire_t = game_t + duration,
+			duration_sec = duration,
+			alert_line_category = cat,
+			strip_label = entry.strip_label,
 		}
 	else
 		state.pending[#state.pending + 1] = entry

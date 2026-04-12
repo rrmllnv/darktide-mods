@@ -1,6 +1,7 @@
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
+local ColorUtilities = require("scripts/utilities/ui/colors")
 
 local M = {}
 
@@ -115,6 +116,19 @@ function M.build(bar_width, bar_label_w, sc)
 			ALERT_DURATION_BAR_BOSS[3],
 			ALERT_DURATION_BAR_BOSS[4],
 		},
+	}
+	local MISSION_POPUP_EFFECT_RGBA = {
+		100,
+		101,
+		133,
+		96,
+	}
+	local ALERT_PALETTE_MISSION_OBJECTIVE = {
+		upper = ColorUtilities.clone(UIHudSettings.get_hud_color("color_tint_main_2", 255)),
+		emitter = ColorUtilities.clone(MISSION_POPUP_EFFECT_RGBA),
+		strip = ColorUtilities.clone(UIHudSettings.get_hud_color("color_tint_main_3", 255)),
+		strip_text = ColorUtilities.clone(UIHudSettings.color_tint_main_1),
+		duration_bar = ColorUtilities.clone(UIHudSettings.get_hud_color("color_tint_main_2", 255)),
 	}
 	local ALERTS_MAX_SLOTS = 5
 	local ALERTS_STACK_TOTAL_HEIGHT = ALERTS_MAX_SLOTS * (ALERTS_SLOT_HEIGHT + ALERTS_SLOT_GAP) - ALERTS_SLOT_GAP
@@ -284,6 +298,7 @@ function M.build(bar_width, bar_label_w, sc)
 		ALERTS_STACK_TOTAL_HEIGHT = ALERTS_STACK_TOTAL_HEIGHT,
 		ALERT_PALETTE_DEFAULT = ALERT_PALETTE_DEFAULT,
 		ALERT_PALETTE_BOSS = ALERT_PALETTE_BOSS,
+		ALERT_PALETTE_MISSION_OBJECTIVE = ALERT_PALETTE_MISSION_OBJECTIVE,
 	}
 end
 

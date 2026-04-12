@@ -163,4 +163,5 @@ mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/hud_utils")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/vanilla_hud_suppression")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/settings")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/alerts")
+mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/mission_objective_hud")
 

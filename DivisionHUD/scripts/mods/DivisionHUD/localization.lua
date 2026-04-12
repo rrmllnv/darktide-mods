@@ -59,6 +59,71 @@ return {
 		ru = "Скрыть баффы",
 		["zh-cn"] = "隐藏增益效果",
 	},
+	hide_vanilla_mission_objectives = {
+		en = "Hide mission objectives",
+		ru = "Скрыть цели миссии",
+		["zh-cn"] = "隐藏任务目标",
+	},
+	hide_vanilla_mission_objectives_description = {
+		en = "When enabled, only the center mission objective popups are hidden; the objective feed (including the area strip) keeps drawing. Use the Mission objectives section to mirror selected popup events into the Division HUD notification strip.",
+		ru = "Если включено, скрываются только центральные всплывающие окна целей; лента целей (включая область area) продолжает отображаться. В блоке «Цели миссии» можно дублировать выбранные события попапов в полоску оповещений Division HUD.",
+		["zh-cn"] = "启用后，仅隐藏中央任务目标弹窗，目标条带（含 area 区域）仍会绘制。可在「任务目标」分组中将所选弹窗事件镜像到 Division HUD 提示条。",
+	},
+	mission_objectives_super = {
+		en = string.rep("\194\160", 8) .. "Mission objectives",
+		ru = string.rep("\194\160", 8) .. "Цели миссии",
+		["zh-cn"] = string.rep("\194\160", 8) .. "任务目标",
+	},
+	mission_objectives_super_description = {
+		en = "When «Hide mission objectives» is on (VANILLA HUD section), these toggles choose which objective events appear in the Division HUD strip (title row + body; same look as enemy approach notifications).",
+		ru = "Когда включено «Скрыть цели миссии» (супергруппа «Ванильный HUD»), эти переключатели задают, какие события целей показывать в полоске оповещений Division HUD (заголовок в полоске + текст цели, оформление как при оповещении о приближении).",
+		["zh-cn"] = "在「VANILLA HUD」中启用「隐藏任务目标」后，这些开关决定哪些目标事件在 Division HUD 条带中显示（条带标题 + 正文，样式与接近敌人通知一致）。",
+	},
+	alert_mission_objective_start = {
+		en = "New objective",
+		ru = "Новая цель",
+		["zh-cn"] = "新目标",
+	},
+	alert_mission_objective_start_description = {
+		en = "When enabled, show in the Division HUD strip when a mission objective starts (same title and description as the standard center popup).",
+		ru = "Показывать в полоске Division HUD при старте цели миссии (тот же заголовок и текст, что у стандартного попапа по центру).",
+		["zh-cn"] = "任务目标开始时在 Division HUD 条带中显示（标题与正文与游戏中央弹窗一致）。",
+	},
+	alert_mission_objective_progress = {
+		en = "Objective progress",
+		ru = "Прогресс цели",
+		["zh-cn"] = "目标进度",
+	},
+	alert_mission_objective_progress_description = {
+		en = "When enabled, show in the Division HUD strip when the game would show a progression popup for an objective (with counter text when applicable).",
+		ru = "Показывать в полоске Division HUD, когда игра показала бы попап прогресса цели (со счётчиком, если он есть).",
+		["zh-cn"] = "当游戏会显示目标进度弹窗时在 Division HUD 条带中显示（含计数文本）。",
+	},
+	alert_mission_objective_complete = {
+		en = "Objective complete",
+		ru = "Цель выполнена",
+		["zh-cn"] = "目标完成",
+	},
+	alert_mission_objective_complete_description = {
+		en = "When enabled, show in the Division HUD strip when a mission objective completes.",
+		ru = "Показывать в полоске Division HUD при завершении цели миссии.",
+		["zh-cn"] = "任务目标完成时在 Division HUD 条带中显示。",
+	},
+	alert_mission_objective_custom_popup = {
+		en = "Scripted objective popups",
+		ru = "Сюжетные всплывашки целей",
+		["zh-cn"] = "脚本目标弹窗",
+	},
+	alert_mission_objective_custom_popup_description = {
+		en = "When enabled, show in the Division HUD strip for generic mission popup events (event_show_objective_popup), e.g. some narrative beats.",
+		ru = "Показывать в полоске Division HUD для общих всплывашек целей (event_show_objective_popup), например сюжетных сообщений.",
+		["zh-cn"] = "为通用任务弹窗事件（event_show_objective_popup）在 Division HUD 条带中显示，例如部分叙事提示。",
+	},
+	mission_objective_custom_popup_strip_fallback = {
+		en = "OBJECTIVE",
+		ru = "ЦЕЛЬ",
+		["zh-cn"] = "目标",
+	},
 	divisionhud_integrations = {
 		en = "\238\128\172 INTEGRATIONS",
 		ru = "\238\128\172 ИНТЕГРАЦИИ",

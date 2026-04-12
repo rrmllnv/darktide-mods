@@ -112,4 +112,28 @@ function HudUtils.safe_gameplay_time()
 	return nil
 end
 
+function HudUtils.safe_time_for_alerts()
+	local t_gameplay = HudUtils.safe_gameplay_time()
+
+	if type(t_gameplay) == "number" and t_gameplay == t_gameplay then
+		return t_gameplay
+	end
+
+	local tm = Managers and Managers.time
+
+	if not tm or type(tm.time) ~= "function" then
+		return nil
+	end
+
+	local ok, t_main = pcall(function()
+		return tm:time("main")
+	end)
+
+	if ok and type(t_main) == "number" and t_main == t_main then
+		return t_main
+	end
+
+	return nil
+end
+
 return HudUtils
