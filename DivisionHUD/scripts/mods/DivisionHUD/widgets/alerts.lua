@@ -117,9 +117,56 @@ local function alerts_mission_strip_string_trim(s)
 	return trimmed or ""
 end
 
+local function alerts_mission_body_base_for_merge(body_text)
+	local t = alerts_mission_strip_string_trim(body_text)
+
+	if t == "" then
+		return ""
+	end
+
+	local stripped = string.gsub(t, "\n%d+/%d+%s*$", "")
+
+	return stripped
+end
+
+local function alerts_mission_parse_progress_max(text)
+	if type(text) ~= "string" or text == "" then
+		return nil
+	end
+
+	local _cur_s, max_s = string.match(text, "(%d+)/(%d+)%s*$")
+
+	if not max_s then
+		return nil
+	end
+
+	local mx = tonumber(max_s)
+
+	if not mx or mx < 1 then
+		return nil
+	end
+
+	return mx
+end
+
+local function alerts_mission_merge_next_count(prev, incoming_body, existing_line_text)
+	local next_count = prev + 1
+	local max_cap = alerts_mission_parse_progress_max(incoming_body)
+
+	if type(max_cap) ~= "number" then
+		max_cap = alerts_mission_parse_progress_max(existing_line_text)
+	end
+
+	if type(max_cap) == "number" and max_cap > 0 then
+		next_count = math.min(next_count, max_cap)
+	end
+
+	return next_count
+end
+
 local function alerts_mission_strip_merge_key(strip_label, body_text)
 	local strip_part = alerts_mission_strip_string_trim(strip_label)
-	local body_part = alerts_mission_strip_string_trim(body_text)
+	local body_part = alerts_mission_body_base_for_merge(body_text)
 
 	return strip_part .. "\x1e" .. body_part
 end
@@ -175,8 +222,13 @@ local function alerts_try_merge_mission_strip_burst(strip_label, body_text, game
 
 			if game_t - first_t <= MISSION_STRIP_MERGE_WINDOW_SEC then
 				local prev = type(e.mission_merge_count) == "number" and e.mission_merge_count or 1
-				local next_count = prev + 1
-				local base_body = type(e.mission_merge_base_body) == "string" and e.mission_merge_base_body ~= "" and e.mission_merge_base_body or body_text
+				local incoming_base = alerts_mission_body_base_for_merge(body_text)
+				local next_count = alerts_mission_merge_next_count(prev, body_text, e.text)
+				local base_body = type(e.mission_merge_base_body) == "string" and e.mission_merge_base_body ~= "" and e.mission_merge_base_body or incoming_base
+
+				if incoming_base ~= "" then
+					base_body = incoming_base
+				end
 
 				e.mission_merge_count = next_count
 				e.mission_merge_base_body = base_body
@@ -197,8 +249,13 @@ local function alerts_try_merge_mission_strip_burst(strip_label, body_text, game
 
 			if game_t - first_t <= MISSION_STRIP_MERGE_WINDOW_SEC then
 				local prev = type(e.mission_merge_count) == "number" and e.mission_merge_count or 1
-				local next_count = prev + 1
-				local base_body = type(e.mission_merge_base_body) == "string" and e.mission_merge_base_body ~= "" and e.mission_merge_base_body or body_text
+				local incoming_base = alerts_mission_body_base_for_merge(body_text)
+				local next_count = alerts_mission_merge_next_count(prev, body_text, e.text)
+				local base_body = type(e.mission_merge_base_body) == "string" and e.mission_merge_base_body ~= "" and e.mission_merge_base_body or incoming_base
+
+				if incoming_base ~= "" then
+					base_body = incoming_base
+				end
 
 				e.mission_merge_count = next_count
 				e.mission_merge_base_body = base_body
@@ -770,7 +827,11 @@ mod.alerts_enqueue_strip_body = function(strip_label, body_text, game_t, alert_l
 		mission_merge_key = alerts_mission_strip_merge_key(strip_label, body_text)
 		mission_merge_first_t = game_t
 		mission_merge_count = 1
-		mission_merge_base_body = body_text
+		mission_merge_base_body = alerts_mission_body_base_for_merge(body_text)
+
+		if mission_merge_base_body == "" then
+			mission_merge_base_body = body_text
+		end
 	end
 
 	local strip_val = type(strip_label) == "string" and strip_label ~= "" and strip_label or nil

@@ -426,7 +426,7 @@ return {
 	},
 	alerts_team_suffix_hound_pounce = {
 		en = "pinned by a Pox Hound",
-		ru = "его схватила чумная гончая",
+		ru = "схватила Чумная гончая",
 		["zh-cn"] = "被瘟疫猎犬扑倒",
 	},
 	alerts_team_suffix_ledge_hanging = {
