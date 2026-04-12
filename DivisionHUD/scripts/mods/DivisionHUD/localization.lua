@@ -169,6 +169,16 @@ return {
 		ru = "Если включено, иконка и счётчик слота гранаты окрашиваются по доле оставшихся зарядов — те же цветовые полосы и пороги доли, что у крупного текста патронов. Если выключено — цвета по умолчанию.",
 		["zh-cn"] = "启用后，手雷技能槽的图标与数字按剩余充能比例着色，色带与比例阈值与大号弹药文字一致。关闭时使用默认颜色。",
 	},
+	wielded_weapon_icon_state_colors = {
+		en = "Current weapon icon colors",
+		ru = "Цвет текущего оружия",
+		["zh-cn"] = "当前武器图标颜色",
+	},
+	wielded_weapon_icon_state_colors_description = {
+		en = "For supported weapons (see DivisionHUD config wielded_weapon_icon_colors.lua), tint the wielded-weapon strip icon: default full white stays for other weapons; listed weapons use the same inactive/active (and optional cooldown) Color keys as mod A La Mode, driven by inventory slot special_active and num_special_charges.",
+		ru = "Для поддерживаемого оружия (список в DivisionHUD/config/wielded_weapon_icon_colors.lua) красить иконку текущего оружия в полоске Division HUD: для остального оружия остаётся обычный белый; для строк из списка — те же ключи Color для «спокойного»/активного (и опционально кулдауна), что в моде A La Mode, по полям special_active и num_special_charges слота инвентаря.",
+		["zh-cn"] = "对配置列表中的武器（见 DivisionHUD/config/wielded_weapon_icon_colors.lua）为当前武器条图标着色：其他武器仍为纯白；列表内武器按与 A La Mode 相同的 Color 键表示非激活/激活（及可选冷却），依据库存槽位的 special_active 与 num_special_charges。",
+	},
 	stimm_slot_icon_tint_by_type = {
 		en = "Color pocket stimm icon",
 		ru = "Цвет иконки шприца",

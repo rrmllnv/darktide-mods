@@ -14,6 +14,7 @@ local defaults = {
 	ammo_text_color_by_fraction = true,
 	grenade_color_by_fraction = true,
 	stimm_slot_icon_tint_by_type = true,
+	wielded_weapon_icon_state_colors = true,
 	dynamic_hud = true,
 	dynamic_hud_strength = 110,
 	dynamic_hud_pitch_ratio = 1,

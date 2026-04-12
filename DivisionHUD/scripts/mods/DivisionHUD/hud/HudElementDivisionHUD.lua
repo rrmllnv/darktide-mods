@@ -421,6 +421,14 @@ local function apply_right_slot_icon_color(widget, widget_name, entry, opacity, 
 		return
 	end
 
+	if widget_name == "slot_weapon_wielded" then
+		local try_fn = mod.divisionhud_try_apply_wielded_weapon_icon_state_colors
+
+		if type(try_fn) == "function" and try_fn(widget, widget_name, entry, opacity, s_cfg, player_unit) then
+			return
+		end
+	end
+
 	c[1] = math.floor(255 * opacity)
 	c[2] = 255
 	c[3] = 255

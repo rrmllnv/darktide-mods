@@ -114,6 +114,13 @@ return {
 						tooltip_text = "grenade_color_by_fraction_description",
 						default_value = d("grenade_color_by_fraction", true),
 					},
+					{
+						setting_id = "wielded_weapon_icon_state_colors",
+						type = "checkbox",
+						title = "wielded_weapon_icon_state_colors",
+						tooltip_text = "wielded_weapon_icon_state_colors_description",
+						default_value = d("wielded_weapon_icon_state_colors", true),
+					},
 				},
 			},
 			{
