@@ -105,6 +105,114 @@ local state = {
 	pending = {},
 }
 
+local MISSION_STRIP_MERGE_WINDOW_SEC = 0.45
+
+local function alerts_mission_strip_string_trim(s)
+	if type(s) ~= "string" then
+		return ""
+	end
+
+	local trimmed = s:match("^%s*(.-)%s*$")
+
+	return trimmed or ""
+end
+
+local function alerts_mission_strip_merge_key(strip_label, body_text)
+	local strip_part = alerts_mission_strip_string_trim(strip_label)
+	local body_part = alerts_mission_strip_string_trim(body_text)
+
+	return strip_part .. "\x1e" .. body_part
+end
+
+local function alerts_mission_grouped_line_text(base_body, count)
+	if type(base_body) ~= "string" or base_body == "" then
+		return ""
+	end
+
+	if type(count) ~= "number" or count ~= count or count < 2 then
+		return base_body
+	end
+
+	count = math.floor(count + 0.5)
+
+	local loc = mod:localize("alerts_message_mission_objective_grouped", base_body, count)
+
+	if type(loc) == "string" and loc ~= "" and not string.find(loc, "^<unlocalized") then
+		return loc
+	end
+
+	return string.format("%s x%d", base_body, count)
+end
+
+local function alerts_try_merge_mission_strip_burst(strip_label, body_text, game_t, duration)
+	if type(body_text) ~= "string" or body_text == "" then
+		return false
+	end
+
+	if alerts_mission_strip_string_trim(body_text) == "" then
+		return false
+	end
+
+	if type(game_t) ~= "number" or game_t ~= game_t then
+		return false
+	end
+
+	if type(duration) ~= "number" or duration ~= duration or duration <= 0 then
+		return false
+	end
+
+	local merge_key = alerts_mission_strip_merge_key(strip_label, body_text)
+
+	if merge_key == "" then
+		return false
+	end
+
+	for i = #state.active, 1, -1 do
+		local e = state.active[i]
+
+		if type(e) == "table" and e.alert_line_category == "mission" and e.mission_merge_key == merge_key and type(e.expire_t) == "number" and game_t < e.expire_t then
+			local first_t = type(e.mission_merge_first_t) == "number" and e.mission_merge_first_t or game_t
+
+			if game_t - first_t <= MISSION_STRIP_MERGE_WINDOW_SEC then
+				local prev = type(e.mission_merge_count) == "number" and e.mission_merge_count or 1
+				local next_count = prev + 1
+				local base_body = type(e.mission_merge_base_body) == "string" and e.mission_merge_base_body ~= "" and e.mission_merge_base_body or body_text
+
+				e.mission_merge_count = next_count
+				e.mission_merge_base_body = base_body
+				e.text = alerts_mission_grouped_line_text(base_body, next_count)
+				e.expire_t = game_t + duration
+				e.duration_sec = duration
+
+				return true
+			end
+		end
+	end
+
+	for i = #state.pending, 1, -1 do
+		local e = state.pending[i]
+
+		if type(e) == "table" and e.alert_line_category == "mission" and e.mission_merge_key == merge_key then
+			local first_t = type(e.mission_merge_first_t) == "number" and e.mission_merge_first_t or game_t
+
+			if game_t - first_t <= MISSION_STRIP_MERGE_WINDOW_SEC then
+				local prev = type(e.mission_merge_count) == "number" and e.mission_merge_count or 1
+				local next_count = prev + 1
+				local base_body = type(e.mission_merge_base_body) == "string" and e.mission_merge_base_body ~= "" and e.mission_merge_base_body or body_text
+
+				e.mission_merge_count = next_count
+				e.mission_merge_base_body = base_body
+				e.text = alerts_mission_grouped_line_text(base_body, next_count)
+				e.duration = duration
+
+				return true
+			end
+		end
+	end
+
+	return false
+end
+
 local function alerts_base_breed_from_clean(clean_breed_name)
 	return string.match(clean_breed_name, "^(.+)_wk$") or clean_breed_name
 end
@@ -428,6 +536,10 @@ local function alerts_promote_from_pending(game_t)
 				spawn_count = sc,
 				alert_line_category = p.alert_line_category,
 				strip_label = p.strip_label,
+				mission_merge_key = p.mission_merge_key,
+				mission_merge_first_t = p.mission_merge_first_t,
+				mission_merge_count = p.mission_merge_count,
+				mission_merge_base_body = p.mission_merge_base_body,
 			}
 		end
 	end
@@ -450,13 +562,29 @@ mod.alerts_clear = function()
 	state.pending = {}
 end
 
-mod.alerts_prune_non_mission_lines = function()
+mod.alerts_prune_for_master_off_mirror = function(keep_mission, keep_team)
+	if not keep_mission and not keep_team then
+		return
+	end
+
+	local function alerts_mirror_keep_category(cat)
+		if keep_mission and cat == "mission" then
+			return true
+		end
+
+		if keep_team and cat == "team" then
+			return true
+		end
+
+		return false
+	end
+
 	local i = 1
 
 	while i <= #state.active do
 		local e = state.active[i]
 
-		if type(e) == "table" and e.alert_line_category ~= "mission" then
+		if type(e) == "table" and not alerts_mirror_keep_category(e.alert_line_category) then
 			table.remove(state.active, i)
 		else
 			i = i + 1
@@ -468,12 +596,16 @@ mod.alerts_prune_non_mission_lines = function()
 	while i <= #state.pending do
 		local e = state.pending[i]
 
-		if type(e) == "table" and e.alert_line_category ~= "mission" then
+		if type(e) == "table" and not alerts_mirror_keep_category(e.alert_line_category) then
 			table.remove(state.pending, i)
 		else
 			i = i + 1
 		end
 	end
+end
+
+mod.alerts_prune_non_mission_lines = function()
+	mod.alerts_prune_for_master_off_mirror(true, false)
 end
 
 mod.alerts_sync = function(game_t)
@@ -594,6 +726,10 @@ mod.alerts_enqueue_strip_body = function(strip_label, body_text, game_t, alert_l
 		allow_strip = true
 	end
 
+	if not allow_strip and alert_line_category == "team" and mod.team_alerts_wants_alerts_ui and mod.team_alerts_wants_alerts_ui() then
+		allow_strip = true
+	end
+
 	if not allow_strip then
 		return
 	end
@@ -621,11 +757,33 @@ mod.alerts_enqueue_strip_body = function(strip_label, body_text, game_t, alert_l
 	alerts_prune_expired(game_t)
 	alerts_promote_from_pending(game_t)
 
+	if cat == "mission" and alerts_try_merge_mission_strip_burst(strip_label, body_text, game_t, duration) then
+		return
+	end
+
+	local mission_merge_key = nil
+	local mission_merge_first_t = nil
+	local mission_merge_count = nil
+	local mission_merge_base_body = nil
+
+	if cat == "mission" then
+		mission_merge_key = alerts_mission_strip_merge_key(strip_label, body_text)
+		mission_merge_first_t = game_t
+		mission_merge_count = 1
+		mission_merge_base_body = body_text
+	end
+
+	local strip_val = type(strip_label) == "string" and strip_label ~= "" and strip_label or nil
+
 	local entry = {
 		text = body_text,
 		duration = duration,
 		alert_line_category = cat,
-		strip_label = type(strip_label) == "string" and strip_label ~= "" and strip_label or nil,
+		strip_label = strip_val,
+		mission_merge_key = mission_merge_key,
+		mission_merge_first_t = mission_merge_first_t,
+		mission_merge_count = mission_merge_count,
+		mission_merge_base_body = mission_merge_base_body,
 	}
 
 	if #state.active < max_vis then
@@ -634,7 +792,11 @@ mod.alerts_enqueue_strip_body = function(strip_label, body_text, game_t, alert_l
 			expire_t = game_t + duration,
 			duration_sec = duration,
 			alert_line_category = cat,
-			strip_label = entry.strip_label,
+			strip_label = strip_val,
+			mission_merge_key = mission_merge_key,
+			mission_merge_first_t = mission_merge_first_t,
+			mission_merge_count = mission_merge_count,
+			mission_merge_base_body = mission_merge_base_body,
 		}
 	else
 		state.pending[#state.pending + 1] = entry

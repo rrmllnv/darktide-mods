@@ -1118,8 +1118,10 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 	local s_cfg = mod._settings
 	local alerts_master_off = type(s_cfg) == "table" and (s_cfg.alerts_enabled == false or s_cfg.alerts_enabled == 0)
 	local mission_mirror = mod.mission_objective_mirror_wants_alerts_ui and mod.mission_objective_mirror_wants_alerts_ui()
+	local team_mirror = mod.team_alerts_wants_alerts_ui and mod.team_alerts_wants_alerts_ui()
+	local alerts_mirror_ui = mission_mirror or team_mirror
 
-	if alerts_master_off and not mission_mirror then
+	if alerts_master_off and not alerts_mirror_ui then
 		if mod.alerts_clear then
 			mod.alerts_clear()
 		end
@@ -1153,8 +1155,8 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		return
 	end
 
-	if alerts_master_off and mission_mirror and mod.alerts_prune_non_mission_lines then
-		mod.alerts_prune_non_mission_lines()
+	if alerts_master_off and alerts_mirror_ui and mod.alerts_prune_for_master_off_mirror then
+		mod.alerts_prune_for_master_off_mirror(mission_mirror, team_mirror)
 	end
 
 	local Hu = mod.hud_utils

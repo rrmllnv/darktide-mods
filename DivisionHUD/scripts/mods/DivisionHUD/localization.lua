@@ -325,9 +325,9 @@ return {
 		["zh-cn"] = string.rep("\194\160", 8) .. "小队",
 	},
 	alerts_group_team_description = {
-		en = "Show teammate knockdowns, trapper net, Pox Hound pin, and deaths in the Division HUD alert strip (same layout as other alerts). The player name uses the squad slot color.",
-		ru = "Показывать нокдауны, сеть ловушечника, схват чумной гончей и смерти союзников в полоске оповещений Division HUD (как остальные алерты). Ник окрашивается цветом слота отряда.",
-		["zh-cn"] = "在小队警报条中显示队友倒地、陷阱网、瘟疫猎犬压制与死亡（样式与其他警报一致）。玩家昵称使用队伍槽位颜色。",
+		en = "Show teammate knockdowns, trapper net, Pox Hound pin, deaths, and «can be rescued» (when the vanilla respawn timer reaches zero) in the Division HUD alert strip. The player name uses the squad slot color.",
+		ru = "Показывать нокдауны, сеть ловушечника, схват чумной гончей, смерти и «можно спасти» (когда ванильный таймер респауна доходит до нуля) в полоске оповещений Division HUD. Ник окрашивается цветом слота отряда.",
+		["zh-cn"] = "在小队警报条中显示队友倒地、陷阱网、瘟疫猎犬压制、死亡，以及「可救援」（与原生复活倒计时归零一致）。玩家昵称使用队伍槽位颜色。",
 	},
 	alerts_team_knock = {
 		en = "Knockdowns",
@@ -345,9 +345,9 @@ return {
 		["zh-cn"] = "陷阱网",
 	},
 	alerts_team_net_description = {
-		en = "When a teammate enters the netted state (Scab Trapper net), enqueue an alert line. Uses the same disabled_character_state check as the vanilla player panel.",
-		ru = "Когда союзник попадает в состояние «в сети» (сеть Скаб-ловушечника), добавлять строку. Проверка disabled_character_state + PlayerUnitStatus.is_netted, как у ванильной панели игрока.",
-		["zh-cn"] = "队友进入“被网住”状态（陷阱兵网）时加入一条警报；与游戏内玩家面板一致读取 disabled_character_state 与 is_netted。",
+		en = "When a teammate is netted (Scab Trapper), enqueue an alert. Uses character_state / disabled checks like the player panel, and also when the state machine applies a server correction to netted so other players on your client are covered.",
+		ru = "Когда союзник в сети ловушечника — строка в оповещениях. Те же проверки character_state / disabled, что у панели игрока; дополнительно при server_correction_occurred в netted, чтобы срабатывало и для союзников с репликацией состояния.",
+		["zh-cn"] = "队友被陷阱兵网住时加入一条警报；与玩家面板一致的 character_state / disabled 判定，并在状态机 server_correction 同步到 netted 时触发，以覆盖其他玩家客户端上的表现。",
 	},
 	alerts_team_hound = {
 		en = "Hound pin",
@@ -368,6 +368,21 @@ return {
 		en = "When a teammate dies, enqueue an alert line.",
 		ru = "Когда союзник умирает, добавлять строку в оповещения.",
 		["zh-cn"] = "队友死亡时加入一条警报。",
+	},
+	alerts_team_rescue_ready = {
+		en = "Rescue zone ready",
+		ru = "Можно спасти",
+		["zh-cn"] = "可救援",
+	},
+	alerts_team_rescue_ready_description = {
+		en = "When the vanilla team panel finishes the dead-player respawn countdown and shows the «can be rescued» line, enqueue one alert using the same localized text as the panel.",
+		ru = "Когда на панели отряда у мёртвого союзника заканчивается обратный отсчёт до появления в зоне спасения и показывается строка «можно спасти» (тот же текст локализации, что в игре), один раз добавить оповещение.",
+		["zh-cn"] = "当原生队伍面板上死亡队友的复活倒计时结束并显示可救援文案时，加入一条使用与面板相同本地化字符串的警报。",
+	},
+	alerts_team_suffix_rescue_ready_fallback = {
+		en = "Can be rescued",
+		ru = "Можно спасти",
+		["zh-cn"] = "可救援",
 	},
 	alerts_team_strip = {
 		en = "Team",
@@ -413,6 +428,11 @@ return {
 		en = "Detected %s x%d",
 		ru = "Обнаружен %s x%d",
 		["zh-cn"] = "侦测到：%s x%d",
+	},
+	alerts_message_mission_objective_grouped = {
+		en = "%s x%d",
+		ru = "%s x%d",
+		["zh-cn"] = "%s x%d",
 	},
 	alerts_breed_title_override_chaos_mutator_daemonhost = {
 		en = "Daemonhost (mutator)",

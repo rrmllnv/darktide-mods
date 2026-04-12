@@ -42,6 +42,7 @@ local defaults = {
 	alerts_team_net = true,
 	alerts_team_hound = true,
 	alerts_team_death = true,
+	alerts_team_rescue_ready = true,
 }
 
 if type(AlertsBossBreeds) == "table" and type(AlertsBossBreeds.list) == "table" then

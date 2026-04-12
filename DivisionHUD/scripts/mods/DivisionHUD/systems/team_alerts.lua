@@ -1,21 +1,35 @@
 local mod = get_mod("DivisionHUD")
 
+if mod._divisionhud_team_alerts_hooked then
+	return mod
+end
+
+mod._divisionhud_team_alerts_hooked = true
+
 local AttackSettings = require("scripts/settings/damage/attack_settings")
 local attack_results = AttackSettings.attack_results
 local Breed = require("scripts/utilities/breed")
 local PlayerUnitStatus = require("scripts/utilities/attack/player_unit_status")
 local HudElementCombatFeed = require("scripts/ui/hud/elements/combat_feed/hud_element_combat_feed")
-local PlayerCharacterStateNetted = require("scripts/extension_systems/character_state_machine/character_states/player_character_state_netted")
-local PlayerCharacterStatePounced = require("scripts/extension_systems/character_state_machine/character_states/player_character_state_pounced")
+local Text = require("scripts/utilities/ui/text")
+local UISettings = require("scripts/settings/ui/ui_settings")
 
 local already_reported = {}
+local rescue_spawn_countdown_prev = {}
+local RESCUE_COUNTDOWN_REMAINING_EPS = 0.12
+
 local special_alert_cooldown_until = {}
 local SPECIAL_ALERT_COOLDOWN_SEC = 2.5
 
-local function division_team_alerts_settings_allow_net()
-	local s = mod._settings
-	local v = s and s.alerts_team_net
+local team_panel_handler_status_prev = {}
 
+local function setting_enabled(setting_id)
+	local s = mod._settings
+	if type(s) ~= "table" then
+		return false
+	end
+
+	local v = s[setting_id]
 	if v == false or v == 0 then
 		return false
 	end
@@ -23,18 +37,38 @@ local function division_team_alerts_settings_allow_net()
 	return true
 end
 
-local function division_team_alerts_settings_allow_hound()
-	local s = mod._settings
-	local v = s and s.alerts_team_hound
+local function gameplay_time()
+	local Hu = mod.hud_utils
 
-	if v == false or v == 0 then
-		return false
+	if Hu and type(Hu.safe_time_for_alerts) == "function" then
+		local t1 = Hu.safe_time_for_alerts()
+		if type(t1) == "number" and t1 == t1 then
+			return t1
+		end
 	end
 
-	return true
+	if Hu and type(Hu.safe_gameplay_time) == "function" then
+		local t2 = Hu.safe_gameplay_time()
+		if type(t2) == "number" and t2 == t2 then
+			return t2
+		end
+	end
+
+	local tm = Managers and Managers.time
+	if tm and type(tm.has_timer) == "function" and tm:has_timer("gameplay") and type(tm.time) == "function" then
+		local ok, t3 = pcall(function()
+			return tm:time("gameplay")
+		end)
+
+		if ok and type(t3) == "number" and t3 == t3 then
+			return t3
+		end
+	end
+
+	return nil
 end
 
-local function division_team_alerts_consume_special_cooldown(key, gt)
+local function consume_cooldown(key, gt)
 	if type(key) ~= "string" or key == "" then
 		return false
 	end
@@ -44,119 +78,192 @@ local function division_team_alerts_consume_special_cooldown(key, gt)
 	end
 
 	local until_t = special_alert_cooldown_until[key]
-
 	if until_t and type(until_t) == "number" and gt < until_t then
 		return false
 	end
 
 	special_alert_cooldown_until[key] = gt + SPECIAL_ALERT_COOLDOWN_SEC
-
 	return true
 end
 
-local function division_team_alerts_resolve_human_teammate_unit(unit)
-	if not unit then
-		return nil, nil
+local function mod_localize_or_fallback(key, fallback_en)
+	local s = mod:localize(key)
+	if type(s) == "string" and s ~= "" and not string.find(s, "^<unlocalized") then
+		return s
 	end
-
-	local ude = ScriptUnit.has_extension(unit, "unit_data_system")
-
-	if not ude then
-		return nil, nil
-	end
-
-	local breed = ude:breed()
-
-	if not Breed.is_player(breed) then
-		return nil, nil
-	end
-
-	local player_unit_spawn_manager = Managers.state.player_unit_spawn
-	local player = player_unit_spawn_manager and player_unit_spawn_manager:owner(unit)
-
-	if not player then
-		return nil, nil
-	end
-
-	local local_player = Managers.player and Managers.player:local_player(1)
-
-	if player == local_player then
-		return nil, nil
-	end
-
-	return player, player:name()
+	return fallback_en
 end
 
-local function division_team_alerts_enqueue_strip_for_unit(unit, suffix_key, default_suffix_en)
+local function player_identity_key(player)
+	if type(player) ~= "table" then
+		return "unknown"
+	end
+
+	local name_fn = player.name
+	local nm = type(name_fn) == "function" and name_fn(player) or nil
+	if type(nm) == "string" and nm ~= "" then
+		return nm
+	end
+
+	local uid_fn = player.unique_id
+	local uid = type(uid_fn) == "function" and uid_fn(player) or nil
+	if uid ~= nil then
+		return tostring(uid)
+	end
+
+	return tostring(player)
+end
+
+local function player_display_name(player, unit)
+	if type(player) ~= "table" then
+		return ""
+	end
+
+	if unit and Unit.alive(unit) then
+		local from_feed = HudElementCombatFeed._get_unit_presentation_name(HudElementCombatFeed, unit)
+		if type(from_feed) == "string" and from_feed ~= "" then
+			return from_feed
+		end
+	end
+
+	local raw = type(player.name) == "function" and player:name() or ""
+	if type(raw) ~= "string" or raw == "" then
+		return ""
+	end
+
+	local slot_fn = player.slot
+	local slot = type(slot_fn) == "function" and slot_fn(player)
+	local colors = UISettings.player_slot_colors
+	local col = slot and colors and colors[slot]
+	if col then
+		return Text.apply_color_to_text(raw, col)
+	end
+
+	return raw
+end
+
+local function enqueue_team_alert(player, unit, suffix_text, cooldown_key)
 	if not mod.alerts_enqueue_strip_body then
 		return
 	end
 
-	local attacked_player, player_name = division_team_alerts_resolve_human_teammate_unit(unit)
-
-	if not attacked_player or type(player_name) ~= "string" or player_name == "" then
+	local local_player = Managers.player and Managers.player:local_player(1)
+	if player == local_player then
 		return
 	end
 
-	local gt = division_team_alerts_gameplay_time()
+	if type(suffix_text) ~= "string" or suffix_text == "" then
+		return
+	end
 
+	local gt = gameplay_time()
 	if type(gt) ~= "number" or gt ~= gt then
 		return
 	end
 
-	local victim_display = HudElementCombatFeed._get_unit_presentation_name(HudElementCombatFeed, unit)
-
-	if type(victim_display) ~= "string" or victim_display == "" then
-		victim_display = player_name
+	if not consume_cooldown(cooldown_key, gt) then
+		return
 	end
 
-	local suffix = mod:localize(suffix_key)
-
-	if type(suffix) ~= "string" or suffix == "" or string.find(suffix, "^<unlocalized") then
-		suffix = default_suffix_en
+	local display = player_display_name(player, unit)
+	if type(display) ~= "string" or display == "" then
+		display = type(player.name) == "function" and player:name() or ""
+	end
+	if type(display) ~= "string" or display == "" then
+		return
 	end
 
-	local body = victim_display .. " " .. suffix
 	local strip = mod:localize("alerts_team_strip")
-
 	if type(strip) ~= "string" or strip == "" or string.find(strip, "^<unlocalized") then
 		strip = "Team"
 	end
 
-	mod.alerts_enqueue_strip_body(strip, body, gt, "team")
+	mod.alerts_enqueue_strip_body(strip, display .. " " .. suffix_text, gt, "team")
 end
 
-local function division_team_alerts_settings_allow_death()
-	local s = mod._settings
-	local v = s and s.alerts_team_death
-
-	if v == false or v == 0 then
-		return false
+local function captive_status_token(unit)
+	if not unit or not HEALTH_ALIVE[unit] then
+		return nil
 	end
 
-	return true
-end
-
-local function division_team_alerts_settings_allow_knock()
-	local s = mod._settings
-	local v = s and s.alerts_team_knock
-
-	if v == false or v == 0 then
-		return false
+	local he = ScriptUnit.has_extension(unit, "health_system") and ScriptUnit.extension(unit, "health_system")
+	if not (he and he.is_alive and he:is_alive()) then
+		return nil
 	end
 
-	return true
-end
+	local uds = ScriptUnit.has_extension(unit, "unit_data_system") and ScriptUnit.extension(unit, "unit_data_system")
+	if not uds then
+		return nil
+	end
 
-local function division_team_alerts_gameplay_time()
-	local Hu = mod.hud_utils
+	local cs = uds:read_component("character_state")
+	local ds = uds:read_component("disabled_character_state")
+	local hogtied = cs and PlayerUnitStatus.is_hogtied(cs) or false
+	local pounced = ds and PlayerUnitStatus.is_pounced(ds) or false
+	local netted = ds and PlayerUnitStatus.is_netted(ds) or false
 
-	if Hu and type(Hu.safe_gameplay_time) == "function" then
-		return Hu.safe_gameplay_time()
+	if hogtied then
+		return "hogtied"
+	end
+	if pounced then
+		return "pounced"
+	end
+	if netted then
+		return "netted"
 	end
 
 	return nil
 end
+
+local function on_team_panel_handler_post_update(handler)
+	local allow_net = setting_enabled("alerts_team_net")
+	local allow_hound = setting_enabled("alerts_team_hound")
+	if not allow_net and not allow_hound then
+		return
+	end
+
+	local arr = handler and handler._player_panels_array
+	if type(arr) ~= "table" then
+		return
+	end
+
+	local local_player = Managers.player and Managers.player:local_player(1)
+
+	for i = 1, #arr do
+		local data = arr[i]
+		local player = type(data) == "table" and data.player
+
+		if type(player) == "table" and player ~= local_player then
+			local unit = player.player_unit
+			local uid_fn = player.unique_id
+			local uid = type(uid_fn) == "function" and uid_fn(player) or nil
+			if uid == nil then
+				uid = "name:" .. player_identity_key(player)
+			end
+
+			local prev_token = team_panel_handler_status_prev[uid]
+			local cur_token = (unit and HEALTH_ALIVE[unit]) and captive_status_token(unit) or nil
+
+			if allow_net and cur_token == "netted" and prev_token ~= "netted" then
+				local suffix = mod_localize_or_fallback("alerts_team_suffix_trapper_net", "caught in a trapper net")
+				local cd = "team_net:" .. player_identity_key(player)
+				enqueue_team_alert(player, unit, suffix, cd)
+			end
+
+			if allow_hound and cur_token == "pounced" and prev_token ~= "pounced" then
+				local suffix = mod_localize_or_fallback("alerts_team_suffix_hound_pounce", "pinned by a Pox Hound")
+				local cd = "team_pounce:" .. player_identity_key(player)
+				enqueue_team_alert(player, unit, suffix, cd)
+			end
+
+			team_panel_handler_status_prev[uid] = cur_token
+		end
+	end
+end
+
+mod:hook_safe("HudElementTeamPanelHandler", "update", function(self, dt, t, ui_renderer, render_settings, input_service)
+	on_team_panel_handler_post_update(self)
+end)
 
 mod:hook_safe("AttackReportManager", "_process_attack_result", function(self, buffer_data)
 	if not mod.alerts_enqueue_strip_body then
@@ -169,35 +276,29 @@ mod:hook_safe("AttackReportManager", "_process_attack_result", function(self, bu
 
 	local attacked_unit = buffer_data.attacked_unit
 	local attack_result = buffer_data.attack_result
-
 	if not attacked_unit then
 		return
 	end
 
-	local killed_unit_data_extension = ScriptUnit.has_extension(attacked_unit, "unit_data_system")
-	local killed_breed_or_nil = killed_unit_data_extension and killed_unit_data_extension:breed()
-	local killed_is_player = Breed.is_player(killed_breed_or_nil)
-
-	if not killed_is_player then
+	local ude_or_nil = ScriptUnit.has_extension(attacked_unit, "unit_data_system")
+	local killed_breed_or_nil = ude_or_nil and ude_or_nil:breed()
+	if not Breed.is_player(killed_breed_or_nil) then
 		return
 	end
 
 	local player_unit_spawn_manager = Managers.state.player_unit_spawn
 	local attacked_player = player_unit_spawn_manager and player_unit_spawn_manager:owner(attacked_unit)
-
 	if not attacked_player then
 		return
 	end
 
 	local local_player = Managers.player and Managers.player:local_player(1)
-
 	if attacked_player == local_player then
 		return
 	end
 
 	local health_extension = ScriptUnit.extension(attacked_unit, "health_system")
 	local killed_health_1 = health_extension and health_extension:current_health()
-
 	if type(killed_health_1) ~= "number" or killed_health_1 ~= killed_health_1 then
 		return
 	end
@@ -206,10 +307,9 @@ mod:hook_safe("AttackReportManager", "_process_attack_result", function(self, bu
 		return
 	end
 
-	local killed_character_state_component = killed_unit_data_extension:read_component("character_state")
+	local killed_character_state_component = ude_or_nil:read_component("character_state")
 	local killed_is_dead = PlayerUnitStatus.is_dead(killed_character_state_component)
 	local player_name = attacked_player:name()
-
 	if already_reported[player_name] == killed_is_dead then
 		return
 	end
@@ -217,77 +317,45 @@ mod:hook_safe("AttackReportManager", "_process_attack_result", function(self, bu
 	already_reported[player_name] = killed_is_dead
 
 	Promise.delay(0.1):next(function()
-		local function division_team_alerts_abort_pending_report()
+		local function abort()
 			already_reported[player_name] = nil
 		end
 
 		if not ScriptUnit.has_extension(attacked_unit, "unit_data_system") then
-			division_team_alerts_abort_pending_report()
-
+			abort()
 			return
 		end
 
 		local ude = ScriptUnit.extension(attacked_unit, "unit_data_system")
 		local csc = ude and ude:read_component("character_state")
-
 		if not csc then
-			division_team_alerts_abort_pending_report()
-
+			abort()
 			return
 		end
 
 		local is_dead = PlayerUnitStatus.is_dead(csc)
 		local is_knocked = PlayerUnitStatus.is_knocked_down(csc)
 
-		if is_dead and not division_team_alerts_settings_allow_death() then
-			division_team_alerts_abort_pending_report()
-
+		if is_dead and not setting_enabled("alerts_team_death") then
+			abort()
 			return
 		end
 
-		if not is_dead and is_knocked and not division_team_alerts_settings_allow_knock() then
-			division_team_alerts_abort_pending_report()
-
+		if not is_dead and is_knocked and not setting_enabled("alerts_team_knock") then
+			abort()
 			return
 		end
 
 		if not is_dead and not is_knocked then
-			division_team_alerts_abort_pending_report()
-
-			return
-		end
-
-		local gt = division_team_alerts_gameplay_time()
-
-		if type(gt) ~= "number" or gt ~= gt then
-			division_team_alerts_abort_pending_report()
-
+			abort()
 			return
 		end
 
 		local suffix_key = is_dead and "alerts_team_suffix_death" or "alerts_team_suffix_knock"
 		local default_suf = is_dead and "died" or "knocked down"
-
-		local victim_display = HudElementCombatFeed._get_unit_presentation_name(HudElementCombatFeed, attacked_unit)
-
-		if type(victim_display) ~= "string" or victim_display == "" then
-			victim_display = attacked_player:name()
-		end
-
-		local suffix = mod:localize(suffix_key)
-
-		if type(suffix) ~= "string" or suffix == "" or string.find(suffix, "^<unlocalized") then
-			suffix = default_suf
-		end
-
-		local body = victim_display .. " " .. suffix
-		local strip = mod:localize("alerts_team_strip")
-
-		if type(strip) ~= "string" or strip == "" or string.find(strip, "^<unlocalized") then
-			strip = "Team"
-		end
-
-		mod.alerts_enqueue_strip_body(strip, body, gt, "team")
+		local suffix = mod_localize_or_fallback(suffix_key, default_suf)
+		local cd = "team_kd_death:" .. player_identity_key(attacked_player)
+		enqueue_team_alert(attacked_player, attacked_unit, suffix, cd)
 
 		Promise.delay(5):next(function()
 			if already_reported[player_name] == killed_is_dead then
@@ -297,84 +365,61 @@ mod:hook_safe("AttackReportManager", "_process_attack_result", function(self, bu
 	end)
 end)
 
-mod:hook_safe(PlayerCharacterStateNetted, "on_enter", function(self, unit, dt, t, previous_state, params)
-	if not division_team_alerts_settings_allow_net() then
+mod:hook("HudElementPlayerPanelBase", "_set_player_respawn_timer", function(func, self, t, timer, is_dead)
+	func(self, t, timer, is_dead)
+
+	if not mod.alerts_enqueue_strip_body then
 		return
 	end
 
-	local ude = unit and ScriptUnit.has_extension(unit, "unit_data_system") and ScriptUnit.extension(unit, "unit_data_system")
-
-	if not ude then
+	if not setting_enabled("alerts_team_rescue_ready") then
 		return
 	end
 
-	local character_state_component = ude:read_component("character_state")
-	local disabled_character_state_component = ude:read_component("disabled_character_state")
-	local net_ok = character_state_component and character_state_component.state_name == "netted"
-
-	if not net_ok and disabled_character_state_component then
-		net_ok = PlayerUnitStatus.is_netted(disabled_character_state_component)
-	end
-
-	if not net_ok then
+	local data = self and self._data
+	local player = type(data) == "table" and data.player
+	local key = type(player) == "table" and player_identity_key(player) or nil
+	if type(key) ~= "string" or key == "" then
 		return
 	end
 
-	local _, player_name = division_team_alerts_resolve_human_teammate_unit(unit)
-
-	if type(player_name) ~= "string" or player_name == "" then
+	if not is_dead then
+		rescue_spawn_countdown_prev[key] = nil
 		return
 	end
 
-	local gt = division_team_alerts_gameplay_time()
-
-	if not division_team_alerts_consume_special_cooldown("team_net:" .. player_name, gt) then
+	if type(timer) ~= "number" or timer ~= timer or type(t) ~= "number" or t ~= t then
 		return
 	end
 
-	division_team_alerts_enqueue_strip_for_unit(unit, "alerts_team_suffix_trapper_net", "caught in a trapper net")
+	local local_player = Managers.player and Managers.player:local_player(1)
+	if player == local_player then
+		return
+	end
+
+	local remaining = math.max(0, timer - t)
+	local prev_remaining = rescue_spawn_countdown_prev[key]
+	local crossed = remaining <= RESCUE_COUNTDOWN_REMAINING_EPS and (type(prev_remaining) ~= "number" or prev_remaining > remaining + 0.0001)
+	rescue_spawn_countdown_prev[key] = remaining
+	if not crossed then
+		return
+	end
+
+	local suffix = Localize("loc_hud_resurrectable")
+	if type(suffix) ~= "string" or suffix == "" or string.find(suffix, "^<unlocalized") then
+		suffix = mod_localize_or_fallback("alerts_team_suffix_rescue_ready_fallback", "Can be rescued")
+	end
+
+	local cd = "team_rescue_ready:" .. key
+	enqueue_team_alert(player, player and player.player_unit, suffix, cd)
 end)
 
-mod:hook_safe(PlayerCharacterStatePounced, "on_enter", function(self, unit, dt, t, previous_state, params)
-	if not division_team_alerts_settings_allow_hound() then
-		return
-	end
+mod.team_alerts_wants_alerts_ui = function()
+	return setting_enabled("alerts_team_net")
+		or setting_enabled("alerts_team_hound")
+		or setting_enabled("alerts_team_knock")
+		or setting_enabled("alerts_team_death")
+		or setting_enabled("alerts_team_rescue_ready")
+end
 
-	local attacked_player, player_name = division_team_alerts_resolve_human_teammate_unit(unit)
-
-	if not attacked_player or type(player_name) ~= "string" or player_name == "" then
-		return
-	end
-
-	Promise.delay(0.05):next(function()
-		if not unit or not ALIVE[unit] then
-			return
-		end
-
-		local ude = ScriptUnit.has_extension(unit, "unit_data_system") and ScriptUnit.extension(unit, "unit_data_system")
-
-		if not ude then
-			return
-		end
-
-		local character_state_component = ude:read_component("character_state")
-		local disabled_character_state_component = ude:read_component("disabled_character_state")
-		local pounce_ok = character_state_component and character_state_component.state_name == "pounced"
-
-		if not pounce_ok and disabled_character_state_component then
-			pounce_ok = PlayerUnitStatus.is_pounced(disabled_character_state_component)
-		end
-
-		if not pounce_ok then
-			return
-		end
-
-		local gt = division_team_alerts_gameplay_time()
-
-		if not division_team_alerts_consume_special_cooldown("team_pounce:" .. player_name, gt) then
-			return
-		end
-
-		division_team_alerts_enqueue_strip_for_unit(unit, "alerts_team_suffix_hound_pounce", "pinned by a Pox Hound")
-	end)
-end)
+return mod
