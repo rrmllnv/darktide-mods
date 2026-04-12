@@ -41,6 +41,8 @@ local defaults = {
 	alerts_team_knock = true,
 	alerts_team_net = true,
 	alerts_team_hound = true,
+	alerts_team_ledge = true,
+	alerts_team_consumed = true,
 	alerts_team_death = true,
 	alerts_team_rescue_ready = true,
 }

@@ -361,6 +361,20 @@ return {
 								default_value = d("alerts_team_hound", true),
 							},
 							{
+								setting_id = "alerts_team_ledge",
+								type = "checkbox",
+								title = "alerts_team_ledge",
+								tooltip_text = "alerts_team_ledge_description",
+								default_value = d("alerts_team_ledge", true),
+							},
+							{
+								setting_id = "alerts_team_consumed",
+								type = "checkbox",
+								title = "alerts_team_consumed",
+								tooltip_text = "alerts_team_consumed_description",
+								default_value = d("alerts_team_consumed", true),
+							},
+							{
 								setting_id = "alerts_team_death",
 								type = "checkbox",
 								title = "alerts_team_death",

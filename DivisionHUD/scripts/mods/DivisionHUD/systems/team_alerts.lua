@@ -202,6 +202,8 @@ local function captive_status_token(unit)
 	local hogtied = cs and PlayerUnitStatus.is_hogtied(cs) or false
 	local pounced = ds and PlayerUnitStatus.is_pounced(ds) or false
 	local netted = ds and PlayerUnitStatus.is_netted(ds) or false
+	local consumed = ds and PlayerUnitStatus.is_consumed(ds) or false
+	local ledge_hanging = cs and PlayerUnitStatus.is_ledge_hanging(cs) or false
 
 	if hogtied then
 		return "hogtied"
@@ -212,6 +214,12 @@ local function captive_status_token(unit)
 	if netted then
 		return "netted"
 	end
+	if consumed then
+		return "consumed"
+	end
+	if ledge_hanging then
+		return "ledge_hanging"
+	end
 
 	return nil
 end
@@ -219,7 +227,9 @@ end
 local function on_team_panel_handler_post_update(handler)
 	local allow_net = setting_enabled("alerts_team_net")
 	local allow_hound = setting_enabled("alerts_team_hound")
-	if not allow_net and not allow_hound then
+	local allow_ledge = setting_enabled("alerts_team_ledge")
+	local allow_consumed = setting_enabled("alerts_team_consumed")
+	if not allow_net and not allow_hound and not allow_ledge and not allow_consumed then
 		return
 	end
 
@@ -254,6 +264,18 @@ local function on_team_panel_handler_post_update(handler)
 			if allow_hound and cur_token == "pounced" and prev_token ~= "pounced" then
 				local suffix = mod_localize_or_fallback("alerts_team_suffix_hound_pounce", "pinned by a Pox Hound")
 				local cd = "team_pounce:" .. player_identity_key(player)
+				enqueue_team_alert(player, unit, suffix, cd)
+			end
+
+			if allow_ledge and cur_token == "ledge_hanging" and prev_token ~= "ledge_hanging" then
+				local suffix = mod_localize_or_fallback("alerts_team_suffix_ledge_hanging", "is hanging on a ledge, needs help")
+				local cd = "team_ledge:" .. player_identity_key(player)
+				enqueue_team_alert(player, unit, suffix, cd)
+			end
+
+			if allow_consumed and cur_token == "consumed" and prev_token ~= "consumed" then
+				local suffix = mod_localize_or_fallback("alerts_team_suffix_consumed", "consumed by a Beast of Nurgle")
+				local cd = "team_consumed:" .. player_identity_key(player)
 				enqueue_team_alert(player, unit, suffix, cd)
 			end
 
@@ -353,7 +375,7 @@ mod:hook_safe("AttackReportManager", "_process_attack_result", function(self, bu
 		end
 
 		local suffix_key = is_dead and "alerts_team_suffix_death" or "alerts_team_suffix_knock"
-		local default_suf = is_dead and "died" or "knocked down"
+		local default_suf = is_dead and "died" or "knocked down, needs help"
 		local suffix = mod_localize_or_fallback(suffix_key, default_suf)
 		local cd = "team_kd_death:" .. player_identity_key(attacked_player)
 		enqueue_team_alert(attacked_player, attacked_unit, suffix, cd)
@@ -422,6 +444,8 @@ end)
 mod.team_alerts_wants_alerts_ui = function()
 	return setting_enabled("alerts_team_net")
 		or setting_enabled("alerts_team_hound")
+		or setting_enabled("alerts_team_ledge")
+		or setting_enabled("alerts_team_consumed")
 		or setting_enabled("alerts_team_knock")
 		or setting_enabled("alerts_team_death")
 		or setting_enabled("alerts_team_rescue_ready")

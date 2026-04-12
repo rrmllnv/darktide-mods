@@ -325,9 +325,9 @@ return {
 		["zh-cn"] = string.rep("\194\160", 8) .. "小队",
 	},
 	alerts_group_team_description = {
-		en = "Show teammate knockdowns, trapper net, Pox Hound pin, deaths, and «can be rescued» (when the vanilla respawn timer reaches zero) in the Division HUD alert strip. The player name uses the squad slot color.",
-		ru = "Показывать нокдауны, сеть ловушечника, схват чумной гончей, смерти и «можно спасти» (когда ванильный таймер респауна доходит до нуля) в полоске оповещений Division HUD. Ник окрашивается цветом слота отряда.",
-		["zh-cn"] = "在小队警报条中显示队友倒地、陷阱网、瘟疫猎犬压制、死亡，以及「可救援」（与原生复活倒计时归零一致）。玩家昵称使用队伍槽位颜色。",
+		en = "Show teammate knockdowns, trapper net, Pox Hound pin, ledge hang, Beast of Nurgle consume, deaths, and «can be rescued» (when the vanilla respawn timer reaches zero) in the Division HUD alert strip. The player name uses the squad slot color.",
+		ru = "Показывать нокдауны, сеть ловушечника, схват чумной гончей, висение на уступе, поглощение зверем Нургла, смерти и «можно спасти» (когда ванильный таймер респауна доходит до нуля) в полоске оповещений Division HUD. Ник окрашивается цветом слота отряда.",
+		["zh-cn"] = "在小队警报条中显示队友倒地、陷阱网、瘟疫猎犬压制、悬崖悬挂、纳垢巨兽吞噬、死亡，以及「可救援」（与原生复活倒计时归零一致）。玩家昵称使用队伍槽位颜色。",
 	},
 	alerts_team_knock = {
 		en = "Knockdowns",
@@ -335,9 +335,9 @@ return {
 		["zh-cn"] = "倒地",
 	},
 	alerts_team_knock_description = {
-		en = "When a teammate enters the knocked down state, enqueue an alert line.",
-		ru = "Когда союзник падает в нокдаун, добавлять строку в оповещения.",
-		["zh-cn"] = "队友进入倒地状态时加入一条警报。",
+		en = "When a teammate enters the knocked down state, enqueue an alert line (wording includes that help is needed).",
+		ru = "Когда союзник падает в нокдаун, добавлять строку в оповещения (в тексте указано, что нужна помощь).",
+		["zh-cn"] = "队友进入倒地状态时加入一条警报（文案中会提示需要帮助）。",
 	},
 	alerts_team_net = {
 		en = "Trapper net",
@@ -358,6 +358,26 @@ return {
 		en = "When a teammate enters the pounced disabled state (Pox Hound pin), enqueue an alert line. Uses the same disabled_character_state check as the vanilla player panel.",
 		ru = "Когда союзник в состоянии «схвачен» с типом pounced (чумная гончая), добавлять строку. Проверка disabled_character_state + PlayerUnitStatus.is_pounced, как у ванильной панели игрока.",
 		["zh-cn"] = "队友进入 pounced 压制（瘟疫猎犬）时加入一条警报；与游戏内玩家面板一致读取 disabled_character_state 与 is_pounced。",
+	},
+	alerts_team_ledge = {
+		en = "Ledge hang",
+		ru = "Уступ",
+		["zh-cn"] = "悬崖悬挂",
+	},
+	alerts_team_ledge_description = {
+		en = "When a teammate enters ledge_hanging (needs pull-up help), enqueue an alert line. Uses PlayerUnitStatus.is_ledge_hanging on character_state.",
+		ru = "Когда союзник в состоянии ledge_hanging (висит на уступе, нужен подтяг), добавлять строку. Проверка PlayerUnitStatus.is_ledge_hanging по character_state.",
+		["zh-cn"] = "队友进入 ledge_hanging（悬挂悬崖需拉一把）时加入一条警报；对 character_state 使用 PlayerUnitStatus.is_ledge_hanging。",
+	},
+	alerts_team_consumed = {
+		en = "Beast of Nurgle consume",
+		ru = "Зверь Нургла",
+		["zh-cn"] = "纳垢巨兽吞噬",
+	},
+	alerts_team_consumed_description = {
+		en = "When a teammate enters the consumed disabled state (Beast of Nurgle), enqueue an alert line. Uses PlayerUnitStatus.is_consumed on disabled_character_state.",
+		ru = "Когда союзник в состоянии consumed (поглощён зверем Нургла), добавлять строку. Проверка PlayerUnitStatus.is_consumed по disabled_character_state.",
+		["zh-cn"] = "队友进入 consumed（被纳垢巨兽吞噬）时加入一条警报；对 disabled_character_state 使用 PlayerUnitStatus.is_consumed。",
 	},
 	alerts_team_death = {
 		en = "Deaths",
@@ -390,9 +410,9 @@ return {
 		["zh-cn"] = "小队",
 	},
 	alerts_team_suffix_knock = {
-		en = "knocked down",
-		ru = "упал",
-		["zh-cn"] = "倒地",
+		en = "knocked down, needs help",
+		ru = "упал, нужна помощь",
+		["zh-cn"] = "倒地，需要帮助",
 	},
 	alerts_team_suffix_death = {
 		en = "died",
@@ -408,6 +428,16 @@ return {
 		en = "pinned by a Pox Hound",
 		ru = "его схватила чумная гончая",
 		["zh-cn"] = "被瘟疫猎犬扑倒",
+	},
+	alerts_team_suffix_ledge_hanging = {
+		en = "is hanging on a ledge, needs help",
+		ru = "висит на уступе, нужна помощь",
+		["zh-cn"] = "挂在悬崖边，需要帮助",
+	},
+	alerts_team_suffix_consumed = {
+		en = "consumed by a Beast of Nurgle",
+		ru = "поглощен Beast of Nurgle",
+		["zh-cn"] = "被纳垢巨兽吞噬",
 	},
 	alerts_ui_banner_alert = {
 		en = "ALERT",
