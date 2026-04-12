@@ -256,13 +256,13 @@ local function on_team_panel_handler_post_update(handler)
 			local cur_token = (unit and HEALTH_ALIVE[unit]) and captive_status_token(unit) or nil
 
 			if allow_net and cur_token == "netted" and prev_token ~= "netted" then
-				local suffix = mod_localize_or_fallback("alerts_team_suffix_trapper_net", "caught in a trapper net")
+				local suffix = mod_localize_or_fallback("alerts_team_suffix_trapper_net", "was ensnared by a Scab Trapper")
 				local cd = "team_net:" .. player_identity_key(player)
 				enqueue_team_alert(player, unit, suffix, cd)
 			end
 
 			if allow_hound and cur_token == "pounced" and prev_token ~= "pounced" then
-				local suffix = mod_localize_or_fallback("alerts_team_suffix_hound_pounce", "pinned by a Pox Hound")
+				local suffix = mod_localize_or_fallback("alerts_team_suffix_hound_pounce", "was pinned by a Pox Hound")
 				local cd = "team_pounce:" .. player_identity_key(player)
 				enqueue_team_alert(player, unit, suffix, cd)
 			end

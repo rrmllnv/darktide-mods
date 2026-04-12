@@ -420,14 +420,14 @@ return {
 		["zh-cn"] = "阵亡",
 	},
 	alerts_team_suffix_trapper_net = {
-		en = "caught in a trapper net",
-		ru = "попал в сеть ловушечника",
-		["zh-cn"] = "被陷阱兵网住",
+		en = "was ensnared by a Scab Trapper",
+		ru = "в сеть Скаб Ловушечника",
+		["zh-cn"] = "陷入斯卡布陷阱兵的网中",
 	},
 	alerts_team_suffix_hound_pounce = {
-		en = "pinned by a Pox Hound",
+		en = "was pinned by a Pox Hound",
 		ru = "схватила Чумная гончая",
-		["zh-cn"] = "被瘟疫猎犬扑倒",
+		["zh-cn"] = "遭瘟疫猎犬扑倒",
 	},
 	alerts_team_suffix_ledge_hanging = {
 		en = "is hanging on a ledge, needs help",
