@@ -14,15 +14,125 @@ return {
 		ru = "\238\128\140 ОТОБРАЖЕНИЕ",
 		["zh-cn"] = "\238\128\140 显示设置",
 	},
+	position_x = {
+		en = "Offset X",
+		ru = "Смещение по X",
+		["zh-cn"] = "水平偏移 X",
+	},
+	position_x_description = {
+		en = "Horizontal offset from the screen center in logical pixels (reference canvas 1920×1080). Range ±960. Negative moves the HUD left, positive moves it right. The root block is center-aligned.",
+		ru = "Горизонтальное смещение от центра экрана в логических пикселях (эталонный холст 1920×1080). Диапазон ±960. Отрицательные значения — влево, положительные — вправо. Корневой блок привязан к центру экрана.",
+		["zh-cn"] = "以屏幕中心为基准的水平偏移（参考分辨率 1920×1080），范围 ±960。负值左移，正值右移。根节点默认居中。",
+	},
+	position_y = {
+		en = "Offset Y",
+		ru = "Смещение по Y",
+		["zh-cn"] = "垂直偏移 Y",
+	},
+	position_y_description = {
+		en = "Vertical offset from the screen center in logical pixels (reference canvas 1920×1080). Range ±540. Negative moves the HUD up, positive moves it down. The root block is center-aligned.",
+		ru = "Вертикальное смещение от центра экрана в логических пикселях (эталонный холст 1920×1080). Диапазон ±540. Отрицательные значения — вверх, положительные — вниз. Корневой блок привязан к центру экрана.",
+		["zh-cn"] = "以屏幕中心为基准的垂直偏移（参考分辨率 1920×1080），范围 ±540。负值上移，正值下移。根节点默认居中。",
+	},
+	opacity = {
+		en = "Opacity",
+		ru = "Прозрачность",
+		["zh-cn"] = "不透明度",
+	},
 	divisionhud_super_bars = {
 		en = "\238\128\178 COMBAT HUD",
 		ru = "\238\128\178 БОЕВОЙ HUD",
 		["zh-cn"] = "\238\128\178 战斗界面",
 	},
+	show_stamina_bar = {
+		en = "Stamina and dodge bar",
+		ru = "Полоса стамины и уворотов",
+		["zh-cn"] = "体力与闪避条",
+	},
+	show_toughness_bar = {
+		en = "Toughness bar",
+		ru = "Полоса стойкости",
+		["zh-cn"] = "韧性条",
+	},
+	show_health_bar = {
+		en = "Health bar",
+		ru = "Полоса здоровья",
+		["zh-cn"] = "生命值条",
+	},
+	show_ability_timer = {
+		en = "Ability bar",
+		ru = "Полоса способности",
+		["zh-cn"] = "技能冷却条",
+	},
+	stimm_slot_icon_tint_by_type = {
+		en = "Color pocket stimm icon",
+		ru = "Цвет иконки шприца",
+		["zh-cn"] = "口袋注射器着色",
+	},
+	stimm_slot_icon_tint_by_type_description = {
+		en = "When enabled, the pocket stimm icon in the Division HUD strip is tinted by syringe template (speed, power, corruption cleanse, ability boost, broker syringe, etc.) using built-in colors. When off, the icon uses the default white tint.",
+		ru = "Если включено, иконка карманного шприца в полоске Division HUD окрашивается по шаблону шприца (скорость, сила, снятие порчи, усиление способности, шприц брокера и т.д.) встроенными цветами. Если выключено — обычный белый тон.",
+		["zh-cn"] = "启用后，按注射器模板（速度、力量、腐蚀治疗、技能强化、经纪人注射器等）用内置颜色为 Division HUD 条带中的口袋注射器图标着色。关闭时使用默认白色。",
+	},
+	ammo_text_color_by_fraction = {
+		en = "Ammo text color by remaining fraction",
+		ru = "Цвет патронов по доле боезапаса",
+		["zh-cn"] = "按弹药比例着色弹药文字",
+	},
+	ammo_text_color_by_fraction_description = {
+		en = "When enabled, the large ammo numbers tint by total ammo fraction: above 75% main, above 50% low, above 25% medium, 25% or less high. When off, they use the default main color.",
+		ru = "Если включено, крупные цифры патронов окрашиваются по доле боезапаса: выше 75% — основной цвет; выше 50% и не выше 75% — низкий запас; выше 25% и не выше 50% — средний; 25% и ниже — критический. Если выключено — обычный основной цвет.",
+		["zh-cn"] = "启用后，大号弹药数字按总弹药比例着色：高于 75% 主色；高于 50% 且不高于 75% 为低弹药色；高于 25% 且不高于 50% 为中档；25% 及以下为高警示色。关闭时使用默认主色。",
+	},
+	grenade_color_by_fraction = {
+		en = "Grenade slot color by charge fraction",
+		ru = "Цвет гранаты по доле зарядов",
+		["zh-cn"] = "手雷槽按充能比例着色",
+	},
+	grenade_color_by_fraction_description = {
+		en = "When enabled, the grenade ability slot icon and counter tint by remaining charges, using the same color bands and fraction thresholds as the large ammo numbers. When off, the slot uses the default colors.",
+		ru = "Если включено, иконка и счётчик слота гранаты окрашиваются по доле оставшихся зарядов — те же цветовые полосы и пороги доли, что у крупного текста патронов. Если выключено — цвета по умолчанию.",
+		["zh-cn"] = "启用后，手雷技能槽的图标与数字按剩余充能比例着色，色带与比例阈值与大号弹药文字一致。关闭时使用默认颜色。",
+	},
+	wielded_weapon_icon_state_colors = {
+		en = "Current weapon icon colors",
+		ru = "Цвет текущего оружия",
+		["zh-cn"] = "当前武器图标颜色",
+	},
+	wielded_weapon_icon_state_colors_description = {
+		en = "For supported weapons (see DivisionHUD config wielded_weapon_icon_colors.lua), tint the wielded-weapon strip icon: default full white stays for other weapons; listed weapons use the same inactive/active (and optional cooldown) Color keys as mod A La Mode, driven by inventory slot special_active and num_special_charges.",
+		ru = "Для поддерживаемого оружия (список в DivisionHUD/config/wielded_weapon_icon_colors.lua) красить иконку текущего оружия в полоске Division HUD: для остального оружия остаётся обычный белый; для строк из списка — те же ключи Color для «спокойного»/активного (и опционально кулдауна), что в моде A La Mode, по полям special_active и num_special_charges слота инвентаря.",
+		["zh-cn"] = "对配置列表中的武器（见 DivisionHUD/config/wielded_weapon_icon_colors.lua）为当前武器条图标着色：其他武器仍为纯白；列表内武器按与 A La Mode 相同的 Color 键表示非激活/激活（及可选冷却），依据库存槽位的 special_active 与 num_special_charges。",
+	},
 	divisionhud_super_dynamic = {
 		en = "\238\129\135 DYNAMIC HUD",
 		ru = "\238\129\135 ДИНАМИЧЕСКИЙ HUD",
 		["zh-cn"] = "\238\129\135 动态界面",
+	},
+	dynamic_hud = {
+		en = "Dynamic HUD",
+		ru = "Динамический HUD",
+		["zh-cn"] = "动态界面",
+	},
+	dynamic_hud_strength = {
+		en = "HUD shift strength",
+		ru = "Сила сдвига HUD",
+		["zh-cn"] = "界面偏移强度",
+	},
+	dynamic_hud_pitch_ratio = {
+		en = "Vertical ratio",
+		ru = "Вертикаль относительно горизонтали",
+		["zh-cn"] = "垂直/水平偏移比例",
+	},
+	dynamic_hud_decay = {
+		en = "Return speed",
+		ru = "Скорость возврата",
+		["zh-cn"] = "界面回弹速度",
+	},
+	dynamic_hud_max_offset = {
+		en = "Max offset",
+		ru = "Макс. смещение",
+		["zh-cn"] = "界面最大偏移量",
 	},
 	divisionhud_super_vanilla_hide = {
 		en = "\238\128\161 VANILLA HUD",
@@ -68,6 +178,41 @@ return {
 		en = "When enabled, only the center mission objective popups are hidden; the objective feed (including the area strip) keeps drawing. Use the Mission objectives section to mirror selected popup events into the Division HUD notification strip.",
 		ru = "Если включено, скрываются только центральные всплывающие окна целей; лента целей (включая область area) продолжает отображаться. В блоке «Цели миссии» можно дублировать выбранные события попапов в полоску оповещений Division HUD.",
 		["zh-cn"] = "启用后，仅隐藏中央任务目标弹窗，目标条带（含 area 区域）仍会绘制。可在「任务目标」分组中将所选弹窗事件镜像到 Division HUD 提示条。",
+	},
+	alerts_super = {
+		en = "\238\128\161 ALERTS",
+		ru = "\238\128\161 ОПОВЕЩЕНИЯ",
+		["zh-cn"] = "\238\128\161 警报",
+	},
+	alerts_enabled = {
+		en = "Enable approach alerts",
+		ru = "Включить оповещения о приближении",
+		["zh-cn"] = "启用接近警报",
+	},
+	alerts_max_visible = {
+		en = "Maximum simultaneous alerts",
+		ru = "Максимум одновременных оповещений",
+		["zh-cn"] = "同时显示的警报数量上限",
+	},
+	alerts_duration_sec = {
+		en = "Alert duration (seconds)",
+		ru = "Время показа оповещения (сек.)",
+		["zh-cn"] = "警报显示时长（秒）",
+	},
+	alerts_show_duration_bar = {
+		en = "Alert display time bar",
+		ru = "Полоса времени показа оповещения",
+		["zh-cn"] = "警报剩余时间条",
+	},
+	alerts_group_bosses = {
+		en = string.rep("\194\160", 8) .. "Bosses",
+		ru = string.rep("\194\160", 8) .. "Боссы",
+		["zh-cn"] = string.rep("\194\160", 8) .. "首领",
+	},
+	alerts_group_specialists = {
+		en = string.rep("\194\160", 8) .. "Specialists",
+		ru = string.rep("\194\160", 8) .. "Специалисты",
+		["zh-cn"] = string.rep("\194\160", 8) .. "专家单位",
 	},
 	mission_objectives_super = {
 		en = string.rep("\194\160", 8) .. "Mission objectives",
@@ -123,211 +268,6 @@ return {
 		en = "OBJECTIVE",
 		ru = "ЦЕЛЬ",
 		["zh-cn"] = "目标",
-	},
-	divisionhud_integrations = {
-		en = "\238\128\172 INTEGRATIONS",
-		ru = "\238\128\172 ИНТЕГРАЦИИ",
-		["zh-cn"] = "\238\128\172 功能兼容",
-	},
-	integration_custom_hud = {
-		en = "Custom HUD",
-		ru = "Custom HUD",
-		["zh-cn"] = "自定义界面兼容",
-	},
-	integration_custom_hud_description = {
-		en = "When enabled and Custom HUD has saved layout for this HUD (including root), Division HUD applies that position every frame and adds Dynamic HUD motion on top. Offset X/Y sliders are ignored for root. If only inner nodes are saved, root is left unchanged. Until anything is saved in Custom HUD, the X/Y sliders still move the block.",
-		ru = "Если включено и в Custom HUD сохранена раскладка этого HUD (в т.ч. root), Division HUD каждый кадр ставит эту позицию и при необходимости добавляет смещение Dynamic HUD. Слайдеры X/Y для root не используются. Если в Custom HUD сохранены только внутренние узлы, root не трогаем. Пока в Custom HUD нет сохранений — блок двигают слайдеры X/Y.",
-		["zh-cn"] = "启用后，若自定义界面已保存本界面布局（含根节点），全境封锁 HUD 会每帧应用该位置并叠加动态效果。根节点将忽略 X/Y 偏移滑块。若仅保存内部节点，根节点保持不变。自定义界面未保存任何布局时，仍可使用 X/Y 滑块移动。",
-	},
-	integration_stimm_countdown = {
-		en = "StimmCountdown",
-		ru = "StimmCountdown",
-		["zh-cn"] = "StimmCountdown",
-	},
-	integration_stimm_countdown_description = {
-		en = "When enabled and the StimmCountdown mod is loaded and enabled, the pocket stimm slot in the Division HUD strip shows its countdown (active / cooldown) using that mod’s display options. When off, the slot uses the usual 01/00 counter only.",
-		ru = "Если включено и мод StimmCountdown загружен и включён, в слоте карманного шприца в полоске Division HUD показывается отсчёт (действие / перезарядка) с учётом настроек того мода. Если выключено — только обычные 01/00.",
-		["zh-cn"] = "启用后，若 StimmCountdown 模组已加载并启用，Division HUD 条带中的口袋注射器槽位将按该模组显示倒计时（生效中/冷却中）。关闭时，槽位仅显示常规的 01/00 计数。",
-	},
-	ammo_text_color_by_fraction = {
-		en = "Ammo text color by remaining fraction",
-		ru = "Цвет патронов по доле боезапаса",
-		["zh-cn"] = "按弹药比例着色弹药文字",
-	},
-	ammo_text_color_by_fraction_description = {
-		en = "When enabled, the large ammo numbers tint by total ammo fraction: above 75% main, above 50% low, above 25% medium, 25% or less high. When off, they use the default main color.",
-		ru = "Если включено, крупные цифры патронов окрашиваются по доле боезапаса: выше 75% — основной цвет; выше 50% и не выше 75% — низкий запас; выше 25% и не выше 50% — средний; 25% и ниже — критический. Если выключено — обычный основной цвет.",
-		["zh-cn"] = "启用后，大号弹药数字按总弹药比例着色：高于 75% 主色；高于 50% 且不高于 75% 为低弹药色；高于 25% 且不高于 50% 为中档；25% 及以下为高警示色。关闭时使用默认主色。",
-	},
-	grenade_color_by_fraction = {
-		en = "Grenade slot color by charge fraction",
-		ru = "Цвет гранаты по доле зарядов",
-		["zh-cn"] = "手雷槽按充能比例着色",
-	},
-	grenade_color_by_fraction_description = {
-		en = "When enabled, the grenade ability slot icon and counter tint by remaining charges, using the same color bands and fraction thresholds as the large ammo numbers. When off, the slot uses the default colors.",
-		ru = "Если включено, иконка и счётчик слота гранаты окрашиваются по доле оставшихся зарядов — те же цветовые полосы и пороги доли, что у крупного текста патронов. Если выключено — цвета по умолчанию.",
-		["zh-cn"] = "启用后，手雷技能槽的图标与数字按剩余充能比例着色，色带与比例阈值与大号弹药文字一致。关闭时使用默认颜色。",
-	},
-	wielded_weapon_icon_state_colors = {
-		en = "Current weapon icon colors",
-		ru = "Цвет текущего оружия",
-		["zh-cn"] = "当前武器图标颜色",
-	},
-	wielded_weapon_icon_state_colors_description = {
-		en = "For supported weapons (see DivisionHUD config wielded_weapon_icon_colors.lua), tint the wielded-weapon strip icon: default full white stays for other weapons; listed weapons use the same inactive/active (and optional cooldown) Color keys as mod A La Mode, driven by inventory slot special_active and num_special_charges.",
-		ru = "Для поддерживаемого оружия (список в DivisionHUD/config/wielded_weapon_icon_colors.lua) красить иконку текущего оружия в полоске Division HUD: для остального оружия остаётся обычный белый; для строк из списка — те же ключи Color для «спокойного»/активного (и опционально кулдауна), что в моде A La Mode, по полям special_active и num_special_charges слота инвентаря.",
-		["zh-cn"] = "对配置列表中的武器（见 DivisionHUD/config/wielded_weapon_icon_colors.lua）为当前武器条图标着色：其他武器仍为纯白；列表内武器按与 A La Mode 相同的 Color 键表示非激活/激活（及可选冷却），依据库存槽位的 special_active 与 num_special_charges。",
-	},
-	stimm_slot_icon_tint_by_type = {
-		en = "Color pocket stimm icon",
-		ru = "Цвет иконки шприца",
-		["zh-cn"] = "口袋注射器着色",
-	},
-	stimm_slot_icon_tint_by_type_description = {
-		en = "When enabled, the pocket stimm icon in the Division HUD strip is tinted by syringe template (speed, power, corruption cleanse, ability boost, broker syringe, etc.) using built-in colors. When off, the icon uses the default white tint.",
-		ru = "Если включено, иконка карманного шприца в полоске Division HUD окрашивается по шаблону шприца (скорость, сила, снятие порчи, усиление способности, шприц брокера и т.д.) встроенными цветами. Если выключено — обычный белый тон.",
-		["zh-cn"] = "启用后，按注射器模板（速度、力量、腐蚀治疗、技能强化、经纪人注射器等）用内置颜色为 Division HUD 条带中的口袋注射器图标着色。关闭时使用默认白色。",
-	},
-	integration_recolor_stimms = {
-		en = "RecolorStimms",
-		ru = "RecolorStimms",
-		["zh-cn"] = "RecolorStimms",
-	},
-	integration_recolor_stimms_description = {
-		en = "When enabled and the RecolorStimms mod is loaded and enabled, pocket stimm icon colors are taken from that mod (get_stimm_argb_255). When off or the mod is unavailable, built-in syringe colors are used.",
-		ru = "Если включено и мод RecolorStimms загружен и включён, цвета иконки карманного шприца берутся из него (get_stimm_argb_255). Иначе используются встроенные цвета шприцев.",
-		["zh-cn"] = "启用后，若 RecolorStimms 模组已加载并启用，口袋注射器图标颜色从该模组读取（get_stimm_argb_255）。关闭或模组不可用时使用内置注射器颜色。",
-	},
-	divisionhud_super_system = {
-		en = "\238\128\169 SYSTEM SETTINGS",
-		ru = "\238\128\169 СИСТЕМНЫЕ НАСТРОЙКИ",
-		["zh-cn"] = "⚙️ 系统设置",
-	},
-	divisionhud_reset_all_settings = {
-		en = "Reset settings",
-		ru = "Сбросить настройки",
-		["zh-cn"] = "重置所有设置",
-	},
-	divisionhud_reset_all_settings_description = {
-		en = "Pick the confirm entry and apply. All Division HUD options return to defaults.",
-		ru = "Выберите подтверждение и примените. Все параметры Division HUD вернутся к значениям по умолчанию.",
-		["zh-cn"] = "选择确认选项并应用，所有全境封锁 HUD 设置将恢复默认。",
-	},
-	divisionhud_reset_confirm = {
-		en = "Yes, reset",
-		ru = "Да, сбросить",
-		["zh-cn"] = "确认重置",
-	},
-	divisionhud_reset_done = {
-		en = "Division HUD: settings restored to defaults.",
-		ru = "Division HUD: настройки сброшены к значениям по умолчанию.",
-		["zh-cn"] = "全境封锁 HUD：已恢复默认设置。",
-	},
-	position_x = {
-		en = "Offset X",
-		ru = "Смещение по X",
-		["zh-cn"] = "水平偏移 X",
-	},
-	position_x_description = {
-		en = "Horizontal offset from the screen center in logical pixels (reference canvas 1920×1080). Range ±960. Negative moves the HUD left, positive moves it right. The root block is center-aligned.",
-		ru = "Горизонтальное смещение от центра экрана в логических пикселях (эталонный холст 1920×1080). Диапазон ±960. Отрицательные значения — влево, положительные — вправо. Корневой блок привязан к центру экрана.",
-		["zh-cn"] = "以屏幕中心为基准的水平偏移（参考分辨率 1920×1080），范围 ±960。负值左移，正值右移。根节点默认居中。",
-	},
-	position_y = {
-		en = "Offset Y",
-		ru = "Смещение по Y",
-		["zh-cn"] = "垂直偏移 Y",
-	},
-	position_y_description = {
-		en = "Vertical offset from the screen center in logical pixels (reference canvas 1920×1080). Range ±540. Negative moves the HUD up, positive moves it down. The root block is center-aligned.",
-		ru = "Вертикальное смещение от центра экрана в логических пикселях (эталонный холст 1920×1080). Диапазон ±540. Отрицательные значения — вверх, положительные — вниз. Корневой блок привязан к центру экрана.",
-		["zh-cn"] = "以屏幕中心为基准的垂直偏移（参考分辨率 1920×1080），范围 ±540。负值上移，正值下移。根节点默认居中。",
-	},
-	opacity = {
-		en = "Opacity",
-		ru = "Прозрачность",
-		["zh-cn"] = "不透明度",
-	},
-	show_stamina_bar = {
-		en = "Stamina and dodge bar",
-		ru = "Полоса стамины и уворотов",
-		["zh-cn"] = "体力与闪避条",
-	},
-	show_toughness_bar = {
-		en = "Toughness bar",
-		ru = "Полоса стойкости",
-		["zh-cn"] = "韧性条",
-	},
-	show_health_bar = {
-		en = "Health bar",
-		ru = "Полоса здоровья",
-		["zh-cn"] = "生命值条",
-	},
-	show_ability_timer = {
-		en = "Ability bar",
-		ru = "Полоса способности",
-		["zh-cn"] = "技能冷却条",
-	},
-	dynamic_hud = {
-		en = "Dynamic HUD",
-		ru = "Динамический HUD",
-		["zh-cn"] = "动态界面",
-	},
-	dynamic_hud_strength = {
-		en = "HUD shift strength",
-		ru = "Сила сдвига HUD",
-		["zh-cn"] = "界面偏移强度",
-	},
-	dynamic_hud_pitch_ratio = {
-		en = "Vertical ratio",
-		ru = "Вертикаль относительно горизонтали",
-		["zh-cn"] = "垂直/水平偏移比例",
-	},
-	dynamic_hud_decay = {
-		en = "Return speed",
-		ru = "Скорость возврата",
-		["zh-cn"] = "界面回弹速度",
-	},
-	dynamic_hud_max_offset = {
-		en = "Max offset",
-		ru = "Макс. смещение",
-		["zh-cn"] = "界面最大偏移量",
-	},
-	alerts_super = {
-		en = "\238\128\161 ALERTS",
-		ru = "\238\128\161 ОПОВЕЩЕНИЯ",
-		["zh-cn"] = "\238\128\161 警报",
-	},
-	alerts_enabled = {
-		en = "Enable approach alerts",
-		ru = "Включить оповещения о приближении",
-		["zh-cn"] = "启用接近警报",
-	},
-	alerts_max_visible = {
-		en = "Maximum simultaneous alerts",
-		ru = "Максимум одновременных оповещений",
-		["zh-cn"] = "同时显示的警报数量上限",
-	},
-	alerts_duration_sec = {
-		en = "Alert duration (seconds)",
-		ru = "Время показа оповещения (сек.)",
-		["zh-cn"] = "警报显示时长（秒）",
-	},
-	alerts_show_duration_bar = {
-		en = "Alert display time bar",
-		ru = "Полоса времени показа оповещения",
-		["zh-cn"] = "警报剩余时间条",
-	},
-	alerts_group_bosses = {
-		en = string.rep("\194\160", 8) .. "Bosses",
-		ru = string.rep("\194\160", 8) .. "Боссы",
-		["zh-cn"] = string.rep("\194\160", 8) .. "首领",
-	},
-	alerts_group_specialists = {
-		en = string.rep("\194\160", 8) .. "Specialists",
-		ru = string.rep("\194\160", 8) .. "Специалисты",
-		["zh-cn"] = string.rep("\194\160", 8) .. "专家单位",
 	},
 	alerts_group_team = {
 		en = string.rep("\194\160", 8) .. "Team",
@@ -471,5 +411,65 @@ return {
 	},
 	alerts_breed_title_override_renegade_grenadier = {
 		ru = "Скаб-Бомбардир",
+	},
+	divisionhud_integrations = {
+		en = "\238\128\172 INTEGRATIONS",
+		ru = "\238\128\172 ИНТЕГРАЦИИ",
+		["zh-cn"] = "\238\128\172 功能兼容",
+	},
+	integration_custom_hud = {
+		en = "Custom HUD",
+		ru = "Custom HUD",
+		["zh-cn"] = "自定义界面兼容",
+	},
+	integration_custom_hud_description = {
+		en = "When enabled and Custom HUD has saved layout for this HUD (including root), Division HUD applies that position every frame and adds Dynamic HUD motion on top. Offset X/Y sliders are ignored for root. If only inner nodes are saved, root is left unchanged. Until anything is saved in Custom HUD, the X/Y sliders still move the block.",
+		ru = "Если включено и в Custom HUD сохранена раскладка этого HUD (в т.ч. root), Division HUD каждый кадр ставит эту позицию и при необходимости добавляет смещение Dynamic HUD. Слайдеры X/Y для root не используются. Если в Custom HUD сохранены только внутренние узлы, root не трогаем. Пока в Custom HUD нет сохранений — блок двигают слайдеры X/Y.",
+		["zh-cn"] = "启用后，若自定义界面已保存本界面布局（含根节点），全境封锁 HUD 会每帧应用该位置并叠加动态效果。根节点将忽略 X/Y 偏移滑块。若仅保存内部节点，根节点保持不变。自定义界面未保存任何布局时，仍可使用 X/Y 滑块移动。",
+	},
+	integration_stimm_countdown = {
+		en = "StimmCountdown",
+		ru = "StimmCountdown",
+		["zh-cn"] = "StimmCountdown",
+	},
+	integration_stimm_countdown_description = {
+		en = "When enabled and the StimmCountdown mod is loaded and enabled, the pocket stimm slot in the Division HUD strip shows its countdown (active / cooldown) using that mod’s display options. When off, the slot uses the usual 01/00 counter only.",
+		ru = "Если включено и мод StimmCountdown загружен и включён, в слоте карманного шприца в полоске Division HUD показывается отсчёт (действие / перезарядка) с учётом настроек того мода. Если выключено — только обычные 01/00.",
+		["zh-cn"] = "启用后，若 StimmCountdown 模组已加载并启用，Division HUD 条带中的口袋注射器槽位将按该模组显示倒计时（生效中/冷却中）。关闭时，槽位仅显示常规的 01/00 计数。",
+	},
+	integration_recolor_stimms = {
+		en = "RecolorStimms",
+		ru = "RecolorStimms",
+		["zh-cn"] = "RecolorStimms",
+	},
+	integration_recolor_stimms_description = {
+		en = "When enabled and the RecolorStimms mod is loaded and enabled, pocket stimm icon colors are taken from that mod (get_stimm_argb_255). When off or the mod is unavailable, built-in syringe colors are used.",
+		ru = "Если включено и мод RecolorStimms загружен и включён, цвета иконки карманного шприца берутся из него (get_stimm_argb_255). Иначе используются встроенные цвета шприцев.",
+		["zh-cn"] = "启用后，若 RecolorStimms 模组已加载并启用，口袋注射器图标颜色从该模组读取（get_stimm_argb_255）。关闭或模组不可用时使用内置注射器颜色。",
+	},
+	divisionhud_super_system = {
+		en = "\238\128\169 SYSTEM SETTINGS",
+		ru = "\238\128\169 СИСТЕМНЫЕ НАСТРОЙКИ",
+		["zh-cn"] = "⚙️ 系统设置",
+	},
+	divisionhud_reset_all_settings = {
+		en = "Reset settings",
+		ru = "Сбросить настройки",
+		["zh-cn"] = "重置所有设置",
+	},
+	divisionhud_reset_all_settings_description = {
+		en = "Pick the confirm entry and apply. All Division HUD options return to defaults.",
+		ru = "Выберите подтверждение и примените. Все параметры Division HUD вернутся к значениям по умолчанию.",
+		["zh-cn"] = "选择确认选项并应用，所有全境封锁 HUD 设置将恢复默认。",
+	},
+	divisionhud_reset_confirm = {
+		en = "Yes, reset",
+		ru = "Да, сбросить",
+		["zh-cn"] = "确认重置",
+	},
+	divisionhud_reset_done = {
+		en = "Division HUD: settings restored to defaults.",
+		ru = "Division HUD: настройки сброшены к значениям по умолчанию.",
+		["zh-cn"] = "全境封锁 HUD：已恢复默认设置。",
 	},
 }
