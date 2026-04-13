@@ -100,9 +100,9 @@ return {
 		["zh-cn"] = "当前武器图标颜色",
 	},
 	wielded_weapon_icon_state_colors_description = {
-		en = "For supported weapons (see DivisionHUD config wielded_weapon_icon_colors.lua), tint the wielded-weapon strip icon: default full white stays for other weapons; listed weapons use the same inactive/active (and optional cooldown) Color keys as mod A La Mode, driven by inventory slot special_active and num_special_charges.",
-		ru = "Для поддерживаемого оружия (список в DivisionHUD/config/wielded_weapon_icon_colors.lua) красить иконку текущего оружия в полоске Division HUD: для остального оружия остаётся обычный белый; для строк из списка — те же ключи Color для «спокойного»/активного (и опционально кулдауна), что в моде A La Mode, по полям special_active и num_special_charges слота инвентаря.",
-		["zh-cn"] = "对配置列表中的武器（见 DivisionHUD/config/wielded_weapon_icon_colors.lua）为当前武器条图标着色：其他武器仍为纯白；列表内武器按与 A La Mode 相同的 Color 键表示非激活/激活（及可选冷却），依据库存槽位的 special_active 与 num_special_charges。",
+		en = "When enabled, tints the wielded-weapon strip icon for weapons included in this mod's internal list by inactive, active, and optional cooldown states. Other weapons stay full white.",
+		ru = "Если включено, для оружия из внутреннего списка мода окрашивает иконку текущего оружия в полоске Division HUD по неактивному, активному и при необходимости кулдауну. Для остального оружия остаётся обычный белый.",
+		["zh-cn"] = "启用后，对本模组配置内的武器，按非激活、激活（及可选冷却）为当前武器条图标着色；其他武器保持纯白。",
 	},
 	divisionhud_super_dynamic = {
 		en = "\238\129\135 DYNAMIC HUD",
@@ -280,9 +280,9 @@ return {
 		["zh-cn"] = "在小队警报条中显示队友倒地、陷阱网、瘟疫猎犬压制、悬崖悬挂、纳垢巨兽吞噬、死亡。玩家昵称使用队伍槽位颜色。",
 	},
 	alerts_team_knock = {
-		en = "Knockdowns",
-		ru = "Кнок",
-		["zh-cn"] = "倒地",
+		en = "Teammate knocked down",
+		ru = "Союзник упал",
+		["zh-cn"] = "队友倒地",
 	},
 	alerts_team_knock_description = {
 		en = "When a teammate enters the knocked down state, enqueue an alert line (wording includes that help is needed).",
@@ -290,9 +290,9 @@ return {
 		["zh-cn"] = "队友进入倒地状态时加入一条警报（文案中会提示需要帮助）。",
 	},
 	alerts_team_net = {
-		en = "Trapper net",
-		ru = "Сеть",
-		["zh-cn"] = "陷阱网",
+		en = "Caught in net",
+		ru = "Пойман в сеть",
+		["zh-cn"] = "被网困住",
 	},
 	alerts_team_net_description = {
 		en = "When a teammate is netted (Scab Trapper), enqueue an alert. Uses character_state / disabled checks like the player panel, and also when the state machine applies a server correction to netted so other players on your client are covered.",
@@ -300,9 +300,9 @@ return {
 		["zh-cn"] = "队友被陷阱兵网住时加入一条警报；与玩家面板一致的 character_state / disabled 判定，并在状态机 server_correction 同步到 netted 时触发，以覆盖其他玩家客户端上的表现。",
 	},
 	alerts_team_hound = {
-		en = "Hound pin",
-		ru = "Собака",
-		["zh-cn"] = "猎犬压制",
+		en = "Pox Hound on teammate",
+		ru = "Чумная Гончая на союзнике",
+		["zh-cn"] = "瘟疫猎犬扑向队友",
 	},
 	alerts_team_hound_description = {
 		en = "When a teammate enters the pounced disabled state (Pox Hound pin), enqueue an alert line. Uses the same disabled_character_state check as the vanilla player panel.",
@@ -310,9 +310,9 @@ return {
 		["zh-cn"] = "队友进入 pounced 压制（瘟疫猎犬）时加入一条警报；与游戏内玩家面板一致读取 disabled_character_state 与 is_pounced。",
 	},
 	alerts_team_ledge = {
-		en = "Ledge hang",
-		ru = "Уступ",
-		["zh-cn"] = "悬崖悬挂",
+		en = "Hanging on ledge",
+		ru = "Висит на уступе",
+		["zh-cn"] = "悬在悬崖边",
 	},
 	alerts_team_ledge_description = {
 		en = "When a teammate enters ledge_hanging (needs pull-up help), enqueue an alert line. Uses PlayerUnitStatus.is_ledge_hanging on character_state.",
@@ -320,9 +320,9 @@ return {
 		["zh-cn"] = "队友进入 ledge_hanging（悬挂悬崖需拉一把）时加入一条警报；对 character_state 使用 PlayerUnitStatus.is_ledge_hanging。",
 	},
 	alerts_team_consumed = {
-		en = "Beast of Nurgle consume",
-		ru = "Зверь Нургла",
-		["zh-cn"] = "纳垢巨兽吞噬",
+		en = "Swallowed by Beast of Nurgle",
+		ru = "Поглощён Зверем Нургла",
+		["zh-cn"] = "被纳垢巨兽吞噬",
 	},
 	alerts_team_consumed_description = {
 		en = "When a teammate enters the consumed disabled state (Beast of Nurgle), enqueue an alert line. Uses PlayerUnitStatus.is_consumed on disabled_character_state.",
@@ -330,9 +330,9 @@ return {
 		["zh-cn"] = "队友进入 consumed（被纳垢巨兽吞噬）时加入一条警报；对 disabled_character_state 使用 PlayerUnitStatus.is_consumed。",
 	},
 	alerts_team_death = {
-		en = "Deaths",
-		ru = "Смерти",
-		["zh-cn"] = "死亡",
+		en = "Teammate death",
+		ru = "Смерть союзника",
+		["zh-cn"] = "队友阵亡",
 	},
 	alerts_team_death_description = {
 		en = "When a teammate dies, enqueue an alert line.",
