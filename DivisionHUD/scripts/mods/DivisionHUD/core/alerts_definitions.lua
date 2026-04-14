@@ -13,13 +13,13 @@ function M.build(bar_width, bar_label_w, sc)
 	local ALERTS_TOUGHNESS_GAP = sc(8)
 	local hud_body_line_spacing = (UIFontSettings.hud_body and UIFontSettings.hud_body.line_spacing) or 1.2
 	local ALERT_MSG_FONT_SIZE = sc(17)
-	local ALERTS_MESSAGE_TEXT_VERTICAL_INSET = sc(10)
+	local ALERTS_MESSAGE_TEXT_VERTICAL_INSET = sc(5)
 	local ALERTS_MESSAGE_TEXT_OFFSET_Y = sc(5)
 	local ALERTS_MESSAGE_TEXT_WRAP_WIDTH = bar_width - sc(10)
 	local ALERTS_BODY_TEXT_HEIGHT_1LINE = math.ceil(ALERT_MSG_FONT_SIZE * hud_body_line_spacing)
-	local ALERTS_BODY_TEXT_HEIGHT_3LINES = math.ceil(ALERT_MSG_FONT_SIZE * hud_body_line_spacing * 3)
+	local ALERTS_BODY_TEXT_HEIGHT_5LINES = math.ceil(ALERT_MSG_FONT_SIZE * hud_body_line_spacing * 5)
 	local ALERTS_BODY_HEIGHT_MIN = ALERTS_BODY_TEXT_HEIGHT_1LINE + ALERTS_MESSAGE_TEXT_VERTICAL_INSET + ALERTS_MESSAGE_TEXT_OFFSET_Y
-	local ALERTS_BODY_HEIGHT_MAX = ALERTS_BODY_TEXT_HEIGHT_3LINES + ALERTS_MESSAGE_TEXT_VERTICAL_INSET + ALERTS_MESSAGE_TEXT_OFFSET_Y
+	local ALERTS_BODY_HEIGHT_MAX = ALERTS_BODY_TEXT_HEIGHT_5LINES + ALERTS_MESSAGE_TEXT_VERTICAL_INSET + ALERTS_MESSAGE_TEXT_OFFSET_Y
 	local ALERTS_SLOT_HEIGHT = ALERTS_BODY_HEIGHT_MAX + ALERTS_STRIP_HEIGHT
 	local ALERT_FEED_ORANGE = {
 		230,
@@ -224,7 +224,7 @@ function M.build(bar_width, bar_label_w, sc)
 		message_text_style.font_size = sc(17)
 		message_text_style.drop_shadow = true
 		message_text_style.text_color = table.clone(UIHudSettings.color_tint_main_1)
-		message_text_style.size = { ALERTS_MESSAGE_TEXT_WRAP_WIDTH, ALERTS_BODY_TEXT_HEIGHT_3LINES }
+		message_text_style.size = { ALERTS_MESSAGE_TEXT_WRAP_WIDTH, ALERTS_BODY_TEXT_HEIGHT_5LINES }
 		message_text_style.offset = { sc(5), ALERTS_MESSAGE_TEXT_OFFSET_Y, 6 }
 
 		local strip_label_style = table.clone(UIFontSettings.hud_body)
