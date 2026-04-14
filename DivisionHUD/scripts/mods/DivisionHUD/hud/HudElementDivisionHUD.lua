@@ -8,6 +8,8 @@ local PlayerCharacterConstants = require("scripts/settings/player_character/play
 local Text = require("scripts/utilities/ui/text")
 local WalletSettings = require("scripts/settings/wallet_settings")
 
+require("scripts/foundation/utilities/color")
+
 local DIVISION_STIMM_TIMER_ACTIVE_COLOR = UIHudSettings.color_tint_main_2
 local DIVISION_STIMM_TIMER_COOLDOWN_COLOR = UIHudSettings.color_tint_alert_2
 local DIVISION_SLOT_COUNTER_TEXT_COLOR_DEFAULT = UIHudSettings.color_tint_main_1
@@ -136,6 +138,23 @@ local function format_stimm_timer_text_as_whole_seconds(text)
 	end
 
 	return string.format("%02d", whole)
+end
+
+local function division_right_slot_counter_markup_lead_unit_digit_as_background(raw_display)
+	if type(raw_display) ~= "string" then
+		return raw_display
+	end
+
+	if not string.match(raw_display, "^0[1-9]$") then
+		return raw_display
+	end
+
+	local grad = Color.terminal_background_gradient(255, true)
+	local r = type(grad[2]) == "number" and grad[2] or 101
+	local gch = type(grad[3]) == "number" and grad[3] or 133
+	local bch = type(grad[4]) == "number" and grad[4] or 96
+
+	return string.format("{#color(%d,%d,%d)}0{#reset()}%s", r, gch, bch, string.sub(raw_display, 2, 2))
 end
 
 local function is_valid_argb_255(c)
@@ -1007,10 +1026,30 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 			apply_right_slot_icon_color(widget, name, entry, opacity, mod._settings, player_unit)
 
 			if widget.style.text then
+				local raw_display
+				local stimm_cd_for_colors
+
 				if name == "slot_weapon_wielded" then
-					widget.content.text = self:_wielded_weapon_counter_text(extensions, entry)
+					raw_display = self:_wielded_weapon_counter_text(extensions, entry)
+					widget.content.text = raw_display or ""
 				else
-					widget.content.text = self:_slot_numeric_text(slot_id, entry, player_unit)
+					if name == "slot_stimm" then
+						stimm_cd_for_colors = get_stimm_countdown_display_for_player_unit(player_unit)
+
+						if stimm_cd_for_colors then
+							raw_display = format_stimm_timer_text_as_whole_seconds(stimm_cd_for_colors.text)
+						else
+							raw_display = self:_slot_numeric_text(slot_id, entry, player_unit)
+						end
+					else
+						raw_display = self:_slot_numeric_text(slot_id, entry, player_unit)
+					end
+
+					if name == "slot_blitz" or name == "slot_stimm" or name == "slot_pickup" then
+						widget.content.text = division_right_slot_counter_markup_lead_unit_digit_as_background(raw_display)
+					else
+						widget.content.text = raw_display or ""
+					end
 				end
 
 				local tc = widget.style.text.text_color
@@ -1022,12 +1061,8 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 				tc[4] = default_tc[4]
 
 				if name == "slot_stimm" then
-					local stimm_cd = get_stimm_countdown_display_for_player_unit(player_unit)
-
-					if stimm_cd then
-						widget.content.text = format_stimm_timer_text_as_whole_seconds(stimm_cd.text)
-
-						local base = stimm_cd.phase == "active" and DIVISION_STIMM_TIMER_ACTIVE_COLOR or DIVISION_STIMM_TIMER_COOLDOWN_COLOR
+					if stimm_cd_for_colors then
+						local base = stimm_cd_for_colors.phase == "active" and DIVISION_STIMM_TIMER_ACTIVE_COLOR or DIVISION_STIMM_TIMER_COOLDOWN_COLOR
 
 						tc[1] = math.floor((base[1] or 255) * opacity)
 						tc[2] = base[2]
