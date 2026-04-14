@@ -22,7 +22,20 @@ local RIGHT_CELL = sc(58)
 local RIGHT_GAP = sc(4)
 local GAP_LEFT_TO_GRID_OLD = sc(12)
 local GAP_LEFT_TO_GRID = RIGHT_GAP
-local BIG_AMMO_W = sc(120) + GAP_LEFT_TO_GRID_OLD - GAP_LEFT_TO_GRID
+local BAR_LABEL_W = sc(64)
+local AMMO_CLIP_FONT = sc(38)
+local AMMO_RESERVE_FONT = sc(26)
+local AMMO_CLIP_OFFSET_Y = sc(14)
+local AMMO_RESERVE_OFFSET_Y = sc(30)
+local AMMO_BIG_MAX_DIGITS = 4
+local AMMO_BIG_TEXT_CHAR_WIDTH_MUL = 0.62
+local AMMO_BIG_MIN_TEXT_PIXEL_W = math.max(
+	math.ceil(AMMO_CLIP_FONT * AMMO_BIG_MAX_DIGITS * AMMO_BIG_TEXT_CHAR_WIDTH_MUL),
+	math.ceil(AMMO_RESERVE_FONT * AMMO_BIG_MAX_DIGITS * AMMO_BIG_TEXT_CHAR_WIDTH_MUL)
+)
+local BIG_AMMO_W_REFERENCE = sc(120) + GAP_LEFT_TO_GRID_OLD - GAP_LEFT_TO_GRID
+local BIG_AMMO_W_LAYOUT = math.max(1, BIG_AMMO_W_REFERENCE - BAR_LABEL_W, AMMO_BIG_MIN_TEXT_PIXEL_W)
+local BIG_AMMO_W = BIG_AMMO_W_LAYOUT + BAR_LABEL_W
 local RIGHT_GRID_COLUMN_COUNT = 3
 local RIGHT_GRID_WIDTH = RIGHT_CELL * RIGHT_GRID_COLUMN_COUNT + RIGHT_GAP * (RIGHT_GRID_COLUMN_COUNT - 1)
 local AUSPEX_SLOT_WIDTH = RIGHT_CELL
@@ -41,9 +54,7 @@ local RIGHT_COLUMN_TOTAL_HEIGHT = WIELDED_ROW_HEIGHT + RIGHT_BOTTOM_ROW_GAP + RI
 local BIG_AMMO_H = RIGHT_COLUMN_TOTAL_HEIGHT
 local MAIN_ROW_HEIGHT = RIGHT_COLUMN_TOTAL_HEIGHT
 local ROW_WIDTH = BIG_AMMO_W + GAP_LEFT_TO_GRID + RIGHT_GRID_WIDTH
-local BAR_LABEL_W = sc(64)
 local BAR_FILL_WIDTH = math.max(1, ROW_WIDTH - BAR_LABEL_W)
-local BIG_AMMO_W_LAYOUT = math.max(1, BIG_AMMO_W - BAR_LABEL_W)
 local BAR_WIDTH = BAR_FILL_WIDTH
 local TOUGHNESS_BAR_HEIGHT = sc(10)
 local ABILITY_BAR_STRIP_HEIGHT = sc(8)
@@ -103,10 +114,6 @@ local AUSPEX_ICON_SIZE = math.max(1, math.min(AUSPEX_SLOT_WIDTH - sc(6), WIELDED
 local SLOT_TEXT_FONT = sc(20)
 local SLOT_ICON_LEFT_INSET = sc(3)
 local SLOT_TEXT_AFTER_ICON_GAP = sc(2)
-local AMMO_CLIP_FONT = sc(38)
-local AMMO_RESERVE_FONT = sc(26)
-local AMMO_CLIP_OFFSET_Y = sc(14)
-local AMMO_RESERVE_OFFSET_Y = sc(30)
 
 local TextColorFractions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/text_color_fractions")
 
@@ -322,6 +329,14 @@ end
 local function create_ammo_big_widget(scenegraph_id)
 	local text_style = text_style_from_hud_body(AMMO_CLIP_FONT, { 0, -AMMO_CLIP_OFFSET_Y, 2 })
 	local text_style_reserve = text_style_from_hud_body(AMMO_RESERVE_FONT, { 0, AMMO_RESERVE_OFFSET_Y, 2 })
+
+	text_style.horizontal_alignment = "center"
+	text_style.vertical_alignment = "center"
+	text_style.size = { BIG_AMMO_W_LAYOUT, math.ceil(AMMO_CLIP_FONT * 1.3) }
+
+	text_style_reserve.horizontal_alignment = "center"
+	text_style_reserve.vertical_alignment = "center"
+	text_style_reserve.size = { BIG_AMMO_W_LAYOUT, math.ceil(AMMO_RESERVE_FONT * 1.3) }
 
 	return UIWidget.create_definition({
 		{
@@ -544,4 +559,6 @@ return {
 	AMMO_TEXT_COLOR_FRACTION_GT_MAIN = AMMO_TEXT_COLOR_FRACTION_GT_MAIN,
 	AMMO_TEXT_COLOR_FRACTION_GT_LOW_BAND = AMMO_TEXT_COLOR_FRACTION_GT_LOW_BAND,
 	AMMO_TEXT_COLOR_FRACTION_GT_MEDIUM_BAND = AMMO_TEXT_COLOR_FRACTION_GT_MEDIUM_BAND,
+	AMMO_BIG_MAX_DIGITS = AMMO_BIG_MAX_DIGITS,
+	AMMO_BIG_DISPLAY_VALUE_MAX = 10^AMMO_BIG_MAX_DIGITS - 1,
 }

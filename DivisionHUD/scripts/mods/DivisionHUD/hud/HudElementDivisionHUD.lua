@@ -65,6 +65,7 @@ local HUD_LAYOUT_SCALE = Definitions.HUD_LAYOUT_SCALE or 1
 local FRACTION_COLOR_GT_MAIN = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_MAIN or 0.75
 local FRACTION_COLOR_GT_LOW_BAND = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_LOW_BAND or 0.5
 local FRACTION_COLOR_GT_MEDIUM_BAND = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_MEDIUM_BAND or 0.25
+local AMMO_BIG_DISPLAY_VALUE_MAX = Definitions.AMMO_BIG_DISPLAY_VALUE_MAX or 9999
 
 local RESOURCE_ZERO_DIM_ALPHA_MUL = 0.45
 
@@ -78,6 +79,22 @@ local function resource_stack_effective_opacity(hud_row_opacity, is_at_zero)
 	end
 
 	return hud_row_opacity
+end
+
+local function format_ammo_big_display_count(raw)
+	if type(raw) ~= "number" or raw ~= raw then
+		return "0"
+	end
+
+	local v = math.floor(raw + 0.5)
+
+	if v < 0 then
+		v = 0
+	elseif v > AMMO_BIG_DISPLAY_VALUE_MAX then
+		v = AMMO_BIG_DISPLAY_VALUE_MAX
+	end
+
+	return string.format("%d", v)
 end
 
 local function read_mod_numeric_setting(key)
@@ -832,8 +849,8 @@ HudElementDivisionHUD._update_ammo_big = function(self, player_unit, widget, opa
 
 	local clip, reserve = self:_read_weapon_slot_clip_reserve(unit_data_extension, visual_loadout_extension, ammo_slot_id)
 
-	widget.content.text = string.format("%d", clip)
-	widget.content.text_reserve = string.format("%d", reserve)
+	widget.content.text = format_ammo_big_display_count(clip)
+	widget.content.text_reserve = format_ammo_big_display_count(reserve)
 
 	local slot_component = unit_data_extension:read_component(ammo_slot_id)
 	local fraction = resolve_ammo_total_fraction(slot_component)
