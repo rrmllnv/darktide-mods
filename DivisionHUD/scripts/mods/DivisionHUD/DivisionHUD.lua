@@ -118,6 +118,10 @@ mod:hook_safe("ProximityAreaBuffDrone", "init", function(self, context, init_dat
 	end
 end)
 
+local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
+
+UIHudSettings.element_draw_layers["HudElementDivisionHUD"] = 301
+
 local hud_elements = {
 	{
 		filename = "DivisionHUD/scripts/mods/DivisionHUD/hud/HudElementDivisionHUD",
