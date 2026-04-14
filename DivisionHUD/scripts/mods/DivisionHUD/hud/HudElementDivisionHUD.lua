@@ -1172,10 +1172,10 @@ local function apply_alert_pass_colors(st, palette, opacity)
 	end
 end
 
-local ALERT_ANIM_ENTER_DUR = 0.22
-local ALERT_ANIM_EXIT_DUR  = 0.28
-local ALERT_ANIM_DROP_PX_BASE  = 40
-local ALERT_ANIM_SLIDE_PX_BASE = 120
+local ALERT_ANIM_ENTER_DUR = 0.12
+local ALERT_ANIM_EXIT_DUR  = 0.15
+local ALERT_ANIM_DROP_PX_BASE  = 10
+local ALERT_ANIM_SLIDE_PX_BASE = 20
 
 local function _div_alert_drop_px()
 	return math.max(1, math.floor(ALERT_ANIM_DROP_PX_BASE * (HUD_LAYOUT_SCALE or 1) + 0.5))
@@ -1317,10 +1317,10 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 	-- ── 2. Transition items not in feed to "exit" ─────────────────────────────
 	for k, item in pairs(by_key) do
 		if not feed_key_to_line[k] and item.state ~= "exit" then
-			item.state    = "exit"
-			item.timer    = 0
-			item.x_anim   = 0
-			item.y_at_exit = item.y_layout or 0
+			item.state     = "exit"
+			item.timer     = 0
+			item.x_anim    = 0
+			item.y_at_exit = item.y_anim or item.y_layout or 0
 		end
 	end
 
@@ -1332,19 +1332,32 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		if k then
 			if not by_key[k] then
 				by_key[k] = {
-					key         = k,
-					state       = "enter",
-					timer       = 0,
-					x_anim      = 0,
-					y_enter_ofs = 0,
-					alpha       = 0,
-					cached_h    = 0,
-					last_line   = line,
-					y_layout    = 0,
-					y_at_exit   = 0,
+					key              = k,
+					state            = "enter",
+					timer            = 0,
+					x_anim           = 0,
+					y_enter_ofs      = -drop_px,
+					y_anim           = 0,
+					alpha            = 0,
+					cached_h         = 0,
+					last_line        = line,
+					y_layout         = 0,
+					y_at_exit        = 0,
+					skip_first_frame = true,
 				}
 			else
-				by_key[k].last_line = line
+				local existing = by_key[k]
+
+				existing.last_line = line
+
+				if existing.state == "exit" then
+					existing.state            = "enter"
+					existing.timer            = 0
+					existing.x_anim           = 0
+					existing.y_enter_ofs      = -drop_px
+					existing.alpha            = 0
+					existing.skip_first_frame = true
+				end
 			end
 		end
 	end
@@ -1405,6 +1418,13 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 
 	for _, item in ipairs(stack) do
 		item.y_layout = y_cur
+
+		-- New items: snap y_anim to layout immediately so they don't slide in
+		-- from y=0. The enter animation (y_enter_ofs) handles the visual drop.
+		if item.skip_first_frame then
+			item.y_anim = y_cur
+		end
+
 		y_cur = y_cur + item.cached_h + ALERTS_SLOT_GAP
 	end
 
@@ -1412,7 +1432,39 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		total_h_target = y_cur - ALERTS_SLOT_GAP
 	end
 
-	-- ── 7. Advance animations ─────────────────────────────────────────────────
+	-- ── 7. Compute col_h and compensate all items BEFORE lerp ────────────────
+	-- Compensation must happen before animation lerp so that existing items
+	-- see y_anim ≈ y_layout and produce zero lerp delta (no visual jump).
+	local col_lerp_k = math.min(1, 10 * dt)
+	local old_col_h  = self._div_alert_col_h or 0
+	local col_h
+
+	if total_h_target >= old_col_h then
+		col_h = total_h_target
+	else
+		local diff = total_h_target - old_col_h
+
+		col_h = math.abs(diff) < 0.5 and total_h_target or (old_col_h + diff * col_lerp_k)
+	end
+
+	self._div_alert_col_h = col_h
+
+	local col_delta = col_h - old_col_h
+
+	if col_delta ~= 0 then
+		for _, item in pairs(by_key) do
+			if item.state == "exit" then
+				-- Keep exiting items at the same screen Y when column moves.
+				item.y_at_exit = item.y_at_exit + col_delta
+			elseif not item.skip_first_frame then
+				-- Keep existing enter/hold items at the same screen Y.
+				-- After this, y_anim == y_layout for hold items → lerp delta = 0.
+				item.y_anim = item.y_anim + col_delta
+			end
+		end
+	end
+
+	-- ── 8. Advance animations (lerp after compensation) ───────────────────────
 	local to_remove = {}
 
 	for k, item in pairs(by_key) do
@@ -1425,6 +1477,9 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 			item.y_enter_ofs = -(drop_px * (1 - ep))
 			item.alpha       = ep
 
+			local dy = item.y_layout - item.y_anim
+			item.y_anim = math.abs(dy) < 0.5 and item.y_layout or (item.y_anim + dy * col_lerp_k)
+
 			if p >= 1 then
 				item.state       = "hold"
 				item.y_enter_ofs = 0
@@ -1433,6 +1488,9 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		elseif item.state == "hold" then
 			item.y_enter_ofs = 0
 			item.alpha       = 1
+
+			local dy = item.y_layout - item.y_anim
+			item.y_anim = math.abs(dy) < 0.5 and item.y_layout or (item.y_anim + dy * col_lerp_k)
 		elseif item.state == "exit" then
 			local p  = math.min(1, item.timer / ALERT_ANIM_EXIT_DUR)
 			local ep = math.easeOutCubic(p)
@@ -1449,37 +1507,6 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 	for _, k in ipairs(to_remove) do
 		by_key[k] = nil
 	end
-
-	-- ── 8. Animate column height (grows instantly, shrinks smoothly) ──────────
-	-- While items are still exiting, keep the column tall enough to contain them
-	-- so they slide only RIGHT (not diagonally). Column shrinks after exit completes.
-	local total_h_col_floor = total_h_target
-
-	for _, item in pairs(by_key) do
-		if item.state == "exit" and item.cached_h > 0 then
-			local bottom = item.y_at_exit + item.cached_h
-
-			if bottom > total_h_col_floor then
-				total_h_col_floor = bottom
-			end
-		end
-	end
-
-	local col_h = self._div_alert_col_h or 0
-
-	if total_h_col_floor >= col_h then
-		col_h = total_h_col_floor
-	else
-		local diff = total_h_col_floor - col_h
-
-		if math.abs(diff) < 0.5 then
-			col_h = total_h_col_floor
-		else
-			col_h = col_h + diff * math.min(1, 10 * dt)
-		end
-	end
-
-	self._div_alert_col_h = col_h
 
 	local col_h_int = math.max(0, math.floor(col_h + 0.5))
 
@@ -1512,6 +1539,15 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 			break
 		end
 
+		-- Skip rendering on the very first frame of existence.
+		-- set_scenegraph_position for alerts_column (step 8) hasn't propagated
+		-- through super.update yet, so the widget would render at the old column
+		-- position (wrong screen Y). From frame 2 the position is correct.
+		if item.skip_first_frame then
+			item.skip_first_frame = false
+			goto continue_render
+		end
+
 		local line = item.last_line
 
 		if not line or type(line.text) ~= "string" or line.text == "" then
@@ -1528,7 +1564,7 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		-- Position this slot within alerts_column
 		local y_pos = item.state == "exit"
 			and math.floor(item.y_at_exit + 0.5)
-			or  math.floor((item.y_layout + item.y_enter_ofs) + 0.5)
+			or  math.floor((item.y_anim + item.y_enter_ofs) + 0.5)
 		local x_pos = math.floor(item.x_anim + 0.5)
 		local slot_id = "alert_slot_" .. slot_idx
 
@@ -1707,6 +1743,15 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 		end
 	end
 
+	local s_op = mod._settings
+	local opacity_raw = s_op and s_op.opacity
+	local opacity = (type(opacity_raw) == "number" and opacity_raw) or 1.0
+	local widgets = self._widgets_by_name
+
+	if not is_in_hub and local_player and player_unit then
+		self:_update_alert_slots(widgets, opacity, ui_renderer, dt)
+	end
+
 	HudElementDivisionHUD.super.update(self, dt, t, ui_renderer, render_settings, input_service)
 
 	if is_in_hub then
@@ -1731,11 +1776,6 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 		return
 	end
 
-	local s_op = mod._settings
-	local opacity_raw = s_op and s_op.opacity
-	local opacity = (type(opacity_raw) == "number" and opacity_raw) or 1.0
-	local widgets = self._widgets_by_name
-
 	VanillaStaminaDodge.update(self, dt, t, ui_renderer, render_settings, input_service)
 	VanillaToughnessHealth.update(self, dt, t, player_unit, opacity)
 
@@ -1752,7 +1792,6 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
 	self:_update_auspex_slot(player_unit, widgets, opacity)
 	self:_update_right_slot_grid(player_unit, widgets, opacity)
-	self:_update_alert_slots(widgets, opacity, ui_renderer, dt)
 end
 
 HudElementDivisionHUD._update_ability_bar = function(self, player_unit, widget, opacity)
