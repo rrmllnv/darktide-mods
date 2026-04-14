@@ -973,10 +973,19 @@ HudElementDivisionHUD._update_auspex_slot = function(self, player_unit, widgets,
 
 	if entry.has_equipment and type(entry.icon) == "string" and entry.icon ~= "" and entry.icon ~= "content/ui/materials/base/ui_default_base" then
 		widget.content.visible = true
-		self:_apply_slot_icon_material(widget, entry)
+
+		if entry.icon ~= self._cached_auspex_icon then
+			self._cached_auspex_icon = entry.icon
+			self:_apply_slot_icon_material(widget, entry)
+		end
+
 		widget.style.icon.color[1] = 255 * opacity
 		widget.style.icon.color[4] = 255
 	else
+		if self._cached_auspex_icon ~= nil then
+			self._cached_auspex_icon = nil
+		end
+
 		widget.content.visible = false
 
 		if widget.style.icon.material_values ~= nil then
@@ -1007,7 +1016,7 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 		return
 	end
 
-	local row = SlotData.build_division_right_slots(extensions)
+	local row = SlotData.build_division_right_slots(extensions, self._cached_wielded_slot_id)
 
 	for i = 1, RIGHT_SLOT_COUNT do
 		local name = right_slot_widget_names[i]
@@ -1022,7 +1031,24 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 			local slot_id = entry.slot_id
 
 			widget.content.visible = true
-			self:_apply_slot_icon_material(widget, entry)
+
+			if name == "slot_weapon_wielded" then
+				local resolved_slot = entry.wielded_source_slot_id
+
+				if resolved_slot then
+					self._cached_wielded_slot_id = resolved_slot
+				end
+
+				local new_icon = entry.icon
+
+				if new_icon ~= self._cached_wielded_icon then
+					self._cached_wielded_icon = new_icon
+					self:_apply_slot_icon_material(widget, entry)
+				end
+			else
+				self:_apply_slot_icon_material(widget, entry)
+			end
+
 			apply_right_slot_icon_color(widget, name, entry, opacity, mod._settings, player_unit)
 
 			if widget.style.text then
@@ -1684,6 +1710,10 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	_div_alert_init(self)
 
 	self:_reset_dynamic_offset_state()
+
+	self._cached_wielded_slot_id = nil
+	self._cached_wielded_icon = nil
+	self._cached_auspex_icon = nil
 
 	local widgets = self._widgets_by_name
 	local skip_init_hide = Definitions.VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS

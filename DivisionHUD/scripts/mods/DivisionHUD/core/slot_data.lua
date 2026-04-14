@@ -377,24 +377,31 @@ local function try_weapon_strip_display_slot(slot_id, slots_settings)
 	return try_weapon_handler_wield_slot(slot_id, slots_settings)
 end
 
-local function pick_division_hud_wielded_display_slot(inventory_component, slots_settings, default_wield_slot)
+local function pick_division_hud_wielded_display_slot(inventory_component, slots_settings, default_wield_slot, cached_slot_id)
 	if not slots_settings then
 		return nil
 	end
 
 	if not inventory_component then
-		return try_weapon_strip_display_slot(default_wield_slot, slots_settings)
+		return try_weapon_strip_display_slot(cached_slot_id, slots_settings)
+			or try_weapon_strip_display_slot(default_wield_slot, slots_settings)
 			or try_weapon_strip_display_slot("slot_primary", slots_settings)
 	end
 
-	return try_weapon_strip_display_slot(inventory_component.wielded_slot, slots_settings)
+	local current = try_weapon_strip_display_slot(inventory_component.wielded_slot, slots_settings)
+
+	if current then
+		return current
+	end
+
+	return try_weapon_strip_display_slot(cached_slot_id, slots_settings)
 		or try_weapon_strip_display_slot(inventory_component.previously_wielded_weapon_slot, slots_settings)
 		or try_weapon_strip_display_slot(inventory_component.previously_wielded_slot, slots_settings)
 		or try_weapon_strip_display_slot(default_wield_slot, slots_settings)
 		or try_weapon_strip_display_slot("slot_primary", slots_settings)
 end
 
-local function resolve_wielded_weapon_display_entry(extensions)
+local function resolve_wielded_weapon_display_entry(extensions, cached_slot_id)
 	local slots_settings = HudElementPlayerWeaponHandlerSettings.slots_settings
 	local default_wield_slot
 
@@ -408,7 +415,7 @@ local function resolve_wielded_weapon_display_entry(extensions)
 
 	local unit_data = extensions.unit_data
 	local inventory_component = unit_data:read_component("inventory")
-	local wielded_slot = pick_division_hud_wielded_display_slot(inventory_component, slots_settings, default_wield_slot)
+	local wielded_slot = pick_division_hud_wielded_display_slot(inventory_component, slots_settings, default_wield_slot, cached_slot_id)
 	local settings = wielded_slot and slots_settings[wielded_slot]
 
 	if not settings then
@@ -476,11 +483,11 @@ local function resolve_auspex_display_entry(extensions)
 	}
 end
 
-local function build_division_right_slots(extensions)
+local function build_division_right_slots(extensions, cached_slot_id)
 	local slots_settings = HudElementPlayerWeaponHandlerSettings.slots_settings
 
 	return {
-		resolve_wielded_weapon_display_entry(extensions),
+		resolve_wielded_weapon_display_entry(extensions, cached_slot_id),
 		resolve_weapon_handler_slot("slot_grenade_ability", slots_settings.slot_grenade_ability, extensions),
 		resolve_weapon_handler_slot("slot_pocketable_small", slots_settings.slot_pocketable_small, extensions),
 		resolve_weapon_handler_slot("slot_pocketable", slots_settings.slot_pocketable, extensions),
