@@ -20,7 +20,7 @@ local DODGE_STATE_COLORS_OVERLAP_BAR = HudElementDodgeCounterSettings.DODGE_STAT
 local DODGE_BAR_STATE_COLORS_BAR_FILL = HudElementDodgeCounterSettings.DODGE_BAR_STATE_COLORS_BAR_FILL
 local DODGE_BAR_STATE_COLORS_BAR_BACKGROUND = HudElementDodgeCounterSettings.DODGE_BAR_STATE_COLORS_BAR_BACKGROUND
 
-local function build_scenegraph(main_row_height)
+local function build_scenegraph(main_row_height, track_width_px)
 	local stm_h = stm_area_size[2]
 	local ddg_h = ddg_area_size[2]
 	local stm_top = main_row_height + 6
@@ -30,13 +30,30 @@ local function build_scenegraph(main_row_height)
 	local ddg_top = math.floor(ddg_center_y - ddg_h * 0.5 + 0.5)
 	local bottom_y = ddg_top + ddg_h
 	local extend_below_main = bottom_y - main_row_height + 4
+	local stm_bar_size_layout = {
+		track_width_px,
+		stm_bar_size[2],
+	}
+	local ddg_bar_size_layout = {
+		track_width_px,
+		ddg_bar_size[2],
+	}
+	local stm_area_size_layout = {
+		math.max(stm_area_size[1], track_width_px),
+		stm_area_size[2],
+	}
+	local ddg_area_size_layout = {
+		math.max(ddg_area_size[1], track_width_px),
+		ddg_area_size[2],
+	}
+	local gauge_width_px = track_width_px + 12
 
 	return {
 		div_vanilla_stm_area = {
 			horizontal_alignment = "center",
 			parent = "boxes_row",
 			vertical_alignment = "top",
-			size = stm_area_size,
+			size = stm_area_size_layout,
 			position = {
 				0,
 				stm_top,
@@ -48,7 +65,7 @@ local function build_scenegraph(main_row_height)
 			parent = "div_vanilla_stm_area",
 			vertical_alignment = "top",
 			size = {
-				212,
+				gauge_width_px,
 				10,
 			},
 			position = {
@@ -61,7 +78,7 @@ local function build_scenegraph(main_row_height)
 			horizontal_alignment = "center",
 			parent = "div_vanilla_stm_area",
 			vertical_alignment = "top",
-			size = stm_bar_size,
+			size = stm_bar_size_layout,
 			position = {
 				0,
 				1,
@@ -72,7 +89,7 @@ local function build_scenegraph(main_row_height)
 			horizontal_alignment = "center",
 			parent = "boxes_row",
 			vertical_alignment = "top",
-			size = ddg_area_size,
+			size = ddg_area_size_layout,
 			position = {
 				0,
 				ddg_top,
@@ -84,7 +101,7 @@ local function build_scenegraph(main_row_height)
 			parent = "div_vanilla_ddg_area",
 			vertical_alignment = "top",
 			size = {
-				212,
+				gauge_width_px,
 				10,
 			},
 			position = {
@@ -97,7 +114,7 @@ local function build_scenegraph(main_row_height)
 			horizontal_alignment = "center",
 			parent = "div_vanilla_ddg_area",
 			vertical_alignment = "top",
-			size = ddg_bar_size,
+			size = ddg_bar_size_layout,
 			position = {
 				0,
 				2,
@@ -108,7 +125,7 @@ local function build_scenegraph(main_row_height)
 			horizontal_alignment = "center",
 			parent = "div_vanilla_ddg_area",
 			vertical_alignment = "top",
-			size = ddg_bar_size,
+			size = ddg_bar_size_layout,
 			position = {
 				0,
 				2,
@@ -308,48 +325,55 @@ local stamina_nodges_definition = UIWidget.create_definition({
 	},
 }, "div_vanilla_stm_bar")
 
-local dodge_bar_definition = UIWidget.create_definition({
-	{
-		pass_type = "rect",
-		style_id = "bar_fill",
-		value = "content/ui/materials/hud/stamina_full",
-		style = {
-			horizontal_alignment = "right",
-			vertical_alignment = "top",
-			size = ddg_bar_size,
-			offset = {
-				0,
-				0,
-				3,
+local function build_dodge_bar_definition(track_width_px)
+	local bar_size_template = {
+		track_width_px,
+		ddg_bar_size[2],
+	}
+
+	return UIWidget.create_definition({
+		{
+			pass_type = "rect",
+			style_id = "bar_fill",
+			value = "content/ui/materials/hud/stamina_full",
+			style = {
+				horizontal_alignment = "right",
+				vertical_alignment = "top",
+				size = bar_size_template,
+				offset = {
+					0,
+					0,
+					3,
+				},
+				size_addition = {
+					0,
+					0,
+				},
+				color = DODGE_BAR_STATE_COLORS_BAR_FILL.available,
 			},
-			size_addition = {
-				0,
-				0,
-			},
-			color = DODGE_BAR_STATE_COLORS_BAR_FILL.available,
 		},
-	},
-	{
-		pass_type = "rect",
-		style_id = "bar_background",
-		value = "content/ui/materials/hud/stamina_full",
-		style = {
-			horizontal_alignment = "right",
-			vertical_alignment = "top",
-			size = ddg_bar_size,
-			offset = {
-				0,
-				0,
-				2,
+		{
+			pass_type = "rect",
+			style_id = "bar_background",
+			value = "content/ui/materials/hud/stamina_full",
+			style = {
+				horizontal_alignment = "right",
+				vertical_alignment = "top",
+				size = bar_size_template,
+				offset = {
+					0,
+					0,
+					2,
+				},
+				size_addition = {
+					0,
+					0,
+				},
+				color = DODGE_BAR_STATE_COLORS_BAR_BACKGROUND.default,
 			},
-			size_addition = {
-				0,
-				0,
-			},
-			color = DODGE_BAR_STATE_COLORS_BAR_BACKGROUND.default,
 		},
-	},
-}, "div_vanilla_ddg_bar")
+	}, "div_vanilla_ddg_bar")
+end
 
 local animations = {
 	on_stamina_depleted = {
@@ -516,8 +540,11 @@ local animations = {
 	},
 }
 
-local function build(main_row_height)
-	local sg, extend_below = build_scenegraph(main_row_height)
+local function build(main_row_height, bar_fill_width)
+	local vanilla_track = stm_bar_size[1]
+	local requested = type(bar_fill_width) == "number" and bar_fill_width or vanilla_track
+	local track_width_px = math.max(1, math.floor(requested + 0.5))
+	local sg, extend_below = build_scenegraph(main_row_height, track_width_px)
 	local wdefs = build_widget_definitions()
 
 	return {
@@ -525,8 +552,10 @@ local function build(main_row_height)
 		widget_definitions = wdefs,
 		animations = animations,
 		stamina_nodges_definition = stamina_nodges_definition,
-		dodge_bar_definition = dodge_bar_definition,
+		dodge_bar_definition = build_dodge_bar_definition(track_width_px),
 		extend_below_main_row = extend_below,
+		division_stamina_bar_width = track_width_px,
+		division_dodge_bar_track_width = track_width_px,
 	}
 end
 

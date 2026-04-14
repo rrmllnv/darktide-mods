@@ -11,6 +11,11 @@ local STAMINA_NODGES_COLOR = HudElementStaminaSettings.STAMINA_NODGES_COLOR
 local M = {}
 
 M.init = function(self, definitions)
+	local stm_w = definitions and definitions.division_stamina_bar_width
+	local ddg_track = definitions and definitions.division_dodge_bar_track_width
+
+	self._division_stm_bar_width = type(stm_w) == "number" and stm_w > 0 and stm_w or HudElementStaminaSettings.bar_size[1]
+	self._division_dodge_bar_track_width = type(ddg_track) == "number" and ddg_track > 0 and ddg_track or HudElementDodgeCounterSettings.bar_size[1]
 	self._stamina_chunk_width = 0
 	self._last_stamina_fraction = 1
 	self._spent_stamina_animation = {
@@ -112,10 +117,9 @@ M._update_stamina_amount = function(self)
 	if num_stamina_chunks ~= self._num_stamina_chunks then
 		self._num_stamina_chunks = num_stamina_chunks
 
-		local bar_size = HudElementStaminaSettings.bar_size
 		local segment_spacing = HudElementStaminaSettings.spacing
 		local total_segment_spacing = segment_spacing * math.max(math.floor(num_stamina_chunks), 0)
-		local total_bar_length = bar_size[1] - total_segment_spacing
+		local total_bar_length = self._division_stm_bar_width - total_segment_spacing
 
 		self._stamina_chunk_width = self._num_stamina_chunks > 0 and total_bar_length / self._num_stamina_chunks or total_bar_length
 	end
@@ -179,7 +183,6 @@ M._draw_stamina_chunks = function(self, dt, t, ui_renderer)
 	end
 
 	local stamina_chunk_width = self._stamina_chunk_width
-	local bar_size = HudElementStaminaSettings.bar_size
 	local stamina_fraction = 1
 	local parent = self._parent
 	local player_extensions = parent and parent:player_extensions()
@@ -221,8 +224,9 @@ M._draw_stamina_chunks = function(self, dt, t, ui_renderer)
 
 	local spacing = HudElementStaminaSettings.spacing
 	local stamina_bar_widget = self._widgets_by_name.stamina_bar
+	local stm_bar_w = self._division_stm_bar_width
 
-	stamina_bar_widget.style.bar_fill.size_addition[1] = -(bar_size[1] * (1 - stamina_fraction))
+	stamina_bar_widget.style.bar_fill.size_addition[1] = -(stm_bar_w * (1 - stamina_fraction))
 
 	if spent_stamina_animation.running then
 		if stamina_fraction >= spent_stamina_animation.stamina then
@@ -233,9 +237,9 @@ M._draw_stamina_chunks = function(self, dt, t, ui_renderer)
 			spent_stamina_animation.stamina = spent_stamina_animation.stamina - dt * HudElementStaminaSettings.stamina_spent_drain_speed
 		end
 
-		stamina_bar_widget.style.bar_spent.size_addition[1] = -(bar_size[1] * (1 - spent_stamina_animation.stamina))
+		stamina_bar_widget.style.bar_spent.size_addition[1] = -(stm_bar_w * (1 - spent_stamina_animation.stamina))
 	else
-		stamina_bar_widget.style.bar_spent.size_addition[1] = -(bar_size[1] * (1 - stamina_fraction))
+		stamina_bar_widget.style.bar_spent.size_addition[1] = -(stm_bar_w * (1 - stamina_fraction))
 	end
 
 	local show_last_nodge = num_stamina_chunks - math.floor(num_stamina_chunks) > 0
@@ -321,10 +325,9 @@ M._update_dodge_amount = function(self, t, ui_renderer)
 
 		self._max_effective_dodges = current_max_effective_dodges
 
-		local bar_size = HudElementDodgeCounterSettings.bar_size
 		local segment_spacing = HudElementDodgeCounterSettings.spacing
 		local total_segment_spacing = segment_spacing * math.max(current_max_effective_dodges - 1, 0)
-		local total_bar_length = bar_size[1] - total_segment_spacing
+		local total_bar_length = self._division_dodge_bar_track_width - total_segment_spacing
 
 		self._dodge_bar_width = math.round(current_max_effective_dodges > 0 and total_bar_length / current_max_effective_dodges or total_bar_length)
 

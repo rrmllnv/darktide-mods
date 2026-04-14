@@ -265,7 +265,7 @@ for k, v in pairs(_division_vanilla_th.scenegraph_definition) do
 end
 
 local DivisionHUDVanillaStaminaDodgeDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/vanilla_stamina_dodge_definitions")
-local _division_vanilla_stm_ddg = DivisionHUDVanillaStaminaDodgeDefs.build(MAIN_ROW_HEIGHT)
+local _division_vanilla_stm_ddg = DivisionHUDVanillaStaminaDodgeDefs.build(MAIN_ROW_HEIGHT, BAR_FILL_WIDTH)
 
 for k, v in pairs(_division_vanilla_stm_ddg.scenegraph_definition) do
 	scenegraph_definition[k] = v
@@ -528,6 +528,8 @@ return {
 	ABILITY_BAR_COOLDOWN_COLOR = ABILITY_BAR_COOLDOWN_COLOR,
 	BAR_LABEL_W = BAR_LABEL_W,
 	BAR_FILL_WIDTH = BAR_FILL_WIDTH,
+	division_stamina_bar_width = _division_vanilla_stm_ddg.division_stamina_bar_width,
+	division_dodge_bar_track_width = _division_vanilla_stm_ddg.division_dodge_bar_track_width,
 	ROW_WIDTH = ROW_WIDTH,
 	RIGHT_SLOT_COUNT = 4,
 	right_slot_widget_names = right_slot_widget_names,
