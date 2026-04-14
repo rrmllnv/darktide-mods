@@ -633,11 +633,45 @@ HudElementDivisionHUD._slot_numeric_text = function(self, slot_id, entry, player
 	end
 
 	if slot_id == "slot_pocketable" or slot_id == "slot_pocketable_small" then
-		if entry.has_equipment and entry.weapon_template then
+		if not entry.has_equipment or type(entry.weapon_template) ~= "table" then
+			return "00"
+		end
+
+		local unit_data_extension = player_unit and ScriptUnit.has_extension(player_unit, "unit_data_system")
+
+		if not unit_data_extension then
 			return "01"
 		end
 
-		return "00"
+		local slot_component = unit_data_extension:read_component(slot_id)
+
+		if not slot_component then
+			return "01"
+		end
+
+		local hud_configuration = entry.weapon_template.hud_configuration
+
+		if type(hud_configuration) == "table" and hud_configuration.uses_weapon_special_charges == true then
+			local num_special_charges = slot_component.num_special_charges
+
+			if type(num_special_charges) == "number" then
+				return string.format("%02d", math.max(0, math.floor(num_special_charges + 0.5)))
+			end
+
+			return "00"
+		end
+
+		if type(hud_configuration) == "table" and hud_configuration.uses_ammunition == true then
+			local total_current = Ammo.current_ammo_in_reserve(slot_component) or 0
+
+			for ci = 1, NetworkConstants.clips_in_use.max_size do
+				total_current = total_current + (Ammo.current_ammo_in_clips(slot_component, ci) or 0)
+			end
+
+			return string.format("%02d", math.max(0, math.floor(total_current + 0.5)))
+		end
+
+		return "01"
 	end
 
 	return "0"
