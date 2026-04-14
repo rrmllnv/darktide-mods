@@ -67,22 +67,22 @@ return {
 	stimm_slot_icon_tint_by_type = {
 		en = "Color pocket stimm icon",
 		ru = "Цвет иконки шприца",
-		["zh-cn"] = "口袋注射器着色",
+		["zh-cn"] = "注射器图标按类型着色",
 	},
 	stimm_slot_icon_tint_by_type_description = {
 		en = "When enabled, the pocket stimm icon in the Division HUD strip is tinted by syringe template (speed, power, corruption cleanse, ability boost, broker syringe, etc.) using built-in colors. When off, the icon uses the default white tint.",
 		ru = "Если включено, иконка карманного шприца в полоске Division HUD окрашивается по шаблону шприца (скорость, сила, снятие порчи, усиление способности, шприц брокера и т.д.) встроенными цветами. Если выключено — обычный белый тон.",
-		["zh-cn"] = "启用后，按注射器模板（速度、力量、腐蚀治疗、技能强化、经纪人注射器等）用内置颜色为 Division HUD 条带中的口袋注射器图标着色。关闭时使用默认白色。",
+		["zh-cn"] = "启用后，根据注射器类型（速度、力量、腐蚀清除、技能强化、巢都渣滓注射器等）使用内置颜色为图标着色。关闭时使用默认白色。",
 	},
 	ammo_text_color_by_fraction = {
 		en = "Ammo text color by remaining fraction",
 		ru = "Цвет патронов по доле боезапаса",
-		["zh-cn"] = "按弹药比例着色弹药文字",
+		["zh-cn"] = "弹药文字按剩余比例变色",
 	},
 	ammo_text_color_by_fraction_description = {
 		en = "When enabled, the large ammo numbers tint by total ammo fraction: above 75% main, above 50% low, above 25% medium, 25% or less high. When off, they use the default main color.",
 		ru = "Если включено, крупные цифры патронов окрашиваются по доле боезапаса: выше 75% — основной цвет; выше 50% и не выше 75% — низкий запас; выше 25% и не выше 50% — средний; 25% и ниже — критический. Если выключено — обычный основной цвет.",
-		["zh-cn"] = "启用后，大号弹药数字按总弹药比例着色：高于 75% 主色；高于 50% 且不高于 75% 为低弹药色；高于 25% 且不高于 50% 为中档；25% 及以下为高警示色。关闭时使用默认主色。",
+		["zh-cn"] = "启用后，大号弹药数字按剩余比例变色：75%以上为主色，50%–75%为低量色，25%–50%为中量色，25%及以下为警告色。关闭时使用默认主色。",
 	},
 	grenade_color_by_fraction = {
 		en = "Grenade slot color by charge fraction",
@@ -92,17 +92,17 @@ return {
 	grenade_color_by_fraction_description = {
 		en = "When enabled, the grenade ability slot icon and counter tint by remaining charges, using the same color bands and fraction thresholds as the large ammo numbers. When off, the slot uses the default colors.",
 		ru = "Если включено, иконка и счётчик слота гранаты окрашиваются по доле оставшихся зарядов — те же цветовые полосы и пороги доли, что у крупного текста патронов. Если выключено — цвета по умолчанию.",
-		["zh-cn"] = "启用后，手雷技能槽的图标与数字按剩余充能比例着色，色带与比例阈值与大号弹药文字一致。关闭时使用默认颜色。",
+		["zh-cn"] = "启用后，手雷图标与计数按剩余充能比例着色，规则与弹药数字一致。关闭时使用默认颜色。",
 	},
 	wielded_weapon_icon_state_colors = {
 		en = "Current weapon icon colors",
 		ru = "Цвет текущего оружия",
-		["zh-cn"] = "当前武器图标颜色",
+		["zh-cn"] = "当前武器图标按状态着色",
 	},
 	wielded_weapon_icon_state_colors_description = {
 		en = "When enabled, tints the wielded-weapon strip icon for weapons included in this mod's internal list by inactive, active, and optional cooldown states. Other weapons stay full white.",
 		ru = "Если включено, для оружия из внутреннего списка мода окрашивает иконку текущего оружия в полоске Division HUD по неактивному, активному и при необходимости кулдауну. Для остального оружия остаётся обычный белый.",
-		["zh-cn"] = "启用后，对本模组配置内的武器，按非激活、激活（及可选冷却）为当前武器条图标着色；其他武器保持纯白。",
+		["zh-cn"] = "启用后，模组支持的武器会按未激活、激活、冷却状态变色，其他武器保持白色。",
 	},
 	divisionhud_super_dynamic = {
 		en = "\238\129\135 DYNAMIC HUD",
@@ -122,7 +122,7 @@ return {
 	dynamic_hud_pitch_ratio = {
 		en = "Vertical ratio",
 		ru = "Вертикаль относительно горизонтали",
-		["zh-cn"] = "垂直/水平偏移比例",
+		["zh-cn"] = "垂直偏移比例",
 	},
 	dynamic_hud_decay = {
 		en = "Return speed",
@@ -177,7 +177,7 @@ return {
 	hide_vanilla_mission_objectives_description = {
 		en = "When enabled, only the center mission objective popups are hidden; the objective feed (including the area strip) keeps drawing. Use the Mission objectives section to mirror selected popup events into the Division HUD notification strip.",
 		ru = "Если включено, скрываются только центральные всплывающие окна целей; лента целей (включая область area) продолжает отображаться. В блоке «Цели миссии» можно дублировать выбранные события попапов в полоску оповещений Division HUD.",
-		["zh-cn"] = "启用后，仅隐藏中央任务目标弹窗，目标条带（含 area 区域）仍会绘制。可在「任务目标」分组中将所选弹窗事件镜像到 Division HUD 提示条。",
+		["zh-cn"] = "启用后仅隐藏中央任务弹窗，目标条带仍保留。可在任务目标设置中，将弹窗事件同步显示到 Division HUD 提示栏。",
 	},
 	alerts_super = {
 		en = "\238\128\161 ALERTS",
@@ -187,12 +187,12 @@ return {
 	alerts_enabled = {
 		en = "Enable approach alerts",
 		ru = "Включить оповещения о приближении",
-		["zh-cn"] = "启用接近警报",
+		["zh-cn"] = "启用敌人接近警报",
 	},
 	alerts_max_visible = {
 		en = "Maximum simultaneous alerts",
 		ru = "Максимум одновременных оповещений",
-		["zh-cn"] = "同时显示的警报数量上限",
+		["zh-cn"] = "同时显示警报上限",
 	},
 	alerts_duration_sec = {
 		en = "Alert duration (seconds)",
@@ -202,7 +202,7 @@ return {
 	alerts_show_duration_bar = {
 		en = "Alert display time bar",
 		ru = "Полоса времени показа оповещения",
-		["zh-cn"] = "警报剩余时间条",
+		["zh-cn"] = "显示警报持续时间条",
 	},
 	alerts_group_bosses = {
 		en = string.rep("\194\160", 8) .. "Bosses",
@@ -212,7 +212,7 @@ return {
 	alerts_group_specialists = {
 		en = string.rep("\194\160", 8) .. "Specialists",
 		ru = string.rep("\194\160", 8) .. "Специалисты",
-		["zh-cn"] = string.rep("\194\160", 8) .. "专家单位",
+		["zh-cn"] = string.rep("\194\160", 8) .. "专家",
 	},
 	mission_objectives_super = {
 		en = string.rep("\194\160", 8) .. "Mission objectives",
@@ -222,7 +222,7 @@ return {
 	mission_objectives_super_description = {
 		en = "When «Hide mission objectives» is on (VANILLA HUD section), these toggles choose which objective events appear in the Division HUD strip (title row + body; same look as enemy approach notifications).",
 		ru = "Когда включено «Скрыть цели миссии» (супергруппа «Ванильный HUD»), эти переключатели задают, какие события целей показывать в полоске оповещений Division HUD (заголовок в полоске + текст цели, оформление как при оповещении о приближении).",
-		["zh-cn"] = "在「VANILLA HUD」中启用「隐藏任务目标」后，这些开关决定哪些目标事件在 Division HUD 条带中显示（条带标题 + 正文，样式与接近敌人通知一致）。",
+		["zh-cn"] = "在原版界面设置中启用“隐藏任务目标”后，可通过这些开关选择哪些事件显示在 Division HUD 提示栏。",
 	},
 	alert_mission_objective_start = {
 		en = "New objective",
@@ -232,7 +232,7 @@ return {
 	alert_mission_objective_start_description = {
 		en = "When enabled, show in the Division HUD strip when a mission objective starts (same title and description as the standard center popup).",
 		ru = "Показывать в полоске Division HUD при старте цели миссии (тот же заголовок и текст, что у стандартного попапа по центру).",
-		["zh-cn"] = "任务目标开始时在 Division HUD 条带中显示（标题与正文与游戏中央弹窗一致）。",
+		["zh-cn"] = "任务目标开始时，在 Division HUD 栏显示与中央弹窗相同的标题与描述。",
 	},
 	alert_mission_objective_progress = {
 		en = "Objective progress",
@@ -242,7 +242,7 @@ return {
 	alert_mission_objective_progress_description = {
 		en = "When enabled, show in the Division HUD strip when the game would show a progression popup for an objective (with counter text when applicable).",
 		ru = "Показывать в полоске Division HUD, когда игра показала бы попап прогресса цели (со счётчиком, если он есть).",
-		["zh-cn"] = "当游戏会显示目标进度弹窗时在 Division HUD 条带中显示（含计数文本）。",
+		["zh-cn"] = "游戏显示目标进度弹窗时，在 Division HUD 栏同步显示（含计数）。",
 	},
 	alert_mission_objective_complete = {
 		en = "Objective complete",
@@ -252,17 +252,17 @@ return {
 	alert_mission_objective_complete_description = {
 		en = "When enabled, show in the Division HUD strip when a mission objective completes.",
 		ru = "Показывать в полоске Division HUD при завершении цели миссии.",
-		["zh-cn"] = "任务目标完成时在 Division HUD 条带中显示。",
+		["zh-cn"] = "任务目标完成时在 Division HUD 栏显示提示。",
 	},
 	alert_mission_objective_custom_popup = {
 		en = "Scripted objective popups",
 		ru = "Сюжетные всплывашки целей",
-		["zh-cn"] = "脚本目标弹窗",
+		["zh-cn"] = "剧情脚本目标弹窗",
 	},
 	alert_mission_objective_custom_popup_description = {
 		en = "When enabled, show in the Division HUD strip for generic mission popup events (event_show_objective_popup), e.g. some narrative beats.",
 		ru = "Показывать в полоске Division HUD для общих всплывашек целей (event_show_objective_popup), например сюжетных сообщений.",
-		["zh-cn"] = "为通用任务弹窗事件（event_show_objective_popup）在 Division HUD 条带中显示，例如部分叙事提示。",
+		["zh-cn"] = "对通用任务弹窗事件（如剧情提示）在 Division HUD 栏显示。",
 	},
 	mission_objective_custom_popup_strip_fallback = {
 		en = "OBJECTIVE",
@@ -277,7 +277,7 @@ return {
 	alerts_group_team_description = {
 		en = "Show teammate knockdowns, trapper net, Pox Hound pin, ledge hang, Beast of Nurgle consume, and deaths in the Division HUD alert strip. The player name uses the squad slot color.",
 		ru = "Показывать нокдауны, сеть ловушечника, схват чумной гончей, висение на уступе, поглощение зверем Нургла и смерти в полоске оповещений Division HUD. Ник окрашивается цветом слота отряда.",
-		["zh-cn"] = "在小队警报条中显示队友倒地、陷阱网、瘟疫猎犬压制、悬崖悬挂、纳垢巨兽吞噬、死亡。玩家昵称使用队伍槽位颜色。",
+		["zh-cn"] = "在警报栏显示队友倒地、被网、被狗咬、悬挂悬崖、被吞、阵亡等状态。玩家名称使用队伍颜色。",
 	},
 	alerts_team_knock = {
 		en = "Teammate knocked down",
@@ -287,7 +287,7 @@ return {
 	alerts_team_knock_description = {
 		en = "When a teammate enters the knocked down state, enqueue an alert line (wording includes that help is needed).",
 		ru = "Когда союзник падает в нокдаун, добавлять строку в оповещения (в тексте указано, что нужна помощь).",
-		["zh-cn"] = "队友进入倒地状态时加入一条警报（文案中会提示需要帮助）。",
+		["zh-cn"] = "队友倒地时显示警报，并提示需要帮助。",
 	},
 	alerts_team_net = {
 		en = "Caught in net",
@@ -297,27 +297,27 @@ return {
 	alerts_team_net_description = {
 		en = "When a teammate is netted (Scab Trapper), enqueue an alert. Uses character_state / disabled checks like the player panel, and also when the state machine applies a server correction to netted so other players on your client are covered.",
 		ru = "Когда союзник в сети ловушечника — строка в оповещениях. Те же проверки character_state / disabled, что у панели игрока; дополнительно при server_correction_occurred в netted, чтобы срабатывало и для союзников с репликацией состояния.",
-		["zh-cn"] = "队友被陷阱兵网住时加入一条警报；与玩家面板一致的 character_state / disabled 判定，并在状态机 server_correction 同步到 netted 时触发，以覆盖其他玩家客户端上的表现。",
+		["zh-cn"] = "队友被陷阱兵网住时显示警报，判定逻辑与原版玩家面板一致，并兼容服务器状态同步。",
 	},
 	alerts_team_hound = {
 		en = "Pox Hound on teammate",
 		ru = "Чумная Гончая на союзнике",
-		["zh-cn"] = "瘟疫猎犬扑向队友",
+		["zh-cn"] = "瘟疫猎犬扑中队友",
 	},
 	alerts_team_hound_description = {
 		en = "When a teammate enters the pounced disabled state (Pox Hound pin), enqueue an alert line. Uses the same disabled_character_state check as the vanilla player panel.",
 		ru = "Когда союзник в состоянии «схвачен» с типом pounced (чумная гончая), добавлять строку. Проверка disabled_character_state + PlayerUnitStatus.is_pounced, как у ванильной панели игрока.",
-		["zh-cn"] = "队友进入 pounced 压制（瘟疫猎犬）时加入一条警报；与游戏内玩家面板一致读取 disabled_character_state 与 is_pounced。",
+		["zh-cn"] = "队友被瘟疫猎犬扑倒压制时显示警报，使用与原版一致的状态判定。",
 	},
 	alerts_team_ledge = {
 		en = "Hanging on ledge",
 		ru = "Висит на уступе",
-		["zh-cn"] = "悬在悬崖边",
+		["zh-cn"] = "悬挂悬崖",
 	},
 	alerts_team_ledge_description = {
 		en = "When a teammate enters ledge_hanging (needs pull-up help), enqueue an alert line. Uses PlayerUnitStatus.is_ledge_hanging on character_state.",
 		ru = "Когда союзник в состоянии ledge_hanging (висит на уступе, нужен подтяг), добавлять строку. Проверка PlayerUnitStatus.is_ledge_hanging по character_state.",
-		["zh-cn"] = "队友进入 ledge_hanging（悬挂悬崖需拉一把）时加入一条警报；对 character_state 使用 PlayerUnitStatus.is_ledge_hanging。",
+		["zh-cn"] = "队友悬挂在悬崖需要救援时显示警报。",
 	},
 	alerts_team_consumed = {
 		en = "Swallowed by Beast of Nurgle",
@@ -327,7 +327,7 @@ return {
 	alerts_team_consumed_description = {
 		en = "When a teammate enters the consumed disabled state (Beast of Nurgle), enqueue an alert line. Uses PlayerUnitStatus.is_consumed on disabled_character_state.",
 		ru = "Когда союзник в состоянии consumed (поглощён зверем Нургла), добавлять строку. Проверка PlayerUnitStatus.is_consumed по disabled_character_state.",
-		["zh-cn"] = "队友进入 consumed（被纳垢巨兽吞噬）时加入一条警报；对 disabled_character_state 使用 PlayerUnitStatus.is_consumed。",
+		["zh-cn"] = "队友被纳垢巨兽吞入体内时显示警报。",
 	},
 	alerts_team_death = {
 		en = "Teammate death",
@@ -337,7 +337,7 @@ return {
 	alerts_team_death_description = {
 		en = "When a teammate dies, enqueue an alert line.",
 		ru = "Когда союзник умирает, добавлять строку в оповещения.",
-		["zh-cn"] = "队友死亡时加入一条警报。",
+		["zh-cn"] = "队友死亡时显示警报。",
 	},
 	alerts_team_strip = {
 		en = "Strike team",
@@ -357,22 +357,22 @@ return {
 	alerts_team_suffix_trapper_net = {
 		en = "was ensnared by a Scab Trapper",
 		ru = "пойман в сеть Скаб Ловушечника",
-		["zh-cn"] = "陷入斯卡布陷阱兵的网中",
+		["zh-cn"] = "被血痂陷阱手的网困住",
 	},
 	alerts_team_suffix_hound_pounce = {
 		en = "was pinned by a Pox Hound",
 		ru = "схватила Чумная гончая",
-		["zh-cn"] = "遭瘟疫猎犬扑倒",
+		["zh-cn"] = "被瘟疫猎犬扑倒",
 	},
 	alerts_team_suffix_ledge_hanging = {
 		en = "is hanging on a ledge, needs help",
 		ru = "висит на уступе, нужна помощь",
-		["zh-cn"] = "挂在悬崖边，需要帮助",
+		["zh-cn"] = "悬挂在悬崖，需要救援",
 	},
 	alerts_team_suffix_consumed = {
 		en = "consumed by a Beast of Nurgle",
 		ru = "поглощён зверем Нургла",
-		["zh-cn"] = "被纳垢巨兽吞噬",
+		["zh-cn"] = "被纳垢兽吞噬",
 	},
 	alerts_ui_banner_alert = {
 		en = "ALERT",
@@ -402,50 +402,52 @@ return {
 	alerts_breed_title_override_chaos_mutator_daemonhost = {
 		en = "Daemonhost (mutator)",
 		ru = "Демонхост (мутатор)",
-		["zh-cn"] = "恶魔宿主（异变）",
+		["zh-cn"] = "恶魔宿主（突变）",
 	},
 	alerts_breed_title_override_chaos_hound_mutator = {
 		en = "Pox Hound (mutator)",
 		ru = "Чумная гончая (мутатор)",
-		["zh-cn"] = "瘟疫猎犬（异变）",
+		["zh-cn"] = "瘟疫猎犬（突变）",
 	},
 	alerts_breed_title_override_renegade_grenadier = {
+		en = "Renegade Grenadier",
 		ru = "Скаб-Бомбардир",
+		["zh-cn"] = "血痂火雷兵",
 	},
 	divisionhud_integrations = {
 		en = "\238\128\172 INTEGRATIONS",
 		ru = "\238\128\172 ИНТЕГРАЦИИ",
-		["zh-cn"] = "\238\128\172 功能兼容",
+		["zh-cn"] = "\238\128\172 模组兼容",
 	},
 	integration_custom_hud = {
 		en = "Custom HUD",
 		ru = "Custom HUD",
-		["zh-cn"] = "自定义界面兼容",
+		["zh-cn"] = "Custom HUD 兼容",
 	},
 	integration_custom_hud_description = {
 		en = "When enabled and Custom HUD has saved layout for this HUD (including root), Division HUD applies that position every frame and adds Dynamic HUD motion on top. Offset X/Y sliders are ignored for root. If only inner nodes are saved, root is left unchanged. Until anything is saved in Custom HUD, the X/Y sliders still move the block.",
 		ru = "Если включено и в Custom HUD сохранена раскладка этого HUD (в т.ч. root), Division HUD каждый кадр ставит эту позицию и при необходимости добавляет смещение Dynamic HUD. Слайдеры X/Y для root не используются. Если в Custom HUD сохранены только внутренние узлы, root не трогаем. Пока в Custom HUD нет сохранений — блок двигают слайдеры X/Y.",
-		["zh-cn"] = "启用后，若自定义界面已保存本界面布局（含根节点），全境封锁 HUD 会每帧应用该位置并叠加动态效果。根节点将忽略 X/Y 偏移滑块。若仅保存内部节点，根节点保持不变。自定义界面未保存任何布局时，仍可使用 X/Y 滑块移动。",
+		["zh-cn"] = "启用后，若 Custom HUD 已保存布局，Division HUD 将使用其位置并叠加动态效果，忽略 X/Y 偏移。未保存布局时仍可使用滑块调整。",
 	},
 	integration_stimm_countdown = {
 		en = "StimmCountdown",
 		ru = "StimmCountdown",
-		["zh-cn"] = "StimmCountdown",
+		["zh-cn"] = "StimmCountdown 兼容",
 	},
 	integration_stimm_countdown_description = {
 		en = "When enabled and the StimmCountdown mod is loaded and enabled, the pocket stimm slot in the Division HUD strip shows its countdown (active / cooldown) using that mod’s display options. When off, the slot uses the usual 01/00 counter only.",
 		ru = "Если включено и мод StimmCountdown загружен и включён, в слоте карманного шприца в полоске Division HUD показывается отсчёт (действие / перезарядка) с учётом настроек того мода. Если выключено — только обычные 01/00.",
-		["zh-cn"] = "启用后，若 StimmCountdown 模组已加载并启用，Division HUD 条带中的口袋注射器槽位将按该模组显示倒计时（生效中/冷却中）。关闭时，槽位仅显示常规的 01/00 计数。",
+		["zh-cn"] = "启用后，若已加载 StimmCountdown，注射器槽会显示持续/冷却倒计时；关闭则只显示 01/00。",
 	},
 	integration_recolor_stimms = {
 		en = "RecolorStimms",
 		ru = "RecolorStimms",
-		["zh-cn"] = "RecolorStimms",
+		["zh-cn"] = "RecolorStimms 兼容",
 	},
 	integration_recolor_stimms_description = {
 		en = "When enabled and the RecolorStimms mod is loaded and enabled, pocket stimm icon colors are taken from that mod (get_stimm_argb_255). When off or the mod is unavailable, built-in syringe colors are used.",
 		ru = "Если включено и мод RecolorStimms загружен и включён, цвета иконки карманного шприца берутся из него (get_stimm_argb_255). Иначе используются встроенные цвета шприцев.",
-		["zh-cn"] = "启用后，若 RecolorStimms 模组已加载并启用，口袋注射器图标颜色从该模组读取（get_stimm_argb_255）。关闭或模组不可用时使用内置注射器颜色。",
+		["zh-cn"] = "启用后，注射器图标颜色将从 RecolorStimms 读取；未启用时使用内置颜色。",
 	},
 	divisionhud_super_system = {
 		en = "\238\128\169 SYSTEM SETTINGS",
@@ -455,12 +457,12 @@ return {
 	divisionhud_reset_all_settings = {
 		en = "Reset settings",
 		ru = "Сбросить настройки",
-		["zh-cn"] = "重置所有设置",
+		["zh-cn"] = "重置设置",
 	},
 	divisionhud_reset_all_settings_description = {
 		en = "Pick the confirm entry and apply. All Division HUD options return to defaults.",
 		ru = "Выберите подтверждение и примените. Все параметры Division HUD вернутся к значениям по умолчанию.",
-		["zh-cn"] = "选择确认选项并应用，所有全境封锁 HUD 设置将恢复默认。",
+		["zh-cn"] = "选择确认并应用，所有 Division HUD 设置恢复默认。",
 	},
 	divisionhud_reset_confirm = {
 		en = "Yes, reset",
