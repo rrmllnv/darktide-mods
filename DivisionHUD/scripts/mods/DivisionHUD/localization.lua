@@ -270,8 +270,8 @@ return {
 		["zh-cn"] = "目标",
 	},
 	alerts_group_team = {
-		en = string.rep("\194\160", 8) .. "Team",
-		ru = string.rep("\194\160", 8) .. "Команда",
+		en = string.rep("\194\160", 8) .. "Strike team",
+		ru = string.rep("\194\160", 8) .. "Ударная группа",
 		["zh-cn"] = string.rep("\194\160", 8) .. "小队",
 	},
 	alerts_group_team_description = {
@@ -340,8 +340,8 @@ return {
 		["zh-cn"] = "队友死亡时加入一条警报。",
 	},
 	alerts_team_strip = {
-		en = "Team",
-		ru = "Команда",
+		en = "Strike team",
+		ru = "Ударная группа",
 		["zh-cn"] = "小队",
 	},
 	alerts_team_suffix_knock = {
