@@ -1174,7 +1174,7 @@ end
 
 local ALERT_ANIM_ENTER_DUR = 0.12
 local ALERT_ANIM_EXIT_DUR  = 0.15
-local ALERT_ANIM_DROP_PX_BASE  = 10
+local ALERT_ANIM_DROP_PX_BASE  = 20
 local ALERT_ANIM_SLIDE_PX_BASE = 20
 
 local function _div_alert_drop_px()
