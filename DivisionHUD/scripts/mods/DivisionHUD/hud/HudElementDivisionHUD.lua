@@ -1172,43 +1172,76 @@ local function apply_alert_pass_colors(st, palette, opacity)
 	end
 end
 
-local function apply_alerts_column_layout(self, widgets, slot_heights, column_width)
-	local y_cursor = 0
+local ALERT_ANIM_ENTER_DUR = 0.22
+local ALERT_ANIM_EXIT_DUR  = 0.28
+local ALERT_ANIM_DROP_PX_BASE  = 40
+local ALERT_ANIM_SLIDE_PX_BASE = 120
 
-	for si = 1, ALERTS_MAX_SLOTS do
-		local h = (type(slot_heights) == "table" and type(slot_heights[si]) == "number" and slot_heights[si]) or 0
-		local slot_id = "alert_slot_" .. si
-		local wname = alert_slot_widget_names[si]
-		local w = wname and widgets[wname]
-
-		if h > 0 then
-			self:set_scenegraph_position(slot_id, nil, y_cursor)
-			self:_set_scenegraph_size(slot_id, column_width, h)
-
-			if w and w.content and w.content.size then
-				w.content.size[1] = column_width
-				w.content.size[2] = h
-			end
-
-			y_cursor = y_cursor + h + ALERTS_SLOT_GAP
-		else
-			self:set_scenegraph_position(slot_id, nil, 0)
-			self:_set_scenegraph_size(slot_id, column_width, 0)
-
-			if w and w.content and w.content.size then
-				w.content.size[1] = column_width
-				w.content.size[2] = 0
-			end
-		end
-	end
-
-	local total_h = (y_cursor > 0) and (y_cursor - ALERTS_SLOT_GAP) or 0
-
-	self:_set_scenegraph_size("alerts_column", column_width, total_h)
-	self:set_scenegraph_position("alerts_column", nil, -(total_h + ALERTS_TOUGHNESS_GAP))
+local function _div_alert_drop_px()
+	return math.max(1, math.floor(ALERT_ANIM_DROP_PX_BASE * (HUD_LAYOUT_SCALE or 1) + 0.5))
 end
 
-HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_renderer)
+local function _div_alert_slide_px()
+	return math.max(1, math.floor(ALERT_ANIM_SLIDE_PX_BASE * (HUD_LAYOUT_SCALE or 1) + 0.5))
+end
+
+local function _div_alert_line_key(line)
+	if not line then
+		return nil
+	end
+
+	local t = line.text
+
+	if type(t) ~= "string" or t == "" then
+		return nil
+	end
+
+	return tostring(line.alert_line_category or "") .. "\x1f" .. tostring(line.strip_label or "") .. "\x1f" .. t
+end
+
+local function _div_alert_init(self)
+	self._div_alert_by_key = {}
+	self._div_alert_col_h  = 0
+end
+
+local function _div_alert_clear_slot_widget(w)
+	if not w or not w.content then
+		return
+	end
+
+	w.content.visible = false
+
+	local st = w.style
+
+	if not st then
+		return
+	end
+
+	if st.alert_message_text and st.alert_message_text.size then
+		st.alert_message_text.size[2] = 0
+	end
+
+	if st.alert_slot_upper_background and st.alert_slot_upper_background.size then
+		st.alert_slot_upper_background.size[2] = 0
+	end
+
+	if st.alert_slot_upper_emitter and st.alert_slot_upper_emitter.size then
+		st.alert_slot_upper_emitter.size[2] = 0
+	end
+
+	if st.alert_duration_bar and st.alert_duration_bar.size then
+		st.alert_duration_bar.size[1] = 0
+	end
+
+	w.dirty = true
+end
+
+HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_renderer, dt)
+	dt = (type(dt) == "number" and dt == dt and dt > 0) and dt or 0
+
+	if not self._div_alert_by_key then
+		_div_alert_init(self)
+	end
 	local s_cfg = mod._settings
 	local alerts_master_off = type(s_cfg) == "table" and (s_cfg.alerts_enabled == false or s_cfg.alerts_enabled == 0)
 	local mission_mirror = mod.mission_objective_mirror_wants_alerts_ui and mod.mission_objective_mirror_wants_alerts_ui()
@@ -1216,35 +1249,19 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 	local alerts_mirror_ui = mission_mirror or team_mirror
 
 	if alerts_master_off and not alerts_mirror_ui then
+		self._div_alert_by_key = {}
+		self._div_alert_col_h  = 0
+
 		if mod.alerts_clear then
 			mod.alerts_clear()
 		end
 
 		for si = 1, ALERTS_MAX_SLOTS do
-			local wname = alert_slot_widget_names[si]
-			local w = wname and widgets[wname]
-
-			if w and w.content then
-				w.content.visible = false
-
-				local st = w.style
-				local dur_bar_sz = st and st.alert_duration_bar and st.alert_duration_bar.size
-
-				if dur_bar_sz and type(dur_bar_sz[1]) == "number" then
-					dur_bar_sz[1] = 0
-				end
-
-				w.dirty = true
-			end
+			_div_alert_clear_slot_widget(alert_slot_widget_names[si] and widgets[alert_slot_widget_names[si]])
 		end
 
-		local slot_heights_off = {}
-
-		for si_off = 1, ALERTS_MAX_SLOTS do
-			slot_heights_off[si_off] = 0
-		end
-
-		apply_alerts_column_layout(self, widgets, slot_heights_off, ALERT_BAR_WIDTH)
+		self:_set_scenegraph_size("alerts_column", ALERT_BAR_WIDTH, 0)
+		self:set_scenegraph_position("alerts_column", nil, -ALERTS_TOUGHNESS_GAP)
 
 		return
 	end
@@ -1270,12 +1287,6 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		mod.alerts_sync(gt)
 	end
 
-	local slot_heights = {}
-
-	for si_h = 1, ALERTS_MAX_SLOTS do
-		slot_heights[si_h] = 0
-	end
-
 	local lines = mod.alerts_get_lines and mod.alerts_get_lines() or {}
 	local n = #lines
 	local banner_raw = Localize("loc_objective_op_train_alert_header")
@@ -1288,154 +1299,339 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 	end
 
 	local show_alert_duration_bar = type(s_cfg) == "table" and (s_cfg.alerts_show_duration_bar == true or s_cfg.alerts_show_duration_bar == 1)
+	local by_key = self._div_alert_by_key
+	local drop_px  = _div_alert_drop_px()
+	local slide_px = _div_alert_slide_px()
 
-	for si = 1, ALERTS_MAX_SLOTS do
-		local wname = alert_slot_widget_names[si]
-		local w = wname and widgets[wname]
+	-- ── 1. Build current feed key set ────────────────────────────────────────
+	local feed_key_to_line = {}
 
-		if w and w.content then
-			local idx = nil
+	for i = 1, n do
+		local k = _div_alert_line_key(lines[i])
 
-			if n > 0 and si >= ALERTS_MAX_SLOTS - n + 1 then
-				idx = ALERTS_MAX_SLOTS + 1 - si
-			end
+		if k then
+			feed_key_to_line[k] = lines[i]
+		end
+	end
 
-			if idx and lines[idx] and type(lines[idx].text) == "string" and lines[idx].text ~= "" then
-				local line = lines[idx]
-				local strip_raw = line.strip_label
+	-- ── 2. Transition items not in feed to "exit" ─────────────────────────────
+	for k, item in pairs(by_key) do
+		if not feed_key_to_line[k] and item.state ~= "exit" then
+			item.state    = "exit"
+			item.timer    = 0
+			item.x_anim   = 0
+			item.y_at_exit = item.y_layout or 0
+		end
+	end
 
-				if type(strip_raw) == "string" and strip_raw ~= "" then
-					w.content.alert_strip_label_text = Utf8.upper(strip_raw)
-				else
-					w.content.alert_strip_label_text = banner_upper
-				end
+	-- ── 3. Add new items; update last_line reference ──────────────────────────
+	for i = 1, n do
+		local line = lines[i]
+		local k = _div_alert_line_key(line)
 
-				w.content.visible = true
-				w.content.alert_message_text = line.text
-				w.alpha_multiplier = opacity
-
-				local st = w.style
-
-				if st then
-					local msg_tc = st.alert_message_text and st.alert_message_text.text_color
-					local cat = line.alert_line_category
-					local pal = ALERT_PALETTE_DEFAULT
-
-					if cat == "boss" then
-						pal = ALERT_PALETTE_BOSS
-					elseif cat == "mission" and type(ALERT_PALETTE_MISSION_OBJECTIVE) == "table" then
-						pal = ALERT_PALETTE_MISSION_OBJECTIVE
-					elseif cat == "team" and type(ALERT_PALETTE_TEAM) == "table" then
-						pal = ALERT_PALETTE_TEAM
-					end
-
-					if type(pal) == "table" then
-						apply_alert_pass_colors(st, pal, opacity)
-					end
-
-					if msg_tc and type(msg_tc[1]) == "number" then
-						msg_tc[1] = math.floor(255 * opacity)
-					end
-
-					local dur_bar = st.alert_duration_bar
-					local dur_bar_sz = dur_bar and dur_bar.size
-
-					if show_alert_duration_bar then
-						local line_dur = type(line.duration_sec) == "number" and line.duration_sec > 0 and line.duration_sec or nil
-						local rem_t = type(line.expire_t) == "number" and (line.expire_t - gt) or 0
-						local frac = 1
-
-						if line_dur then
-							frac = math.clamp(rem_t / line_dur, 0, 1)
-						end
-
-						if dur_bar_sz and type(dur_bar_sz[1]) == "number" and type(dur_bar_sz[2]) == "number" then
-							dur_bar_sz[1] = math.max(0, math.floor(ALERT_BAR_WIDTH * frac + 0.5))
-						end
-
-						local dbc = dur_bar and dur_bar.color
-
-						if dbc and type(pal) == "table" and type(pal.duration_bar) == "table" and type(pal.duration_bar[1]) == "number" then
-							dbc[1] = math.floor(pal.duration_bar[1] * opacity)
-						elseif dbc and type(dbc[1]) == "number" then
-							dbc[1] = math.floor(230 * opacity)
-						end
-					elseif dur_bar_sz and type(dur_bar_sz[1]) == "number" then
-						dur_bar_sz[1] = 0
-					end
-
-					local msg_st = st.alert_message_text
-					local body_h = ALERTS_BODY_HEIGHT_MIN
-
-					if ui_renderer and msg_st and type(ALERTS_MESSAGE_TEXT_WRAP_WIDTH) == "number" and type(ALERTS_MESSAGE_TEXT_VERTICAL_INSET) == "number" then
-						local measured = Text.text_height(ui_renderer, line.text, msg_st, {
-							ALERTS_MESSAGE_TEXT_WRAP_WIDTH,
-							4096,
-						}, true)
-
-						body_h = math.ceil(measured + ALERTS_MESSAGE_TEXT_VERTICAL_INSET + ALERTS_MESSAGE_TEXT_OFFSET_Y)
-						body_h = math.clamp(body_h, ALERTS_BODY_HEIGHT_MIN, ALERTS_BODY_HEIGHT_MAX)
-					end
-
-					local text_box_h = body_h - ALERTS_MESSAGE_TEXT_VERTICAL_INSET - ALERTS_MESSAGE_TEXT_OFFSET_Y
-
-					if msg_st and msg_st.size then
-						msg_st.size[2] = text_box_h
-					end
-
-					local ub = st.alert_slot_upper_background
-					local ue = st.alert_slot_upper_emitter
-
-					if ub and ub.size then
-						ub.size[2] = body_h
-					end
-
-					if ue and ue.size then
-						ue.size[2] = body_h
-					end
-
-					slot_heights[si] = body_h + ALERTS_STRIP_HEIGHT
-				else
-					slot_heights[si] = ALERTS_BODY_HEIGHT_MIN + ALERTS_STRIP_HEIGHT
-				end
-
-				w.dirty = true
+		if k then
+			if not by_key[k] then
+				by_key[k] = {
+					key         = k,
+					state       = "enter",
+					timer       = 0,
+					x_anim      = 0,
+					y_enter_ofs = 0,
+					alpha       = 0,
+					cached_h    = 0,
+					last_line   = line,
+					y_layout    = 0,
+					y_at_exit   = 0,
+				}
 			else
-				w.content.visible = false
-
-				local st = w.style
-				local dur_bar = st and st.alert_duration_bar
-				local dur_bar_sz = dur_bar and dur_bar.size
-
-				if dur_bar_sz and type(dur_bar_sz[1]) == "number" then
-					dur_bar_sz[1] = 0
-				end
-
-				if st then
-					local msg_st_h = st.alert_message_text
-					local ub_h = st.alert_slot_upper_background
-					local ue_h = st.alert_slot_upper_emitter
-
-					if msg_st_h and msg_st_h.size then
-						msg_st_h.size[2] = 0
-					end
-
-					if ub_h and ub_h.size then
-						ub_h.size[2] = 0
-					end
-
-					if ue_h and ue_h.size then
-						ue_h.size[2] = 0
-					end
-				end
-
-				slot_heights[si] = 0
-				w.dirty = true
+				by_key[k].last_line = line
 			end
 		end
 	end
 
-	apply_alerts_column_layout(self, widgets, slot_heights, ALERT_BAR_WIDTH)
+	-- ── 4. Compute height for each non-exiting item ───────────────────────────
+	--    We need a temporary widget measurement; use the first invisible slot as scratch.
+	--    Height is cached on the item; if ui_renderer unavailable, keep previous value.
+	local scratch_msg_st = nil
+
+	do
+		local wname0 = alert_slot_widget_names[1]
+		local w0 = wname0 and widgets[wname0]
+
+		if w0 and w0.style and w0.style.alert_message_text then
+			scratch_msg_st = w0.style.alert_message_text
+		end
+	end
+
+	for _, item in pairs(by_key) do
+		if item.state ~= "exit" then
+			local line = item.last_line
+
+			if line and type(line.text) == "string" and line.text ~= "" then
+				local body_h = ALERTS_BODY_HEIGHT_MIN
+
+				if ui_renderer and scratch_msg_st and type(ALERTS_MESSAGE_TEXT_WRAP_WIDTH) == "number" and type(ALERTS_MESSAGE_TEXT_VERTICAL_INSET) == "number" then
+					local measured = Text.text_height(ui_renderer, line.text, scratch_msg_st, {
+						ALERTS_MESSAGE_TEXT_WRAP_WIDTH,
+						4096,
+					}, true)
+
+					body_h = math.ceil(measured + ALERTS_MESSAGE_TEXT_VERTICAL_INSET + ALERTS_MESSAGE_TEXT_OFFSET_Y)
+					body_h = math.clamp(body_h, ALERTS_BODY_HEIGHT_MIN, ALERTS_BODY_HEIGHT_MAX)
+				end
+
+				item.cached_h = body_h + ALERTS_STRIP_HEIGHT
+			elseif item.cached_h == 0 then
+				item.cached_h = ALERTS_BODY_HEIGHT_MIN + ALERTS_STRIP_HEIGHT
+			end
+		end
+	end
+
+	-- ── 5. Build stack: non-exiting items, newest first (top of column) ───────
+	local stack = {}
+
+	for i = n, 1, -1 do
+		local k = _div_alert_line_key(lines[i])
+		local item = k and by_key[k]
+
+		if item and item.state ~= "exit" then
+			stack[#stack + 1] = item
+		end
+	end
+
+	-- ── 6. Compute y_layout for stack items (newest at y=0 top) ──────────────
+	local total_h_target = 0
+	local y_cur = 0
+
+	for _, item in ipairs(stack) do
+		item.y_layout = y_cur
+		y_cur = y_cur + item.cached_h + ALERTS_SLOT_GAP
+	end
+
+	if y_cur > 0 then
+		total_h_target = y_cur - ALERTS_SLOT_GAP
+	end
+
+	-- ── 7. Advance animations ─────────────────────────────────────────────────
+	local to_remove = {}
+
+	for k, item in pairs(by_key) do
+		item.timer = item.timer + dt
+
+		if item.state == "enter" then
+			local p  = math.min(1, item.timer / ALERT_ANIM_ENTER_DUR)
+			local ep = math.easeOutCubic(p)
+
+			item.y_enter_ofs = -(drop_px * (1 - ep))
+			item.alpha       = ep
+
+			if p >= 1 then
+				item.state       = "hold"
+				item.y_enter_ofs = 0
+				item.alpha       = 1
+			end
+		elseif item.state == "hold" then
+			item.y_enter_ofs = 0
+			item.alpha       = 1
+		elseif item.state == "exit" then
+			local p  = math.min(1, item.timer / ALERT_ANIM_EXIT_DUR)
+			local ep = math.easeOutCubic(p)
+
+			item.x_anim = slide_px * ep
+			item.alpha  = 1 - ep
+
+			if p >= 1 then
+				to_remove[#to_remove + 1] = k
+			end
+		end
+	end
+
+	for _, k in ipairs(to_remove) do
+		by_key[k] = nil
+	end
+
+	-- ── 8. Animate column height (grows instantly, shrinks smoothly) ──────────
+	-- While items are still exiting, keep the column tall enough to contain them
+	-- so they slide only RIGHT (not diagonally). Column shrinks after exit completes.
+	local total_h_col_floor = total_h_target
+
+	for _, item in pairs(by_key) do
+		if item.state == "exit" and item.cached_h > 0 then
+			local bottom = item.y_at_exit + item.cached_h
+
+			if bottom > total_h_col_floor then
+				total_h_col_floor = bottom
+			end
+		end
+	end
+
+	local col_h = self._div_alert_col_h or 0
+
+	if total_h_col_floor >= col_h then
+		col_h = total_h_col_floor
+	else
+		local diff = total_h_col_floor - col_h
+
+		if math.abs(diff) < 0.5 then
+			col_h = total_h_col_floor
+		else
+			col_h = col_h + diff * math.min(1, 10 * dt)
+		end
+	end
+
+	self._div_alert_col_h = col_h
+
+	local col_h_int = math.max(0, math.floor(col_h + 0.5))
+
+	self:_set_scenegraph_size("alerts_column", ALERT_BAR_WIDTH, col_h_int)
+	self:set_scenegraph_position("alerts_column", nil, -(col_h_int + ALERTS_TOUGHNESS_GAP))
+
+	-- ── 9. Clear all slot widgets ─────────────────────────────────────────────
+	for si = 1, ALERTS_MAX_SLOTS do
+		_div_alert_clear_slot_widget(alert_slot_widget_names[si] and widgets[alert_slot_widget_names[si]])
+	end
+
+	-- ── 10. Build render list: stack first, then exiting ─────────────────────
+	local render_list = {}
+
+	for _, item in ipairs(stack) do
+		render_list[#render_list + 1] = item
+	end
+
+	for _, item in pairs(by_key) do
+		if item.state == "exit" then
+			render_list[#render_list + 1] = item
+		end
+	end
+
+	-- ── 11. Assign slots and populate content ─────────────────────────────────
+	local slot_idx = 1
+
+	for _, item in ipairs(render_list) do
+		if slot_idx > ALERTS_MAX_SLOTS then
+			break
+		end
+
+		local line = item.last_line
+
+		if not line or type(line.text) ~= "string" or line.text == "" then
+			goto continue_render
+		end
+
+		local wname = alert_slot_widget_names[slot_idx]
+		local w = wname and widgets[wname]
+
+		if not w or not w.content then
+			goto continue_render
+		end
+
+		-- Position this slot within alerts_column
+		local y_pos = item.state == "exit"
+			and math.floor(item.y_at_exit + 0.5)
+			or  math.floor((item.y_layout + item.y_enter_ofs) + 0.5)
+		local x_pos = math.floor(item.x_anim + 0.5)
+		local slot_id = "alert_slot_" .. slot_idx
+
+		self:set_scenegraph_position(slot_id, x_pos, y_pos)
+		self:_set_scenegraph_size(slot_id, ALERT_BAR_WIDTH, item.cached_h)
+
+		if w.content.size then
+			w.content.size[1] = ALERT_BAR_WIDTH
+			w.content.size[2] = item.cached_h
+		end
+
+		-- Populate text content
+		local strip_raw = line.strip_label
+
+		if type(strip_raw) == "string" and strip_raw ~= "" then
+			w.content.alert_strip_label_text = Utf8.upper(strip_raw)
+		else
+			w.content.alert_strip_label_text = banner_upper
+		end
+
+		w.content.alert_message_text = line.text
+
+		-- Apply colors and sizes
+		local st = w.style
+
+		if st then
+			local msg_tc = st.alert_message_text and st.alert_message_text.text_color
+			local cat    = line.alert_line_category
+			local pal    = ALERT_PALETTE_DEFAULT
+
+			if cat == "boss" then
+				pal = ALERT_PALETTE_BOSS
+			elseif cat == "mission" and type(ALERT_PALETTE_MISSION_OBJECTIVE) == "table" then
+				pal = ALERT_PALETTE_MISSION_OBJECTIVE
+			elseif cat == "team" and type(ALERT_PALETTE_TEAM) == "table" then
+				pal = ALERT_PALETTE_TEAM
+			end
+
+			if type(pal) == "table" then
+				apply_alert_pass_colors(st, pal, opacity)
+			end
+
+			if msg_tc and type(msg_tc[1]) == "number" then
+				msg_tc[1] = math.floor(255 * opacity)
+			end
+
+			-- Duration bar
+			local dur_bar    = st.alert_duration_bar
+			local dur_bar_sz = dur_bar and dur_bar.size
+
+			if show_alert_duration_bar then
+				local line_dur = type(line.duration_sec) == "number" and line.duration_sec > 0 and line.duration_sec or nil
+				local rem_t    = type(line.expire_t) == "number" and (line.expire_t - gt) or 0
+				local frac     = 1
+
+				if line_dur then
+					frac = math.clamp(rem_t / line_dur, 0, 1)
+				end
+
+				if dur_bar_sz and type(dur_bar_sz[1]) == "number" and type(dur_bar_sz[2]) == "number" then
+					dur_bar_sz[1] = math.max(0, math.floor(ALERT_BAR_WIDTH * frac + 0.5))
+				end
+
+				local dbc = dur_bar and dur_bar.color
+
+				if dbc and type(pal) == "table" and type(pal.duration_bar) == "table" and type(pal.duration_bar[1]) == "number" then
+					dbc[1] = math.floor(pal.duration_bar[1] * opacity)
+				elseif dbc and type(dbc[1]) == "number" then
+					dbc[1] = math.floor(230 * opacity)
+				end
+			elseif dur_bar_sz and type(dur_bar_sz[1]) == "number" then
+				dur_bar_sz[1] = 0
+			end
+
+			-- Text and background sizes (from cached item height)
+			local body_h      = item.cached_h - ALERTS_STRIP_HEIGHT
+			local text_box_h  = body_h - ALERTS_MESSAGE_TEXT_VERTICAL_INSET - ALERTS_MESSAGE_TEXT_OFFSET_Y
+			local msg_st      = st.alert_message_text
+
+			if msg_st and msg_st.size then
+				msg_st.size[2] = text_box_h
+			end
+
+			local ub = st.alert_slot_upper_background
+			local ue = st.alert_slot_upper_emitter
+
+			if ub and ub.size then
+				ub.size[2] = body_h
+			end
+
+			if ue and ue.size then
+				ue.size[2] = body_h
+			end
+		end
+
+		w.content.visible  = true
+		w.alpha_multiplier = opacity * math.max(0, math.min(1, item.alpha))
+		w.dirty            = true
+
+		slot_idx = slot_idx + 1
+
+		::continue_render::
+	end
 end
 
 HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
@@ -1449,6 +1645,7 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 
 	VanillaStaminaDodge.init(self, Definitions)
 	VanillaToughnessHealth.init(self, Definitions)
+	_div_alert_init(self)
 
 	self:_reset_dynamic_offset_state()
 
@@ -1555,7 +1752,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
 	self:_update_auspex_slot(player_unit, widgets, opacity)
 	self:_update_right_slot_grid(player_unit, widgets, opacity)
-	self:_update_alert_slots(widgets, opacity, ui_renderer)
+	self:_update_alert_slots(widgets, opacity, ui_renderer, dt)
 end
 
 HudElementDivisionHUD._update_ability_bar = function(self, player_unit, widget, opacity)
