@@ -539,7 +539,19 @@ local function create_prox_slot_widget(scenegraph_id, default_icon)
 	count_text_style.text_vertical_alignment = "top"
 	count_text_style.text_color = { 255, 255, 255, 255 }
 	count_text_style.size = { PROX_SLOT_SIZE - sc(2), PROX_SLOT_SIZE }
-	count_text_style.offset = { 0, sc(2), 4 }
+	count_text_style.offset = { 0, sc(2), 5 }
+
+	local ox = sc(1)
+
+	local function count_outline_style(dx, dy, z)
+		local s = table.clone(count_text_style)
+
+		s.drop_shadow = false
+		s.text_color = { 255, 0, 0, 0 }
+		s.offset = { dx, sc(2) + dy, z }
+
+		return s
+	end
 
 	return UIWidget.create_definition({
 		{
@@ -564,15 +576,32 @@ local function create_prox_slot_widget(scenegraph_id, default_icon)
 			style = dist_text_style,
 		},
 		{
-			pass_type = "rect",
-			style_id = "count_bg",
-			style = {
-				horizontal_alignment = "right",
-				vertical_alignment = "top",
-				color = { 180, 0, 0, 0 },
-				size = { math.ceil(PROX_SLOT_SIZE * 0.72), math.ceil(PROX_COUNT_FONT * 1.2) },
-				offset = { 0, sc(1), 3 },
-			},
+			pass_type = "text",
+			value_id = "count_text",
+			value = "",
+			style_id = "count_text_outline_w",
+			style = count_outline_style(-ox, 0, 3),
+		},
+		{
+			pass_type = "text",
+			value_id = "count_text",
+			value = "",
+			style_id = "count_text_outline_e",
+			style = count_outline_style(ox, 0, 3),
+		},
+		{
+			pass_type = "text",
+			value_id = "count_text",
+			value = "",
+			style_id = "count_text_outline_n",
+			style = count_outline_style(0, -ox, 3),
+		},
+		{
+			pass_type = "text",
+			value_id = "count_text",
+			value = "",
+			style_id = "count_text_outline_s",
+			style = count_outline_style(0, ox, 3),
 		},
 		{
 			pass_type = "text",

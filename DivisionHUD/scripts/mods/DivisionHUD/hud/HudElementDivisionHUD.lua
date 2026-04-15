@@ -2096,12 +2096,6 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 			end
 
 			widget.content.count_text = label or ""
-
-			local count_bg = widget.style.count_bg
-
-			if count_bg then
-				count_bg.color[1] = label and 180 or 0
-			end
 		end
 
 		local icon_color = widget.style.icon and widget.style.icon.color
