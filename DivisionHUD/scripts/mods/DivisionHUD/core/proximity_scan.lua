@@ -63,6 +63,26 @@ local PICKUP_DATA = {
 		icon               = "content/ui/materials/hud/icons/party_ammo",
 		size_label_loc_key = "ammo_size_big",
 	},
+	-- Гримуары
+	grimoire = {
+		cat  = "grimoire",
+		icon = "content/ui/materials/icons/pocketables/hud/small/party_grimoire",
+	},
+	-- Писания (tome)
+	tome = {
+		cat  = "tome",
+		icon = "content/ui/materials/icons/pocketables/hud/small/party_scripture",
+	},
+	-- Черепа мученика (всегда на карте, обычно 4 штуки)
+	collectible_01_pickup = {
+		cat  = "skull",
+		icon = "content/ui/materials/hud/interactions/icons/enemy",
+	},
+	-- Черепа события (Skulls event)
+	skulls_01_pickup = {
+		cat  = "skull",
+		icon = "content/ui/materials/hud/interactions/icons/enemy",
+	},
 	-- Ящики патронов (pocketable + deployable + level)
 	ammo_cache_pocketable = {
 		cat  = "ammo_crate",
@@ -78,7 +98,7 @@ local PICKUP_DATA = {
 	},
 }
 
-local CATEGORIES = { "medical_station", "medical", "medical_deployed", "stimm_corruption", "stimm_power", "stimm_speed", "stimm_ability", "ammo_small", "ammo_large", "ammo_crate", "grenade" }
+local CATEGORIES = { "medical_station", "medical", "medical_deployed", "stimm_corruption", "stimm_power", "stimm_speed", "stimm_ability", "ammo_small", "ammo_large", "ammo_crate", "grenade", "grimoire", "tome", "skull" }
 
 local MED_DEPLOYED_ICON = "content/ui/materials/icons/pocketables/hud/small/party_medic_crate"
 

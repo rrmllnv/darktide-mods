@@ -534,6 +534,36 @@ return {
 		ru = "Обнаруживать гранаты (обычные и экспедиционные).",
 		["zh-cn"] = "检测手榴弹（普通和远征）。",
 	},
+	proximity_show_grimoire = {
+		en = "Show grimoires",
+		ru = "Показывать гримуары",
+		["zh-cn"] = "显示秘典",
+	},
+	proximity_show_grimoire_description = {
+		en = "Detect grimoires on the map.",
+		ru = "Обнаруживать гримуары на карте.",
+		["zh-cn"] = "检测地图上的秘典。",
+	},
+	proximity_show_tome = {
+		en = "Show scriptures",
+		ru = "Показывать писания",
+		["zh-cn"] = "显示圣书",
+	},
+	proximity_show_tome_description = {
+		en = "Detect scriptures (tomes) on the map.",
+		ru = "Обнаруживать писания на карте.",
+		["zh-cn"] = "检测地图上的圣书。",
+	},
+	proximity_show_skull = {
+		en = "Show skulls",
+		ru = "Показывать черепа",
+		["zh-cn"] = "显示头骨",
+	},
+	proximity_show_skull_description = {
+		en = "Detect tainted skulls on the map.",
+		ru = "Обнаруживать черепа на карте.",
+		["zh-cn"] = "检测地图上的污染头骨。",
+	},
 	divisionhud_integrations = {
 		en = "\238\128\172 INTEGRATIONS",
 		ru = "\238\128\172 ИНТЕГРАЦИИ",

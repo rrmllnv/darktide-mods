@@ -260,7 +260,7 @@ local scenegraph_definition = {
 		parent = "ability_bar",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
-		size = { PROX_SLOT_SIZE * 6 + PROX_COL_GAP * 5, MAIN_ROW_HEIGHT },
+		size = { PROX_SLOT_SIZE * 7 + PROX_COL_GAP * 6, MAIN_ROW_HEIGHT },
 		position = { BAR_FILL_WIDTH + PROX_BLOCK_GAP, ABILITY_BAR_STRIP_HEIGHT + BOXES_ROW_TOP_GAP, 0 },
 	},
 	prox_medical_station = {
@@ -334,6 +334,27 @@ local scenegraph_definition = {
 		position = { 0, 0, 0 },
 	},
 	prox_ammo_crate = {
+		parent = "proximity_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
+		position = { 0, 0, 0 },
+	},
+	prox_grimoire = {
+		parent = "proximity_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
+		position = { 0, 0, 0 },
+	},
+	prox_tome = {
+		parent = "proximity_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
+		position = { 0, 0, 0 },
+	},
+	prox_skull = {
 		parent = "proximity_row",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
@@ -696,6 +717,9 @@ local PROX_CATEGORY_ICONS = {
 	ammo_large       = "content/ui/materials/hud/icons/party_ammo",
 	ammo_crate       = "content/ui/materials/icons/pocketables/hud/small/party_ammo_crate",
 	grenade          = "content/ui/materials/hud/icons/party_throwable",
+	grimoire         = "content/ui/materials/icons/pocketables/hud/small/party_grimoire",
+	tome             = "content/ui/materials/icons/pocketables/hud/small/party_scripture",
+	skull            = "content/ui/materials/hud/interactions/icons/enemy",
 }
 
 local widget_definitions = {
@@ -719,6 +743,9 @@ local widget_definitions = {
 	prox_grenade_bg          = create_prox_slot_bg_widget("prox_grenade"),
 	prox_medical_deployed_bg = create_prox_slot_bg_widget("prox_medical_deployed"),
 	prox_ammo_crate_bg       = create_prox_slot_bg_widget("prox_ammo_crate"),
+	prox_grimoire_bg         = create_prox_slot_bg_widget("prox_grimoire"),
+	prox_tome_bg             = create_prox_slot_bg_widget("prox_tome"),
+	prox_skull_bg            = create_prox_slot_bg_widget("prox_skull"),
 	prox_medical_station  = create_prox_slot_widget("prox_medical_station",  PROX_CATEGORY_ICONS.medical_station),
 	prox_medical          = create_prox_slot_widget("prox_medical",          PROX_CATEGORY_ICONS.medical),
 	prox_medical_deployed = create_prox_slot_widget("prox_medical_deployed", PROX_CATEGORY_ICONS.medical_deployed),
@@ -730,6 +757,9 @@ local widget_definitions = {
 	prox_ammo_large       = create_prox_slot_widget("prox_ammo_large",       PROX_CATEGORY_ICONS.ammo_large),
 	prox_ammo_crate       = create_prox_slot_widget("prox_ammo_crate",       PROX_CATEGORY_ICONS.ammo_crate),
 	prox_grenade          = create_prox_slot_widget("prox_grenade",          PROX_CATEGORY_ICONS.grenade),
+	prox_grimoire         = create_prox_slot_widget("prox_grimoire",         PROX_CATEGORY_ICONS.grimoire),
+	prox_tome             = create_prox_slot_widget("prox_tome",             PROX_CATEGORY_ICONS.tome),
+	prox_skull            = create_prox_slot_widget("prox_skull",            PROX_CATEGORY_ICONS.skull),
 }
 
 for k, v in pairs(_division_alerts.widget_definitions) do
@@ -825,7 +855,7 @@ return {
 		local row_y = PROX_SLOT_SIZE + PROX_ROW_GAP
 		local t = {}
 
-		for col = 0, 5 do
+		for col = 0, 6 do
 			local x = step * col
 
 			t[#t + 1] = { x = x, y = 0,     is_bottom = false }
@@ -847,5 +877,8 @@ return {
 		ammo_large       = "prox_ammo_large",
 		ammo_crate       = "prox_ammo_crate",
 		grenade          = "prox_grenade",
+		grimoire         = "prox_grimoire",
+		tome             = "prox_tome",
+		skull            = "prox_skull",
 	},
 }

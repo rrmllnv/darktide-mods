@@ -1916,6 +1916,9 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 		ammo_large       = type(s_cfg) ~= "table" or (s_cfg.proximity_show_ammo_large ~= false and s_cfg.proximity_show_ammo_large ~= 0),
 		ammo_crate       = type(s_cfg) ~= "table" or (s_cfg.proximity_show_ammo_crate ~= false and s_cfg.proximity_show_ammo_crate ~= 0),
 		grenade          = type(s_cfg) ~= "table" or (s_cfg.proximity_show_grenade    ~= false and s_cfg.proximity_show_grenade    ~= 0),
+		grimoire         = type(s_cfg) ~= "table" or (s_cfg.proximity_show_grimoire   ~= false and s_cfg.proximity_show_grimoire   ~= 0),
+		tome             = type(s_cfg) ~= "table" or (s_cfg.proximity_show_tome       ~= false and s_cfg.proximity_show_tome       ~= 0),
+		skull            = type(s_cfg) ~= "table" or (s_cfg.proximity_show_skull      ~= false and s_cfg.proximity_show_skull      ~= 0),
 	}
 
 	if not self._prox_anim then
