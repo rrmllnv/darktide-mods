@@ -114,6 +114,7 @@ local AUSPEX_ICON_SIZE = math.max(1, math.min(AUSPEX_SLOT_WIDTH - sc(6), WIELDED
 local SLOT_TEXT_FONT = sc(20)
 local SLOT_ICON_LEFT_INSET = sc(3)
 local SLOT_TEXT_AFTER_ICON_GAP = sc(2)
+local SLOT_LEAD_ZERO_CHAR_W = sc(12)
 
 local TextColorFractions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/text_color_fractions")
 
@@ -382,7 +383,11 @@ end
 
 local function create_right_slot_widget(scenegraph_id)
 	local text_left_x = SLOT_ICON_LEFT_INSET + SLOT_ICON_TEXTURE_SIZE + SLOT_TEXT_AFTER_ICON_GAP
-	local text_style = text_style_slot_counter_after_icon(SLOT_TEXT_FONT, text_left_x)
+	local text_lead_style = text_style_slot_counter_after_icon(SLOT_TEXT_FONT, text_left_x)
+	local text_main_style = text_style_slot_counter_after_icon(SLOT_TEXT_FONT, text_left_x + SLOT_LEAD_ZERO_CHAR_W)
+
+	text_lead_style = table.clone(text_lead_style)
+	text_lead_style.text_color = table.clone(UIHudSettings.color_tint_main_1)
 
 	return UIWidget.create_definition({
 		{
@@ -400,10 +405,17 @@ local function create_right_slot_widget(scenegraph_id)
 		},
 		{
 			pass_type = "text",
+			value_id = "text_lead",
+			value = "",
+			style_id = "text_lead",
+			style = text_lead_style,
+		},
+		{
+			pass_type = "text",
 			value_id = "text",
 			value = "0",
 			style_id = "text",
-			style = text_style,
+			style = text_main_style,
 		},
 	}, scenegraph_id)
 end
@@ -563,4 +575,6 @@ return {
 	AMMO_TEXT_COLOR_FRACTION_GT_MEDIUM_BAND = AMMO_TEXT_COLOR_FRACTION_GT_MEDIUM_BAND,
 	AMMO_BIG_MAX_DIGITS = AMMO_BIG_MAX_DIGITS,
 	AMMO_BIG_DISPLAY_VALUE_MAX = 10^AMMO_BIG_MAX_DIGITS - 1,
+	SLOT_TEXT_FULL_OFFSET_X = SLOT_ICON_LEFT_INSET + SLOT_ICON_TEXTURE_SIZE + SLOT_TEXT_AFTER_ICON_GAP,
+	SLOT_TEXT_MAIN_OFFSET_X = SLOT_ICON_LEFT_INSET + SLOT_ICON_TEXTURE_SIZE + SLOT_TEXT_AFTER_ICON_GAP + SLOT_LEAD_ZERO_CHAR_W,
 }
