@@ -1918,7 +1918,6 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 		grenade          = type(s_cfg) ~= "table" or (s_cfg.proximity_show_grenade    ~= false and s_cfg.proximity_show_grenade    ~= 0),
 		grimoire         = type(s_cfg) ~= "table" or (s_cfg.proximity_show_grimoire   ~= false and s_cfg.proximity_show_grimoire   ~= 0),
 		tome             = type(s_cfg) ~= "table" or (s_cfg.proximity_show_tome       ~= false and s_cfg.proximity_show_tome       ~= 0),
-		skull            = type(s_cfg) ~= "table" or (s_cfg.proximity_show_skull      ~= false and s_cfg.proximity_show_skull      ~= 0),
 	}
 
 	if not self._prox_anim then
@@ -2134,6 +2133,20 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 					icon_color[3] = 255
 					icon_color[4] = 255
 				end
+			elseif cat == "medical_deployed" then
+				local tc = UIHudSettings.color_tint_6
+
+				icon_color[1] = tc[1] or 255
+				icon_color[2] = tc[2] or 255
+				icon_color[3] = tc[3] or 255
+				icon_color[4] = tc[4] or 255
+			elseif cat == "ammo_crate" and data and data.prox_icon_tint == "ammo_deployed" then
+				local tc = UIHudSettings.color_tint_ammo_high
+
+				icon_color[1] = tc[1] or 255
+				icon_color[2] = tc[2] or 255
+				icon_color[3] = tc[3] or 255
+				icon_color[4] = tc[4] or 255
 			else
 				icon_color[1] = 255
 				icon_color[2] = 255

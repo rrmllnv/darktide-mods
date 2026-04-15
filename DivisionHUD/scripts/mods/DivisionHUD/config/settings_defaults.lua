@@ -44,7 +44,6 @@ local defaults = {
 	proximity_show_grenade = true,
 	proximity_show_grimoire = true,
 	proximity_show_tome     = true,
-	proximity_show_skull    = true,
 	integration_custom_hud = false,
 	integration_stimm_countdown = true,
 	integration_recolor_stimms = false,

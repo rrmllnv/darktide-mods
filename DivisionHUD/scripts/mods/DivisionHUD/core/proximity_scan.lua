@@ -73,16 +73,6 @@ local PICKUP_DATA = {
 		cat  = "tome",
 		icon = "content/ui/materials/icons/pocketables/hud/small/party_scripture",
 	},
-	-- Черепа мученика (всегда на карте, обычно 4 штуки)
-	collectible_01_pickup = {
-		cat  = "skull",
-		icon = "content/ui/materials/hud/interactions/icons/enemy",
-	},
-	-- Черепа события (Skulls event)
-	skulls_01_pickup = {
-		cat  = "skull",
-		icon = "content/ui/materials/hud/interactions/icons/enemy",
-	},
 	-- Ящики патронов (pocketable + deployable + level)
 	ammo_cache_pocketable = {
 		cat  = "ammo_crate",
@@ -98,9 +88,10 @@ local PICKUP_DATA = {
 	},
 }
 
-local CATEGORIES = { "medical_station", "medical", "medical_deployed", "stimm_corruption", "stimm_power", "stimm_speed", "stimm_ability", "ammo_small", "ammo_large", "ammo_crate", "grenade", "grimoire", "tome", "skull" }
+local CATEGORIES = { "medical_station", "medical", "medical_deployed", "stimm_corruption", "stimm_power", "stimm_speed", "stimm_ability", "ammo_small", "ammo_large", "ammo_crate", "grenade", "grimoire", "tome" }
 
 local MED_DEPLOYED_ICON = "content/ui/materials/icons/pocketables/hud/small/party_medic_crate"
+
 
 -- Получить систему расширений по имени системы
 local function _get_system(system_name)
@@ -246,7 +237,8 @@ local function _read_count(unit, pickup_name)
 	return nil
 end
 
-local function _add_result(result, best_dist_sq, cat, dist_sq, dist_m, icon, stimm_id, size_label, size_label_loc_key, count)
+-- prox_icon_tint: для ammo_crate — "ammo_deployed" только у развёрнутых/уровневых ящиков, не у карманного
+local function _add_result(result, best_dist_sq, cat, dist_sq, dist_m, icon, stimm_id, size_label, size_label_loc_key, count, prox_icon_tint)
 	if not best_dist_sq[cat] or dist_sq < best_dist_sq[cat] then
 		best_dist_sq[cat] = dist_sq
 		result[cat] = {
@@ -256,6 +248,7 @@ local function _add_result(result, best_dist_sq, cat, dist_sq, dist_m, icon, sti
 			size_label         = size_label,
 			size_label_loc_key = size_label_loc_key,
 			count              = count,
+			prox_icon_tint     = prox_icon_tint,
 		}
 	end
 end
@@ -301,11 +294,18 @@ local function scan(player_unit, radius)
 							local dist_sq = _dist_sq(upos, player_pos)
 
 							if dist_sq <= radius_sq then
+								local prox_icon_tint = nil
+
+								if pd.cat == "ammo_crate" and (pickup_name == "ammo_cache_deployable" or pickup_name == "large_ammunition_crate") then
+									prox_icon_tint = "ammo_deployed"
+								end
+
 								_add_result(
 									result, best_dist_sq, pd.cat, dist_sq,
 									math.max(0, math.floor(math.sqrt(dist_sq) + 0.5)),
 									pd.icon, pd.stimm_id, pd.size_label, pd.size_label_loc_key,
-									_read_count(unit, pickup_name)
+									_read_count(unit, pickup_name),
+									prox_icon_tint
 								)
 							end
 						end
@@ -338,6 +338,7 @@ local function scan(player_unit, radius)
 							result, best_dist_sq, med_cat, dist_sq,
 							math.max(0, math.floor(math.sqrt(dist_sq) + 0.5)),
 							MED_DEPLOYED_ICON, nil, nil, nil,
+							nil,
 							nil
 						)
 					end

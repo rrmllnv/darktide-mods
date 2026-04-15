@@ -490,13 +490,6 @@ return {
 				tooltip_text = "proximity_show_tome_description",
 				default_value = d("proximity_show_tome", true),
 			},
-			{
-				setting_id = "proximity_show_skull",
-				type = "checkbox",
-				title = "proximity_show_skull",
-				tooltip_text = "proximity_show_skull_description",
-				default_value = d("proximity_show_skull", true),
-			},
 		},
 	},
 		{

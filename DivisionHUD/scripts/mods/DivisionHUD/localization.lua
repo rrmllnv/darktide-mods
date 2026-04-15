@@ -554,16 +554,6 @@ return {
 		ru = "Обнаруживать писания на карте.",
 		["zh-cn"] = "检测地图上的圣书。",
 	},
-	proximity_show_skull = {
-		en = "Show skulls",
-		ru = "Показывать черепа",
-		["zh-cn"] = "显示头骨",
-	},
-	proximity_show_skull_description = {
-		en = "Detect tainted skulls on the map.",
-		ru = "Обнаруживать черепа на карте.",
-		["zh-cn"] = "检测地图上的污染头骨。",
-	},
 	divisionhud_integrations = {
 		en = "\238\128\172 INTEGRATIONS",
 		ru = "\238\128\172 ИНТЕГРАЦИИ",
