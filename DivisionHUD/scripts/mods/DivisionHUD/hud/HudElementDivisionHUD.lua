@@ -1905,14 +1905,16 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 	local show_stimm   = type(s_cfg) ~= "table" or (s_cfg.proximity_show_stimm ~= false and s_cfg.proximity_show_stimm ~= 0)
 
 	local cat_settings = {
-		medical          = type(s_cfg) ~= "table" or (s_cfg.proximity_show_medical    ~= false and s_cfg.proximity_show_medical    ~= 0),
-		medical_deployed = type(s_cfg) ~= "table" or (s_cfg.proximity_show_medical    ~= false and s_cfg.proximity_show_medical    ~= 0),
+		medical_station  = type(s_cfg) ~= "table" or (s_cfg.proximity_show_medical_station  ~= false and s_cfg.proximity_show_medical_station  ~= 0),
+		medical          = type(s_cfg) ~= "table" or (s_cfg.proximity_show_medical          ~= false and s_cfg.proximity_show_medical          ~= 0),
+		medical_deployed = type(s_cfg) ~= "table" or (s_cfg.proximity_show_medical_deployed ~= false and s_cfg.proximity_show_medical_deployed ~= 0),
 		stimm_corruption = show_stimm,
 		stimm_power      = show_stimm,
 		stimm_speed      = show_stimm,
 		stimm_ability    = show_stimm,
 		ammo_small       = type(s_cfg) ~= "table" or (s_cfg.proximity_show_ammo_small ~= false and s_cfg.proximity_show_ammo_small ~= 0),
 		ammo_large       = type(s_cfg) ~= "table" or (s_cfg.proximity_show_ammo_large ~= false and s_cfg.proximity_show_ammo_large ~= 0),
+		ammo_crate       = type(s_cfg) ~= "table" or (s_cfg.proximity_show_ammo_crate ~= false and s_cfg.proximity_show_ammo_crate ~= 0),
 		grenade          = type(s_cfg) ~= "table" or (s_cfg.proximity_show_grenade    ~= false and s_cfg.proximity_show_grenade    ~= 0),
 	}
 

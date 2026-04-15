@@ -260,8 +260,15 @@ local scenegraph_definition = {
 		parent = "ability_bar",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
-		size = { PROX_SLOT_SIZE * 5 + PROX_COL_GAP * 4, MAIN_ROW_HEIGHT },
+		size = { PROX_SLOT_SIZE * 6 + PROX_COL_GAP * 5, MAIN_ROW_HEIGHT },
 		position = { BAR_FILL_WIDTH + PROX_BLOCK_GAP, ABILITY_BAR_STRIP_HEIGHT + BOXES_ROW_TOP_GAP, 0 },
+	},
+	prox_medical_station = {
+		parent = "proximity_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
+		position = { 0, 0, 0 },
 	},
 	prox_medical = {
 		parent = "proximity_row",
@@ -320,6 +327,13 @@ local scenegraph_definition = {
 		position = { 0, 0, 0 },
 	},
 	prox_medical_deployed = {
+		parent = "proximity_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
+		position = { 0, 0, 0 },
+	},
+	prox_ammo_crate = {
 		parent = "proximity_row",
 		horizontal_alignment = "left",
 		vertical_alignment = "top",
@@ -671,14 +685,16 @@ local function create_weapon_wielded_slot_widget(scenegraph_id)
 end
 
 local PROX_CATEGORY_ICONS = {
-	medical          = "content/ui/materials/hud/interactions/icons/pocketable_medkit",
+	medical_station  = "content/ui/materials/hud/interactions/icons/pocketable_medkit",
+	medical          = "content/ui/materials/icons/pocketables/hud/small/party_medic_crate",
 	medical_deployed = "content/ui/materials/icons/pocketables/hud/small/party_medic_crate",
 	stimm_corruption = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
 	stimm_power      = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
 	stimm_speed      = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
 	stimm_ability    = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
 	ammo_small       = "content/ui/materials/hud/icons/party_ammo",
-	ammo_large       = "content/ui/materials/icons/pocketables/hud/small/party_ammo_crate",
+	ammo_large       = "content/ui/materials/hud/icons/party_ammo",
+	ammo_crate       = "content/ui/materials/icons/pocketables/hud/small/party_ammo_crate",
 	grenade          = "content/ui/materials/hud/icons/party_throwable",
 }
 
@@ -692,6 +708,7 @@ local widget_definitions = {
 	slot_blitz = create_right_slot_widget("slot_blitz"),
 	slot_stimm = create_right_slot_widget("slot_stimm"),
 	slot_pickup = create_right_slot_widget("slot_pickup"),
+	prox_medical_station_bg  = create_prox_slot_bg_widget("prox_medical_station"),
 	prox_medical_bg          = create_prox_slot_bg_widget("prox_medical"),
 	prox_stimm_corruption_bg = create_prox_slot_bg_widget("prox_stimm_corruption"),
 	prox_stimm_power_bg      = create_prox_slot_bg_widget("prox_stimm_power"),
@@ -701,6 +718,8 @@ local widget_definitions = {
 	prox_ammo_large_bg       = create_prox_slot_bg_widget("prox_ammo_large"),
 	prox_grenade_bg          = create_prox_slot_bg_widget("prox_grenade"),
 	prox_medical_deployed_bg = create_prox_slot_bg_widget("prox_medical_deployed"),
+	prox_ammo_crate_bg       = create_prox_slot_bg_widget("prox_ammo_crate"),
+	prox_medical_station  = create_prox_slot_widget("prox_medical_station",  PROX_CATEGORY_ICONS.medical_station),
 	prox_medical          = create_prox_slot_widget("prox_medical",          PROX_CATEGORY_ICONS.medical),
 	prox_medical_deployed = create_prox_slot_widget("prox_medical_deployed", PROX_CATEGORY_ICONS.medical_deployed),
 	prox_stimm_corruption = create_prox_slot_widget("prox_stimm_corruption", PROX_CATEGORY_ICONS.stimm_corruption),
@@ -709,6 +728,7 @@ local widget_definitions = {
 	prox_stimm_ability    = create_prox_slot_widget("prox_stimm_ability",    PROX_CATEGORY_ICONS.stimm_ability),
 	prox_ammo_small       = create_prox_slot_widget("prox_ammo_small",       PROX_CATEGORY_ICONS.ammo_small),
 	prox_ammo_large       = create_prox_slot_widget("prox_ammo_large",       PROX_CATEGORY_ICONS.ammo_large),
+	prox_ammo_crate       = create_prox_slot_widget("prox_ammo_crate",       PROX_CATEGORY_ICONS.ammo_crate),
 	prox_grenade          = create_prox_slot_widget("prox_grenade",          PROX_CATEGORY_ICONS.grenade),
 }
 
@@ -805,7 +825,7 @@ return {
 		local row_y = PROX_SLOT_SIZE + PROX_ROW_GAP
 		local t = {}
 
-		for col = 0, 4 do
+		for col = 0, 5 do
 			local x = step * col
 
 			t[#t + 1] = { x = x, y = 0,     is_bottom = false }
@@ -816,6 +836,7 @@ return {
 	end)(),
 	PROX_SLIDE_PX = math.max(4, math.floor(PROX_SLOT_SIZE * 0.45 + 0.5)),
 	PROX_SLOT_WIDGET_NAMES = {
+		medical_station  = "prox_medical_station",
 		medical          = "prox_medical",
 		medical_deployed = "prox_medical_deployed",
 		stimm_corruption = "prox_stimm_corruption",
@@ -824,6 +845,7 @@ return {
 		stimm_ability    = "prox_stimm_ability",
 		ammo_small       = "prox_ammo_small",
 		ammo_large       = "prox_ammo_large",
+		ammo_crate       = "prox_ammo_crate",
 		grenade          = "prox_grenade",
 	},
 }

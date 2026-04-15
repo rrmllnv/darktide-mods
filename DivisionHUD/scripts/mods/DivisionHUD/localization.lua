@@ -454,15 +454,35 @@ return {
 		ru = "Максимальное расстояние в метрах для обнаружения предметов.",
 		["zh-cn"] = "检测附近物品的最大距离（米）。",
 	},
+	proximity_show_medical_station = {
+		en = "Show health stations",
+		ru = "Показывать мед станции",
+		["zh-cn"] = "显示医疗站",
+	},
+	proximity_show_medical_station_description = {
+		en = "Detect health stations (only those with remaining charges).",
+		ru = "Обнаруживать мед станции (только с оставшимися зарядами).",
+		["zh-cn"] = "检测医疗站（仅剩余充能时显示）。",
+	},
 	proximity_show_medical = {
 		en = "Show medkits",
 		ru = "Показывать аптечки",
 		["zh-cn"] = "显示急救箱",
 	},
 	proximity_show_medical_description = {
-		en = "Detect medical crates and health stations.",
-		ru = "Обнаруживать медицинские ящики и станции здоровья.",
-		["zh-cn"] = "检测医疗箱和生命站。",
+		en = "Detect pocketable medical crates.",
+		ru = "Обнаруживать карманные мед ящики.",
+		["zh-cn"] = "检测可携带医疗箱。",
+	},
+	proximity_show_medical_deployed = {
+		en = "Show deployed medical crates",
+		ru = "Показывать развёрнутые мед ящики",
+		["zh-cn"] = "显示已部署医疗箱",
+	},
+	proximity_show_medical_deployed_description = {
+		en = "Detect deployed medical crates placed by players.",
+		ru = "Обнаруживать развёрнутые мед ящики, выставленные игроками.",
+		["zh-cn"] = "检测玩家放置的已部署医疗箱。",
 	},
 	proximity_show_stimm = {
 		en = "Show stimulants",
@@ -485,14 +505,24 @@ return {
 		["zh-cn"] = "检测小弹夹。",
 	},
 	proximity_show_ammo_large = {
-		en = "Show large ammo / crates",
-		ru = "Показывать крупные патроны / ящики",
-		["zh-cn"] = "显示大弹夹/弹药箱",
+		en = "Show large ammo clips",
+		ru = "Показывать крупные патроны",
+		["zh-cn"] = "显示大弹夹",
 	},
 	proximity_show_ammo_large_description = {
-		en = "Detect large ammo clips and ammo crates.",
-		ru = "Обнаруживать крупные обоймы и ящики с патронами.",
-		["zh-cn"] = "检测大弹夹和弹药箱。",
+		en = "Detect large ammo clips.",
+		ru = "Обнаруживать крупные обоймы с патронами.",
+		["zh-cn"] = "检测大弹夹。",
+	},
+	proximity_show_ammo_crate = {
+		en = "Show ammo crates",
+		ru = "Показывать ящики патронов",
+		["zh-cn"] = "显示弹药箱",
+	},
+	proximity_show_ammo_crate_description = {
+		en = "Detect ammo crates (pocketable, deployed, and level crates).",
+		ru = "Обнаруживать ящики патронов (карманные, развёрнутые и на уровне).",
+		["zh-cn"] = "检测弹药箱（可携带、已部署和地图内）。",
 	},
 	proximity_show_grenade = {
 		en = "Show grenades",

@@ -23,7 +23,7 @@ local PICKUP_DATA = {
 	},
 	-- Медстанция
 	health_station = {
-		cat  = "medical",
+		cat  = "medical_station",
 		icon = "content/ui/materials/hud/interactions/icons/pocketable_medkit",
 	},
 	-- Медкейты (pocketable — deployable сканируется через smart_tag_system)
@@ -59,27 +59,26 @@ local PICKUP_DATA = {
 		size_label = nil,
 	},
 	large_clip = {
-		cat                = "ammo_small",
+		cat                = "ammo_large",
 		icon               = "content/ui/materials/hud/icons/party_ammo",
-		size_label         = nil,
 		size_label_loc_key = "ammo_size_big",
 	},
 	-- Ящики патронов (pocketable + deployable + level)
 	ammo_cache_pocketable = {
-		cat  = "ammo_large",
+		cat  = "ammo_crate",
 		icon = "content/ui/materials/icons/pocketables/hud/small/party_ammo_crate",
 	},
 	ammo_cache_deployable = {
-		cat  = "ammo_large",
+		cat  = "ammo_crate",
 		icon = "content/ui/materials/icons/pocketables/hud/small/party_ammo_crate",
 	},
 	large_ammunition_crate = {
-		cat  = "ammo_large",
+		cat  = "ammo_crate",
 		icon = "content/ui/materials/icons/pocketables/hud/small/party_ammo_crate",
 	},
 }
 
-local CATEGORIES = { "medical", "medical_deployed", "stimm_corruption", "stimm_power", "stimm_speed", "stimm_ability", "ammo_small", "ammo_large", "grenade" }
+local CATEGORIES = { "medical_station", "medical", "medical_deployed", "stimm_corruption", "stimm_power", "stimm_speed", "stimm_ability", "ammo_small", "ammo_large", "ammo_crate", "grenade" }
 
 local MED_DEPLOYED_ICON = "content/ui/materials/icons/pocketables/hud/small/party_medic_crate"
 
