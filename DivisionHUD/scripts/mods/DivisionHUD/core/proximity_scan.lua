@@ -26,7 +26,7 @@ local PICKUP_DATA = {
 		cat  = "medical",
 		icon = "content/ui/materials/hud/interactions/icons/pocketable_medkit",
 	},
-	-- Медкейты (только pocketable — deployable сканируется отдельно)
+	-- Медкейты (pocketable — deployable сканируется через smart_tag_system)
 	medical_crate_pocketable = {
 		cat  = "medical",
 		icon = "content/ui/materials/icons/pocketables/hud/small/party_medic_crate",
@@ -52,7 +52,7 @@ local PICKUP_DATA = {
 		icon     = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
 		stimm_id = "syringe_ability_boost_pocketable",
 	},
-	-- Патронные клипы (маленький и большой) → иконка из командного HUD
+	-- Патронные клипы
 	small_clip = {
 		cat        = "ammo_small",
 		icon       = "content/ui/materials/hud/icons/party_ammo",
@@ -63,12 +63,16 @@ local PICKUP_DATA = {
 		icon       = "content/ui/materials/hud/icons/party_ammo",
 		size_label = "big",
 	},
-	-- Ящики патронов (pocketable + deployable)
+	-- Ящики патронов (pocketable + deployable + level)
 	ammo_cache_pocketable = {
 		cat  = "ammo_large",
 		icon = "content/ui/materials/icons/pocketables/hud/small/party_ammo_crate",
 	},
 	ammo_cache_deployable = {
+		cat  = "ammo_large",
+		icon = "content/ui/materials/icons/pocketables/hud/small/party_ammo_crate",
+	},
+	large_ammunition_crate = {
 		cat  = "ammo_large",
 		icon = "content/ui/materials/icons/pocketables/hud/small/party_ammo_crate",
 	},
@@ -78,30 +82,115 @@ local CATEGORIES = { "medical", "medical_deployed", "stimm_corruption", "stimm_p
 
 local MED_DEPLOYED_ICON = "content/ui/materials/icons/pocketables/hud/small/party_medic_crate"
 
-local function _pickup_name_for_unit(unit, ext)
-	local pickup_name = Unit.get_data(unit, "pickup_type")
+-- Получить систему расширений по имени системы
+local function _get_system(system_name)
+	local ext_manager = Managers.state and Managers.state.extension
 
-	if not pickup_name and ext and ext.interaction_type then
-		local ok, itype = pcall(function()
-			return ext:interaction_type()
-		end)
+	if not ext_manager or not ext_manager.system then
+		return nil
+	end
+
+	local ok, system = pcall(function()
+		return ext_manager:system(system_name)
+	end)
+
+	if ok then
+		return system
+	end
+
+	return nil
+end
+
+-- Получить unit_to_extension_map из системы
+local function _get_system_map(system_name)
+	local system = _get_system(system_name)
+
+	if not system or not system.unit_to_extension_map then
+		return nil
+	end
+
+	local ok, map = pcall(function()
+		return system:unit_to_extension_map()
+	end)
+
+	if ok and type(map) == "table" then
+		return map
+	end
+
+	return nil
+end
+
+-- Читает строку из Unit.get_data безопасно
+local function _unit_data_string(unit, field)
+	if not unit then
+		return nil
+	end
+
+	local has = Unit.has_data(unit, field)
+
+	if not has then
+		return nil
+	end
+
+	local ok, v = pcall(Unit.get_data, unit, field)
+
+	if ok and v ~= nil then
+		return type(v) == "string" and string.lower(v) or v
+	end
+
+	return nil
+end
+
+-- Проверяет что interactee является активным и не использованным
+local function _interactee_is_available(ext, player_unit)
+	if ext.active then
+		local ok, v = pcall(function() return ext:active() end)
+
+		if ok and not v then
+			return false
+		end
+	end
+
+	if ext.used then
+		local ok, v = pcall(function() return ext:used() end)
+
+		if ok and v then
+			return false
+		end
+	end
+
+	if player_unit and ext.show_marker then
+		local ok, v = pcall(function() return ext:show_marker(player_unit) end)
+
+		if ok and not v then
+			return false
+		end
+	end
+
+	return true
+end
+
+local function _pickup_name_for_unit(unit, ext)
+	local pickup_name = _unit_data_string(unit, "pickup_type")
+
+	if not pickup_name then
+		local ok, itype = pcall(function() return ext:interaction_type() end)
 
 		if ok and itype == "health_station" then
 			pickup_name = "health_station"
 		end
 	end
 
+	-- Медстанция: фильтруем истощённые
 	if pickup_name == "health_station" then
-		local hs_ok, hs_ext = pcall(function()
+		local ok, hs_ext = pcall(function()
 			return ScriptUnit.extension(unit, "health_station_system")
 		end)
 
-		if hs_ok and hs_ext and hs_ext.charge_amount then
-			local charges_ok, charges = pcall(function()
-				return hs_ext:charge_amount()
-			end)
+		if ok and hs_ext and hs_ext.charge_amount then
+			local ok2, charges = pcall(function() return hs_ext:charge_amount() end)
 
-			if not charges_ok or not charges or charges <= 0 then
+			if not ok2 or not charges or charges <= 0 then
 				return nil
 			end
 		end
@@ -121,7 +210,7 @@ local function _read_count(unit, pickup_name)
 		if ok and v and v > 0 then
 			return v
 		end
-	elseif pickup_name == "ammo_cache_deployable" then
+	elseif pickup_name == "ammo_cache_deployable" or pickup_name == "large_ammunition_crate" then
 		local ok, v = pcall(function()
 			local gs   = Managers.state.game_session:game_session()
 			local goid = Managers.state.unit_spawner:game_object_id(unit)
@@ -140,19 +229,43 @@ local function _read_count(unit, pickup_name)
 				return nil
 			end
 
+			-- Путь 1: через has_job() → _job_logic (ProximityHeal)
 			local has_job, logic = ext:has_job()
 
 			if has_job and logic then
-				local reserve = logic._heal_reserve
-				local healed  = logic._amount_of_damage_healed or 0
+				local reserve = rawget(logic, "_heal_reserve")
+				local healed  = rawget(logic, "_amount_of_damage_healed") or 0
 
-				if reserve then
+				if reserve and reserve > 0 then
 					return math.max(0, math.floor(reserve - healed))
 				end
 			end
+
+			-- Путь 2: через _relation_data напрямую
+			local rd = rawget(ext, "_relation_data")
+
+			if rd then
+				for _, rel in pairs(rd) do
+					local logics = rawget(rel, "logic")
+
+					if logics then
+						for _, l in ipairs(logics) do
+							local reserve = rawget(l, "_heal_reserve")
+
+							if reserve and reserve > 0 then
+								local healed = rawget(l, "_amount_of_damage_healed") or 0
+
+								return math.max(0, math.floor(reserve - healed))
+							end
+						end
+					end
+				end
+			end
+
+			return nil
 		end)
 
-		if ok and v and v > 0 then
+		if ok and v and v >= 0 then
 			return v
 		end
 	end
@@ -160,31 +273,25 @@ local function _read_count(unit, pickup_name)
 	return nil
 end
 
--- Проверяет что юнит является развёрнутым медицинским ящиком.
--- Используется двойная проверка: через deployable_type (owner/server)
--- или через _target_type SmartTagExtension (husk-клиенты).
-local function _is_medical_deployed(unit, st_ext)
-	-- Вариант 1: deployable_type установлен в local_init (server/owner)
-	local ok1, dt = pcall(function()
-		return Unit.get_data(unit, "deployable_type")
-	end)
-
-	if ok1 and dt == "medical_crate" then
-		return true
+local function _add_result(result, best_dist_sq, cat, dist_sq, dist_m, icon, stimm_id, size_label, count)
+	if not best_dist_sq[cat] or dist_sq < best_dist_sq[cat] then
+		best_dist_sq[cat] = dist_sq
+		result[cat] = {
+			dist_m     = dist_m,
+			icon       = icon,
+			stimm_id   = stimm_id,
+			size_label = size_label,
+			count      = count,
+		}
 	end
+end
 
-	-- Вариант 2: SmartTagExtension._target_type из husk_init
-	if st_ext then
-		local ok2, tt = pcall(function()
-			return rawget(st_ext, "_target_type")
-		end)
+local function _dist_sq(a, b)
+	local dx = a.x - b.x
+	local dy = a.y - b.y
+	local dz = a.z - b.z
 
-		if ok2 and tt == "medical_crate_deployable" then
-			return true
-		end
-	end
-
-	return false
+	return dx * dx + dy * dy + dz * dz
 end
 
 local function scan(player_unit, radius)
@@ -200,46 +307,32 @@ local function scan(player_unit, radius)
 		return result
 	end
 
-	local extension_system = Managers.state and Managers.state.extension
-
-	if not extension_system then
-		return result
-	end
-
 	local radius_sq    = radius * radius
 	local best_dist_sq = {}
 
-	-- ── Первый проход: стандартные пикапы через InteracteeExtension ──────────────
-	local ok, interactees = pcall(function()
-		return extension_system:get_entities("InteracteeExtension")
-	end)
+	-- ── Первый проход: interactee_system ─────────────────────────────────────────
+	local interactee_map = _get_system_map("interactee_system")
 
-	if ok and interactees then
-		for unit, ext in pairs(interactees) do
-			if unit and Unit.alive(unit) then
-				local pickup_name = _pickup_name_for_unit(unit, ext)
+	if interactee_map then
+		for unit, ext in pairs(interactee_map) do
+			if unit and Unit.alive(unit) and unit ~= player_unit then
+				if _interactee_is_available(ext, player_unit) then
+					local pickup_name = _pickup_name_for_unit(unit, ext)
 
-				if pickup_name then
-					local pd = PICKUP_DATA[pickup_name]
+					if pickup_name then
+						local pd = PICKUP_DATA[pickup_name]
 
-					if pd then
-						local upos = Unit.world_position(unit, 1)
-						local dx = upos.x - player_pos.x
-						local dy = upos.y - player_pos.y
-						local dz = upos.z - player_pos.z
-						local dist_sq = dx * dx + dy * dy + dz * dz
-						local cat = pd.cat
+						if pd then
+							local upos    = Unit.world_position(unit, 1)
+							local dist_sq = _dist_sq(upos, player_pos)
 
-						if dist_sq <= radius_sq then
-							if not best_dist_sq[cat] or dist_sq < best_dist_sq[cat] then
-								best_dist_sq[cat] = dist_sq
-						result[cat] = {
-							dist_m     = math.max(0, math.floor(math.sqrt(dist_sq) + 0.5)),
-							icon       = pd.icon,
-							stimm_id   = pd.stimm_id,
-							size_label = pd.size_label,
-							count      = _read_count(unit, pickup_name),
-						}
+							if dist_sq <= radius_sq then
+								_add_result(
+									result, best_dist_sq, pd.cat, dist_sq,
+									math.max(0, math.floor(math.sqrt(dist_sq) + 0.5)),
+									pd.icon, pd.stimm_id, pd.size_label,
+									_read_count(unit, pickup_name)
+								)
 							end
 						end
 					end
@@ -248,35 +341,31 @@ local function scan(player_unit, radius)
 		end
 	end
 
-	-- ── Второй проход: развёрнутые медкейты через SmartTagExtension ──────────────
-	-- У medical_crate_deployable нет InteracteeExtension, поэтому сканируем
-	-- SmartTagExtension который добавляется и в local_init и в husk_init.
-	local ok_st, smart_tags = pcall(function()
-		return extension_system:get_entities("SmartTagExtension")
-	end)
+	-- ── Второй проход: smart_tag_system → medical_crate_deployable ───────────────
+	-- У deployable медкейта нет InteracteeExtension; его smart_tag_target_type
+	-- выставляется и в local_init и в husk_init, поэтому виден на всех клиентах.
+	local smart_tag_map = _get_system_map("smart_tag_system")
 
-	if ok_st and smart_tags then
+	if smart_tag_map then
 		local med_cat = "medical_deployed"
 
-		for unit, st_ext in pairs(smart_tags) do
+		for unit, _ in pairs(smart_tag_map) do
 			if unit and Unit.alive(unit) and unit ~= player_unit then
-				if _is_medical_deployed(unit, st_ext) then
-					local upos = Unit.world_position(unit, 1)
-					local dx = upos.x - player_pos.x
-					local dy = upos.y - player_pos.y
-					local dz = upos.z - player_pos.z
-					local dist_sq = dx * dx + dy * dy + dz * dz
+				local stt = _unit_data_string(unit, "smart_tag_target_type")
+				local dt  = _unit_data_string(unit, "deployable_type")
+
+				-- smart_tag_target_type (все клиенты) или deployable_type (owner/server)
+				if stt == "medical_crate_deployable" or dt == "medical_crate" then
+					local upos    = Unit.world_position(unit, 1)
+					local dist_sq = _dist_sq(upos, player_pos)
 
 					if dist_sq <= radius_sq then
-						if not best_dist_sq[med_cat] or dist_sq < best_dist_sq[med_cat] then
-							best_dist_sq[med_cat] = dist_sq
-							result[med_cat] = {
-								dist_m   = math.max(0, math.floor(math.sqrt(dist_sq) + 0.5)),
-								icon     = MED_DEPLOYED_ICON,
-								stimm_id = nil,
-								count    = _read_count(unit, "medical_crate_deployable"),
-							}
-						end
+						_add_result(
+							result, best_dist_sq, med_cat, dist_sq,
+							math.max(0, math.floor(math.sqrt(dist_sq) + 0.5)),
+							MED_DEPLOYED_ICON, nil, nil,
+							_read_count(unit, "medical_crate_deployable")
+						)
 					end
 				end
 			end
