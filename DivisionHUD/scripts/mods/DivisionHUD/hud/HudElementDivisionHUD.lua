@@ -2084,7 +2084,19 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 			widget.content.icon = data.icon or RIGHT_SLOT_ICON_FALLBACK
 			widget.content.dist_text = string.format("%dm", data.dist_m)
 			local count_str = (data.count and data.count > 0) and tostring(data.count) or nil
-			local size_str  = data.size_label or nil
+			local size_str
+
+			if data.size_label_loc_key then
+				local loc = mod:localize(data.size_label_loc_key)
+
+				if type(loc) == "string" and loc ~= "" and not string.find(loc, "^<unlocalized") then
+					size_str = loc
+				else
+					size_str = "big"
+				end
+			else
+				size_str = data.size_label
+			end
 			local label
 
 			if count_str and size_str then

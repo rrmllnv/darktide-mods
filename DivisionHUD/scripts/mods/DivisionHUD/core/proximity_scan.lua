@@ -59,9 +59,10 @@ local PICKUP_DATA = {
 		size_label = nil,
 	},
 	large_clip = {
-		cat        = "ammo_small",
-		icon       = "content/ui/materials/hud/icons/party_ammo",
-		size_label = "big",
+		cat                = "ammo_small",
+		icon               = "content/ui/materials/hud/icons/party_ammo",
+		size_label         = nil,
+		size_label_loc_key = "ammo_size_big",
 	},
 	-- Ящики патронов (pocketable + deployable + level)
 	ammo_cache_pocketable = {
@@ -221,67 +222,21 @@ local function _read_count(unit, pickup_name)
 		if ok and v and v > 0 then
 			return v
 		end
-	elseif pickup_name == "medical_crate_deployable" then
-		local ok, v = pcall(function()
-			local ext = ScriptUnit.extension(unit, "proximity_system")
-
-			if not ext then
-				return nil
-			end
-
-			-- Путь 1: через has_job() → _job_logic (ProximityHeal)
-			local has_job, logic = ext:has_job()
-
-			if has_job and logic then
-				local reserve = rawget(logic, "_heal_reserve")
-				local healed  = rawget(logic, "_amount_of_damage_healed") or 0
-
-				if reserve and reserve > 0 then
-					return math.max(0, math.floor(reserve - healed))
-				end
-			end
-
-			-- Путь 2: через _relation_data напрямую
-			local rd = rawget(ext, "_relation_data")
-
-			if rd then
-				for _, rel in pairs(rd) do
-					local logics = rawget(rel, "logic")
-
-					if logics then
-						for _, l in ipairs(logics) do
-							local reserve = rawget(l, "_heal_reserve")
-
-							if reserve and reserve > 0 then
-								local healed = rawget(l, "_amount_of_damage_healed") or 0
-
-								return math.max(0, math.floor(reserve - healed))
-							end
-						end
-					end
-				end
-			end
-
-			return nil
-		end)
-
-		if ok and v and v >= 0 then
-			return v
-		end
 	end
 
 	return nil
 end
 
-local function _add_result(result, best_dist_sq, cat, dist_sq, dist_m, icon, stimm_id, size_label, count)
+local function _add_result(result, best_dist_sq, cat, dist_sq, dist_m, icon, stimm_id, size_label, size_label_loc_key, count)
 	if not best_dist_sq[cat] or dist_sq < best_dist_sq[cat] then
 		best_dist_sq[cat] = dist_sq
 		result[cat] = {
-			dist_m     = dist_m,
-			icon       = icon,
-			stimm_id   = stimm_id,
-			size_label = size_label,
-			count      = count,
+			dist_m             = dist_m,
+			icon               = icon,
+			stimm_id           = stimm_id,
+			size_label         = size_label,
+			size_label_loc_key = size_label_loc_key,
+			count              = count,
 		}
 	end
 end
@@ -330,7 +285,7 @@ local function scan(player_unit, radius)
 								_add_result(
 									result, best_dist_sq, pd.cat, dist_sq,
 									math.max(0, math.floor(math.sqrt(dist_sq) + 0.5)),
-									pd.icon, pd.stimm_id, pd.size_label,
+									pd.icon, pd.stimm_id, pd.size_label, pd.size_label_loc_key,
 									_read_count(unit, pickup_name)
 								)
 							end
@@ -363,8 +318,8 @@ local function scan(player_unit, radius)
 						_add_result(
 							result, best_dist_sq, med_cat, dist_sq,
 							math.max(0, math.floor(math.sqrt(dist_sq) + 0.5)),
-							MED_DEPLOYED_ICON, nil, nil,
-							_read_count(unit, "medical_crate_deployable")
+							MED_DEPLOYED_ICON, nil, nil, nil,
+							nil
 						)
 					end
 				end
