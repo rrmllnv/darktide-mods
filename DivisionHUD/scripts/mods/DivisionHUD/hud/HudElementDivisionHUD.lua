@@ -35,6 +35,7 @@ end
 
 local DynamicHudContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/dynamic_hud")
 local GameFlowContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/game_flow")
+local ProximityScan = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/proximity_scan")
 
 local HudElementDivisionHUD = class("HudElementDivisionHUD", "HudElementBase")
 
@@ -62,6 +63,14 @@ local ALERTS_MESSAGE_TEXT_WRAP_WIDTH = Definitions.ALERTS_MESSAGE_TEXT_WRAP_WIDT
 
 local COMBAT_ABILITY_TYPE = "combat_ability"
 local GRENADE_ABILITY_TYPE = "grenade_ability"
+
+local PROX_SLOT_WIDGET_NAMES = Definitions.PROX_SLOT_WIDGET_NAMES
+local PROX_GRID_POSITIONS = Definitions.PROX_GRID_POSITIONS
+local PROX_SLIDE_PX = Definitions.PROX_SLIDE_PX or 8
+local PROX_SCAN_INTERVAL = 0.5
+local PROX_ANIM_ENTER_DUR = 0.15
+local PROX_ANIM_EXIT_DUR = 0.12
+local RIGHT_SLOT_ICON_FALLBACK = Definitions.RIGHT_SLOT_ICON_FALLBACK
 
 local HUD_LAYOUT_SCALE = Definitions.HUD_LAYOUT_SCALE or 1
 local SLOT_TEXT_FULL_OFFSET_X = Definitions.SLOT_TEXT_FULL_OFFSET_X
@@ -1732,6 +1741,9 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	self._cached_wielded_slot_id = nil
 	self._cached_wielded_icon = nil
 	self._cached_auspex_icon = nil
+	self._prox_scan_timer = 0
+	self._prox_data = {}
+	self._prox_anim = {}
 
 	local widgets = self._widgets_by_name
 	local skip_init_hide = Definitions.VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS
@@ -1856,6 +1868,263 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
 	self:_update_auspex_slot(player_unit, widgets, opacity)
 	self:_update_right_slot_grid(player_unit, widgets, opacity)
+	self:_update_proximity_scan(player_unit, dt)
+	self:_update_proximity_widgets(widgets, opacity, dt)
+end
+
+HudElementDivisionHUD._update_proximity_scan = function(self, player_unit, dt)
+	self._prox_scan_timer = (self._prox_scan_timer or 0) + dt
+
+	if self._prox_scan_timer < PROX_SCAN_INTERVAL then
+		return
+	end
+
+	self._prox_scan_timer = 0
+
+	local s_cfg = mod._settings
+	local enabled = type(s_cfg) ~= "table" or s_cfg.proximity_enabled ~= false and s_cfg.proximity_enabled ~= 0
+
+	if not enabled then
+		self._prox_data = {}
+		return
+	end
+
+	local radius = (type(s_cfg) == "table" and type(s_cfg.proximity_radius) == "number") and s_cfg.proximity_radius or 15
+
+	self._prox_data = ProximityScan.scan(player_unit, radius)
+end
+
+HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacity, dt)
+	dt = (type(dt) == "number" and dt == dt and dt > 0) and dt or 0
+
+	local s_cfg = mod._settings
+	local prox_data = self._prox_data or {}
+	local enabled = type(s_cfg) ~= "table" or (s_cfg.proximity_enabled ~= false and s_cfg.proximity_enabled ~= 0)
+
+	local show_stimm   = type(s_cfg) ~= "table" or (s_cfg.proximity_show_stimm ~= false and s_cfg.proximity_show_stimm ~= 0)
+
+	local cat_settings = {
+		medical          = type(s_cfg) ~= "table" or (s_cfg.proximity_show_medical    ~= false and s_cfg.proximity_show_medical    ~= 0),
+		stimm_corruption = show_stimm,
+		stimm_power      = show_stimm,
+		stimm_speed      = show_stimm,
+		stimm_ability    = show_stimm,
+		ammo_small       = type(s_cfg) ~= "table" or (s_cfg.proximity_show_ammo_small ~= false and s_cfg.proximity_show_ammo_small ~= 0),
+		ammo_large       = type(s_cfg) ~= "table" or (s_cfg.proximity_show_ammo_large ~= false and s_cfg.proximity_show_ammo_large ~= 0),
+		grenade          = type(s_cfg) ~= "table" or (s_cfg.proximity_show_grenade    ~= false and s_cfg.proximity_show_grenade    ~= 0),
+	}
+
+	if not self._prox_anim then
+		self._prox_anim = {}
+	end
+
+	local slide_px = PROX_SLIDE_PX
+
+	-- ── Шаг 1: инициализировать anim для всех категорий ────────────────────────
+	for _, cat in ipairs(ProximityScan.CATEGORIES) do
+		if not self._prox_anim[cat] then
+			self._prox_anim[cat] = { state = "hidden", timer = 0, alpha = 0, y_offset = 0, grid_idx = nil }
+		end
+	end
+
+	-- ── Шаг 2: переходы состояний (только exit) ────────────────────────────────
+	for _, cat in ipairs(ProximityScan.CATEGORIES) do
+		local anim = self._prox_anim[cat]
+		local want = enabled and cat_settings[cat] and prox_data[cat] ~= nil
+
+		if want and anim.state == "exit" then
+			-- Предмет вернулся пока ещё играла exit — реверсируем в enter
+			local gp = anim.grid_idx and PROX_GRID_POSITIONS and PROX_GRID_POSITIONS[anim.grid_idx]
+			local sd = (gp and gp.is_bottom) and 1 or -1
+
+			anim.state    = "enter"
+			anim.timer    = PROX_ANIM_ENTER_DUR * (1 - anim.alpha)
+			anim.y_offset = sd * slide_px * (1 - anim.alpha)
+		elseif not want and (anim.state == "enter" or anim.state == "hold") then
+			-- Предмет пропал — запустить exit
+			anim.state    = "exit"
+			anim.timer    = PROX_ANIM_EXIT_DUR * (1 - anim.alpha)
+			anim.grid_idx = nil
+		end
+	end
+
+	-- ── Шаг 3: уплотнение + назначение новых позиций ────────────────────────────
+	-- Собираем уже активные enter/hold слоты, сортируем по текущему grid_idx
+	local active = {}
+
+	for _, cat in ipairs(ProximityScan.CATEGORIES) do
+		local anim = self._prox_anim[cat]
+
+		if anim.state == "enter" or anim.state == "hold" then
+			active[#active + 1] = anim
+		end
+	end
+
+	table.sort(active, function(a, b)
+		local ai = a.grid_idx or math.huge
+		local bi = b.grid_idx or math.huge
+
+		return ai < bi
+	end)
+
+	-- Переназначаем последовательно — заполняем дырки
+	for new_idx, anim in ipairs(active) do
+		if anim.grid_idx ~= new_idx then
+			anim.grid_idx = new_idx
+			anim.y_offset = 0
+		end
+	end
+
+	-- Назначаем позиции для новых (hidden → want)
+	local next_idx = #active + 1
+
+	for _, cat in ipairs(ProximityScan.CATEGORIES) do
+		local anim = self._prox_anim[cat]
+		local want = enabled and cat_settings[cat] and prox_data[cat] ~= nil
+
+		if want and anim.state == "hidden" and next_idx <= #PROX_GRID_POSITIONS then
+			local gp = PROX_GRID_POSITIONS[next_idx]
+			local sd = (gp and gp.is_bottom) and 1 or -1
+
+			anim.state    = "enter"
+			anim.timer    = 0
+			anim.alpha    = 0
+			anim.grid_idx = next_idx
+			anim.y_offset = sd * slide_px
+			next_idx      = next_idx + 1
+		end
+	end
+
+	-- ── Шаг 4: advance + render ─────────────────────────────────────────────────
+	for _, cat in ipairs(ProximityScan.CATEGORIES) do
+		local widget_name = PROX_SLOT_WIDGET_NAMES and PROX_SLOT_WIDGET_NAMES[cat]
+		local widget = widget_name and widgets[widget_name]
+
+		if not widget or not widget.content then
+			goto continue_prox
+		end
+
+		local anim = self._prox_anim[cat]
+		local gp   = anim.grid_idx and PROX_GRID_POSITIONS and PROX_GRID_POSITIONS[anim.grid_idx]
+		local sd   = (gp and gp.is_bottom) and 1 or -1
+
+		anim.timer = anim.timer + dt
+
+		if anim.state == "enter" then
+			local p  = math.min(1, anim.timer / PROX_ANIM_ENTER_DUR)
+			local ep = math.easeOutCubic(p)
+
+			anim.alpha    = ep
+			anim.y_offset = sd * slide_px * (1 - ep)
+
+			if p >= 1 then
+				anim.state    = "hold"
+				anim.alpha    = 1
+				anim.y_offset = 0
+			end
+		elseif anim.state == "hold" then
+			anim.alpha    = 1
+			anim.y_offset = 0
+		elseif anim.state == "exit" then
+			local p  = math.min(1, anim.timer / PROX_ANIM_EXIT_DUR)
+			local ep = math.easeOutCubic(p)
+
+			anim.alpha    = 1 - ep
+			anim.y_offset = sd * slide_px * ep
+
+			if p >= 1 then
+				anim.state    = "hidden"
+				anim.alpha    = 0
+				anim.y_offset = 0
+				anim.grid_idx = nil
+			end
+		end
+
+		-- Пересчитываем gp после advance (grid_idx мог стать nil)
+		gp = anim.grid_idx and PROX_GRID_POSITIONS and PROX_GRID_POSITIONS[anim.grid_idx]
+
+		local bg_w = widgets["prox_" .. cat .. "_bg"]
+
+		if anim.state == "hidden" then
+			widget.content.visible = false
+			widget.dirty = true
+
+			if bg_w then
+				bg_w.content.visible = false
+				bg_w.dirty = true
+			end
+
+			goto continue_prox
+		end
+
+		if not gp then
+			widget.content.visible = false
+			widget.dirty = true
+			goto continue_prox
+		end
+
+		local eff_alpha = opacity * math.max(0, math.min(1, anim.alpha))
+
+		self:set_scenegraph_position(widget_name, gp.x, gp.y + math.floor(anim.y_offset + 0.5))
+
+		if bg_w then
+			bg_w.content.visible = true
+			bg_w.alpha_multiplier = eff_alpha
+			bg_w.dirty = true
+		end
+
+		widget.content.visible = true
+		widget.alpha_multiplier = eff_alpha
+
+		local data = prox_data[cat]
+
+		if data then
+			widget.content.icon = data.icon or RIGHT_SLOT_ICON_FALLBACK
+			widget.content.dist_text = string.format("%dm", data.dist_m)
+		end
+
+		local icon_color = widget.style.icon and widget.style.icon.color
+
+		if icon_color then
+			local is_stimm_cat = cat == "stimm_corruption" or cat == "stimm_power" or cat == "stimm_speed" or cat == "stimm_ability"
+
+			if is_stimm_cat and data and data.stimm_id then
+				local stimm_argb = resolve_stimm_slot_main_argb_255(data.stimm_id, s_cfg)
+
+				if is_valid_argb_255(stimm_argb) then
+					icon_color[1] = stimm_argb[1] or 255
+					icon_color[2] = stimm_argb[2] or 255
+					icon_color[3] = stimm_argb[3] or 255
+					icon_color[4] = stimm_argb[4] or 255
+				else
+					icon_color[1] = 255
+					icon_color[2] = 255
+					icon_color[3] = 255
+					icon_color[4] = 255
+				end
+			else
+				icon_color[1] = 255
+				icon_color[2] = 255
+				icon_color[3] = 255
+				icon_color[4] = 255
+			end
+		end
+
+		local text_color = widget.style.dist_text and widget.style.dist_text.text_color
+
+		if text_color then
+			local base_c = DIVISION_SLOT_COUNTER_TEXT_COLOR_DEFAULT
+
+			text_color[1] = base_c[1] or 255
+			text_color[2] = base_c[2] or 255
+			text_color[3] = base_c[3] or 255
+			text_color[4] = base_c[4] or 255
+		end
+
+		widget.dirty = true
+
+		::continue_prox::
+	end
 end
 
 HudElementDivisionHUD._update_ability_bar = function(self, player_unit, widget, opacity)

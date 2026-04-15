@@ -424,6 +424,81 @@ return {
 		ru = "Скаб-Бомбардир",
 		["zh-cn"] = "血痂火雷兵",
 	},
+	divisionhud_super_proximity = {
+		en = "\238\128\161 PROXIMITY DETECTOR",
+		ru = "\238\128\161 ДЕТЕКТОР ПРЕДМЕТОВ",
+		["zh-cn"] = "\238\128\161 近距感应",
+	},
+	proximity_enabled = {
+		en = "Enable proximity detector",
+		ru = "Включить детектор предметов",
+		["zh-cn"] = "启用近距感应",
+	},
+	proximity_enabled_description = {
+		en = "Shows nearby pickups (medkits, ammo, stimms) to the right of the HUD slots.",
+		ru = "Показывает ближайшие предметы (аптечки, патроны, стимы) справа от слотов HUD.",
+		["zh-cn"] = "在HUD槽右侧显示附近的拾取物（急救箱、弹药、注射器）。",
+	},
+	proximity_radius = {
+		en = "Detection radius (m)",
+		ru = "Радиус обнаружения (м)",
+		["zh-cn"] = "检测半径（米）",
+	},
+	proximity_radius_description = {
+		en = "Maximum distance in meters to detect nearby items.",
+		ru = "Максимальное расстояние в метрах для обнаружения предметов.",
+		["zh-cn"] = "检测附近物品的最大距离（米）。",
+	},
+	proximity_show_medical = {
+		en = "Show medkits",
+		ru = "Показывать аптечки",
+		["zh-cn"] = "显示急救箱",
+	},
+	proximity_show_medical_description = {
+		en = "Detect medical crates and health stations.",
+		ru = "Обнаруживать медицинские ящики и станции здоровья.",
+		["zh-cn"] = "检测医疗箱和生命站。",
+	},
+	proximity_show_stimm = {
+		en = "Show stimulants",
+		ru = "Показывать стимуляторы",
+		["zh-cn"] = "显示注射器",
+	},
+	proximity_show_stimm_description = {
+		en = "Detect stimulant syringes.",
+		ru = "Обнаруживать стимулирующие шприцы.",
+		["zh-cn"] = "检测刺激注射器。",
+	},
+	proximity_show_ammo_small = {
+		en = "Show small ammo clips",
+		ru = "Показывать малые патроны",
+		["zh-cn"] = "显示小弹夹",
+	},
+	proximity_show_ammo_small_description = {
+		en = "Detect small ammo clips.",
+		ru = "Обнаруживать малые обоймы с патронами.",
+		["zh-cn"] = "检测小弹夹。",
+	},
+	proximity_show_ammo_large = {
+		en = "Show large ammo / crates",
+		ru = "Показывать крупные патроны / ящики",
+		["zh-cn"] = "显示大弹夹/弹药箱",
+	},
+	proximity_show_ammo_large_description = {
+		en = "Detect large ammo clips and ammo crates.",
+		ru = "Обнаруживать крупные обоймы и ящики с патронами.",
+		["zh-cn"] = "检测大弹夹和弹药箱。",
+	},
+	proximity_show_grenade = {
+		en = "Show grenades",
+		ru = "Показывать гранаты",
+		["zh-cn"] = "显示手榴弹",
+	},
+	proximity_show_grenade_description = {
+		en = "Detect grenades (standard and expedition).",
+		ru = "Обнаруживать гранаты (обычные и экспедиционные).",
+		["zh-cn"] = "检测手榴弹（普通和远征）。",
+	},
 	divisionhud_integrations = {
 		en = "\238\128\172 INTEGRATIONS",
 		ru = "\238\128\172 ИНТЕГРАЦИИ",

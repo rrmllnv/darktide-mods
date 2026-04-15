@@ -116,6 +116,13 @@ local SLOT_ICON_LEFT_INSET = sc(3)
 local SLOT_TEXT_AFTER_ICON_GAP = sc(2)
 local SLOT_LEAD_ZERO_CHAR_W = sc(12)
 
+local PROX_BLOCK_GAP = sc(8)
+local PROX_COL_GAP = sc(3)
+local PROX_ROW_GAP = sc(3)
+local PROX_SLOT_SIZE = math.floor((MAIN_ROW_HEIGHT - PROX_ROW_GAP) / 2)
+local PROX_ICON_SIZE = math.max(sc(18), math.floor(PROX_SLOT_SIZE * 0.52 + 0.5))
+local PROX_TEXT_FONT = math.max(sc(11), math.floor(PROX_SLOT_SIZE * 0.36 + 0.5))
+
 local TextColorFractions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/text_color_fractions")
 
 if type(TextColorFractions) ~= "table" then
@@ -248,6 +255,69 @@ local scenegraph_definition = {
 		vertical_alignment = "top",
 		size = { RIGHT_BOTTOM_SLOT_WIDTH, RIGHT_BOTTOM_SLOT_HEIGHT },
 		position = { RIGHT_GRID_ORIGIN_X + (RIGHT_BOTTOM_SLOT_WIDTH + RIGHT_GAP) * 2, RIGHT_BOTTOM_ROW_Y, 0 },
+	},
+	proximity_row = {
+		parent = "ability_bar",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { PROX_SLOT_SIZE * 5 + PROX_COL_GAP * 4, MAIN_ROW_HEIGHT },
+		position = { BAR_FILL_WIDTH + PROX_BLOCK_GAP, ABILITY_BAR_STRIP_HEIGHT + BOXES_ROW_TOP_GAP, 0 },
+	},
+	prox_medical = {
+		parent = "proximity_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
+		position = { 0, 0, 0 },
+	},
+	prox_stimm_corruption = {
+		parent = "proximity_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
+		position = { 0, 0, 0 },
+	},
+	prox_stimm_power = {
+		parent = "proximity_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
+		position = { 0, 0, 0 },
+	},
+	prox_stimm_speed = {
+		parent = "proximity_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
+		position = { 0, 0, 0 },
+	},
+	prox_stimm_ability = {
+		parent = "proximity_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
+		position = { 0, 0, 0 },
+	},
+	prox_ammo_small = {
+		parent = "proximity_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
+		position = { 0, PROX_SLOT_SIZE + PROX_ROW_GAP, 0 },
+	},
+	prox_ammo_large = {
+		parent = "proximity_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
+		position = { PROX_SLOT_SIZE + PROX_COL_GAP, PROX_SLOT_SIZE + PROX_ROW_GAP, 0 },
+	},
+	prox_grenade = {
+		parent = "proximity_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
+		position = { 0, 0, 0 },
 	},
 }
 
@@ -420,6 +490,61 @@ local function create_right_slot_widget(scenegraph_id)
 	}, scenegraph_id)
 end
 
+local function create_prox_slot_bg_widget(scenegraph_id)
+	return UIWidget.create_definition({
+		{
+			pass_type = "rect",
+			style_id = "background",
+			value_id = "background",
+			style = {
+				color = table.clone(HUD_GLASS_PLATE_COLOR),
+				size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
+				offset = { 0, 0, 0 },
+			},
+		},
+	}, scenegraph_id)
+end
+
+local function create_prox_slot_widget(scenegraph_id, default_icon)
+	local icon_material = default_icon or RIGHT_SLOT_ICON_FALLBACK
+
+	local dist_text_style = table.clone(UIFontSettings.hud_body)
+
+	dist_text_style.font_size = PROX_TEXT_FONT
+	dist_text_style.drop_shadow = true
+	dist_text_style.horizontal_alignment = "center"
+	dist_text_style.vertical_alignment = "center"
+	dist_text_style.text_horizontal_alignment = "center"
+	dist_text_style.text_vertical_alignment = "center"
+	dist_text_style.text_color = table.clone(UIHudSettings.color_tint_main_1)
+	dist_text_style.size = { PROX_SLOT_SIZE, math.ceil(PROX_TEXT_FONT * 1.4) }
+	dist_text_style.offset = { 0, math.floor(PROX_SLOT_SIZE * 0.5 - PROX_TEXT_FONT * 0.5 - sc(2)), 3 }
+
+	return UIWidget.create_definition({
+		{
+			pass_type = "texture",
+			style_id = "icon",
+			value = icon_material,
+			value_id = "icon",
+			style = {
+				horizontal_alignment = "center",
+				vertical_alignment = "center",
+				size = { PROX_ICON_SIZE, PROX_ICON_SIZE },
+				default_size = { PROX_ICON_SIZE, PROX_ICON_SIZE },
+				offset = { 0, -math.floor(PROX_TEXT_FONT * 0.6), 1 },
+				color = { 255, 255, 255, 255 },
+			},
+		},
+		{
+			pass_type = "text",
+			value_id = "dist_text",
+			value = "",
+			style_id = "dist_text",
+			style = dist_text_style,
+		},
+	}, scenegraph_id)
+end
+
 local function create_auspex_slot_widget(scenegraph_id)
 	return UIWidget.create_definition({
 		{
@@ -477,6 +602,17 @@ local function create_weapon_wielded_slot_widget(scenegraph_id)
 	}, scenegraph_id)
 end
 
+local PROX_CATEGORY_ICONS = {
+	medical          = "content/ui/materials/hud/interactions/icons/pocketable_medkit",
+	stimm_corruption = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
+	stimm_power      = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
+	stimm_speed      = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
+	stimm_ability    = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
+	ammo_small       = "content/ui/materials/hud/icons/party_ammo",
+	ammo_large       = "content/ui/materials/icons/pocketables/hud/small/party_ammo_crate",
+	grenade          = "content/ui/materials/hud/interactions/icons/grenade",
+}
+
 local widget_definitions = {
 	boxes_bg = create_slots_bg_widget("boxes_row", BAR_FILL_WIDTH, MAIN_ROW_HEIGHT),
 	ability_bar = create_combat_ability_bar_widget("ability_bar"),
@@ -487,6 +623,22 @@ local widget_definitions = {
 	slot_blitz = create_right_slot_widget("slot_blitz"),
 	slot_stimm = create_right_slot_widget("slot_stimm"),
 	slot_pickup = create_right_slot_widget("slot_pickup"),
+	prox_medical_bg          = create_prox_slot_bg_widget("prox_medical"),
+	prox_stimm_corruption_bg = create_prox_slot_bg_widget("prox_stimm_corruption"),
+	prox_stimm_power_bg      = create_prox_slot_bg_widget("prox_stimm_power"),
+	prox_stimm_speed_bg      = create_prox_slot_bg_widget("prox_stimm_speed"),
+	prox_stimm_ability_bg    = create_prox_slot_bg_widget("prox_stimm_ability"),
+	prox_ammo_small_bg       = create_prox_slot_bg_widget("prox_ammo_small"),
+	prox_ammo_large_bg       = create_prox_slot_bg_widget("prox_ammo_large"),
+	prox_grenade_bg          = create_prox_slot_bg_widget("prox_grenade"),
+	prox_medical          = create_prox_slot_widget("prox_medical",          PROX_CATEGORY_ICONS.medical),
+	prox_stimm_corruption = create_prox_slot_widget("prox_stimm_corruption", PROX_CATEGORY_ICONS.stimm_corruption),
+	prox_stimm_power      = create_prox_slot_widget("prox_stimm_power",      PROX_CATEGORY_ICONS.stimm_power),
+	prox_stimm_speed      = create_prox_slot_widget("prox_stimm_speed",      PROX_CATEGORY_ICONS.stimm_speed),
+	prox_stimm_ability    = create_prox_slot_widget("prox_stimm_ability",    PROX_CATEGORY_ICONS.stimm_ability),
+	prox_ammo_small       = create_prox_slot_widget("prox_ammo_small",       PROX_CATEGORY_ICONS.ammo_small),
+	prox_ammo_large       = create_prox_slot_widget("prox_ammo_large",       PROX_CATEGORY_ICONS.ammo_large),
+	prox_grenade          = create_prox_slot_widget("prox_grenade",          PROX_CATEGORY_ICONS.grenade),
 }
 
 for k, v in pairs(_division_alerts.widget_definitions) do
@@ -577,4 +729,29 @@ return {
 	AMMO_BIG_DISPLAY_VALUE_MAX = 10^AMMO_BIG_MAX_DIGITS - 1,
 	SLOT_TEXT_FULL_OFFSET_X = SLOT_ICON_LEFT_INSET + SLOT_ICON_TEXTURE_SIZE + SLOT_TEXT_AFTER_ICON_GAP,
 	SLOT_TEXT_MAIN_OFFSET_X = SLOT_ICON_LEFT_INSET + SLOT_ICON_TEXTURE_SIZE + SLOT_TEXT_AFTER_ICON_GAP + SLOT_LEAD_ZERO_CHAR_W,
+	PROX_GRID_POSITIONS = (function()
+		local step = PROX_SLOT_SIZE + PROX_COL_GAP
+		local row_y = PROX_SLOT_SIZE + PROX_ROW_GAP
+		local t = {}
+
+		for col = 0, 4 do
+			local x = step * col
+
+			t[#t + 1] = { x = x, y = 0,     is_bottom = false }
+			t[#t + 1] = { x = x, y = row_y, is_bottom = true  }
+		end
+
+		return t
+	end)(),
+	PROX_SLIDE_PX = math.max(4, math.floor(PROX_SLOT_SIZE * 0.45 + 0.5)),
+	PROX_SLOT_WIDGET_NAMES = {
+		medical          = "prox_medical",
+		stimm_corruption = "prox_stimm_corruption",
+		stimm_power      = "prox_stimm_power",
+		stimm_speed      = "prox_stimm_speed",
+		stimm_ability    = "prox_stimm_ability",
+		ammo_small       = "prox_ammo_small",
+		ammo_large       = "prox_ammo_large",
+		grenade          = "prox_grenade",
+	},
 }
