@@ -1745,6 +1745,7 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	self._prox_data = {}
 	self._prox_anim = {}
 
+
 	local widgets = self._widgets_by_name
 	local skip_init_hide = Definitions.VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS
 
@@ -1905,6 +1906,7 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 
 	local cat_settings = {
 		medical          = type(s_cfg) ~= "table" or (s_cfg.proximity_show_medical    ~= false and s_cfg.proximity_show_medical    ~= 0),
+		medical_deployed = type(s_cfg) ~= "table" or (s_cfg.proximity_show_medical    ~= false and s_cfg.proximity_show_medical    ~= 0),
 		stimm_corruption = show_stimm,
 		stimm_power      = show_stimm,
 		stimm_speed      = show_stimm,
@@ -2081,6 +2083,25 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 		if data then
 			widget.content.icon = data.icon or RIGHT_SLOT_ICON_FALLBACK
 			widget.content.dist_text = string.format("%dm", data.dist_m)
+			local count_str = (data.count and data.count > 0) and tostring(data.count) or nil
+			local size_str  = data.size_label or nil
+			local label
+
+			if count_str and size_str then
+				label = count_str .. " " .. size_str
+			elseif count_str then
+				label = count_str
+			elseif size_str then
+				label = size_str
+			end
+
+			widget.content.count_text = label or ""
+
+			local count_bg = widget.style.count_bg
+
+			if count_bg then
+				count_bg.color[1] = label and 180 or 0
+			end
 		end
 
 		local icon_color = widget.style.icon and widget.style.icon.color

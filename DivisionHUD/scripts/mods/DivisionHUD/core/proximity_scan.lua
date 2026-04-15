@@ -1,37 +1,33 @@
 -- Все отслеживаемые типы пикапов с категорией, иконкой и дополнительными данными
 local PICKUP_DATA = {
-	-- Гранаты (обычные и экспедиционные)
+	-- Гранаты (обычные и экспедиционные) → иконка из team panel HUD
 	small_grenade = {
 		cat  = "grenade",
-		icon = "content/ui/materials/hud/interactions/icons/grenade",
+		icon = "content/ui/materials/hud/icons/party_throwable",
 	},
 	expedition_grenade_airstrike_pocketable = {
 		cat  = "grenade",
-		icon = "content/ui/materials/hud/interactions/icons/grenade",
+		icon = "content/ui/materials/hud/icons/party_throwable",
 	},
 	expedition_grenade_artillery_strike_pocketable = {
 		cat  = "grenade",
-		icon = "content/ui/materials/hud/interactions/icons/grenade",
+		icon = "content/ui/materials/hud/icons/party_throwable",
 	},
 	expedition_grenade_big_pocketable = {
 		cat  = "grenade",
-		icon = "content/ui/materials/hud/interactions/icons/grenade",
+		icon = "content/ui/materials/hud/icons/party_throwable",
 	},
 	expedition_grenade_valkyrie_hover_pocketable = {
 		cat  = "grenade",
-		icon = "content/ui/materials/hud/interactions/icons/grenade",
+		icon = "content/ui/materials/hud/icons/party_throwable",
 	},
 	-- Медстанция
 	health_station = {
 		cat  = "medical",
 		icon = "content/ui/materials/hud/interactions/icons/pocketable_medkit",
 	},
-	-- Медкейты
+	-- Медкейты (только pocketable — deployable сканируется отдельно)
 	medical_crate_pocketable = {
-		cat  = "medical",
-		icon = "content/ui/materials/icons/pocketables/hud/small/party_medic_crate",
-	},
-	medical_crate_deployable = {
 		cat  = "medical",
 		icon = "content/ui/materials/icons/pocketables/hud/small/party_medic_crate",
 	},
@@ -58,12 +54,14 @@ local PICKUP_DATA = {
 	},
 	-- Патронные клипы (маленький и большой) → иконка из командного HUD
 	small_clip = {
-		cat  = "ammo_small",
-		icon = "content/ui/materials/hud/icons/party_ammo",
+		cat        = "ammo_small",
+		icon       = "content/ui/materials/hud/icons/party_ammo",
+		size_label = nil,
 	},
 	large_clip = {
-		cat  = "ammo_small",
-		icon = "content/ui/materials/hud/icons/party_ammo",
+		cat        = "ammo_small",
+		icon       = "content/ui/materials/hud/icons/party_ammo",
+		size_label = "big",
 	},
 	-- Ящики патронов (pocketable + deployable)
 	ammo_cache_pocketable = {
@@ -76,7 +74,9 @@ local PICKUP_DATA = {
 	},
 }
 
-local CATEGORIES = { "medical", "stimm_corruption", "stimm_power", "stimm_speed", "stimm_ability", "ammo_small", "ammo_large", "grenade" }
+local CATEGORIES = { "medical", "medical_deployed", "stimm_corruption", "stimm_power", "stimm_speed", "stimm_ability", "ammo_small", "ammo_large", "grenade" }
+
+local MED_DEPLOYED_ICON = "content/ui/materials/icons/pocketables/hud/small/party_medic_crate"
 
 local function _pickup_name_for_unit(unit, ext)
 	local pickup_name = Unit.get_data(unit, "pickup_type")
@@ -110,6 +110,83 @@ local function _pickup_name_for_unit(unit, ext)
 	return pickup_name
 end
 
+local function _read_count(unit, pickup_name)
+	if pickup_name == "health_station" then
+		local ok, v = pcall(function()
+			local ext = ScriptUnit.extension(unit, "health_station_system")
+
+			return ext and ext.charge_amount and ext:charge_amount()
+		end)
+
+		if ok and v and v > 0 then
+			return v
+		end
+	elseif pickup_name == "ammo_cache_deployable" then
+		local ok, v = pcall(function()
+			local gs   = Managers.state.game_session:game_session()
+			local goid = Managers.state.unit_spawner:game_object_id(unit)
+
+			return GameSession.game_object_field(gs, goid, "charges")
+		end)
+
+		if ok and v and v > 0 then
+			return v
+		end
+	elseif pickup_name == "medical_crate_deployable" then
+		local ok, v = pcall(function()
+			local ext = ScriptUnit.extension(unit, "proximity_system")
+
+			if not ext then
+				return nil
+			end
+
+			local has_job, logic = ext:has_job()
+
+			if has_job and logic then
+				local reserve = logic._heal_reserve
+				local healed  = logic._amount_of_damage_healed or 0
+
+				if reserve then
+					return math.max(0, math.floor(reserve - healed))
+				end
+			end
+		end)
+
+		if ok and v and v > 0 then
+			return v
+		end
+	end
+
+	return nil
+end
+
+-- Проверяет что юнит является развёрнутым медицинским ящиком.
+-- Используется двойная проверка: через deployable_type (owner/server)
+-- или через _target_type SmartTagExtension (husk-клиенты).
+local function _is_medical_deployed(unit, st_ext)
+	-- Вариант 1: deployable_type установлен в local_init (server/owner)
+	local ok1, dt = pcall(function()
+		return Unit.get_data(unit, "deployable_type")
+	end)
+
+	if ok1 and dt == "medical_crate" then
+		return true
+	end
+
+	-- Вариант 2: SmartTagExtension._target_type из husk_init
+	if st_ext then
+		local ok2, tt = pcall(function()
+			return rawget(st_ext, "_target_type")
+		end)
+
+		if ok2 and tt == "medical_crate_deployable" then
+			return true
+		end
+	end
+
+	return false
+end
+
 local function scan(player_unit, radius)
 	local result = {}
 
@@ -129,39 +206,75 @@ local function scan(player_unit, radius)
 		return result
 	end
 
+	local radius_sq    = radius * radius
+	local best_dist_sq = {}
+
+	-- ── Первый проход: стандартные пикапы через InteracteeExtension ──────────────
 	local ok, interactees = pcall(function()
 		return extension_system:get_entities("InteracteeExtension")
 	end)
 
-	if not ok or not interactees then
-		return result
+	if ok and interactees then
+		for unit, ext in pairs(interactees) do
+			if unit and Unit.alive(unit) then
+				local pickup_name = _pickup_name_for_unit(unit, ext)
+
+				if pickup_name then
+					local pd = PICKUP_DATA[pickup_name]
+
+					if pd then
+						local upos = Unit.world_position(unit, 1)
+						local dx = upos.x - player_pos.x
+						local dy = upos.y - player_pos.y
+						local dz = upos.z - player_pos.z
+						local dist_sq = dx * dx + dy * dy + dz * dz
+						local cat = pd.cat
+
+						if dist_sq <= radius_sq then
+							if not best_dist_sq[cat] or dist_sq < best_dist_sq[cat] then
+								best_dist_sq[cat] = dist_sq
+						result[cat] = {
+							dist_m     = math.max(0, math.floor(math.sqrt(dist_sq) + 0.5)),
+							icon       = pd.icon,
+							stimm_id   = pd.stimm_id,
+							size_label = pd.size_label,
+							count      = _read_count(unit, pickup_name),
+						}
+							end
+						end
+					end
+				end
+			end
+		end
 	end
 
-	local radius_sq   = radius * radius
-	local best_dist_sq = {}
+	-- ── Второй проход: развёрнутые медкейты через SmartTagExtension ──────────────
+	-- У medical_crate_deployable нет InteracteeExtension, поэтому сканируем
+	-- SmartTagExtension который добавляется и в local_init и в husk_init.
+	local ok_st, smart_tags = pcall(function()
+		return extension_system:get_entities("SmartTagExtension")
+	end)
 
-	for unit, ext in pairs(interactees) do
-		if unit and Unit.alive(unit) then
-			local pickup_name = _pickup_name_for_unit(unit, ext)
+	if ok_st and smart_tags then
+		local med_cat = "medical_deployed"
 
-			if pickup_name then
-				local pd = PICKUP_DATA[pickup_name]
-
-				if pd then
+		for unit, st_ext in pairs(smart_tags) do
+			if unit and Unit.alive(unit) and unit ~= player_unit then
+				if _is_medical_deployed(unit, st_ext) then
 					local upos = Unit.world_position(unit, 1)
 					local dx = upos.x - player_pos.x
 					local dy = upos.y - player_pos.y
 					local dz = upos.z - player_pos.z
 					local dist_sq = dx * dx + dy * dy + dz * dz
-					local cat = pd.cat
 
 					if dist_sq <= radius_sq then
-						if not best_dist_sq[cat] or dist_sq < best_dist_sq[cat] then
-							best_dist_sq[cat] = dist_sq
-							result[cat] = {
+						if not best_dist_sq[med_cat] or dist_sq < best_dist_sq[med_cat] then
+							best_dist_sq[med_cat] = dist_sq
+							result[med_cat] = {
 								dist_m   = math.max(0, math.floor(math.sqrt(dist_sq) + 0.5)),
-								icon     = pd.icon,
-								stimm_id = pd.stimm_id,
+								icon     = MED_DEPLOYED_ICON,
+								stimm_id = nil,
+								count    = _read_count(unit, "medical_crate_deployable"),
 							}
 						end
 					end

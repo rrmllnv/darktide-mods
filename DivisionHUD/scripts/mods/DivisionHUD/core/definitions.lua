@@ -120,7 +120,7 @@ local PROX_BLOCK_GAP = sc(8)
 local PROX_COL_GAP = sc(3)
 local PROX_ROW_GAP = sc(3)
 local PROX_SLOT_SIZE = math.floor((MAIN_ROW_HEIGHT - PROX_ROW_GAP) / 2)
-local PROX_ICON_SIZE = math.max(sc(18), math.floor(PROX_SLOT_SIZE * 0.52 + 0.5))
+local PROX_ICON_SIZE = math.max(sc(16), math.floor(PROX_SLOT_SIZE * 0.44 + 0.5))
 local PROX_TEXT_FONT = math.max(sc(11), math.floor(PROX_SLOT_SIZE * 0.36 + 0.5))
 
 local TextColorFractions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/text_color_fractions")
@@ -319,6 +319,13 @@ local scenegraph_definition = {
 		size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
 		position = { 0, 0, 0 },
 	},
+	prox_medical_deployed = {
+		parent = "proximity_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
+		position = { 0, 0, 0 },
+	},
 }
 
 local DivisionHUDAlertsDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/alerts_definitions")
@@ -505,6 +512,8 @@ local function create_prox_slot_bg_widget(scenegraph_id)
 	}, scenegraph_id)
 end
 
+local PROX_COUNT_FONT = math.max(sc(9), math.floor(PROX_TEXT_FONT * 0.8 + 0.5))
+
 local function create_prox_slot_widget(scenegraph_id, default_icon)
 	local icon_material = default_icon or RIGHT_SLOT_ICON_FALLBACK
 
@@ -519,6 +528,18 @@ local function create_prox_slot_widget(scenegraph_id, default_icon)
 	dist_text_style.text_color = table.clone(UIHudSettings.color_tint_main_1)
 	dist_text_style.size = { PROX_SLOT_SIZE, math.ceil(PROX_TEXT_FONT * 1.4) }
 	dist_text_style.offset = { 0, math.floor(PROX_SLOT_SIZE * 0.5 - PROX_TEXT_FONT * 0.5 - sc(2)), 3 }
+
+	local count_text_style = table.clone(UIFontSettings.hud_body)
+
+	count_text_style.font_size = PROX_COUNT_FONT
+	count_text_style.drop_shadow = true
+	count_text_style.horizontal_alignment = "right"
+	count_text_style.vertical_alignment = "top"
+	count_text_style.text_horizontal_alignment = "right"
+	count_text_style.text_vertical_alignment = "top"
+	count_text_style.text_color = { 255, 255, 255, 255 }
+	count_text_style.size = { PROX_SLOT_SIZE - sc(2), PROX_SLOT_SIZE }
+	count_text_style.offset = { 0, sc(2), 4 }
 
 	return UIWidget.create_definition({
 		{
@@ -541,6 +562,24 @@ local function create_prox_slot_widget(scenegraph_id, default_icon)
 			value = "",
 			style_id = "dist_text",
 			style = dist_text_style,
+		},
+		{
+			pass_type = "rect",
+			style_id = "count_bg",
+			style = {
+				horizontal_alignment = "right",
+				vertical_alignment = "top",
+				color = { 180, 0, 0, 0 },
+				size = { math.ceil(PROX_SLOT_SIZE * 0.72), math.ceil(PROX_COUNT_FONT * 1.2) },
+				offset = { 0, sc(1), 3 },
+			},
+		},
+		{
+			pass_type = "text",
+			value_id = "count_text",
+			value = "",
+			style_id = "count_text",
+			style = count_text_style,
 		},
 	}, scenegraph_id)
 end
@@ -604,13 +643,14 @@ end
 
 local PROX_CATEGORY_ICONS = {
 	medical          = "content/ui/materials/hud/interactions/icons/pocketable_medkit",
+	medical_deployed = "content/ui/materials/icons/pocketables/hud/small/party_medic_crate",
 	stimm_corruption = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
 	stimm_power      = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
 	stimm_speed      = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
 	stimm_ability    = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
 	ammo_small       = "content/ui/materials/hud/icons/party_ammo",
 	ammo_large       = "content/ui/materials/icons/pocketables/hud/small/party_ammo_crate",
-	grenade          = "content/ui/materials/hud/interactions/icons/grenade",
+	grenade          = "content/ui/materials/hud/icons/party_throwable",
 }
 
 local widget_definitions = {
@@ -631,7 +671,9 @@ local widget_definitions = {
 	prox_ammo_small_bg       = create_prox_slot_bg_widget("prox_ammo_small"),
 	prox_ammo_large_bg       = create_prox_slot_bg_widget("prox_ammo_large"),
 	prox_grenade_bg          = create_prox_slot_bg_widget("prox_grenade"),
+	prox_medical_deployed_bg = create_prox_slot_bg_widget("prox_medical_deployed"),
 	prox_medical          = create_prox_slot_widget("prox_medical",          PROX_CATEGORY_ICONS.medical),
+	prox_medical_deployed = create_prox_slot_widget("prox_medical_deployed", PROX_CATEGORY_ICONS.medical_deployed),
 	prox_stimm_corruption = create_prox_slot_widget("prox_stimm_corruption", PROX_CATEGORY_ICONS.stimm_corruption),
 	prox_stimm_power      = create_prox_slot_widget("prox_stimm_power",      PROX_CATEGORY_ICONS.stimm_power),
 	prox_stimm_speed      = create_prox_slot_widget("prox_stimm_speed",      PROX_CATEGORY_ICONS.stimm_speed),
@@ -746,6 +788,7 @@ return {
 	PROX_SLIDE_PX = math.max(4, math.floor(PROX_SLOT_SIZE * 0.45 + 0.5)),
 	PROX_SLOT_WIDGET_NAMES = {
 		medical          = "prox_medical",
+		medical_deployed = "prox_medical_deployed",
 		stimm_corruption = "prox_stimm_corruption",
 		stimm_power      = "prox_stimm_power",
 		stimm_speed      = "prox_stimm_speed",
