@@ -20,6 +20,7 @@ local defaults = {
 	dynamic_hud_pitch_ratio = 1,
 	dynamic_hud_decay = 11,
 	dynamic_hud_max_offset = 100,
+	dynamic_hud_freeze_on_ads = true,
 	hide_vanilla_team_panel_local = false,
 	hide_vanilla_stamina_area = true,
 	hide_vanilla_dodge_area = true,

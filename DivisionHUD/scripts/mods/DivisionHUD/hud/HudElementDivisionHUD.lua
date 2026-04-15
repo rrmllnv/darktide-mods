@@ -1753,8 +1753,24 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 		local pos_y = (s and type(s.position_y) == "number" and s.position_y) or 0
 		local dyn_x, dyn_y = 0, 0
 
+		local is_ads = false
+
+		if player_unit then
+			local ud = ScriptUnit.has_extension(player_unit, "unit_data_system")
+			local alt_fire = ud and ud:read_component("alternate_fire")
+
+			is_ads = alt_fire ~= nil and alt_fire.is_active == true
+		end
+
+		local freeze_on_ads = type(s) == "table" and s.dynamic_hud_freeze_on_ads ~= false and s.dynamic_hud_freeze_on_ads ~= 0
+
 		if DynamicHudContext.dynamic_hud_enabled(mod, DivisionHUDSettingsDefaults) then
-			dyn_x, dyn_y = self:_compute_dynamic_root_offset(dt, local_player)
+			if freeze_on_ads and is_ads then
+				self._dyn_prev_yaw = nil
+				self._dyn_prev_pitch = nil
+			else
+				dyn_x, dyn_y = self:_compute_dynamic_root_offset(dt, local_player)
+			end
 		else
 			self:_reset_dynamic_offset_state()
 		end

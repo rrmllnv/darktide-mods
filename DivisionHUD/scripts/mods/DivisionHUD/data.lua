@@ -154,17 +154,24 @@ return {
 						range = { 2, 28 },
 						decimals_number = 0,
 					},
-					{
-						setting_id = "dynamic_hud_max_offset",
-						type = "numeric",
-						default_value = d("dynamic_hud_max_offset", 100),
-						range = { 8, 220 },
-						decimals_number = 0,
-					},
+				{
+					setting_id = "dynamic_hud_max_offset",
+					type = "numeric",
+					default_value = d("dynamic_hud_max_offset", 100),
+					range = { 8, 220 },
+					decimals_number = 0,
+				},
+				{
+					setting_id = "dynamic_hud_freeze_on_ads",
+					type = "checkbox",
+					title = "dynamic_hud_freeze_on_ads",
+					tooltip_text = "dynamic_hud_freeze_on_ads_description",
+					default_value = d("dynamic_hud_freeze_on_ads", true),
 				},
 			},
-			{
-				setting_id = "divisionhud_super_vanilla_hide",
+		},
+		{
+			setting_id = "divisionhud_super_vanilla_hide",
 				type = "group",
 				title = "divisionhud_super_vanilla_hide",
 				sub_widgets = {

@@ -134,6 +134,16 @@ return {
 		ru = "Макс. смещение",
 		["zh-cn"] = "界面最大偏移量",
 	},
+	dynamic_hud_freeze_on_ads = {
+		en = "Freeze when aiming",
+		ru = "Стабилизировать при прицеливании",
+		["zh-cn"] = "瞄准时锁定界面",
+	},
+	dynamic_hud_freeze_on_ads_description = {
+		en = "Freezes HUD movement while aiming down sights (works with mouse and controllers).",
+		ru = "Фиксирует динамику HUD при прицеливании. Работает с мышью и геймпадом.",
+		["zh-cn"] = "瞄准时锁定界面偏移（支持鼠标和手柄）。",
+	},
 	divisionhud_super_vanilla_hide = {
 		en = "\238\128\161 VANILLA HUD",
 		ru = "\238\128\161 ВАНИЛЬНЫЙ HUD",
