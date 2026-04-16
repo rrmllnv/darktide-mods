@@ -16,19 +16,22 @@ local STAMINA_BAR_COLOR = HudElementStaminaSettings.STAMINA_BAR_COLOR
 local HEALTH_BAR_FILL_COLOR = UIHudSettings.color_tint_1
 local TOUGHNESS_BAR_FILL_COLOR = UIHudSettings.color_tint_6
 local WOUNDS_BAR_FILL_COLOR = UIHudSettings.color_tint_8
+local EXTRA_VALUE_LABEL_WIDTH = 24
 
 local function build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap)
+	local extended_label_width = bar_label_w + EXTRA_VALUE_LABEL_WIDTH
+
 	return {
 		toughness_value_label = {
 			parent = "root",
 			horizontal_alignment = "left",
 			vertical_alignment = "top",
 			size = {
-				bar_label_w,
+				extended_label_width,
 				bar_h,
 			},
 			position = {
-				0,
+				-EXTRA_VALUE_LABEL_WIDTH,
 				0,
 				0,
 			},
@@ -52,11 +55,11 @@ local function build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_sta
 			horizontal_alignment = "left",
 			vertical_alignment = "top",
 			size = {
-				bar_label_w,
+				extended_label_width,
 				health_bar_h,
 			},
 			position = {
-				0,
+				-EXTRA_VALUE_LABEL_WIDTH,
 				bar_h + bar_stack_gap,
 				0,
 			},

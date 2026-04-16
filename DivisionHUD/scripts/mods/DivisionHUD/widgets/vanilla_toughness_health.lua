@@ -16,6 +16,10 @@ local OVERSHIELDED_TOUGHNESS_BAR_FILL_COLOR = UIHudSettings.color_tint_10
 
 local M = {}
 
+local function apply_color_to_text(text, color)
+	return "{#color(" .. color[2] .. "," .. color[3] .. "," .. color[4] .. ")}" .. text .. "{#reset()}"
+end
+
 local HEALTH_WIDGETS_ALPHA = {
 	"health",
 }
@@ -46,18 +50,11 @@ local TOUGHNESS_WIDGETS_ROW_NO_PULSE = {
 	"toughness_max",
 }
 
-local function update_value_label_widget(widget, current_val, opacity)
+local function update_label_widget_text(widget, text, opacity)
 	if not widget or not widget.content then
 		return
 	end
 
-	local c = math.floor(current_val + 0.5)
-
-	if c < 0 then
-		c = 0
-	end
-
-	local text = tostring(c)
 	local r = math.floor(255 * opacity + 0.5)
 	local changed = false
 
@@ -80,6 +77,16 @@ local function update_value_label_widget(widget, current_val, opacity)
 	if changed then
 		widget.dirty = true
 	end
+end
+
+local function update_value_label_widget(widget, current_val, opacity)
+	local c = math.floor(current_val + 0.5)
+
+	if c < 0 then
+		c = 0
+	end
+
+	update_label_widget_text(widget, tostring(c), opacity)
 end
 
 local TIMED_GOLD_BAR_BUFF_TEMPLATE_NAMES = {
@@ -670,7 +677,16 @@ M.update = function(self, dt, t, player_unit, opacity)
 
 				if label_t and label_t.content then
 					label_t.content.visible = true
-					update_value_label_widget(label_t, toughness_extension:remaining_toughness(), alpha)
+
+					if has_overshield then
+						local base_toughness_value = math.max(max_toughness_visual, 0)
+						local bonus_toughness_value = math.max(overshield_amount, 0)
+						local formatted_text = string.format("%s + %s", apply_color_to_text(tostring(math.floor(bonus_toughness_value)), OVERSHIELDED_TOUGHNESS_BAR_FILL_COLOR), tostring(math.floor(base_toughness_value + 0.5)))
+
+						update_label_widget_text(label_t, formatted_text, alpha)
+					else
+						update_value_label_widget(label_t, toughness_extension:remaining_toughness(), alpha)
+					end
 				end
 
 				for i = 1, #TOUGHNESS_WIDGETS_ALL do
