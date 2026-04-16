@@ -941,9 +941,8 @@ HudElementDivisionHUD._update_expedition_salvage = function(self, local_player, 
 	local text_color = widget.style.text and widget.style.text.text_color
 
 	if text_color then
-		local is_zero = amount <= 0
-		local base = is_zero and UIHudSettings.color_tint_ammo_high or UIHudSettings.color_tint_main_1
-		local eff = resource_stack_effective_opacity(opacity, is_zero)
+		local base = UIHudSettings.color_tint_main_1
+		local eff = opacity
 
 		text_color[1] = math.floor((base[1] or 255) * eff)
 		text_color[2] = base[2] or 255
