@@ -140,6 +140,38 @@ local function _unit_data_string(unit, field)
 	return nil
 end
 
+local function _network_unit_template_name(unit)
+	local unit_spawner = Managers.state and Managers.state.unit_spawner
+	local game_session_manager = Managers.state and Managers.state.game_session
+
+	if not unit_spawner or not unit_spawner.game_object_id or not unit_spawner._unit_template_network_lookup then
+		return nil
+	end
+
+	if not game_session_manager or not game_session_manager.game_session then
+		return nil
+	end
+
+	local ok, unit_template_name = pcall(function()
+		local goid = unit_spawner:game_object_id(unit)
+
+		if not goid then
+			return nil
+		end
+
+		local gs = game_session_manager:game_session()
+		local unit_template_id = GameSession.game_object_field(gs, goid, "unit_template")
+
+		return unit_spawner._unit_template_network_lookup[unit_template_id]
+	end)
+
+	if ok then
+		return unit_template_name
+	end
+
+	return nil
+end
+
 local function _interactee_is_available(ext, player_unit)
 	if ext.active then
 		local ok, v = pcall(function() return ext:active() end)
@@ -306,10 +338,11 @@ local function scan(player_unit, radius)
 
 		for unit, _ in pairs(smart_tag_map) do
 			if unit and Unit.alive(unit) and unit ~= player_unit then
-				local stt = _unit_data_string(unit, "smart_tag_target_type")
-				local dt  = _unit_data_string(unit, "deployable_type")
+				local stt                = _unit_data_string(unit, "smart_tag_target_type")
+				local dt                 = _unit_data_string(unit, "deployable_type")
+				local unit_template_name = _network_unit_template_name(unit)
 
-				if stt == "medical_crate_deployable" or dt == "medical_crate" then
+				if (stt == "medical_crate_deployable" or dt == "medical_crate") and unit_template_name ~= "broker_stimm_field_crate_deployable" then
 					local upos    = Unit.world_position(unit, 1)
 					local dist_sq = _dist_sq(upos, player_pos)
 
