@@ -1358,7 +1358,6 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 	local drop_px  = _div_alert_drop_px()
 	local slide_px = _div_alert_slide_px()
 
-	-- ── 1. Build current feed key set ────────────────────────────────────────
 	local feed_key_to_line = {}
 
 	for i = 1, n do
@@ -1369,7 +1368,6 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		end
 	end
 
-	-- ── 2. Transition items not in feed to "exit" ─────────────────────────────
 	for k, item in pairs(by_key) do
 		if not feed_key_to_line[k] and item.state ~= "exit" then
 			item.state     = "exit"
@@ -1379,7 +1377,6 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		end
 	end
 
-	-- ── 3. Add new items; update last_line reference ──────────────────────────
 	for i = 1, n do
 		local line = lines[i]
 		local k = _div_alert_line_key(line)
@@ -1417,9 +1414,6 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		end
 	end
 
-	-- ── 4. Compute height for each non-exiting item ───────────────────────────
-	--    We need a temporary widget measurement; use the first invisible slot as scratch.
-	--    Height is cached on the item; if ui_renderer unavailable, keep previous value.
 	local scratch_msg_st = nil
 
 	do
@@ -1455,7 +1449,6 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		end
 	end
 
-	-- ── 5. Build stack: non-exiting items, newest first (top of column) ───────
 	local stack = {}
 
 	for i = n, 1, -1 do
@@ -1467,15 +1460,12 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		end
 	end
 
-	-- ── 6. Compute y_layout for stack items (newest at y=0 top) ──────────────
 	local total_h_target = 0
 	local y_cur = 0
 
 	for _, item in ipairs(stack) do
 		item.y_layout = y_cur
 
-		-- New items: snap y_anim to layout immediately so they don't slide in
-		-- from y=0. The enter animation (y_enter_ofs) handles the visual drop.
 		if item.skip_first_frame then
 			item.y_anim = y_cur
 		end
@@ -1487,9 +1477,6 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		total_h_target = y_cur - ALERTS_SLOT_GAP
 	end
 
-	-- ── 7. Compute col_h and compensate all items BEFORE lerp ────────────────
-	-- Compensation must happen before animation lerp so that existing items
-	-- see y_anim ≈ y_layout and produce zero lerp delta (no visual jump).
 	local col_lerp_k = math.min(1, 10 * dt)
 	local old_col_h  = self._div_alert_col_h or 0
 	local col_h
@@ -1509,17 +1496,13 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 	if col_delta ~= 0 then
 		for _, item in pairs(by_key) do
 			if item.state == "exit" then
-				-- Keep exiting items at the same screen Y when column moves.
 				item.y_at_exit = item.y_at_exit + col_delta
 			elseif not item.skip_first_frame then
-				-- Keep existing enter/hold items at the same screen Y.
-				-- After this, y_anim == y_layout for hold items → lerp delta = 0.
 				item.y_anim = item.y_anim + col_delta
 			end
 		end
 	end
 
-	-- ── 8. Advance animations (lerp after compensation) ───────────────────────
 	local to_remove = {}
 
 	for k, item in pairs(by_key) do
@@ -1568,12 +1551,10 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 	self:_set_scenegraph_size("alerts_column", ALERT_BAR_WIDTH, col_h_int)
 	self:set_scenegraph_position("alerts_column", nil, -(col_h_int + ALERTS_TOUGHNESS_GAP))
 
-	-- ── 9. Clear all slot widgets ─────────────────────────────────────────────
 	for si = 1, ALERTS_MAX_SLOTS do
 		_div_alert_clear_slot_widget(alert_slot_widget_names[si] and widgets[alert_slot_widget_names[si]])
 	end
 
-	-- ── 10. Build render list: stack first, then exiting ─────────────────────
 	local render_list = {}
 
 	for _, item in ipairs(stack) do
@@ -1586,7 +1567,6 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		end
 	end
 
-	-- ── 11. Assign slots and populate content ─────────────────────────────────
 	local slot_idx = 1
 
 	for _, item in ipairs(render_list) do
@@ -1594,10 +1574,6 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 			break
 		end
 
-		-- Skip rendering on the very first frame of existence.
-		-- set_scenegraph_position for alerts_column (step 8) hasn't propagated
-		-- through super.update yet, so the widget would render at the old column
-		-- position (wrong screen Y). From frame 2 the position is correct.
 		if item.skip_first_frame then
 			item.skip_first_frame = false
 			goto continue_render
@@ -1616,7 +1592,6 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 			goto continue_render
 		end
 
-		-- Position this slot within alerts_column
 		local y_pos = item.state == "exit"
 			and math.floor(item.y_at_exit + 0.5)
 			or  math.floor((item.y_anim + item.y_enter_ofs) + 0.5)
@@ -1631,7 +1606,6 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 			w.content.size[2] = item.cached_h
 		end
 
-		-- Populate text content
 		local strip_raw = line.strip_label
 
 		if type(strip_raw) == "string" and strip_raw ~= "" then
@@ -1642,7 +1616,6 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 
 		w.content.alert_message_text = line.text
 
-		-- Apply colors and sizes
 		local st = w.style
 
 		if st then
@@ -1666,7 +1639,6 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 				msg_tc[1] = math.floor(255 * opacity)
 			end
 
-			-- Duration bar
 			local dur_bar    = st.alert_duration_bar
 			local dur_bar_sz = dur_bar and dur_bar.size
 
@@ -1694,7 +1666,6 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 				dur_bar_sz[1] = 0
 			end
 
-			-- Text and background sizes (from cached item height)
 			local body_h      = item.cached_h - ALERTS_STRIP_HEIGHT
 			local text_box_h  = body_h - ALERTS_MESSAGE_TEXT_VERTICAL_INSET - ALERTS_MESSAGE_TEXT_OFFSET_Y
 			local msg_st      = st.alert_message_text
@@ -1957,20 +1928,17 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 
 	local slide_px = PROX_SLIDE_PX
 
-	-- ── Шаг 1: инициализировать anim для всех категорий ────────────────────────
 	for _, cat in ipairs(ProximityScan.CATEGORIES) do
 		if not self._prox_anim[cat] then
 			self._prox_anim[cat] = { state = "hidden", timer = 0, alpha = 0, y_offset = 0, grid_idx = nil }
 		end
 	end
 
-	-- ── Шаг 2: переходы состояний (только exit) ────────────────────────────────
 	for _, cat in ipairs(ProximityScan.CATEGORIES) do
 		local anim = self._prox_anim[cat]
 		local want = enabled and cat_settings[cat] and prox_data[cat] ~= nil
 
 		if want and anim.state == "exit" then
-			-- Предмет вернулся пока ещё играла exit — реверсируем в enter
 			local gp = anim.grid_idx and PROX_GRID_POSITIONS and PROX_GRID_POSITIONS[anim.grid_idx]
 			local sd = (gp and gp.is_bottom) and 1 or -1
 
@@ -1978,15 +1946,12 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 			anim.timer    = PROX_ANIM_ENTER_DUR * (1 - anim.alpha)
 			anim.y_offset = sd * slide_px * (1 - anim.alpha)
 		elseif not want and (anim.state == "enter" or anim.state == "hold") then
-			-- Предмет пропал — запустить exit
 			anim.state    = "exit"
 			anim.timer    = PROX_ANIM_EXIT_DUR * (1 - anim.alpha)
 			anim.grid_idx = nil
 		end
 	end
 
-	-- ── Шаг 3: уплотнение + назначение новых позиций ────────────────────────────
-	-- Собираем уже активные enter/hold слоты, сортируем по текущему grid_idx
 	local active = {}
 
 	for _, cat in ipairs(ProximityScan.CATEGORIES) do
@@ -2004,7 +1969,6 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 		return ai < bi
 	end)
 
-	-- Переназначаем последовательно — заполняем дырки
 	for new_idx, anim in ipairs(active) do
 		if anim.grid_idx ~= new_idx then
 			anim.grid_idx = new_idx
@@ -2012,7 +1976,6 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 		end
 	end
 
-	-- Назначаем позиции для новых (hidden → want)
 	local next_idx = #active + 1
 
 	for _, cat in ipairs(ProximityScan.CATEGORIES) do
@@ -2032,7 +1995,6 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 		end
 	end
 
-	-- ── Шаг 4: advance + render ─────────────────────────────────────────────────
 	for _, cat in ipairs(ProximityScan.CATEGORIES) do
 		local widget_name = PROX_SLOT_WIDGET_NAMES and PROX_SLOT_WIDGET_NAMES[cat]
 		local widget = widget_name and widgets[widget_name]
@@ -2077,7 +2039,6 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 			end
 		end
 
-		-- Пересчитываем gp после advance (grid_idx мог стать nil)
 		gp = anim.grid_idx and PROX_GRID_POSITIONS and PROX_GRID_POSITIONS[anim.grid_idx]
 
 		local bg_w = widgets["prox_" .. cat .. "_bg"]

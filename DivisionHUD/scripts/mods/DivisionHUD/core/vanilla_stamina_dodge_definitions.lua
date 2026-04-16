@@ -30,7 +30,6 @@ local function build_scenegraph(main_row_height, track_width_px)
 	local ddg_top = math.floor(ddg_center_y - ddg_h * 0.5 + 0.5)
 	local bottom_y = ddg_top + ddg_h
 	local extend_below_main = bottom_y - main_row_height + 4
-	-- Нижний край dodge-бара в локальных координатах div_vanilla_ddg_area (gauge y=-5 h=10; bar y=2 h=ddg_bar_size[2]).
 	local ddg_bar_h = ddg_bar_size[2]
 	local ddg_visual_bottom_local = math.max(-5 + 10, 2 + ddg_bar_h)
 	local buff_layout_from_stm_ddg = {

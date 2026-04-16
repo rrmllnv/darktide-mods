@@ -1,6 +1,4 @@
--- Все отслеживаемые типы пикапов с категорией, иконкой и дополнительными данными
 local PICKUP_DATA = {
-	-- Гранаты (обычные и экспедиционные) → иконка из team panel HUD
 	small_grenade = {
 		cat  = "grenade",
 		icon = "content/ui/materials/hud/icons/party_throwable",
@@ -21,17 +19,14 @@ local PICKUP_DATA = {
 		cat  = "grenade",
 		icon = "content/ui/materials/hud/icons/party_throwable",
 	},
-	-- Медстанция
 	health_station = {
 		cat  = "medical_station",
 		icon = "content/ui/materials/hud/interactions/icons/pocketable_medkit",
 	},
-	-- Медкейты (pocketable — deployable сканируется через smart_tag_system)
 	medical_crate_pocketable = {
 		cat  = "medical",
 		icon = "content/ui/materials/icons/pocketables/hud/small/party_medic_crate",
 	},
-	-- Стимуляторы — каждый тип в отдельный слот, цвет применяется в HUD по stimm_id
 	syringe_corruption_pocketable = {
 		cat      = "stimm_corruption",
 		icon     = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
@@ -52,7 +47,6 @@ local PICKUP_DATA = {
 		icon     = "content/ui/materials/icons/pocketables/hud/small/party_syringe_corruption",
 		stimm_id = "syringe_ability_boost_pocketable",
 	},
-	-- Патронные клипы
 	small_clip = {
 		cat        = "ammo_small",
 		icon       = "content/ui/materials/hud/icons/party_ammo",
@@ -63,17 +57,14 @@ local PICKUP_DATA = {
 		icon               = "content/ui/materials/hud/icons/party_ammo",
 		size_label_loc_key = "ammo_size_big",
 	},
-	-- Гримуары
 	grimoire = {
 		cat  = "grimoire",
 		icon = "content/ui/materials/icons/pocketables/hud/small/party_grimoire",
 	},
-	-- Писания (tome)
 	tome = {
 		cat  = "tome",
 		icon = "content/ui/materials/icons/pocketables/hud/small/party_scripture",
 	},
-	-- Ящики патронов (pocketable + deployable + level)
 	ammo_cache_pocketable = {
 		cat  = "ammo_crate",
 		icon = "content/ui/materials/icons/pocketables/hud/small/party_ammo_crate",
@@ -93,7 +84,6 @@ local CATEGORIES = { "medical_station", "medical", "medical_deployed", "stimm_co
 local MED_DEPLOYED_ICON = "content/ui/materials/icons/pocketables/hud/small/party_medic_crate"
 
 
--- Получить систему расширений по имени системы
 local function _get_system(system_name)
 	local ext_manager = Managers.state and Managers.state.extension
 
@@ -112,7 +102,6 @@ local function _get_system(system_name)
 	return nil
 end
 
--- Получить unit_to_extension_map из системы
 local function _get_system_map(system_name)
 	local system = _get_system(system_name)
 
@@ -131,7 +120,6 @@ local function _get_system_map(system_name)
 	return nil
 end
 
--- Читает строку из Unit.get_data безопасно
 local function _unit_data_string(unit, field)
 	if not unit then
 		return nil
@@ -152,7 +140,6 @@ local function _unit_data_string(unit, field)
 	return nil
 end
 
--- Проверяет что interactee является активным и не использованным
 local function _interactee_is_available(ext, player_unit)
 	if ext.active then
 		local ok, v = pcall(function() return ext:active() end)
@@ -192,7 +179,6 @@ local function _pickup_name_for_unit(unit, ext)
 		end
 	end
 
-	-- Медстанция: фильтруем истощённые
 	if pickup_name == "health_station" then
 		local ok, hs_ext = pcall(function()
 			return ScriptUnit.extension(unit, "health_station_system")
@@ -237,7 +223,6 @@ local function _read_count(unit, pickup_name)
 	return nil
 end
 
--- prox_icon_tint: для ammo_crate — "ammo_deployed" только у развёрнутых/уровневых ящиков, не у карманного
 local function _add_result(result, best_dist_sq, cat, dist_sq, dist_m, icon, stimm_id, size_label, size_label_loc_key, count, prox_icon_tint)
 	if not best_dist_sq[cat] or dist_sq < best_dist_sq[cat] then
 		best_dist_sq[cat] = dist_sq
@@ -277,7 +262,6 @@ local function scan(player_unit, radius)
 	local radius_sq    = radius * radius
 	local best_dist_sq = {}
 
-	-- ── Первый проход: interactee_system ─────────────────────────────────────────
 	local interactee_map = _get_system_map("interactee_system")
 
 	if interactee_map then
@@ -315,9 +299,6 @@ local function scan(player_unit, radius)
 		end
 	end
 
-	-- ── Второй проход: smart_tag_system → medical_crate_deployable ───────────────
-	-- У deployable медкейта нет InteracteeExtension; его smart_tag_target_type
-	-- выставляется и в local_init и в husk_init, поэтому виден на всех клиентах.
 	local smart_tag_map = _get_system_map("smart_tag_system")
 
 	if smart_tag_map then
@@ -328,7 +309,6 @@ local function scan(player_unit, radius)
 				local stt = _unit_data_string(unit, "smart_tag_target_type")
 				local dt  = _unit_data_string(unit, "deployable_type")
 
-				-- smart_tag_target_type (все клиенты) или deployable_type (owner/server)
 				if stt == "medical_crate_deployable" or dt == "medical_crate" then
 					local upos    = Unit.world_position(unit, 1)
 					local dist_sq = _dist_sq(upos, player_pos)

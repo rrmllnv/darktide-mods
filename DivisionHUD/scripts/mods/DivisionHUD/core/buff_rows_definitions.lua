@@ -4,7 +4,7 @@ local HudElementPlayerBuffsSettings = require("scripts/ui/hud/elements/player_bu
 
 local BUFF_COLS       = 5
 local BUFF_ROWS_COUNT = 3
-local BUFF_MAX_SLOTS  = BUFF_COLS * BUFF_ROWS_COUNT  -- 15
+local BUFF_MAX_SLOTS  = BUFF_COLS * BUFF_ROWS_COUNT
 
 local M = {}
 
@@ -27,7 +27,6 @@ end
 
 local BUFF_SLOT_SIZE = 38
 local BUFF_FRAME_SIZE = 59
--- Горизонтальный шаг между слотами — как в HudElementPlayerBuffsSettings (исходник игры), не sc().
 local BUFF_SLOT_SPACING = HudElementPlayerBuffsSettings.horizontal_spacing
 
 if type(BUFF_SLOT_SPACING) ~= "number" or BUFF_SLOT_SPACING ~= BUFF_SLOT_SPACING or BUFF_SLOT_SPACING <= 0 then
@@ -35,10 +34,9 @@ if type(BUFF_SLOT_SPACING) ~= "number" or BUFF_SLOT_SPACING ~= BUFF_SLOT_SPACING
 end
 
 local BUFF_ROW_SPACING = BUFF_SLOT_SPACING
--- Зазор под визуальным низом dodge-бара; ddg_top и ddg_visual_bottom_local — из vanilla_stamina_dodge_definitions.build_scenegraph.
 local BUFF_AREA_TOP_GAP = sc(10)
 local BUFF_AREA_LEFT_NUDGE = sc(1) 
-local BUFF_SLIDE_PX     = sc(18)   -- ход анимации в пикселях
+local BUFF_SLIDE_PX     = sc(18)
 
 M.BUFF_SLOT_SPACING = BUFF_SLOT_SPACING
 M.BUFF_ROW_SPACING  = BUFF_ROW_SPACING
@@ -86,13 +84,11 @@ M.build = function(buff_layout_from_stm_ddg, main_row_height, extend_below_main_
 	local main_h   = (type(main_row_height) == "number" and main_row_height == main_row_height) and main_row_height or 0
 	local ext_main = (type(extend_below_main_row) == "number" and extend_below_main_row == extend_below_main_row) and extend_below_main_row or 0
 
-	-- Якорь первой иконки: левый край boxes_row, сразу под визуальным низом dodge-бара.
 	local buff_anchor_y          = ddg_top + ddg_visual_bottom_local + BUFF_AREA_TOP_GAP
 	local buff_bottom_from_boxes = buff_anchor_y + buff_total_h
 	local boxes_base_bottom      = main_h + ext_main
 	local extend_below_buff_rows = math.max(0, math.ceil(buff_bottom_from_boxes - boxes_base_bottom))
 
-	-- Позиции ячеек сетки: слева направо, сверху вниз
 	local grid_positions = {}
 
 	for row = 0, BUFF_ROWS_COUNT - 1 do
@@ -110,20 +106,16 @@ M.build = function(buff_layout_from_stm_ddg, main_row_height, extend_below_main_
 		end
 	end
 
-	-- ── Scenegraph ───────────────────────────────────────────────────────────────
 	local scenegraph_definition = {
 		division_buff_rows = {
 			parent               = "boxes_row",
 			horizontal_alignment = "left",
 			vertical_alignment   = "top",
-			-- Размер узла = один слот, как у vanilla buff scenegraph.
-			-- Вся сетка строится через widget.offset, иначе center-alignment pass'ов уводит иконки вправо/вниз.
 			size                 = { BUFF_SLOT_SIZE, BUFF_SLOT_SIZE },
 			position             = { BUFF_AREA_LEFT_NUDGE, buff_anchor_y, 0 },
 		},
 	}
 
-	-- ── Widget definition (vanilla buff style) ────────────────────────────────────
 	local text_style = table.clone(UIFontSettings.hud_body)
 
 	text_style.horizontal_alignment      = "right"
@@ -194,7 +186,6 @@ M.build = function(buff_layout_from_stm_ddg, main_row_height, extend_below_main_
 		},
 	}, "division_buff_rows")
 
-	-- ── Pool виджетов (15 слотов) ─────────────────────────────────────────────────
 	local widget_definitions = {}
 	local buff_widget_names  = {}
 
