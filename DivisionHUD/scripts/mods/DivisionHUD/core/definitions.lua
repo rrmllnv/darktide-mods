@@ -384,6 +384,14 @@ local _division_buff_rows = DivisionHUDBuffRowsDefs.build(
 	_division_vanilla_stm_ddg.extend_below_main_row,
 	BAR_FILL_WIDTH
 )
+local _division_buff_rows_base_y = _division_buff_rows.scenegraph_definition
+	and _division_buff_rows.scenegraph_definition.division_buff_rows
+	and _division_buff_rows.scenegraph_definition.division_buff_rows.position
+	and _division_buff_rows.scenegraph_definition.division_buff_rows.position[2]
+	or 0
+local _division_buff_rows_hidden_stamina_y = _division_vanilla_stm_ddg.buff_layout_from_stm_ddg
+	and _division_vanilla_stm_ddg.buff_layout_from_stm_ddg.stm_top
+	or _division_buff_rows_base_y
 
 for k, v in pairs(_division_buff_rows.scenegraph_definition) do
 	scenegraph_definition[k] = v
@@ -859,6 +867,8 @@ return {
 	AMMO_BIG_DISPLAY_VALUE_MAX = 10^AMMO_BIG_MAX_DIGITS - 1,
 	SLOT_TEXT_FULL_OFFSET_X = SLOT_ICON_LEFT_INSET + SLOT_ICON_TEXTURE_SIZE + SLOT_TEXT_AFTER_ICON_GAP,
 	SLOT_TEXT_MAIN_OFFSET_X = SLOT_ICON_LEFT_INSET + SLOT_ICON_TEXTURE_SIZE + SLOT_TEXT_AFTER_ICON_GAP + SLOT_LEAD_ZERO_CHAR_W,
+	DIVISION_BUFF_ROWS_BASE_Y = _division_buff_rows_base_y,
+	DIVISION_BUFF_ROWS_HIDDEN_STAMINA_Y = _division_buff_rows_hidden_stamina_y,
 	PROX_GRID_POSITIONS = (function()
 		local step = PROX_SLOT_SIZE + PROX_COL_GAP
 		local row_y = PROX_SLOT_SIZE + PROX_ROW_GAP

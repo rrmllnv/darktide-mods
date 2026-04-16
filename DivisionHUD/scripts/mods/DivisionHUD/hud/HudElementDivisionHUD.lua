@@ -72,6 +72,8 @@ local PROX_SCAN_INTERVAL = 0.5
 local PROX_ANIM_ENTER_DUR = 0.15
 local PROX_ANIM_EXIT_DUR = 0.12
 local RIGHT_SLOT_ICON_FALLBACK = Definitions.RIGHT_SLOT_ICON_FALLBACK
+local DIVISION_BUFF_ROWS_BASE_Y = Definitions.DIVISION_BUFF_ROWS_BASE_Y or 0
+local DIVISION_BUFF_ROWS_HIDDEN_STAMINA_Y = Definitions.DIVISION_BUFF_ROWS_HIDDEN_STAMINA_Y or DIVISION_BUFF_ROWS_BASE_Y
 
 local HUD_LAYOUT_SCALE = Definitions.HUD_LAYOUT_SCALE or 1
 local SLOT_TEXT_FULL_OFFSET_X = Definitions.SLOT_TEXT_FULL_OFFSET_X
@@ -1746,6 +1748,9 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	self._prox_scan_timer = 0
 	self._prox_data = {}
 	self._prox_anim = {}
+	self._division_buff_rows_base_y = DIVISION_BUFF_ROWS_BASE_Y
+	self._division_buff_rows_hidden_stamina_y = DIVISION_BUFF_ROWS_HIDDEN_STAMINA_Y
+	self._division_buff_rows_current_y = nil
 
 
 	local widgets = self._widgets_by_name
@@ -1758,7 +1763,25 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	end
 end
 
+HudElementDivisionHUD._update_buff_rows_position = function(self)
+	local s = mod._settings
+	local show_stamina = s and s.show_stamina_bar
+	local buffs_enabled = type(s) ~= "table" or (s.buff_rows_enabled ~= false and s.buff_rows_enabled ~= 0)
+	local target_y = self._division_buff_rows_base_y or DIVISION_BUFF_ROWS_BASE_Y
+
+	if buffs_enabled and (show_stamina == false or show_stamina == 0) then
+		target_y = self._division_buff_rows_hidden_stamina_y or target_y
+	end
+
+	if self._division_buff_rows_current_y ~= target_y then
+		self:set_scenegraph_position("division_buff_rows", nil, target_y)
+		self._division_buff_rows_current_y = target_y
+	end
+end
+
 HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_settings, input_service)
+	self:_update_buff_rows_position()
+
 	local is_in_hub = GameFlowContext.is_hub_like()
 	local local_player, player_unit = GameFlowContext.local_player_alive_unit()
 
