@@ -221,7 +221,7 @@ local function _read_count(unit, pickup_name)
 		if ok and v and v > 0 then
 			return v
 		end
-	elseif pickup_name == "ammo_cache_deployable" or pickup_name == "large_ammunition_crate" then
+	elseif pickup_name == "ammo_cache_deployable" then
 		local ok, v = pcall(function()
 			local gs   = Managers.state.game_session:game_session()
 			local goid = Managers.state.unit_spawner:game_object_id(unit)
