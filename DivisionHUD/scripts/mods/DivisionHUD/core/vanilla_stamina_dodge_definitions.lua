@@ -30,6 +30,15 @@ local function build_scenegraph(main_row_height, track_width_px)
 	local ddg_top = math.floor(ddg_center_y - ddg_h * 0.5 + 0.5)
 	local bottom_y = ddg_top + ddg_h
 	local extend_below_main = bottom_y - main_row_height + 4
+	-- Нижний край dodge-бара в локальных координатах div_vanilla_ddg_area (gauge y=-5 h=10; bar y=2 h=ddg_bar_size[2]).
+	local ddg_bar_h = ddg_bar_size[2]
+	local ddg_visual_bottom_local = math.max(-5 + 10, 2 + ddg_bar_h)
+	local buff_layout_from_stm_ddg = {
+		ddg_top                   = ddg_top,
+		ddg_visual_bottom_local    = ddg_visual_bottom_local,
+		stm_top                   = stm_top,
+		ddg_bottom_from_boxes_row = bottom_y,
+	}
 	local stm_bar_size_layout = {
 		track_width_px,
 		stm_bar_size[2],
@@ -132,7 +141,7 @@ local function build_scenegraph(main_row_height, track_width_px)
 				1,
 			},
 		},
-	}, extend_below_main
+	}, extend_below_main, buff_layout_from_stm_ddg
 end
 
 local value_text_style = table.clone(UIFontSettings.body_small)
@@ -544,8 +553,15 @@ local function build(main_row_height, bar_fill_width)
 	local vanilla_track = stm_bar_size[1]
 	local requested = type(bar_fill_width) == "number" and bar_fill_width or vanilla_track
 	local track_width_px = math.max(1, math.floor(requested + 0.5))
-	local sg, extend_below = build_scenegraph(main_row_height, track_width_px)
+	local sg, extend_below, buff_layout_from_stm_ddg = build_scenegraph(main_row_height, track_width_px)
 	local wdefs = build_widget_definitions()
+	local ddg_top_from_boxes_row = 0
+
+	if type(buff_layout_from_stm_ddg) == "table" and type(buff_layout_from_stm_ddg.ddg_top) == "number" and buff_layout_from_stm_ddg.ddg_top == buff_layout_from_stm_ddg.ddg_top then
+		ddg_top_from_boxes_row = buff_layout_from_stm_ddg.ddg_top
+	elseif sg and sg.div_vanilla_ddg_area and type(sg.div_vanilla_ddg_area.position) == "table" then
+		ddg_top_from_boxes_row = sg.div_vanilla_ddg_area.position[2] or 0
+	end
 
 	return {
 		scenegraph_definition = sg,
@@ -554,6 +570,8 @@ local function build(main_row_height, bar_fill_width)
 		stamina_nodges_definition = stamina_nodges_definition,
 		dodge_bar_definition = build_dodge_bar_definition(track_width_px),
 		extend_below_main_row = extend_below,
+		ddg_top_from_boxes_row = ddg_top_from_boxes_row,
+		buff_layout_from_stm_ddg = buff_layout_from_stm_ddg,
 		division_stamina_bar_width = track_width_px,
 		division_dodge_bar_track_width = track_width_px,
 	}

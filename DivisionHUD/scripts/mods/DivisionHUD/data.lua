@@ -121,6 +121,13 @@ return {
 						tooltip_text = "wielded_weapon_icon_state_colors_description",
 						default_value = d("wielded_weapon_icon_state_colors", true),
 					},
+					{
+						setting_id = "buff_rows_enabled",
+						type = "checkbox",
+						title = "buff_rows_enabled",
+						tooltip_text = "buff_rows_enabled_description",
+						default_value = d("buff_rows_enabled", true),
+					},
 				},
 			},
 			{
@@ -203,7 +210,7 @@ return {
 					{
 						setting_id = "hide_vanilla_player_buffs_background",
 						type = "checkbox",
-						default_value = d("hide_vanilla_player_buffs_background", false),
+						default_value = d("hide_vanilla_player_buffs_background", true),
 					},
 					{
 						setting_id = "hide_vanilla_mission_objectives",
@@ -520,10 +527,10 @@ return {
 					},
 				},
 			},
-			{
-				setting_id = "divisionhud_super_system",
-				type = "group",
-				title = "divisionhud_super_system",
+		{
+			setting_id = "divisionhud_super_system",
+			type = "group",
+			title = "divisionhud_super_system",
 				sub_widgets = {
 					{
 						setting_id = "divisionhud_reset_all_settings",

@@ -377,9 +377,23 @@ for k, v in pairs(_division_vanilla_stm_ddg.scenegraph_definition) do
 	scenegraph_definition[k] = v
 end
 
-scenegraph_definition.boxes_row.size[2] = MAIN_ROW_HEIGHT + _division_vanilla_stm_ddg.extend_below_main_row
+local DivisionHUDBuffRowsDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/buff_rows_definitions")
+local _division_buff_rows = DivisionHUDBuffRowsDefs.build(
+	_division_vanilla_stm_ddg.buff_layout_from_stm_ddg,
+	MAIN_ROW_HEIGHT,
+	_division_vanilla_stm_ddg.extend_below_main_row,
+	BAR_FILL_WIDTH
+)
 
-local ROOT_HEIGHT = ROOT_HEIGHT_BASE + _division_vanilla_stm_ddg.extend_below_main_row
+for k, v in pairs(_division_buff_rows.scenegraph_definition) do
+	scenegraph_definition[k] = v
+end
+
+local _extend_total = _division_vanilla_stm_ddg.extend_below_main_row + _division_buff_rows.extend_below_buff_rows
+
+scenegraph_definition.boxes_row.size[2] = MAIN_ROW_HEIGHT + _extend_total
+
+local ROOT_HEIGHT = ROOT_HEIGHT_BASE + _extend_total
 
 scenegraph_definition.root.size[2] = ROOT_HEIGHT
 
@@ -764,6 +778,10 @@ for k, v in pairs(_division_vanilla_stm_ddg.widget_definitions) do
 	widget_definitions[k] = v
 end
 
+for k, v in pairs(_division_buff_rows.widget_definitions) do
+	widget_definitions[k] = v
+end
+
 local VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS = {
 	stamina_gauge = true,
 	stamina_bar = true,
@@ -784,6 +802,7 @@ local right_slot_widget_names = {
 return {
 	scenegraph_definition = scenegraph_definition,
 	widget_definitions = widget_definitions,
+	buff_rows = _division_buff_rows,
 	vanilla_stamina_dodge_animations = _division_vanilla_stm_ddg.animations,
 	stamina_nodges_definition = _division_vanilla_stm_ddg.stamina_nodges_definition,
 	health_stamina_nodges_definition = _division_vanilla_th.health_stamina_nodges_definition,

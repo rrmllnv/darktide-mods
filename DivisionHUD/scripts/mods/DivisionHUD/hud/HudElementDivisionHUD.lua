@@ -27,6 +27,7 @@ local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/slot_d
 local VanillaStaminaDodge = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/vanilla_stamina_dodge")
 local VanillaToughnessHealth = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/vanilla_toughness_health")
 local CombatAbilityBar = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/combat_ability_bar")
+local DivisionBuffs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/division_buffs")
 local DivisionHUDSettingsDefaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/settings_defaults")
 
 if type(DivisionHUDSettingsDefaults) ~= "table" then
@@ -1734,6 +1735,7 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 
 	VanillaStaminaDodge.init(self, Definitions)
 	VanillaToughnessHealth.init(self, Definitions)
+	DivisionBuffs.init(self, Definitions)
 	_div_alert_init(self)
 
 	self:_reset_dynamic_offset_state()
@@ -1871,6 +1873,13 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	self:_update_right_slot_grid(player_unit, widgets, opacity)
 	self:_update_proximity_scan(player_unit, dt)
 	self:_update_proximity_widgets(widgets, opacity, dt)
+
+	local s_buffs = mod._settings
+	local buffs_enabled = type(s_buffs) ~= "table" or (s_buffs.buff_rows_enabled ~= false and s_buffs.buff_rows_enabled ~= 0)
+
+	if buffs_enabled then
+		DivisionBuffs.update(self, dt, t, ui_renderer, opacity)
+	end
 end
 
 HudElementDivisionHUD._update_proximity_scan = function(self, player_unit, dt)
@@ -2208,6 +2217,13 @@ HudElementDivisionHUD._draw_widgets = function(self, dt, t, input_service, ui_re
 	end
 
 	VanillaToughnessHealth.draw(self, dt, t, input_service, ui_renderer, render_settings)
+
+	local s_buffs_d = mod._settings
+	local buffs_enabled_d = type(s_buffs_d) ~= "table" or (s_buffs_d.buff_rows_enabled ~= false and s_buffs_d.buff_rows_enabled ~= 0)
+
+	if buffs_enabled_d then
+		DivisionBuffs.draw(self, dt, t, input_service, ui_renderer, render_settings)
+	end
 end
 
 HudElementDivisionHUD.draw = function(self, dt, t, ui_renderer, render_settings, input_service)
@@ -2219,6 +2235,7 @@ HudElementDivisionHUD.destroy = function(self, ui_renderer)
 
 	VanillaStaminaDodge.destroy(self, ui_renderer)
 	VanillaToughnessHealth.destroy(self, ui_renderer)
+	DivisionBuffs.destroy(self, ui_renderer)
 
 	HudElementDivisionHUD.super.destroy(self, ui_renderer)
 end
