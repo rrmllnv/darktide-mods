@@ -589,7 +589,7 @@ local function create_prox_slot_widget(scenegraph_id, default_icon)
 	count_text_style.text_vertical_alignment = "top"
 	count_text_style.text_color = { 255, 255, 255, 255 }
 	count_text_style.size = { PROX_SLOT_SIZE - sc(2), PROX_SLOT_SIZE }
-	count_text_style.offset = { 0, sc(2), 5 }
+	count_text_style.offset = { -sc(2), sc(2), 5 }
 
 	local ox = sc(1)
 
@@ -598,7 +598,7 @@ local function create_prox_slot_widget(scenegraph_id, default_icon)
 
 		s.drop_shadow = false
 		s.text_color = { 255, 0, 0, 0 }
-		s.offset = { dx, sc(2) + dy, z }
+		s.offset = { -sc(2) + dx, sc(2) + dy, z }
 
 		return s
 	end
