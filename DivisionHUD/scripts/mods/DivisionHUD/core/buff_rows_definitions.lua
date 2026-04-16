@@ -37,7 +37,7 @@ end
 local BUFF_ROW_SPACING = BUFF_SLOT_SPACING
 -- Зазор под визуальным низом dodge-бара; ddg_top и ddg_visual_bottom_local — из vanilla_stamina_dodge_definitions.build_scenegraph.
 local BUFF_AREA_TOP_GAP = sc(10)
-local BUFF_AREA_LEFT_NUDGE = -sc(1) 
+local BUFF_AREA_LEFT_NUDGE = sc(1) 
 local BUFF_SLIDE_PX     = sc(18)   -- ход анимации в пикселях
 
 M.BUFF_SLOT_SPACING = BUFF_SLOT_SPACING
