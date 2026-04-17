@@ -207,6 +207,13 @@ local scenegraph_definition = {
 		size = { BAR_FILL_WIDTH, MAIN_ROW_HEIGHT },
 		position = { 0, ABILITY_BAR_STRIP_HEIGHT + BOXES_ROW_TOP_GAP, 0 },
 	},
+	boxes_row_main_slots = {
+		parent = "boxes_row",
+		horizontal_alignment = "left",
+		vertical_alignment = "top",
+		size = { BAR_FILL_WIDTH, MAIN_ROW_HEIGHT },
+		position = { 0, 0, 0 },
+	},
 	division_expedition_salvage_slot = {
 		parent = "boxes_row",
 		horizontal_alignment = "left",
@@ -437,21 +444,93 @@ local function create_combat_ability_bar_widget(scenegraph_id)
 	return UIWidget.create_definition(passes, scenegraph_id)
 end
 
-local function create_slots_bg_widget(scenegraph_id, w, h)
-	return UIWidget.create_definition({
+local function build_terminal_gradient_frame_corner_passes(w, h, z_gradient, z_shadow, z_frame, z_corner)
+	local wh = { w, h }
+
+	return {
 		{
 			pass_type = "texture",
-			style_id = "background",
-			value = "content/ui/materials/hud/backgrounds/terminal_background_weapon",
+			style_id = "background_gradient",
+			value = "content/ui/materials/gradients/gradient_vertical",
 			style = {
-				horizontal_alignment = "left",
-				vertical_alignment = "top",
-				color = Color.terminal_background_gradient(255, true),
-				size = { w, h },
-				offset = { 0, 0, 0 },
+				horizontal_alignment = "center",
+				vertical_alignment = "center",
+				size = wh,
+				default_color = Color.terminal_background_gradient(nil, true),
+				selected_color = Color.terminal_frame_selected(nil, true),
+				disabled_color = Color.ui_grey_medium(255, true),
+				color = table.clone(Color.terminal_background_gradient(nil, true)),
+				offset = { 0, 0, z_gradient },
 			},
 		},
-	}, scenegraph_id)
+		{
+			pass_type = "texture",
+			style_id = "outer_shadow",
+			value = "content/ui/materials/frames/dropshadow_medium",
+			style = {
+				horizontal_alignment = "center",
+				vertical_alignment = "center",
+				scale_to_material = true,
+				color = Color.black(200, true),
+				size_addition = {
+					20,
+					20,
+				},
+				offset = {
+					0,
+					0,
+					z_shadow,
+				},
+			},
+		},
+		{
+			pass_type = "texture",
+			style_id = "frame",
+			value = "content/ui/materials/frames/frame_tile_2px",
+			style = {
+				horizontal_alignment = "center",
+				vertical_alignment = "center",
+				default_color = Color.terminal_frame(nil, true),
+				selected_color = Color.terminal_frame_selected(nil, true),
+				disabled_color = Color.ui_grey_medium(255, true),
+				color = table.clone(Color.terminal_frame(nil, true)),
+				offset = { 0, 0, z_frame },
+			},
+		},
+		{
+			pass_type = "texture",
+			style_id = "corner",
+			value = "content/ui/materials/frames/frame_corner_2px",
+			style = {
+				horizontal_alignment = "center",
+				vertical_alignment = "center",
+				default_color = Color.terminal_corner(nil, true),
+				selected_color = Color.terminal_corner_selected(nil, true),
+				disabled_color = Color.ui_grey_light(255, true),
+				color = table.clone(Color.terminal_corner(nil, true)),
+				offset = { 0, 0, z_corner },
+			},
+		},
+	}
+end
+
+local BOXES_BG_Z_GRADIENT = 0
+local BOXES_BG_Z_SHADOW = 1
+local BOXES_BG_Z_FRAME = 2
+local BOXES_BG_Z_CORNER = 3
+
+local function create_slots_bg_widget(scenegraph_id, w, h)
+	return UIWidget.create_definition(
+		build_terminal_gradient_frame_corner_passes(
+			w,
+			h,
+			BOXES_BG_Z_GRADIENT,
+			BOXES_BG_Z_SHADOW,
+			BOXES_BG_Z_FRAME,
+			BOXES_BG_Z_CORNER
+		),
+		scenegraph_id
+	)
 end
 
 local function create_ammo_big_widget(scenegraph_id)
@@ -547,19 +626,29 @@ local function create_right_slot_widget(scenegraph_id)
 	}, scenegraph_id)
 end
 
+local PROX_TERMINAL_BG_Z_GRADIENT = 0
+local PROX_TERMINAL_BG_Z_SHADOW = 1
+local PROX_TERMINAL_BG_Z_FRAME = 2
+local PROX_TERMINAL_BG_Z_CORNER = 3
+local PROX_FG_Z_ICON = 6
+local PROX_FG_Z_DIST = 7
+local PROX_FG_Z_COUNT_OUTLINE = 8
+local PROX_FG_Z_COUNT = 9
+
 local function create_prox_slot_bg_widget(scenegraph_id)
-	return UIWidget.create_definition({
-		{
-			pass_type = "rect",
-			style_id = "background",
-			value_id = "background",
-			style = {
-				color = table.clone(HUD_GLASS_PLATE_COLOR),
-				size = { PROX_SLOT_SIZE, PROX_SLOT_SIZE },
-				offset = { 0, 0, 0 },
-			},
-		},
-	}, scenegraph_id)
+	local sz = PROX_SLOT_SIZE
+
+	return UIWidget.create_definition(
+		build_terminal_gradient_frame_corner_passes(
+			sz,
+			sz,
+			PROX_TERMINAL_BG_Z_GRADIENT,
+			PROX_TERMINAL_BG_Z_SHADOW,
+			PROX_TERMINAL_BG_Z_FRAME,
+			PROX_TERMINAL_BG_Z_CORNER
+		),
+		scenegraph_id
+	)
 end
 
 local PROX_COUNT_FONT = math.max(sc(9), math.floor(PROX_TEXT_FONT * 0.8 + 0.5))
@@ -577,7 +666,7 @@ local function create_prox_slot_widget(scenegraph_id, default_icon)
 	dist_text_style.text_vertical_alignment = "center"
 	dist_text_style.text_color = table.clone(UIHudSettings.color_tint_main_1)
 	dist_text_style.size = { PROX_SLOT_SIZE, math.ceil(PROX_TEXT_FONT * 1.4) }
-	dist_text_style.offset = { 0, math.floor(PROX_SLOT_SIZE * 0.5 - PROX_TEXT_FONT * 0.5 - sc(2)), 3 }
+	dist_text_style.offset = { 0, math.floor(PROX_SLOT_SIZE * 0.5 - PROX_TEXT_FONT * 0.5 - sc(2)), PROX_FG_Z_DIST }
 
 	local count_text_style = table.clone(UIFontSettings.hud_body)
 
@@ -589,7 +678,7 @@ local function create_prox_slot_widget(scenegraph_id, default_icon)
 	count_text_style.text_vertical_alignment = "top"
 	count_text_style.text_color = { 255, 255, 255, 255 }
 	count_text_style.size = { PROX_SLOT_SIZE - sc(2), PROX_SLOT_SIZE }
-	count_text_style.offset = { -sc(2), sc(2), 5 }
+	count_text_style.offset = { -sc(2), sc(2), PROX_FG_Z_COUNT }
 
 	local ox = sc(1)
 
@@ -614,7 +703,7 @@ local function create_prox_slot_widget(scenegraph_id, default_icon)
 				vertical_alignment = "center",
 				size = { PROX_ICON_SIZE, PROX_ICON_SIZE },
 				default_size = { PROX_ICON_SIZE, PROX_ICON_SIZE },
-				offset = { 0, -math.floor(PROX_TEXT_FONT * 0.6), 1 },
+				offset = { 0, -math.floor(PROX_TEXT_FONT * 0.6), PROX_FG_Z_ICON },
 				color = { 255, 255, 255, 255 },
 			},
 		},
@@ -630,28 +719,28 @@ local function create_prox_slot_widget(scenegraph_id, default_icon)
 			value_id = "count_text",
 			value = "",
 			style_id = "count_text_outline_w",
-			style = count_outline_style(-ox, 0, 3),
+			style = count_outline_style(-ox, 0, PROX_FG_Z_COUNT_OUTLINE),
 		},
 		{
 			pass_type = "text",
 			value_id = "count_text",
 			value = "",
 			style_id = "count_text_outline_e",
-			style = count_outline_style(ox, 0, 3),
+			style = count_outline_style(ox, 0, PROX_FG_Z_COUNT_OUTLINE),
 		},
 		{
 			pass_type = "text",
 			value_id = "count_text",
 			value = "",
 			style_id = "count_text_outline_n",
-			style = count_outline_style(0, -ox, 3),
+			style = count_outline_style(0, -ox, PROX_FG_Z_COUNT_OUTLINE),
 		},
 		{
 			pass_type = "text",
 			value_id = "count_text",
 			value = "",
 			style_id = "count_text_outline_s",
-			style = count_outline_style(0, ox, 3),
+			style = count_outline_style(0, ox, PROX_FG_Z_COUNT_OUTLINE),
 		},
 		{
 			pass_type = "text",
@@ -737,7 +826,7 @@ local PROX_CATEGORY_ICONS = {
 }
 
 local widget_definitions = {
-	boxes_bg = create_slots_bg_widget("boxes_row", BAR_FILL_WIDTH, MAIN_ROW_HEIGHT),
+	boxes_bg = create_slots_bg_widget("boxes_row_main_slots", BAR_FILL_WIDTH, MAIN_ROW_HEIGHT),
 	ability_bar = create_combat_ability_bar_widget("ability_bar"),
 	expedition_salvage = create_expedition_salvage_widget("division_expedition_salvage_slot"),
 	ammo_big = create_ammo_big_widget("ammo_big"),
