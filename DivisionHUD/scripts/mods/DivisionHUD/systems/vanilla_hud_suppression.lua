@@ -21,8 +21,6 @@ mod.divisionhud_vanilla_hud_apply_settings = function(setting_id)
 	if not relevant then
 		return
 	end
-
-	-- Draw hooks below are stateless and read mod._settings directly every frame.
 end
 
 mod:hook("HudElementStamina", "draw", function(func, self, dt, t, ui_renderer, render_settings, input_service)
