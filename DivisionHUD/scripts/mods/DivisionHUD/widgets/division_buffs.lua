@@ -1,3 +1,5 @@
+local mod = get_mod("DivisionHUD")
+
 local BuffSettings = require("scripts/settings/buff/buff_settings")
 local HudElementPlayerBuffsSettings = require("scripts/ui/hud/elements/player_buffs/hud_element_player_buffs_settings")
 local Colors = require("scripts/utilities/ui/colors")
@@ -326,6 +328,7 @@ M.update = function(self, dt, t, ui_renderer, opacity)
 
 	local entries = self._div_buff_entries
 	local raw_buffs = buff_extension and buff_extension:buffs() or nil
+	local debug_buffs = mod.divisionhud_debug_get_extra_buffs and mod.divisionhud_debug_get_extra_buffs() or nil
 	local show_aura_category = _show_aura_category()
 	local max_visible = math.min(self._div_buff_max_slots or MAX_BUFFS, MAX_BUFFS)
 	local slide_px = self._div_buff_slide_px
@@ -340,6 +343,16 @@ M.update = function(self, dt, t, ui_renderer, opacity)
 	if raw_buffs then
 		for i = 1, #raw_buffs do
 			local buff = raw_buffs[i]
+
+			if buff and buff:has_hud() then
+				_ensure_entry(self, entries, buff)
+			end
+		end
+	end
+
+	if debug_buffs then
+		for i = 1, #debug_buffs do
+			local buff = debug_buffs[i]
 
 			if buff and buff:has_hud() then
 				_ensure_entry(self, entries, buff)

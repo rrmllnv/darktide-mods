@@ -533,6 +533,13 @@ return {
 			title = "divisionhud_super_system",
 				sub_widgets = {
 					{
+						setting_id = "debug",
+						type = "checkbox",
+						title = "debug",
+						tooltip_text = "debug_description",
+						default_value = d("debug", false),
+					},
+					{
 						setting_id = "divisionhud_reset_all_settings",
 						type = "dropdown",
 						default_value = 0,

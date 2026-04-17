@@ -168,6 +168,7 @@ mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/vanilla_hud_suppress
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/settings")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/wielded_weapon_icon_tint")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/alerts")
+mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/debug")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/mission_objective_hud")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/team_alerts")
 

@@ -604,6 +604,16 @@ return {
 		ru = "\238\128\169 СИСТЕМНЫЕ НАСТРОЙКИ",
 		["zh-cn"] = "⚙️ 系统设置",
 	},
+	debug = {
+		en = "Debug",
+		ru = "Debug",
+		["zh-cn"] = "调试",
+	},
+	debug_description = {
+		en = "Enables the internal DivisionHUD debug hotkeys on the numpad. Numpad 1 shows the alert \"Enemies nearby\". Numpad 2 simulates the invulnerability toughness buff and the 125 + 170 toughness label.",
+		ru = "Включает внутренние debug-горячие клавиши DivisionHUD на numpad. Numpad 1 показывает алерт «Враги рядом». Numpad 2 имитирует баф неуязвимости на стойкость и подпись стойкости 125 + 170.",
+		["zh-cn"] = "启用 DivisionHUD 的数字小键盘调试热键。小键盘 1 显示“敌人接近”警报，小键盘 2 模拟无敌韧性增益和 125 + 170 韧性文本。",
+	},
 	divisionhud_reset_all_settings = {
 		en = "Reset settings",
 		ru = "Сбросить настройки",

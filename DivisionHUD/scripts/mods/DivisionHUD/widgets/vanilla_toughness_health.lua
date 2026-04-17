@@ -636,6 +636,14 @@ M.update = function(self, dt, t, player_unit, opacity)
 
 				local buff_extension = ScriptUnit.has_extension(player_unit, "buff_system")
 				local timed_gold_bar_fill = timed_gold_toughness_bar_fill_fraction(buff_extension)
+				local debug_timed_gold_bar_fill = mod.divisionhud_debug_get_timed_gold_bar_progress and mod.divisionhud_debug_get_timed_gold_bar_progress() or nil
+				local debug_toughness_override = mod.divisionhud_debug_get_toughness_override and mod.divisionhud_debug_get_toughness_override() or nil
+
+				if type(debug_timed_gold_bar_fill) == "number" and debug_timed_gold_bar_fill == debug_timed_gold_bar_fill and debug_timed_gold_bar_fill > 0 and debug_timed_gold_bar_fill <= 1 then
+					if timed_gold_bar_fill == nil or debug_timed_gold_bar_fill > timed_gold_bar_fill then
+						timed_gold_bar_fill = debug_timed_gold_bar_fill
+					end
+				end
 
 				local max_toughness = toughness_extension.max_toughness and toughness_extension:max_toughness() or 0
 				local max_toughness_visual = toughness_extension.max_toughness_visual and toughness_extension:max_toughness_visual() or 0
@@ -644,6 +652,17 @@ M.update = function(self, dt, t, player_unit, opacity)
 				local overshield_amount = current_toughness_visual < max_toughness and math.max(current_toughness - max_toughness_visual, 0) or 0
 				local has_overshield = math.floor(overshield_amount) > 0
 				local toughness_percentage_bar = toughness_extension.current_toughness_percent_visual and toughness_extension:current_toughness_percent_visual() or 0
+
+				if not has_overshield and type(debug_toughness_override) == "table" then
+					local debug_base_toughness_value = debug_toughness_override.base_toughness_value
+					local debug_bonus_toughness_value = debug_toughness_override.bonus_toughness_value
+
+					if type(debug_base_toughness_value) == "number" and type(debug_bonus_toughness_value) == "number" and debug_base_toughness_value >= 0 and debug_bonus_toughness_value > 0 then
+						max_toughness_visual = debug_base_toughness_value
+						overshield_amount = debug_bonus_toughness_value
+						has_overshield = true
+					end
+				end
 
 				if has_overshield and not self._vdth_has_toughness_overshield and toughness_percentage_bar >= 1 then
 					self._vdth_has_toughness_overshield = true

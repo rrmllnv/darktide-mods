@@ -50,6 +50,7 @@ local defaults = {
 	integration_recolor_stimms = false,
 	divisionhud_reset_all_settings = 0,
 	alerts_enabled = true,
+	debug = false,
 	alerts_max_visible = 2,
 	alerts_duration_sec = 6,
 	alerts_show_duration_bar = true,

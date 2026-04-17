@@ -1821,6 +1821,10 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	local widgets = self._widgets_by_name
 
 	if not is_in_hub and local_player and player_unit then
+		if mod.divisionhud_debug_update then
+			mod.divisionhud_debug_update()
+		end
+
 		self:_update_alert_slots(widgets, opacity, ui_renderer, dt)
 	end
 
