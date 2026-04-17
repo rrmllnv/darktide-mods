@@ -1229,6 +1229,7 @@ end
 
 local ALERT_ANIM_ENTER_DUR = 0.12
 local ALERT_ANIM_EXIT_DUR  = 0.15
+local ALERT_ANIM_ENTER_QUEUE_GAP = 0.5
 local ALERT_ANIM_DROP_PX_BASE  = 20
 local ALERT_ANIM_SLIDE_PX_BASE = 20
 
@@ -1263,6 +1264,7 @@ end
 local function _div_alert_init(self)
 	self._div_alert_by_key = {}
 	self._div_alert_col_h  = 0
+	self._div_alert_next_enter_t = nil
 end
 
 local function _div_alert_clear_slot_widget(w)
@@ -1312,6 +1314,7 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 	if alerts_master_off and not alerts_mirror_ui then
 		self._div_alert_by_key = {}
 		self._div_alert_col_h  = 0
+		self._div_alert_next_enter_t = nil
 
 		if mod.alerts_clear then
 			mod.alerts_clear()
@@ -1380,6 +1383,7 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 			item.timer     = 0
 			item.x_anim    = 0
 			item.y_at_exit = item.y_anim or item.y_layout or 0
+			self._div_alert_next_enter_t = math.max(self._div_alert_next_enter_t or gt, gt + ALERT_ANIM_EXIT_DUR)
 		end
 	end
 
@@ -1389,10 +1393,16 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 
 		if k then
 			if not by_key[k] then
+				local next_enter_t = self._div_alert_next_enter_t
+				local enter_start_t = math.max(gt, type(next_enter_t) == "number" and next_enter_t or gt)
+
+				self._div_alert_next_enter_t = enter_start_t + ALERT_ANIM_ENTER_QUEUE_GAP
+
 				by_key[k] = {
 					key              = k,
 					state            = "enter",
 					timer            = 0,
+					enter_start_t    = enter_start_t,
 					x_anim           = 0,
 					y_enter_ofs      = -drop_px,
 					y_anim           = 0,
@@ -1409,8 +1419,14 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 				existing.last_line = line
 
 				if existing.state == "exit" then
+					local next_enter_t = self._div_alert_next_enter_t
+					local enter_start_t = math.max(gt, type(next_enter_t) == "number" and next_enter_t or gt)
+
+					self._div_alert_next_enter_t = enter_start_t + ALERT_ANIM_ENTER_QUEUE_GAP
+
 					existing.state            = "enter"
 					existing.timer            = 0
+					existing.enter_start_t    = enter_start_t
 					existing.x_anim           = 0
 					existing.y_enter_ofs      = -drop_px
 					existing.alpha            = 0
@@ -1460,8 +1476,12 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 	for i = n, 1, -1 do
 		local k = _div_alert_line_key(lines[i])
 		local item = k and by_key[k]
+		local waiting_for_enter = item
+			and item.state == "enter"
+			and type(item.enter_start_t) == "number"
+			and gt < item.enter_start_t
 
-		if item and item.state ~= "exit" then
+		if item and item.state ~= "exit" and not waiting_for_enter then
 			stack[#stack + 1] = item
 		end
 	end
@@ -1515,17 +1535,26 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		item.timer = item.timer + dt
 
 		if item.state == "enter" then
-			local p  = math.min(1, item.timer / ALERT_ANIM_ENTER_DUR)
-			local ep = math.easeOutCubic(p)
+			local enter_start_t = type(item.enter_start_t) == "number" and item.enter_start_t or gt
+			local anim_t = math.max(0, gt - enter_start_t)
 
-			item.y_enter_ofs = -(drop_px * (1 - ep))
-			item.alpha       = ep
+			if gt < enter_start_t then
+				item.y_enter_ofs = -drop_px
+				item.alpha       = 0
+			else
+				local p  = math.min(1, anim_t / ALERT_ANIM_ENTER_DUR)
+				local ep = math.easeOutCubic(p)
+
+				item.y_enter_ofs = -(drop_px * (1 - ep))
+				item.alpha       = ep
+			end
 
 			local dy = item.y_layout - item.y_anim
 			item.y_anim = math.abs(dy) < 0.5 and item.y_layout or (item.y_anim + dy * col_lerp_k)
 
-			if p >= 1 then
+			if anim_t >= ALERT_ANIM_ENTER_DUR then
 				item.state       = "hold"
+				item.enter_start_t = nil
 				item.y_enter_ofs = 0
 				item.alpha       = 1
 			end
