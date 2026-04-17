@@ -1251,7 +1251,13 @@ local function _div_alert_line_key(line)
 		return nil
 	end
 
-	return tostring(line.alert_line_category or "") .. "\x1f" .. tostring(line.strip_label or "") .. "\x1f" .. t
+	local base_key = tostring(line.alert_line_category or "") .. "\x1f" .. tostring(line.strip_label or "") .. "\x1f" .. t
+
+	if line.alert_line_category == "debug" and line.alert_instance_id ~= nil then
+		return base_key .. "\x1f" .. tostring(line.alert_instance_id)
+	end
+
+	return base_key
 end
 
 local function _div_alert_init(self)

@@ -593,6 +593,7 @@ local function alerts_promote_from_pending(game_t)
 				spawn_count = sc,
 				alert_line_category = p.alert_line_category,
 				strip_label = p.strip_label,
+				alert_instance_id = p.alert_instance_id,
 				mission_merge_key = p.mission_merge_key,
 				mission_merge_first_t = p.mission_merge_first_t,
 				mission_merge_count = p.mission_merge_count,
@@ -776,7 +777,7 @@ mod.alerts_enqueue_spawn_grouped = function(group_key, category, display_name, g
 	end
 end
 
-mod.alerts_enqueue_strip_body = function(strip_label, body_text, game_t, alert_line_category)
+mod.alerts_enqueue_strip_body = function(strip_label, body_text, game_t, alert_line_category, alert_options)
 	local allow_strip = alerts_globally_enabled()
 
 	if not allow_strip and alert_line_category == "mission" and mod.mission_objective_mirror_wants_alerts_ui and mod.mission_objective_mirror_wants_alerts_ui() then
@@ -802,6 +803,7 @@ mod.alerts_enqueue_strip_body = function(strip_label, body_text, game_t, alert_l
 	local duration = alerts_duration_sec_clamped()
 	local max_vis = alerts_max_visible_clamped()
 	local cat = "default"
+	local instance_id = type(alert_options) == "table" and alert_options.instance_id or nil
 
 	if alert_line_category == "boss" then
 		cat = "boss"
@@ -809,6 +811,8 @@ mod.alerts_enqueue_strip_body = function(strip_label, body_text, game_t, alert_l
 		cat = "mission"
 	elseif alert_line_category == "team" then
 		cat = "team"
+	elseif alert_line_category == "debug" then
+		cat = "debug"
 	end
 
 	alerts_prune_expired(game_t)
@@ -841,6 +845,7 @@ mod.alerts_enqueue_strip_body = function(strip_label, body_text, game_t, alert_l
 		duration = duration,
 		alert_line_category = cat,
 		strip_label = strip_val,
+		alert_instance_id = instance_id,
 		mission_merge_key = mission_merge_key,
 		mission_merge_first_t = mission_merge_first_t,
 		mission_merge_count = mission_merge_count,
@@ -854,6 +859,7 @@ mod.alerts_enqueue_strip_body = function(strip_label, body_text, game_t, alert_l
 			duration_sec = duration,
 			alert_line_category = cat,
 			strip_label = strip_val,
+			alert_instance_id = instance_id,
 			mission_merge_key = mission_merge_key,
 			mission_merge_first_t = mission_merge_first_t,
 			mission_merge_count = mission_merge_count,

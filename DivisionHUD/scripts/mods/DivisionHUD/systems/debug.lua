@@ -19,6 +19,7 @@ local DEBUG_TOUGHNESS_BONUS_VALUE = 125
 local debug_state = {
 	invulnerability_start_t = nil,
 	invulnerability_expire_t = nil,
+	alert_instance_seq = 0,
 }
 
 local DEBUG_FAKE_BUFF_TEMPLATE = {
@@ -177,7 +178,11 @@ mod.divisionhud_debug_update = function()
 	refresh_debug_state(game_t)
 
 	if key_pressed("numpad 1") and mod.alerts_enqueue_strip_body then
-		mod.alerts_enqueue_strip_body(DEBUG_ALERT_STRIP, DEBUG_ALERT_TEXT, game_t)
+		debug_state.alert_instance_seq = debug_state.alert_instance_seq + 1
+
+		mod.alerts_enqueue_strip_body(DEBUG_ALERT_STRIP, DEBUG_ALERT_TEXT, game_t, "debug", {
+			instance_id = debug_state.alert_instance_seq,
+		})
 	end
 
 	if key_pressed("numpad 2") then
