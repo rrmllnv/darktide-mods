@@ -71,6 +71,26 @@ local function enqueue_mission_objective_alert(strip_label, body_text)
 	mod.alerts_enqueue_strip_body(strip_label, body, t, "mission")
 end
 
+mod.divisionhud_mission_objective_apply_settings = function(setting_id)
+	local relevant = setting_id == "divisionhud_reset_all_settings"
+		or setting_id == "hide_vanilla_mission_objectives"
+		or setting_id == "alert_mission_objective_start"
+		or setting_id == "alert_mission_objective_progress"
+		or setting_id == "alert_mission_objective_complete"
+		or setting_id == "alert_mission_objective_custom_popup"
+
+	if not relevant then
+		return
+	end
+
+	local Hu = mod.hud_utils
+	local hud_element = Hu and Hu.resolve_division_hud_instance and Hu.resolve_division_hud_instance()
+
+	if hud_element then
+		hud_element._div_alert_next_enter_t = nil
+	end
+end
+
 mod:hook("HudElementMissionObjectivePopup", "event_mission_objective_start", function(func, self, objective)
 	if not objective_uses_hud(objective) then
 		return func(self, objective)

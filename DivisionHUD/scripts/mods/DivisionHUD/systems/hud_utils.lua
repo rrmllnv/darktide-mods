@@ -27,17 +27,64 @@ function HudUtils.resolve_element_instance(hud, const, class_name)
 	return inst
 end
 
-local DIVISION_HUD_ELEMENT_CLASS_NAME = "HudElementDivisionHUD"
-local DIVISION_HUD_CUSTOM_HUD_SAVED_PREFIX = DIVISION_HUD_ELEMENT_CLASS_NAME .. "|"
-
-function HudUtils.custom_hud_has_saved_node_settings_for_division_hud()
+function HudUtils.resolve_mod(mod_name)
 	local get_mod_fn = rawget(_G, "get_mod")
 
-	if type(get_mod_fn) ~= "function" then
+	if type(get_mod_fn) ~= "function" or type(mod_name) ~= "string" or mod_name == "" then
+		return nil
+	end
+
+	return get_mod_fn(mod_name)
+end
+
+function HudUtils.mod_is_enabled(mod_handle)
+	if not mod_handle then
 		return false
 	end
 
-	local custom_hud_mod = get_mod_fn("custom_hud")
+	if type(mod_handle.is_enabled) ~= "function" then
+		return true
+	end
+
+	local ok, enabled = pcall(function()
+		return mod_handle:is_enabled()
+	end)
+
+	return ok and enabled == true
+end
+
+function HudUtils.is_valid_argb_255(c)
+	return type(c) == "table"
+		and type(c[1]) == "number"
+		and type(c[2]) == "number"
+		and type(c[3]) == "number"
+		and type(c[4]) == "number"
+end
+
+function HudUtils.copy_argb_255(c)
+	if not HudUtils.is_valid_argb_255(c) then
+		return nil
+	end
+
+	return {
+		c[1],
+		c[2],
+		c[3],
+		c[4],
+	}
+end
+
+local DIVISION_HUD_ELEMENT_CLASS_NAME = "HudElementDivisionHUD"
+local DIVISION_HUD_CUSTOM_HUD_SAVED_PREFIX = DIVISION_HUD_ELEMENT_CLASS_NAME .. "|"
+
+function HudUtils.resolve_division_hud_instance()
+	local hud, const = HudUtils.get_current_hud_instances()
+
+	return HudUtils.resolve_element_instance(hud, const, DIVISION_HUD_ELEMENT_CLASS_NAME)
+end
+
+function HudUtils.custom_hud_has_saved_node_settings_for_division_hud()
+	local custom_hud_mod = HudUtils.resolve_mod("custom_hud")
 
 	if not custom_hud_mod or type(custom_hud_mod.get) ~= "function" then
 		return false
@@ -63,13 +110,7 @@ end
 local DIVISION_HUD_CUSTOM_HUD_ROOT_NODE_NAME = DIVISION_HUD_ELEMENT_CLASS_NAME .. "|root"
 
 function HudUtils.custom_hud_get_saved_root_position_for_division_hud()
-	local get_mod_fn = rawget(_G, "get_mod")
-
-	if type(get_mod_fn) ~= "function" then
-		return nil
-	end
-
-	local custom_hud_mod = get_mod_fn("custom_hud")
+	local custom_hud_mod = HudUtils.resolve_mod("custom_hud")
 
 	if not custom_hud_mod or type(custom_hud_mod.get) ~= "function" then
 		return nil

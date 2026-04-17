@@ -8,6 +8,23 @@ local function divisionhud_panel_is_team_handler_local_player(panel)
 	return d ~= nil and d.scenegraph_id == "local_player"
 end
 
+mod.divisionhud_vanilla_hud_apply_settings = function(setting_id)
+	local relevant = setting_id == "divisionhud_reset_all_settings"
+		or setting_id == "hide_vanilla_stamina_area"
+		or setting_id == "hide_vanilla_dodge_area"
+		or setting_id == "hide_vanilla_team_panel_local"
+		or setting_id == "hide_vanilla_weapon_pivot"
+		or setting_id == "hide_vanilla_combat_ability_slot"
+		or setting_id == "hide_vanilla_player_buffs_background"
+		or setting_id == "hide_vanilla_mission_objectives"
+
+	if not relevant then
+		return
+	end
+
+	-- Draw hooks below are stateless and read mod._settings directly every frame.
+end
+
 mod:hook("HudElementStamina", "draw", function(func, self, dt, t, ui_renderer, render_settings, input_service)
 	local s = mod._settings
 

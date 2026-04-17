@@ -1,12 +1,13 @@
 local mod = get_mod("DivisionHUD")
 
-mod._division_hud_recolor_stimms_mod = nil
 mod.tracked_deployables = mod.tracked_deployables or {}
 
 mod.on_all_mods_loaded = function()
-	local get_mod_fn = rawget(_G, "get_mod")
+	local bridge = mod.recolor_stimms_bridge
 
-	mod._division_hud_recolor_stimms_mod = type(get_mod_fn) == "function" and get_mod_fn("RecolorStimms") or nil
+	if bridge and type(bridge.refresh) == "function" then
+		bridge.refresh()
+	end
 end
 
 local function division_hud_add_tracked_deployable(unit, name, duration)
@@ -136,6 +137,43 @@ for _, hud_element in ipairs(hud_elements) do
 	mod:add_require_path(hud_element.filename)
 end
 
+local function divisionhud_insert_or_replace_element(element_pool, data)
+	if type(element_pool) ~= "table" or type(data) ~= "table" then
+		return
+	end
+
+	for i = 1, #element_pool do
+		local element = element_pool[i]
+
+		if type(element) == "table" and element.class_name == data.class_name then
+			element_pool[i] = data
+
+			return
+		end
+	end
+
+	element_pool[#element_pool + 1] = data
+end
+
+local function add_or_replace_division_hud_elements(element_pool)
+	for _, hud_element in ipairs(hud_elements) do
+		divisionhud_insert_or_replace_element(element_pool, {
+			class_name = hud_element.class_name,
+			filename = hud_element.filename,
+			use_hud_scale = true,
+			visibility_groups = hud_element.visibility_groups or {
+				"alive",
+			},
+		})
+	end
+end
+
+mod:hook_require("scripts/ui/hud/hud_elements_player_onboarding", add_or_replace_division_hud_elements)
+mod:hook_require("scripts/ui/hud/hud_elements_player", add_or_replace_division_hud_elements)
+mod:hook_require("scripts/ui/hud/hud_elements_training_grounds", add_or_replace_division_hud_elements)
+mod:hook_require("scripts/ui/hud/hud_elements_shooting_range", add_or_replace_division_hud_elements)
+mod:hook_require("scripts/ui/hud/hud_elements_tutorial", add_or_replace_division_hud_elements)
+
 mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/core/definitions")
 mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/core/slot_data")
 mod:add_require_path("DivisionHUD/scripts/mods/DivisionHUD/core/alerts_definitions")
@@ -163,7 +201,14 @@ mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, para
 	return func(self, elements, visibility_groups, params)
 end)
 
+mod:hook("MechanismManager", "mechanism_data", function(func, self)
+	if self and self._mechanism then
+		return func(self)
+	end
+end)
+
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/hud_utils")
+mod.recolor_stimms_bridge = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/compat/recolor_stimms_bridge")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/vanilla_hud_suppression")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/settings")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/wielded_weapon_icon_tint")
@@ -171,4 +216,56 @@ mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/alerts")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/debug")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/mission_objective_hud")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/systems/team_alerts")
+
+mod.divisionhud_proximity_apply_settings = function(setting_id)
+	local relevant = setting_id == "divisionhud_reset_all_settings"
+		or setting_id == "proximity_enabled"
+		or setting_id == "proximity_radius"
+		or setting_id == "proximity_show_medical_station"
+		or setting_id == "proximity_show_medical"
+		or setting_id == "proximity_show_medical_deployed"
+		or setting_id == "proximity_show_stimm"
+		or setting_id == "proximity_show_ammo_small"
+		or setting_id == "proximity_show_ammo_large"
+		or setting_id == "proximity_show_ammo_crate"
+		or setting_id == "proximity_show_grenade"
+		or setting_id == "proximity_show_grimoire"
+		or setting_id == "proximity_show_tome"
+
+	if not relevant then
+		return
+	end
+
+	local HudUtils = mod.hud_utils
+	local hud_element = HudUtils and HudUtils.resolve_division_hud_instance and HudUtils.resolve_division_hud_instance()
+
+	if not hud_element then
+		return
+	end
+
+	hud_element._prox_scan_timer = math.huge
+	hud_element._prox_data = {}
+	hud_element._prox_anim = {}
+end
+
+mod.divisionhud_alerts_apply_settings = function(setting_id)
+	local relevant = setting_id == "divisionhud_reset_all_settings"
+		or setting_id == "alerts_enabled"
+		or setting_id == "alerts_max_visible"
+		or setting_id == "alerts_duration_sec"
+		or setting_id == "alerts_show_duration_bar"
+
+	if not relevant then
+		return
+	end
+
+	local HudUtils = mod.hud_utils
+	local hud_element = HudUtils and HudUtils.resolve_division_hud_instance and HudUtils.resolve_division_hud_instance()
+
+	if not hud_element then
+		return
+	end
+
+	hud_element._div_alert_next_enter_t = nil
+end
 

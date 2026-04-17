@@ -74,6 +74,16 @@ local function clear_debug_state()
 	debug_state.invulnerability_expire_t = nil
 end
 
+mod.divisionhud_debug_apply_settings = function(setting_id)
+	if setting_id ~= "debug" and setting_id ~= "divisionhud_reset_all_settings" then
+		return
+	end
+
+	if not debug_enabled() then
+		clear_debug_state()
+	end
+end
+
 local function refresh_debug_state(game_t)
 	local expire_t = debug_state.invulnerability_expire_t
 

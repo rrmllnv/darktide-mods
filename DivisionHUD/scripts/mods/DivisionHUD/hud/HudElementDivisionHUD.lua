@@ -37,6 +37,7 @@ end
 local DynamicHudContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/dynamic_hud")
 local GameFlowContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/game_flow")
 local ProximityScan = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/proximity_scan")
+local HudUtils = mod.hud_utils or {}
 
 local HudElementDivisionHUD = class("HudElementDivisionHUD", "HudElementBase")
 
@@ -163,11 +164,7 @@ local function split_lead_zero(raw_display)
 end
 
 local function is_valid_argb_255(c)
-	return type(c) == "table"
-		and type(c[1]) == "number"
-		and type(c[2]) == "number"
-		and type(c[3]) == "number"
-		and type(c[4]) == "number"
+	return HudUtils.is_valid_argb_255 and HudUtils.is_valid_argb_255(c) or false
 end
 
 local function resolve_ammo_total_fraction(slot_component)
@@ -311,23 +308,14 @@ local function resolve_stimm_slot_main_argb_255(stimm_template_id, s_cfg)
 	end
 
 	local use_recolor = type(s_cfg) == "table" and s_cfg.integration_recolor_stimms == true
-	local rm = mod._division_hud_recolor_stimms_mod
+	local fallback = DIVISION_STIMM_SLOT_TYPE_COLORS[stimm_template_id]
+	local bridge = mod.recolor_stimms_bridge
 
-	if
-		use_recolor
-		and rm
-		and type(rm.is_enabled) == "function"
-		and rm:is_enabled()
-		and type(rm.get_stimm_argb_255) == "function"
-	then
-		local from_recolor = rm.get_stimm_argb_255(stimm_template_id)
-
-		if is_valid_argb_255(from_recolor) then
-			return from_recolor
-		end
+	if use_recolor and bridge and type(bridge.stimm_argb255) == "function" then
+		return bridge.stimm_argb255(stimm_template_id, fallback)
 	end
 
-	return DIVISION_STIMM_SLOT_TYPE_COLORS[stimm_template_id]
+	return fallback
 end
 
 local function get_stimm_countdown_display_for_player_unit(player_unit)
