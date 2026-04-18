@@ -143,6 +143,18 @@ return {
 								text = "main_strip_background_fill_black",
 								value = 1,
 							},
+							{
+								text = "main_strip_background_fill_terminal_grid_tint",
+								value = 2,
+							},
+							{
+								text = "main_strip_background_fill_weapon_stats_panel",
+								value = 3,
+							},
+							{
+								text = "main_strip_background_fill_inventory_grid",
+								value = 4,
+							},
 						},
 					},
 				},

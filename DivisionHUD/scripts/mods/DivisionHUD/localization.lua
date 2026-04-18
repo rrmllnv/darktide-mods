@@ -125,19 +125,34 @@ return {
 		["zh-cn"] = "横条背景填充",
 	},
 	main_strip_background_fill_description = {
-		en = "Fill color behind the main Division HUD strip (slot row) and proximity scanner slot frames: vanilla terminal gradient, or solid black.",
-		ru = "Цвет заливки под основной полоской Division HUD (ряд слотов) и под фонами слотов сканера близости: исходный терминальный градиент или чёрный.",
-		["zh-cn"] = "主战斗横条与邻近物品槽背景的填充色：原版终端渐变或纯黑。",
+		en = "Strip background: first three are simple tints on the gradient pass (original mod). Values 3–4 replicate vanilla item stats panel and inventory grid backgrounds.",
+		ru = "Фон полоски: первые три — простые тинты на градиенте (как раньше в моде). Значения 3–4 — ваниль: панель статов предмета и сетка инвентаря.",
+		["zh-cn"] = "前三个为渐变层简单着色；3–4 复刻物品侧栏与库存网格背景。",
 	},
 	main_strip_background_fill_terminal = {
-		en = "Terminal (default)",
-		ru = "Терминал (по умолчанию)",
-		["zh-cn"] = "终端渐变（默认）",
+		en = "Terminal gradient (simple)",
+		ru = "Терминальный градиент (простой)",
+		["zh-cn"] = "终端渐变（简单）",
 	},
 	main_strip_background_fill_black = {
-		en = "Black",
-		ru = "Чёрный",
-		["zh-cn"] = "黑色",
+		en = "Black (simple)",
+		ru = "Чёрный (простой)",
+		["zh-cn"] = "黑色（简单）",
+	},
+	main_strip_background_fill_terminal_grid_tint = {
+		en = "Terminal grid tint on gradient (simple)",
+		ru = "Тинт terminal_grid на градиенте (простой)",
+		["zh-cn"] = "网格色染渐变（简单）",
+	},
+	main_strip_background_fill_weapon_stats_panel = {
+		en = "Item stats panel (weapon stats)",
+		ru = "Панель статов предмета (weapon stats)",
+		["zh-cn"] = "物品属性侧栏",
+	},
+	main_strip_background_fill_inventory_grid = {
+		en = "Inventory / vendor grid",
+		ru = "Сетка инвентаря / вендора",
+		["zh-cn"] = "库存或商店网格",
 	},
 	divisionhud_super_dynamic = {
 		en = "\238\129\135 DYNAMIC HUD",

@@ -444,18 +444,51 @@ local function create_combat_ability_bar_widget(scenegraph_id)
 	return UIWidget.create_definition(passes, scenegraph_id)
 end
 
+local STRIP_FILL_MATERIAL_DEFAULT = "content/ui/materials/gradients/gradient_vertical"
+
+local function strip_bg_widget_content_defaults()
+	return {
+		weapon_stats_dim_visible = false,
+		strip_fill_visible = true,
+		strip_fill_material = STRIP_FILL_MATERIAL_DEFAULT,
+		terminal_chrome_visible = true,
+		shadow_visible = true,
+	}
+end
+
 local function build_terminal_gradient_frame_corner_passes(w, h, z_gradient, z_shadow, z_frame, z_corner)
 	local wh = { w, h }
+	local z_dim = z_gradient - 2
 
 	return {
 		{
-			pass_type = "texture",
-			style_id = "background_gradient",
-			value = "content/ui/materials/gradients/gradient_vertical",
+			pass_type = "rect",
+			style_id = "weapon_stats_dim_rect",
+			visibility_function = function(content)
+				return content.weapon_stats_dim_visible == true
+			end,
 			style = {
 				horizontal_alignment = "center",
 				vertical_alignment = "center",
 				size = wh,
+				color = { 100, 0, 0, 0 },
+				offset = { 0, 0, z_dim },
+			},
+		},
+		{
+			pass_type = "texture",
+			style_id = "strip_fill",
+			value_id = "strip_fill_material",
+			value = STRIP_FILL_MATERIAL_DEFAULT,
+			visibility_function = function(content)
+				return content.strip_fill_visible == true
+			end,
+			style = {
+				horizontal_alignment = "center",
+				vertical_alignment = "center",
+				scale_to_material = true,
+				size = wh,
+				size_addition = { 0, 0 },
 				default_color = Color.terminal_background_gradient(nil, true),
 				selected_color = Color.terminal_frame_selected(nil, true),
 				disabled_color = Color.ui_grey_medium(255, true),
@@ -467,6 +500,9 @@ local function build_terminal_gradient_frame_corner_passes(w, h, z_gradient, z_s
 			pass_type = "texture",
 			style_id = "outer_shadow",
 			value = "content/ui/materials/frames/dropshadow_medium",
+			visibility_function = function(content)
+				return content.shadow_visible == true
+			end,
 			style = {
 				horizontal_alignment = "center",
 				vertical_alignment = "center",
@@ -487,6 +523,9 @@ local function build_terminal_gradient_frame_corner_passes(w, h, z_gradient, z_s
 			pass_type = "texture",
 			style_id = "frame",
 			value = "content/ui/materials/frames/frame_tile_2px",
+			visibility_function = function(content)
+				return content.terminal_chrome_visible == true
+			end,
 			style = {
 				horizontal_alignment = "center",
 				vertical_alignment = "center",
@@ -501,6 +540,9 @@ local function build_terminal_gradient_frame_corner_passes(w, h, z_gradient, z_s
 			pass_type = "texture",
 			style_id = "corner",
 			value = "content/ui/materials/frames/frame_corner_2px",
+			visibility_function = function(content)
+				return content.terminal_chrome_visible == true
+			end,
 			style = {
 				horizontal_alignment = "center",
 				vertical_alignment = "center",
@@ -529,7 +571,8 @@ local function create_slots_bg_widget(scenegraph_id, w, h)
 			BOXES_BG_Z_FRAME,
 			BOXES_BG_Z_CORNER
 		),
-		scenegraph_id
+		scenegraph_id,
+		strip_bg_widget_content_defaults()
 	)
 end
 
@@ -647,7 +690,8 @@ local function create_prox_slot_bg_widget(scenegraph_id)
 			PROX_TERMINAL_BG_Z_FRAME,
 			PROX_TERMINAL_BG_Z_CORNER
 		),
-		scenegraph_id
+		scenegraph_id,
+		strip_bg_widget_content_defaults()
 	)
 end
 
