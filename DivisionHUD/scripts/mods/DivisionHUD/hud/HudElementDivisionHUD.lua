@@ -131,6 +131,60 @@ local function read_mod_numeric_setting(key)
 	return 0
 end
 
+local function copy_argb_255_components(dst, src)
+	if not dst or not src then
+		return
+	end
+
+	dst[1] = src[1]
+	dst[2] = src[2]
+	dst[3] = src[3]
+	dst[4] = src[4]
+end
+
+local function resolve_main_strip_background_fill_mode()
+	local s_cfg = mod._settings
+	local v = type(s_cfg) == "table" and s_cfg.main_strip_background_fill
+
+	if v == 1 or v == true then
+		return 1
+	end
+
+	if v == 0 or v == false then
+		return 0
+	end
+
+	local default_v = DivisionHUDSettingsDefaults.main_strip_background_fill
+
+	if default_v == 1 or default_v == true then
+		return 1
+	end
+
+	return 0
+end
+
+local function apply_main_strip_background_gradient_fill(widget, src_rgba)
+	if not widget or not src_rgba then
+		return
+	end
+
+	local st = widget.style and widget.style.background_gradient
+
+	if not st then
+		return
+	end
+
+	if st.color then
+		copy_argb_255_components(st.color, src_rgba)
+	end
+
+	if st.default_color then
+		copy_argb_255_components(st.default_color, src_rgba)
+	end
+
+	widget.dirty = true
+end
+
 local function wrapped_angle_delta(prev_rad, curr_rad)
 	return (curr_rad - prev_rad + math.pi) % (math.pi * 2) - math.pi
 end
@@ -1877,6 +1931,22 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 
 	VanillaStaminaDodge.update(self, dt, t, ui_renderer, render_settings, input_service)
 	VanillaToughnessHealth.update(self, dt, t, player_unit, opacity)
+
+	local fill_mode = resolve_main_strip_background_fill_mode()
+
+	if self._main_strip_background_fill_mode_cache ~= fill_mode then
+		self._main_strip_background_fill_mode_cache = fill_mode
+
+		local fill_src = fill_mode == 1 and Color.black(nil, true) or Color.terminal_background_gradient(nil, true)
+
+		apply_main_strip_background_gradient_fill(widgets.boxes_bg, fill_src)
+
+		for i = 1, #ProximityScan.CATEGORIES do
+			local cat = ProximityScan.CATEGORIES[i]
+
+			apply_main_strip_background_gradient_fill(widgets["prox_" .. cat .. "_bg"], fill_src)
+		end
+	end
 
 	local boxes_bg = widgets.boxes_bg
 

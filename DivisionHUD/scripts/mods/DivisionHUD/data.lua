@@ -128,6 +128,23 @@ return {
 						tooltip_text = "buff_rows_enabled_description",
 						default_value = d("buff_rows_enabled", true),
 					},
+					{
+						setting_id = "main_strip_background_fill",
+						type = "dropdown",
+						title = "main_strip_background_fill",
+						tooltip_text = "main_strip_background_fill_description",
+						default_value = d("main_strip_background_fill", 0),
+						options = {
+							{
+								text = "main_strip_background_fill_terminal",
+								value = 0,
+							},
+							{
+								text = "main_strip_background_fill_black",
+								value = 1,
+							},
+						},
+					},
 				},
 			},
 			{

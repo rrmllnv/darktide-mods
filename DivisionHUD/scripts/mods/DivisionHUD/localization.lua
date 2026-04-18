@@ -119,6 +119,26 @@ return {
 		ru = "Отображает активные бафы игрока рядами ниже полос стамины/уклонения (до 15 бафов, по 5 в ряд).",
 		["zh-cn"] = "在耐力/闪避栏下方以行显示玩家的激活增益（最多15个，每行5个）。",
 	},
+	main_strip_background_fill = {
+		en = "Strip background fill",
+		ru = "Заливка фона полоски",
+		["zh-cn"] = "横条背景填充",
+	},
+	main_strip_background_fill_description = {
+		en = "Fill color behind the main Division HUD strip (slot row) and proximity scanner slot frames: vanilla terminal gradient, or solid black.",
+		ru = "Цвет заливки под основной полоской Division HUD (ряд слотов) и под фонами слотов сканера близости: исходный терминальный градиент или чёрный.",
+		["zh-cn"] = "主战斗横条与邻近物品槽背景的填充色：原版终端渐变或纯黑。",
+	},
+	main_strip_background_fill_terminal = {
+		en = "Terminal (default)",
+		ru = "Терминал (по умолчанию)",
+		["zh-cn"] = "终端渐变（默认）",
+	},
+	main_strip_background_fill_black = {
+		en = "Black",
+		ru = "Чёрный",
+		["zh-cn"] = "黑色",
+	},
 	divisionhud_super_dynamic = {
 		en = "\238\129\135 DYNAMIC HUD",
 		ru = "\238\129\135 ДИНАМИЧЕСКИЙ HUD",

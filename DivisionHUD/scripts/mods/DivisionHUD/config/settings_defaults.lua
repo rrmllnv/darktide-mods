@@ -45,6 +45,7 @@ local defaults = {
 	proximity_show_grimoire = true,
 	proximity_show_tome     = true,
 	buff_rows_enabled = true,
+	main_strip_background_fill = 0,
 	integration_custom_hud = false,
 	integration_stimm_countdown = true,
 	integration_recolor_stimms = false,
