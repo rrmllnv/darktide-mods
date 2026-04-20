@@ -85,7 +85,7 @@ return {
 								type = "checkbox",
 								title = "divisionhud_auto_slot_device",
 								tooltip_text = "divisionhud_auto_slot_device_description",
-								default_value = d("divisionhud_auto_slot_device", true),
+								default_value = d("divisionhud_auto_slot_device", false),
 							},
 						},
 					},

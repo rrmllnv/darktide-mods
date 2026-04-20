@@ -73,7 +73,7 @@ local function effective_hud_visible(s_op, player_unit, defaults)
 	end
 
 	if allow_hud_with_slot_device == nil then
-		allow_hud_with_slot_device = true
+		allow_hud_with_slot_device = false
 	end
 
 	allow_hud_with_slot_device = allow_hud_with_slot_device ~= false and allow_hud_with_slot_device ~= 0
