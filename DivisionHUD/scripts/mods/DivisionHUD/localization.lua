@@ -125,9 +125,19 @@ return {
 		["zh-cn"] = "横条背景填充",
 	},
 	main_strip_background_fill_description = {
-		en = "Strip background: first three are simple tints on the gradient pass (original mod). Values 3–4 replicate vanilla item stats panel and inventory grid backgrounds.",
-		ru = "Фон полоски: первые три — простые тинты на градиенте (как раньше в моде). Значения 3–4 — ваниль: панель статов предмета и сетка инвентаря.",
-		["zh-cn"] = "前三个为渐变层简单着色；3–4 复刻物品侧栏与库存网格背景。",
+		en = "Modes 0–1: weapon HUD fill (terminal_background_weapon), plain or with Division frame. Modes 2–4: simple tints on the gradient pass. Modes 5–6: vanilla item stats panel and inventory grid backgrounds.",
+		ru = "0–1: оружейная заливка (terminal_background_weapon), без рамки или с рамкой Division. 2–4: простые тинты на градиенте. 5–6: панель статов предмета и сетка инвентаря.",
+		["zh-cn"] = "0–1：武器底图；2–4：渐变简单着色；5–6：物品侧栏与库存网格。",
+	},
+	main_strip_background_fill_weapon_hud_plain = {
+		en = "Weapon fill only (no frame)",
+		ru = "Только оружейная заливка (без рамки)",
+		["zh-cn"] = "仅武器底图（无边框）",
+	},
+	main_strip_background_fill_weapon_hud = {
+		en = "Weapon slot + Division frame",
+		ru = "Оружейный слот + рамка Division",
+		["zh-cn"] = "武器槽 + Division 边框",
 	},
 	main_strip_background_fill_terminal = {
 		en = "Terminal gradient (simple)",

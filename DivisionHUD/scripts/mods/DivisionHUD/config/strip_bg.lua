@@ -1,11 +1,14 @@
 -- Фон полоски Division HUD (boxes_bg + prox_*_bg).
--- 0–2 — простые тинты на pass strip_fill + gradient_vertical (как раньше в моде).
--- 3–4 — ваниль: панель статов предмета (weapon stats), сетка инвентаря (view_element_grid).
+-- Режимы 0–6 — порядок как в настройках мода (см. data.lua main_strip_background_fill).
+-- 0–1: terminal_background_weapon (ванильный слот оружия), без/с рамкой Division.
+-- 2–4: простые тинты на gradient_vertical.
+-- 5–6: ваниль — панель статов предмета, сетка инвентаря.
 
 require("scripts/foundation/utilities/color")
 
 local MATERIAL_TERMINAL_BASIC = "content/ui/materials/backgrounds/terminal_basic"
 local MATERIAL_GRADIENT_VERTICAL = "content/ui/materials/gradients/gradient_vertical"
+local MATERIAL_WEAPON_HUD = "content/ui/materials/hud/backgrounds/terminal_background_weapon"
 
 local function set_strip_fill_size_addition(widget, add_w, add_h)
 	local st = widget.style and widget.style.strip_fill
@@ -73,6 +76,38 @@ local function apply_simple_strip(widget, get_tint_rgba)
 	tint_strip_fill(widget, get_tint_rgba)
 end
 
+local function apply_vanilla_weapon_hud_strip(widget)
+	local c = widget.content
+
+	c.weapon_stats_dim_visible = false
+	c.strip_fill_visible = true
+	c.terminal_chrome_visible = true
+	c.shadow_visible = true
+	c.strip_fill_material = MATERIAL_WEAPON_HUD
+
+	set_strip_fill_size_addition(widget, 0, 0)
+
+	tint_strip_fill(widget, function()
+		return table.clone(Color.terminal_background_gradient(255, true))
+	end)
+end
+
+local function apply_vanilla_weapon_hud_strip_no_chrome(widget)
+	local c = widget.content
+
+	c.weapon_stats_dim_visible = false
+	c.strip_fill_visible = true
+	c.terminal_chrome_visible = false
+	c.shadow_visible = false
+	c.strip_fill_material = MATERIAL_WEAPON_HUD
+
+	set_strip_fill_size_addition(widget, 0, 0)
+
+	tint_strip_fill(widget, function()
+		return table.clone(Color.terminal_background_gradient(255, true))
+	end)
+end
+
 local function apply_vanilla_weapon_stats(widget)
 	local c = widget.content
 
@@ -112,11 +147,7 @@ local function normalize_mode(raw, raw_default)
 		v = tonumber(v)
 	end
 
-	if v == 5 then
-		v = 0
-	end
-
-	if v == 0 or v == 1 or v == 2 or v == 3 or v == 4 then
+	if v == 0 or v == 1 or v == 2 or v == 3 or v == 4 or v == 5 or v == 6 then
 		return v
 	end
 
@@ -126,11 +157,7 @@ local function normalize_mode(raw, raw_default)
 		d = tonumber(d)
 	end
 
-	if d == 5 then
-		d = 0
-	end
-
-	if d == 0 or d == 1 or d == 2 or d == 3 or d == 4 then
+	if d == 0 or d == 1 or d == 2 or d == 3 or d == 4 or d == 5 or d == 6 then
 		return d
 	end
 
@@ -145,20 +172,24 @@ local function apply_strip_background_to_widget(widget, mode)
 	mode = normalize_mode(mode, 0)
 
 	if mode == 0 then
+		apply_vanilla_weapon_hud_strip_no_chrome(widget)
+	elseif mode == 1 then
+		apply_vanilla_weapon_hud_strip(widget)
+	elseif mode == 2 then
 		apply_simple_strip(widget, function()
 			return table.clone(Color.terminal_background_gradient(nil, true))
 		end)
-	elseif mode == 1 then
+	elseif mode == 3 then
 		apply_simple_strip(widget, function()
 			return table.clone(Color.black(nil, true))
 		end)
-	elseif mode == 2 then
+	elseif mode == 4 then
 		apply_simple_strip(widget, function()
 			return table.clone(Color.terminal_grid_background(nil, true))
 		end)
-	elseif mode == 3 then
+	elseif mode == 5 then
 		apply_vanilla_weapon_stats(widget)
-	elseif mode == 4 then
+	elseif mode == 6 then
 		apply_vanilla_inventory_grid(widget)
 	end
 
@@ -166,11 +197,13 @@ local function apply_strip_background_to_widget(widget, mode)
 end
 
 local PRESETS = {
-	[0] = { id = "simple_terminal_background_gradient" },
-	[1] = { id = "simple_black" },
-	[2] = { id = "simple_terminal_grid_tint" },
-	[3] = { id = "vanilla_weapon_stats_grid_background" },
-	[4] = { id = "vanilla_view_element_grid_background" },
+	[0] = { id = "vanilla_hud_weapon_slot_background_no_chrome" },
+	[1] = { id = "vanilla_hud_weapon_slot_background" },
+	[2] = { id = "simple_terminal_background_gradient" },
+	[3] = { id = "simple_black" },
+	[4] = { id = "simple_terminal_grid_tint" },
+	[5] = { id = "vanilla_weapon_stats_grid_background" },
+	[6] = { id = "vanilla_view_element_grid_background" },
 }
 
 local function resolve_preset(mode)
@@ -179,8 +212,9 @@ end
 
 return {
 	PRESETS = PRESETS,
-	DROPDOWN_VALUES = { 0, 1, 2, 3, 4 },
+	DROPDOWN_VALUES = { 0, 1, 2, 3, 4, 5, 6 },
 	normalize_mode = normalize_mode,
 	resolve_preset = resolve_preset,
 	apply_strip_background_to_widget = apply_strip_background_to_widget,
 }
+

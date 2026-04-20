@@ -136,24 +136,32 @@ return {
 						default_value = d("main_strip_background_fill", 0),
 						options = {
 							{
-								text = "main_strip_background_fill_terminal",
+								text = "main_strip_background_fill_weapon_hud_plain",
 								value = 0,
 							},
 							{
-								text = "main_strip_background_fill_black",
+								text = "main_strip_background_fill_weapon_hud",
 								value = 1,
 							},
 							{
-								text = "main_strip_background_fill_terminal_grid_tint",
+								text = "main_strip_background_fill_terminal",
 								value = 2,
 							},
 							{
-								text = "main_strip_background_fill_weapon_stats_panel",
+								text = "main_strip_background_fill_black",
 								value = 3,
 							},
 							{
-								text = "main_strip_background_fill_inventory_grid",
+								text = "main_strip_background_fill_terminal_grid_tint",
 								value = 4,
+							},
+							{
+								text = "main_strip_background_fill_weapon_stats_panel",
+								value = 5,
+							},
+							{
+								text = "main_strip_background_fill_inventory_grid",
+								value = 6,
 							},
 						},
 					},
