@@ -49,6 +49,7 @@ end
 
 local DynamicHudContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/dynamic_hud")
 local GameFlowContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/game_flow")
+local AutoSwitchHud = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/auto_switch_hud")
 local ProximityScan = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/proximity_scan")
 local HudUtils = mod.hud_utils or {}
 
@@ -1855,8 +1856,9 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	local opacity_raw = s_op and s_op.opacity
 	local opacity = (type(opacity_raw) == "number" and opacity_raw) or 1.0
 	local widgets = self._widgets_by_name
+	local hud_enabled = AutoSwitchHud.effective_hud_visible(s_op, player_unit, DivisionHUDSettingsDefaults)
 
-	if not is_in_hub and local_player and player_unit then
+	if not is_in_hub and local_player and player_unit and hud_enabled then
 		if mod.divisionhud_debug_update then
 			mod.divisionhud_debug_update()
 		end
@@ -1878,6 +1880,17 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	end
 
 	if not local_player or not player_unit then
+		self:_reset_dynamic_offset_state()
+
+		if mod.alerts_clear then
+			mod.alerts_clear()
+		end
+
+		self:_set_all_visible(false)
+		return
+	end
+
+	if not hud_enabled then
 		self:_reset_dynamic_offset_state()
 
 		if mod.alerts_clear then
@@ -2237,6 +2250,13 @@ HudElementDivisionHUD._set_all_visible = function(self, visible)
 end
 
 HudElementDivisionHUD._draw_widgets = function(self, dt, t, input_service, ui_renderer, render_settings)
+	local s_vis = mod._settings
+	local _, pu_draw = GameFlowContext.local_player_alive_unit()
+
+	if not AutoSwitchHud.effective_hud_visible(s_vis, pu_draw, DivisionHUDSettingsDefaults) then
+		return
+	end
+
 	local skip = Definitions.VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS
 	local widgets = self._widgets
 	local n_widgets = #widgets

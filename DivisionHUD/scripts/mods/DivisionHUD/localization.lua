@@ -14,6 +14,66 @@ return {
 		ru = "\238\128\140 ОТОБРАЖЕНИЕ",
 		["zh-cn"] = "\238\128\140 显示设置",
 	},
+	divisionhud_visible = {
+		en = "Show Division HUD",
+		ru = "Показывать Division HUD",
+		["zh-cn"] = "显示 Division HUD",
+	},
+	divisionhud_visible_description = {
+		en = "When off, the entire Division HUD overlay is hidden.",
+		ru = "Если выключено, скрыт весь оверлей Division HUD.",
+		["zh-cn"] = "关闭时隐藏整个 Division HUD。",
+	},
+	divisionhud_toggle_visible_keybind = {
+		en = "Toggle HUD visibility",
+		ru = "Переключить видимость HUD",
+		["zh-cn"] = "切换 HUD 显示",
+	},
+	divisionhud_toggle_visible_keybind_description = {
+		en = "Same as «Show Division HUD» above.",
+		ru = "То же, что чекбокс «Показывать Division HUD» выше.",
+		["zh-cn"] = "与上方「显示 Division HUD」相同。",
+	},
+	divisionhud_auto_switch = {
+		en = string.rep("\194\160", 8) .. "Auto visibility switch",
+		ru = string.rep("\194\160", 8) .. "Авто переключение видимости",
+		["zh-cn"] = string.rep("\194\160", 8) .. "自动切换可见性",
+	},
+	divisionhud_auto_first_person = {
+		en = "First person",
+		ru = "От первого лица",
+		["zh-cn"] = "第一人称",
+	},
+	divisionhud_auto_first_person_description = {
+		en = "Show HUD in first person.",
+		ru = "Показывать HUD от первого лица.",
+		["zh-cn"] = "第一人称时显示。",
+	},
+	divisionhud_auto_third_person = {
+		en = "Third person",
+		ru = "От третьего лица",
+		["zh-cn"] = "第三人称",
+	},
+	divisionhud_auto_third_person_description = {
+		en = "Show HUD in third person.",
+		ru = "Показывать HUD от третьего лица.",
+		["zh-cn"] = "第三人称时显示。",
+	},
+	divisionhud_auto_slot_device = {
+		en = "Device slot",
+		ru = "Слот устройства",
+		["zh-cn"] = "设备栏",
+	},
+	divisionhud_auto_slot_device_description = {
+		en = "While slot_device is wielded: on — show Division HUD (still follows first/third person above); off — hide.",
+		ru = "Пока в руках слот устройства: вкл — показывать Division HUD (с учётом строк от первого/третьего лица выше); выкл — не показывать.",
+		["zh-cn"] = "手持设备栏（slot_device）时：开 — 显示 Division HUD（仍受上方第一/第三人称规则约束）；关 — 不显示。",
+	},
+	divisionhud_placement = {
+		en = string.rep("\194\160", 8) .. "Position & opacity",
+		ru = string.rep("\194\160", 8) .. "Позиция и прозрачность",
+		["zh-cn"] = string.rep("\194\160", 8) .. "位置与不透明度",
+	},
 	position_x = {
 		en = "Offset X",
 		ru = "Смещение по X",

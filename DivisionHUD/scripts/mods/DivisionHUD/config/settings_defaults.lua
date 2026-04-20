@@ -4,6 +4,10 @@ local AlertsBossBreeds = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/con
 local AlertsSpecialistBreeds = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_specialist_breeds")
 
 local defaults = {
+	divisionhud_visible = true,
+	divisionhud_auto_first_person = true,
+	divisionhud_auto_third_person = true,
+	divisionhud_auto_slot_device = true,
 	position_x = 400,
 	position_y = 200,
 	opacity = 1.0,

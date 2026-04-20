@@ -445,6 +445,22 @@ local function resolve_wielded_weapon_display_entry(extensions, cached_slot_id)
 	}
 end
 
+local function is_wielding_slot_device(player_unit)
+	if not player_unit or not ALIVE[player_unit] then
+		return false
+	end
+
+	local unit_data_extension = ScriptUnit.has_extension(player_unit, "unit_data_system")
+
+	if not unit_data_extension then
+		return false
+	end
+
+	local inventory_component = unit_data_extension:read_component("inventory")
+
+	return inventory_component and inventory_component.wielded_slot == "slot_device"
+end
+
 local function resolve_auspex_display_entry(extensions)
 	local slots_settings = HudElementPlayerWeaponHandlerSettings.slots_settings
 	local device_settings = slots_settings and slots_settings.slot_device
@@ -496,6 +512,7 @@ end
 
 return {
 	build_division_right_slots = build_division_right_slots,
+	is_wielding_slot_device = is_wielding_slot_device,
 	resolve_auspex_display_entry = resolve_auspex_display_entry,
 	DEFAULT_GRENADE_FLAT_ICON = DEFAULT_GRENADE_FLAT_ICON,
 	HUD_WEAPON_ICON_CONTAINER_MATERIAL = "content/ui/materials/hud/icons/weapon_icon_container",

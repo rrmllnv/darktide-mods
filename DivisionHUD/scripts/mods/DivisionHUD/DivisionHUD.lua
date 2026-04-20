@@ -269,3 +269,10 @@ mod.divisionhud_alerts_apply_settings = function(setting_id)
 	hud_element._div_alert_next_enter_t = nil
 end
 
+function mod.divisionhud_toggle_visible_keybind(_)
+	local cur = mod:get("divisionhud_visible")
+	local on = cur ~= false and cur ~= 0
+
+	mod:set("divisionhud_visible", not on, true)
+end
+
