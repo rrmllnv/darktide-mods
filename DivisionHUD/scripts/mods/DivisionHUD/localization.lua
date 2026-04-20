@@ -180,14 +180,14 @@ return {
 		["zh-cn"] = "在耐力/闪避栏下方以行显示玩家的激活增益（最多15个，每行5个）。",
 	},
 	main_strip_background_fill = {
-		en = "Strip background fill",
-		ru = "Заливка фона полоски",
-		["zh-cn"] = "横条背景填充",
+		en = "Division HUD panel background",
+		ru = "Фон панели Division HUD",
+		["zh-cn"] = "Division HUD 面板背景",
 	},
 	main_strip_background_fill_description = {
-		en = "Modes 0–1: weapon HUD fill (terminal_background_weapon), plain or with Division frame. Modes 2–4: simple tints on the gradient pass. Modes 5–6: vanilla item stats panel and inventory grid backgrounds.",
-		ru = "0–1: оружейная заливка (terminal_background_weapon), без рамки или с рамкой Division. 2–4: простые тинты на градиенте. 5–6: панель статов предмета и сетка инвентаря.",
-		["zh-cn"] = "0–1：武器底图；2–4：渐变简单着色；5–6：物品侧栏与库存网格。",
+		en = "Fill behind the Division HUD panel that holds the weapon row.",
+		ru = "Заливка под панелью Division HUD: область ряда оружия.",
+		["zh-cn"] = "Division HUD 武器行所在面板的背景填充。",
 	},
 	main_strip_background_fill_weapon_hud_plain = {
 		en = "Weapon fill only (no frame)",
@@ -208,11 +208,6 @@ return {
 		en = "Black (simple)",
 		ru = "Чёрный (простой)",
 		["zh-cn"] = "黑色（简单）",
-	},
-	main_strip_background_fill_terminal_grid_tint = {
-		en = "Terminal grid tint on gradient (simple)",
-		ru = "Тинт terminal_grid на градиенте (простой)",
-		["zh-cn"] = "网格色染渐变（简单）",
 	},
 	main_strip_background_fill_weapon_stats_panel = {
 		en = "Item stats panel (weapon stats)",
