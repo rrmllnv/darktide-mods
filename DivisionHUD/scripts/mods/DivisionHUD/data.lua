@@ -209,6 +209,27 @@ return {
 							},
 						},
 					},
+					{
+						setting_id = "proximity_strip_background_fill",
+						type = "dropdown",
+						title = "proximity_strip_background_fill",
+						tooltip_text = "proximity_strip_background_fill_description",
+						default_value = d("proximity_strip_background_fill", 0),
+						options = {
+							{
+								text = "main_strip_background_fill_weapon_hud",
+								value = 0,
+							},
+							{
+								text = "main_strip_background_fill_terminal",
+								value = 1,
+							},
+							{
+								text = "main_strip_background_fill_black",
+								value = 2,
+							},
+						},
+					},
 				},
 			},
 			{

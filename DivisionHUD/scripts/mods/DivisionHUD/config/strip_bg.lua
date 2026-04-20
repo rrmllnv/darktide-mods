@@ -1,7 +1,6 @@
--- Фон полоски Division HUD (boxes_bg + prox_*_bg).
--- Режимы 0–3 — см. data.lua main_strip_background_fill.
--- 0–1: terminal_background_weapon (ванильный слот оружия), без/с рамкой Division.
--- 2–3: простые тинты на gradient_vertical.
+-- Фон Division HUD: boxes_bg (main_strip_background_fill) и prox_*_bg (proximity_strip_background_fill).
+-- Main в меню: 0–3 (plain / оружие+рамка / терминал / чёрный).
+-- Proximity в меню: 0–2 без plain → внутри приводится к режимам 1–3.
 
 require("scripts/foundation/utilities/color")
 
@@ -106,22 +105,23 @@ local function apply_vanilla_weapon_hud_strip_no_chrome(widget)
 	end)
 end
 
-local function normalize_mode(raw, raw_default)
-	local v = raw
-
-	if type(v) == "string" then
-		v = tonumber(v)
+local function tonumber_safe(raw)
+	if type(raw) == "string" then
+		return tonumber(raw)
 	end
+
+	return raw
+end
+
+-- main: значение из выпадающего списка 0–3.
+local function normalize_mode_main(raw, raw_default)
+	local v = tonumber_safe(raw)
 
 	if v == 0 or v == 1 or v == 2 or v == 3 then
 		return v
 	end
 
-	local d = raw_default
-
-	if type(d) == "string" then
-		d = tonumber(d)
-	end
+	local d = tonumber_safe(raw_default)
 
 	if d == 0 or d == 1 or d == 2 or d == 3 then
 		return d
@@ -130,22 +130,39 @@ local function normalize_mode(raw, raw_default)
 	return 0
 end
 
-local function apply_strip_background_to_widget(widget, mode)
+-- proximity: в меню 0–2 → внутренний режим отрисовки 1–3 (без plain).
+local function normalize_mode_proximity(raw, raw_default)
+	local v = tonumber_safe(raw)
+
+	if v == 0 or v == 1 or v == 2 then
+		return v + 1
+	end
+
+	local d = tonumber_safe(raw_default)
+
+	if d == 0 or d == 1 or d == 2 then
+		return d + 1
+	end
+
+	return 1
+end
+
+local function apply_strip_background_to_widget(widget, internal_mode)
 	if not widget or not widget.content then
 		return
 	end
 
-	mode = normalize_mode(mode, 0)
+	internal_mode = tonumber_safe(internal_mode) or 0
 
-	if mode == 0 then
+	if internal_mode == 0 then
 		apply_vanilla_weapon_hud_strip_no_chrome(widget)
-	elseif mode == 1 then
+	elseif internal_mode == 1 then
 		apply_vanilla_weapon_hud_strip(widget)
-	elseif mode == 2 then
+	elseif internal_mode == 2 then
 		apply_simple_strip(widget, function()
 			return table.clone(Color.terminal_background_gradient(nil, true))
 		end)
-	elseif mode == 3 then
+	elseif internal_mode == 3 then
 		apply_simple_strip(widget, function()
 			return table.clone(Color.black(nil, true))
 		end)
@@ -161,15 +178,16 @@ local PRESETS = {
 	[3] = { id = "simple_black" },
 }
 
-local function resolve_preset(mode)
-	return PRESETS[normalize_mode(mode, 0)] or PRESETS[0]
+local function resolve_preset(internal_mode)
+	return PRESETS[tonumber_safe(internal_mode) or 0] or PRESETS[0]
 end
 
 return {
 	PRESETS = PRESETS,
-	DROPDOWN_VALUES = { 0, 1, 2, 3 },
-	normalize_mode = normalize_mode,
+	DROPDOWN_VALUES_MAIN = { 0, 1, 2, 3 },
+	DROPDOWN_VALUES_PROXIMITY = { 0, 1, 2 },
+	normalize_mode_main = normalize_mode_main,
+	normalize_mode_proximity = normalize_mode_proximity,
 	resolve_preset = resolve_preset,
 	apply_strip_background_to_widget = apply_strip_background_to_widget,
 }
-

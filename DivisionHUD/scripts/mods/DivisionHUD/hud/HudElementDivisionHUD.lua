@@ -37,8 +37,11 @@ end
 
 if type(MainStripBackgroundPresets) ~= "table" or type(MainStripBackgroundPresets.apply_strip_background_to_widget) ~= "function" then
 	MainStripBackgroundPresets = {
-		normalize_mode = function()
+		normalize_mode_main = function()
 			return 0
+		end,
+		normalize_mode_proximity = function()
+			return 1
 		end,
 		apply_strip_background_to_widget = function() end,
 		resolve_preset = function()
@@ -1904,20 +1907,29 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	VanillaStaminaDodge.update(self, dt, t, ui_renderer, render_settings, input_service)
 	VanillaToughnessHealth.update(self, dt, t, player_unit, opacity)
 
-	local fill_mode = MainStripBackgroundPresets.normalize_mode(
+	local fill_mode_main = MainStripBackgroundPresets.normalize_mode_main(
 		type(mod._settings) == "table" and mod._settings.main_strip_background_fill,
 		DivisionHUDSettingsDefaults.main_strip_background_fill
 	)
 
-	if self._main_strip_background_fill_mode_cache ~= fill_mode then
-		self._main_strip_background_fill_mode_cache = fill_mode
+	if self._main_strip_background_fill_mode_cache ~= fill_mode_main then
+		self._main_strip_background_fill_mode_cache = fill_mode_main
 
-		MainStripBackgroundPresets.apply_strip_background_to_widget(widgets.boxes_bg, fill_mode)
+		MainStripBackgroundPresets.apply_strip_background_to_widget(widgets.boxes_bg, fill_mode_main)
+	end
+
+	local fill_mode_prox = MainStripBackgroundPresets.normalize_mode_proximity(
+		type(mod._settings) == "table" and mod._settings.proximity_strip_background_fill,
+		DivisionHUDSettingsDefaults.proximity_strip_background_fill
+	)
+
+	if self._proximity_strip_background_fill_mode_cache ~= fill_mode_prox then
+		self._proximity_strip_background_fill_mode_cache = fill_mode_prox
 
 		for i = 1, #ProximityScan.CATEGORIES do
 			local cat = ProximityScan.CATEGORIES[i]
 
-			MainStripBackgroundPresets.apply_strip_background_to_widget(widgets["prox_" .. cat .. "_bg"], fill_mode)
+			MainStripBackgroundPresets.apply_strip_background_to_widget(widgets["prox_" .. cat .. "_bg"], fill_mode_prox)
 		end
 	end
 

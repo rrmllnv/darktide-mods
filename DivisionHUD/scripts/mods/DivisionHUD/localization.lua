@@ -180,14 +180,24 @@ return {
 		["zh-cn"] = "在耐力/闪避栏下方以行显示玩家的激活增益（最多15个，每行5个）。",
 	},
 	main_strip_background_fill = {
-		en = "Division HUD panel background",
-		ru = "Фон панели Division HUD",
-		["zh-cn"] = "Division HUD 面板背景",
+		en = "Weapon & ammo slots background",
+		ru = "Фон под слотами оружия и патронов",
+		["zh-cn"] = "武器与弹药槽背景",
 	},
 	main_strip_background_fill_description = {
-		en = "Fill behind the Division HUD panel that holds the weapon row.",
-		ru = "Заливка под панелью Division HUD: область ряда оружия.",
-		["zh-cn"] = "Division HUD 武器行所在面板的背景填充。",
+		en = "Fill behind the weapon and ammo slots (Division HUD).",
+		ru = "Заливка под слотами оружия и патронов (Division HUD).",
+		["zh-cn"] = "武器与弹药槽背后的填充（Division HUD）。",
+	},
+	proximity_strip_background_fill = {
+		en = "Detected items area background",
+		ru = "Фон под иконками обнаруженных предметов",
+		["zh-cn"] = "探测物品图标区域背景",
+	},
+	proximity_strip_background_fill_description = {
+		en = "Fill behind proximity item icons; separate from weapon/ammo slots.",
+		ru = "Заливка под иконками обнаруженных предметов (proximity), отдельно от слотов оружия и патронов.",
+		["zh-cn"] = "近距离探测到的物品图标背后的填充（与武器/弹药槽分开）。",
 	},
 	main_strip_background_fill_weapon_hud_plain = {
 		en = "Weapon fill only",
