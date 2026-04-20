@@ -214,7 +214,7 @@ return {
 						type = "dropdown",
 						title = "proximity_strip_background_fill",
 						tooltip_text = "proximity_strip_background_fill_description",
-						default_value = d("proximity_strip_background_fill", 0),
+						default_value = d("proximity_strip_background_fill", 1),
 						options = {
 							{
 								text = "main_strip_background_fill_weapon_hud",
