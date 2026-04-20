@@ -60,14 +60,14 @@ return {
 		["zh-cn"] = "第三人称时显示。",
 	},
 	divisionhud_auto_slot_device = {
-		en = "Device slot",
-		ru = "Слот устройства",
-		["zh-cn"] = "设备栏",
+		en = "Device in hand",
+		ru = "Устройство в руках",
+		["zh-cn"] = "手持设备",
 	},
 	divisionhud_auto_slot_device_description = {
-		en = "While slot_device is wielded: on — show Division HUD (still follows first/third person above); off — hide.",
-		ru = "Пока в руках слот устройства: вкл — показывать Division HUD (с учётом строк от первого/третьего лица выше); выкл — не показывать.",
-		["zh-cn"] = "手持设备栏（slot_device）时：开 — 显示 Division HUD（仍受上方第一/第三人称规则约束）；关 — 不显示。",
+		en = "If you hold a device: off — hide Division HUD. On — do not hide.",
+		ru = "Если в руках устройство: выкл — скрыть Division HUD. Вкл — не скрывать.",
+		["zh-cn"] = "手持设备时：关 — 隐藏 Division HUD；开 — 不隐藏。",
 	},
 	divisionhud_placement = {
 		en = string.rep("\194\160", 8) .. "Position & opacity",
