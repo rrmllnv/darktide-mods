@@ -207,14 +207,6 @@ return {
 								text = "main_strip_background_fill_black",
 								value = 3,
 							},
-							{
-								text = "main_strip_background_fill_weapon_stats_panel",
-								value = 4,
-							},
-							{
-								text = "main_strip_background_fill_inventory_grid",
-								value = 5,
-							},
 						},
 					},
 				},
