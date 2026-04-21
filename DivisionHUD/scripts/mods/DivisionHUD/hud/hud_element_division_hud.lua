@@ -22,13 +22,13 @@ local DIVISION_STIMM_SLOT_TYPE_COLORS = {
 	syringe_broker_pocketable = { 255, 208, 69, 255 },
 }
 
-local Definitions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/definitions")
-local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/slot_data")
-local VanillaStaminaDodge = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/vanilla_stamina_dodge")
-local VanillaToughnessHealth = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/vanilla_toughness_health")
-local CombatAbilityBar = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/combat_ability_bar")
-local DivisionBuffs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/widgets/division_buffs")
-local DivisionHUDSettingsDefaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/settings_defaults")
+local Definitions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/main_hud_definitions")
+local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/data/slot_data")
+local StaminaDodgeWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/stamina_dodge")
+local ToughnessHealthWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/toughness_health")
+local CombatAbilityBar = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/combat_ability_bar")
+local DivisionBuffs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/division_buffs")
+local DivisionHUDSettingsDefaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/defaults")
 local MainStripBackgroundPresets = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/strip_bg")
 
 if type(DivisionHUDSettingsDefaults) ~= "table" then
@@ -53,7 +53,7 @@ end
 local DynamicHudContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/dynamic_hud")
 local GameFlowContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/game_flow")
 local AutoSwitchHud = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/auto_switch_hud")
-local ProximityScan = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/proximity_scan")
+local ProximityScan = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/proximity_runtime")
 local HudUtils = mod.hud_utils or {}
 
 local HudElementDivisionHUD = class("HudElementDivisionHUD", "HudElementBase")
@@ -1740,13 +1740,13 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	local definitions = {
 		scenegraph_definition = Definitions.scenegraph_definition,
 		widget_definitions = Definitions.widget_definitions,
-		animations = Definitions.vanilla_stamina_dodge_animations,
+		animations = Definitions.stamina_dodge_animations,
 	}
 
 	HudElementDivisionHUD.super.init(self, parent, draw_layer, start_scale, definitions)
 
-	VanillaStaminaDodge.init(self, Definitions)
-	VanillaToughnessHealth.init(self, Definitions)
+	StaminaDodgeWidget.init(self, Definitions)
+	ToughnessHealthWidget.init(self, Definitions)
 	DivisionBuffs.init(self, Definitions)
 	_div_alert_init(self)
 
@@ -1764,7 +1764,7 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 
 
 	local widgets = self._widgets_by_name
-	local skip_init_hide = Definitions.VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS
+	local skip_init_hide = Definitions.STAMINA_DODGE_DRAW_LAYER_WIDGETS
 
 	for name, widget in pairs(widgets) do
 		if widget.content and not skip_init_hide[name] and name ~= "stamina_nodge" then
@@ -1904,8 +1904,8 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 		return
 	end
 
-	VanillaStaminaDodge.update(self, dt, t, ui_renderer, render_settings, input_service)
-	VanillaToughnessHealth.update(self, dt, t, player_unit, opacity)
+	StaminaDodgeWidget.update(self, dt, t, ui_renderer, render_settings, input_service)
+	ToughnessHealthWidget.update(self, dt, t, player_unit, opacity)
 
 	local fill_mode_main = MainStripBackgroundPresets.normalize_mode_main(
 		type(mod._settings) == "table" and mod._settings.main_strip_background_fill,
@@ -2252,7 +2252,7 @@ end
 
 HudElementDivisionHUD._set_all_visible = function(self, visible)
 	local widgets = self._widgets_by_name
-	local skip_init_hide = Definitions.VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS
+	local skip_init_hide = Definitions.STAMINA_DODGE_DRAW_LAYER_WIDGETS
 
 	for name, widget in pairs(widgets) do
 		if widget.content and not skip_init_hide[name] and name ~= "stamina_nodge" then
@@ -2269,7 +2269,7 @@ HudElementDivisionHUD._draw_widgets = function(self, dt, t, input_service, ui_re
 		return
 	end
 
-	local skip = Definitions.VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS
+	local skip = Definitions.STAMINA_DODGE_DRAW_LAYER_WIDGETS
 	local widgets = self._widgets
 	local n_widgets = #widgets
 
@@ -2285,10 +2285,10 @@ HudElementDivisionHUD._draw_widgets = function(self, dt, t, input_service, ui_re
 	local show_stamina = s_st and s_st.show_stamina_bar
 
 	if show_stamina ~= false and show_stamina ~= 0 then
-		VanillaStaminaDodge.draw(self, dt, t, input_service, ui_renderer, render_settings)
+		StaminaDodgeWidget.draw(self, dt, t, input_service, ui_renderer, render_settings)
 	end
 
-	VanillaToughnessHealth.draw(self, dt, t, input_service, ui_renderer, render_settings)
+	ToughnessHealthWidget.draw(self, dt, t, input_service, ui_renderer, render_settings)
 
 	local s_buffs_d = mod._settings
 	local buffs_enabled_d = type(s_buffs_d) ~= "table" or (s_buffs_d.buff_rows_enabled ~= false and s_buffs_d.buff_rows_enabled ~= 0)
@@ -2305,8 +2305,8 @@ end
 HudElementDivisionHUD.destroy = function(self, ui_renderer)
 	self:_reset_dynamic_offset_state()
 
-	VanillaStaminaDodge.destroy(self, ui_renderer)
-	VanillaToughnessHealth.destroy(self, ui_renderer)
+	StaminaDodgeWidget.destroy(self, ui_renderer)
+	ToughnessHealthWidget.destroy(self, ui_renderer)
 	DivisionBuffs.destroy(self, ui_renderer)
 
 	HudElementDivisionHUD.super.destroy(self, ui_renderer)

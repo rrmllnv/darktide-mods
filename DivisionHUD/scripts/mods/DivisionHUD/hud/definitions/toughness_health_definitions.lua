@@ -1,6 +1,6 @@
 local mod = get_mod("DivisionHUD")
 
-local StaminaDodgeDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/vanilla_stamina_dodge_definitions")
+local StaminaDodgeDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/stamina_dodge_definitions")
 
 local HudElementStaminaSettings = require("scripts/ui/hud/elements/blocking/hud_element_stamina_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")

@@ -57,7 +57,7 @@ local function build_scenegraph(main_row_height, track_width_px)
 	local gauge_width_px = track_width_px + 12
 
 	return {
-		div_vanilla_stm_area = {
+		div_stamina_area = {
 			horizontal_alignment = "center",
 			parent = "boxes_row",
 			vertical_alignment = "top",
@@ -68,9 +68,9 @@ local function build_scenegraph(main_row_height, track_width_px)
 				0,
 			},
 		},
-		div_vanilla_stm_gauge = {
+		div_stamina_gauge = {
 			horizontal_alignment = "center",
-			parent = "div_vanilla_stm_area",
+			parent = "div_stamina_area",
 			vertical_alignment = "top",
 			size = {
 				gauge_width_px,
@@ -82,9 +82,9 @@ local function build_scenegraph(main_row_height, track_width_px)
 				1,
 			},
 		},
-		div_vanilla_stm_bar = {
+		div_stamina_bar = {
 			horizontal_alignment = "center",
-			parent = "div_vanilla_stm_area",
+			parent = "div_stamina_area",
 			vertical_alignment = "top",
 			size = stm_bar_size_layout,
 			position = {
@@ -93,7 +93,7 @@ local function build_scenegraph(main_row_height, track_width_px)
 				1,
 			},
 		},
-		div_vanilla_ddg_area = {
+		div_dodge_area = {
 			horizontal_alignment = "center",
 			parent = "boxes_row",
 			vertical_alignment = "top",
@@ -104,9 +104,9 @@ local function build_scenegraph(main_row_height, track_width_px)
 				0,
 			},
 		},
-		div_vanilla_ddg_gauge = {
+		div_dodge_gauge = {
 			horizontal_alignment = "center",
-			parent = "div_vanilla_ddg_area",
+			parent = "div_dodge_area",
 			vertical_alignment = "top",
 			size = {
 				gauge_width_px,
@@ -118,9 +118,9 @@ local function build_scenegraph(main_row_height, track_width_px)
 				1,
 			},
 		},
-		div_vanilla_ddg_overlap_bar = {
+		div_dodge_overlap_bar = {
 			horizontal_alignment = "center",
-			parent = "div_vanilla_ddg_area",
+			parent = "div_dodge_area",
 			vertical_alignment = "top",
 			size = ddg_bar_size_layout,
 			position = {
@@ -129,9 +129,9 @@ local function build_scenegraph(main_row_height, track_width_px)
 				1,
 			},
 		},
-		div_vanilla_ddg_bar = {
+		div_dodge_bar = {
 			horizontal_alignment = "center",
-			parent = "div_vanilla_ddg_area",
+			parent = "div_dodge_area",
 			vertical_alignment = "top",
 			size = ddg_bar_size_layout,
 			position = {
@@ -185,7 +185,7 @@ local function build_widget_definitions()
 					color = UIHudSettings.color_tint_main_2,
 				},
 			},
-		}, "div_vanilla_stm_gauge"),
+		}, "div_stamina_gauge"),
 		stamina_bar = UIWidget.create_definition({
 			{
 				pass_type = "rect",
@@ -244,7 +244,7 @@ local function build_widget_definitions()
 					color = STAMINA_BAR_COLOR.fill,
 				},
 			},
-		}, "div_vanilla_stm_bar"),
+		}, "div_stamina_bar"),
 		stamina_depleted_bar = UIWidget.create_definition({
 			{
 				pass_type = "rect",
@@ -265,7 +265,7 @@ local function build_widget_definitions()
 					color = STAMINA_BAR_BACKGROUND_COLOR,
 				},
 			},
-		}, "div_vanilla_stm_bar"),
+		}, "div_stamina_bar"),
 		dodge_gauge = UIWidget.create_definition({
 			{
 				pass_type = "texture",
@@ -282,7 +282,7 @@ local function build_widget_definitions()
 					color = UIHudSettings.color_tint_main_2,
 				},
 			},
-		}, "div_vanilla_ddg_gauge"),
+		}, "div_dodge_gauge"),
 		wide_bar = UIWidget.create_definition({
 			{
 				pass_type = "rect",
@@ -303,7 +303,7 @@ local function build_widget_definitions()
 					color = DODGE_STATE_COLORS_OVERLAP_BAR.hidden,
 				},
 			},
-		}, "div_vanilla_ddg_overlap_bar"),
+		}, "div_dodge_overlap_bar"),
 	}
 end
 
@@ -331,7 +331,7 @@ local stamina_nodges_definition = UIWidget.create_definition({
 			color = STAMINA_NODGES_COLOR.filled,
 		},
 	},
-}, "div_vanilla_stm_bar")
+}, "div_stamina_bar")
 
 local function build_dodge_bar_definition(track_width_px)
 	local bar_size_template = {
@@ -380,7 +380,7 @@ local function build_dodge_bar_definition(track_width_px)
 				color = DODGE_BAR_STATE_COLORS_BAR_BACKGROUND.default,
 			},
 		},
-	}, "div_vanilla_ddg_bar")
+	}, "div_dodge_bar")
 end
 
 local animations = {
@@ -558,8 +558,8 @@ local function build(main_row_height, bar_fill_width)
 
 	if type(buff_layout_from_stm_ddg) == "table" and type(buff_layout_from_stm_ddg.ddg_top) == "number" and buff_layout_from_stm_ddg.ddg_top == buff_layout_from_stm_ddg.ddg_top then
 		ddg_top_from_boxes_row = buff_layout_from_stm_ddg.ddg_top
-	elseif sg and sg.div_vanilla_ddg_area and type(sg.div_vanilla_ddg_area.position) == "table" then
-		ddg_top_from_boxes_row = sg.div_vanilla_ddg_area.position[2] or 0
+	elseif sg and sg.div_dodge_area and type(sg.div_dodge_area.position) == "table" then
+		ddg_top_from_boxes_row = sg.div_dodge_area.position[2] or 0
 	end
 
 	return {

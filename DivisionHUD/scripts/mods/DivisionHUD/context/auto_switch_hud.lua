@@ -2,7 +2,7 @@
 -- от первого/третьего лица (мод Perspectives, иначе first_person_system) и по слоту устройства в руках.
 
 local mod = get_mod("DivisionHUD")
-local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/slot_data")
+local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/data/slot_data")
 
 local function is_first_person_effective(player_unit)
 	if not player_unit or not ALIVE[player_unit] then

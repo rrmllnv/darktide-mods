@@ -1014,3 +1014,26 @@ mod:hook_safe("UnitSpawnerManager", "_add_network_unit", function(self, unit, ga
 
 	alerts_on_unit_spawn_for_alert_categories(raw_breed_name, unit, t)
 end)
+
+mod.divisionhud_alerts_apply_settings = function(setting_id)
+	local relevant = setting_id == "divisionhud_reset_all_settings"
+		or setting_id == "alerts_enabled"
+		or setting_id == "alerts_max_visible"
+		or setting_id == "alerts_duration_sec"
+		or setting_id == "alerts_show_duration_bar"
+
+	if not relevant then
+		return
+	end
+
+	local HudUtils = mod.hud_utils
+	local hud_element = HudUtils and HudUtils.resolve_division_hud_instance and HudUtils.resolve_division_hud_instance()
+
+	if not hud_element then
+		return
+	end
+
+	hud_element._div_alert_next_enter_t = nil
+end
+
+return mod

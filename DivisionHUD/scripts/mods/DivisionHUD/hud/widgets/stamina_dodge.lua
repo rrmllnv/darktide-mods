@@ -39,37 +39,37 @@ M.init = function(self, definitions)
 	local save_data = Managers.save:account_data()
 	local interface_settings = save_data.interface_settings
 
-	self._vstm_ddg_visibility_setting = interface_settings.stamina_and_dodge_visibility_setting or "dynamic"
-	self._vstm_syncronize_with_dodge_bar = interface_settings.stamina_and_dodge_show_together or false
-	self._vddg_syncronize_with_stamina_bar = interface_settings.stamina_and_dodge_show_together or false
+	self._stamina_dodge_visibility_setting = interface_settings.stamina_and_dodge_visibility_setting or "dynamic"
+	self._stamina_sync_with_dodge_bar = interface_settings.stamina_and_dodge_show_together or false
+	self._dodge_sync_with_stamina_bar = interface_settings.stamina_and_dodge_show_together or false
 	self._use_percentage_based_division = interface_settings.show_stamina_with_fixed_dividers or false
 	self._show_stamina_percentage_text = interface_settings.show_stamina_percentage_text or false
-	self._vstm_is_active = false
-	self._vddg_is_active = false
-	self._vstm_alpha_mult = 0
-	self._vddg_alpha_mult = 0
+	self._stamina_is_active = false
+	self._dodge_is_active = false
+	self._stamina_alpha_mult = 0
+	self._dodge_alpha_mult = 0
 
-	Managers.event:register(self, "event_update_stamina_and_dodge_hud_visibility_changed", "division_vanilla_cb_visibility")
-	Managers.event:register(self, "event_update_stamina_and_dodge_hud_syncronized", "division_vanilla_cb_sync")
-	Managers.event:register(self, "event_update_show_stamina_with_fixed_dividers", "division_vanilla_cb_fixed_dividers")
-	Managers.event:register(self, "event_update_show_stamina_percentage_text", "division_vanilla_cb_percentage_text")
+	Managers.event:register(self, "event_update_stamina_and_dodge_hud_visibility_changed", "division_stamina_dodge_cb_visibility")
+	Managers.event:register(self, "event_update_stamina_and_dodge_hud_syncronized", "division_stamina_dodge_cb_sync")
+	Managers.event:register(self, "event_update_show_stamina_with_fixed_dividers", "division_stamina_dodge_cb_fixed_dividers")
+	Managers.event:register(self, "event_update_show_stamina_percentage_text", "division_stamina_dodge_cb_percentage_text")
 end
 
-M.division_vanilla_cb_sync = function(self, enabled)
-	self._vstm_syncronize_with_dodge_bar = enabled
-	self._vddg_syncronize_with_stamina_bar = enabled
+M.division_stamina_dodge_cb_sync = function(self, enabled)
+	self._stamina_sync_with_dodge_bar = enabled
+	self._dodge_sync_with_stamina_bar = enabled
 end
 
-M.division_vanilla_cb_fixed_dividers = function(self, enabled)
+M.division_stamina_dodge_cb_fixed_dividers = function(self, enabled)
 	self._use_percentage_based_division = enabled
 end
 
-M.division_vanilla_cb_percentage_text = function(self, enabled)
+M.division_stamina_dodge_cb_percentage_text = function(self, enabled)
 	self._show_stamina_percentage_text = enabled
 end
 
-M.division_vanilla_cb_visibility = function(self, visibility_setting)
-	self._vstm_ddg_visibility_setting = visibility_setting
+M.division_stamina_dodge_cb_visibility = function(self, visibility_setting)
+	self._stamina_dodge_visibility_setting = visibility_setting
 end
 
 M.destroy = function(self, ui_renderer)
@@ -126,7 +126,7 @@ M._update_stamina_amount = function(self)
 end
 
 M._update_stamina_visibility_base = function(self)
-	local visibility_setting = self._vstm_ddg_visibility_setting
+	local visibility_setting = self._stamina_dodge_visibility_setting
 	local should_always_be_visible = visibility_setting == "always_stamina" or visibility_setting == "always_both"
 	local is_visibility_enabled = should_always_be_visible or visibility_setting ~= "stamina_disabled" and visibility_setting ~= "both_disabled"
 	local draw = not not should_always_be_visible
@@ -148,23 +148,23 @@ M._update_stamina_visibility_base = function(self)
 		end
 	end
 
-	self._vstm_is_active = draw
-	self._vstm_draw_base = draw
-	self._vstm_should_always_visible = should_always_be_visible
-	self._vstm_is_visibility_enabled = is_visibility_enabled
+	self._stamina_is_active = draw
+	self._stamina_draw_base = draw
+	self._stamina_should_always_be_visible = should_always_be_visible
+	self._stamina_is_visibility_enabled = is_visibility_enabled
 end
 
 M._update_stamina_visibility_alpha = function(self, dt)
-	local draw = self._vstm_draw_base
-	local should_always_be_visible = self._vstm_should_always_visible
-	local is_visibility_enabled = self._vstm_is_visibility_enabled
+	local draw = self._stamina_draw_base
+	local should_always_be_visible = self._stamina_should_always_be_visible
+	local is_visibility_enabled = self._stamina_is_visibility_enabled
 
 	if is_visibility_enabled and not should_always_be_visible then
-		draw = draw or self._vddg_is_active
+		draw = draw or self._dodge_is_active
 	end
 
 	local alpha_speed = draw and 8 or 3
-	local alpha_multiplier = self._vstm_alpha_mult or 0
+	local alpha_multiplier = self._stamina_alpha_mult or 0
 
 	if draw then
 		alpha_multiplier = math.min(alpha_multiplier + dt * alpha_speed, 1)
@@ -172,7 +172,7 @@ M._update_stamina_visibility_alpha = function(self, dt)
 		alpha_multiplier = math.max(alpha_multiplier - dt * alpha_speed, 0)
 	end
 
-	self._vstm_alpha_mult = alpha_multiplier
+	self._stamina_alpha_mult = alpha_multiplier
 end
 
 M._draw_stamina_chunks = function(self, dt, t, ui_renderer)
@@ -397,21 +397,21 @@ M._update_dodge_visibility = function(self, dt)
 	local consecutive_dodges_performed = self._consecutive_dodges_performed
 	local consecutive_dodges_cooldown = self._consecutive_dodges_cooldown
 	local fixed_t = FixedFrame.get_latest_fixed_time()
-	local visibility_setting = self._vstm_ddg_visibility_setting
+	local visibility_setting = self._stamina_dodge_visibility_setting
 	local should_always_be_visible = visibility_setting == "always_dodge" or visibility_setting == "always_both"
 	local is_visibility_enabled = should_always_be_visible or visibility_setting ~= "dodge_disabled" and visibility_setting ~= "both_disabled"
 	local draw = should_always_be_visible or is_visibility_enabled and (consecutive_dodges_performed > 0 or fixed_t <= (consecutive_dodges_cooldown or 0) + 1)
 
-	self._vddg_is_active = draw
+	self._dodge_is_active = draw
 
-	local syncronize_with_stamina_bar = self._vddg_syncronize_with_stamina_bar
+	local syncronize_with_stamina_bar = self._dodge_sync_with_stamina_bar
 
 	if is_visibility_enabled and not should_always_be_visible and syncronize_with_stamina_bar then
-		draw = draw or self._vstm_is_active
+		draw = draw or self._stamina_is_active
 	end
 
 	local alpha_speed = draw and 8 or 3
-	local alpha_multiplier = self._vddg_alpha_mult or 0
+	local alpha_multiplier = self._dodge_alpha_mult or 0
 
 	if draw then
 		alpha_multiplier = math.min(alpha_multiplier + dt * alpha_speed, 1)
@@ -419,7 +419,7 @@ M._update_dodge_visibility = function(self, dt)
 		alpha_multiplier = math.max(alpha_multiplier - dt * alpha_speed, 0)
 	end
 
-	self._vddg_alpha_mult = alpha_multiplier
+	self._dodge_alpha_mult = alpha_multiplier
 end
 
 M._draw_dodge_bars = function(self, dt, t, ui_renderer)
@@ -545,8 +545,8 @@ M.update = function(self, dt, t, ui_renderer, render_settings, input_service)
 end
 
 M.draw = function(self, dt, t, input_service, ui_renderer, render_settings)
-	local stm_a = self._vstm_alpha_mult or 0
-	local ddg_a = self._vddg_alpha_mult or 0
+	local stm_a = self._stamina_alpha_mult or 0
+	local ddg_a = self._dodge_alpha_mult or 0
 
 	if stm_a ~= 0 then
 		local previous_alpha_multiplier = render_settings.alpha_multiplier

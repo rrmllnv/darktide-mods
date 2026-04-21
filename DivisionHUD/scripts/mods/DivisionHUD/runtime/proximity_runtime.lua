@@ -1,3 +1,5 @@
+local mod = get_mod("DivisionHUD")
+
 local PICKUP_DATA = {
 	small_grenade = {
 		cat  = "grenade",
@@ -363,7 +365,40 @@ local function scan(player_unit, radius)
 	return result
 end
 
-return {
+local ProximityRuntime = {
 	scan       = scan,
 	CATEGORIES = CATEGORIES,
 }
+
+mod.divisionhud_proximity_apply_settings = function(setting_id)
+	local relevant = setting_id == "divisionhud_reset_all_settings"
+		or setting_id == "proximity_enabled"
+		or setting_id == "proximity_radius"
+		or setting_id == "proximity_show_medical_station"
+		or setting_id == "proximity_show_medical"
+		or setting_id == "proximity_show_medical_deployed"
+		or setting_id == "proximity_show_stimm"
+		or setting_id == "proximity_show_ammo_small"
+		or setting_id == "proximity_show_ammo_large"
+		or setting_id == "proximity_show_ammo_crate"
+		or setting_id == "proximity_show_grenade"
+		or setting_id == "proximity_show_grimoire"
+		or setting_id == "proximity_show_tome"
+
+	if not relevant then
+		return
+	end
+
+	local HudUtils = mod.hud_utils
+	local hud_element = HudUtils and HudUtils.resolve_division_hud_instance and HudUtils.resolve_division_hud_instance()
+
+	if not hud_element then
+		return
+	end
+
+	hud_element._prox_scan_timer = math.huge
+	hud_element._prox_data = {}
+	hud_element._prox_anim = {}
+end
+
+return ProximityRuntime

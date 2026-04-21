@@ -1,6 +1,6 @@
 local mod = get_mod("DivisionHUD")
 
-local DivisionHUD_settings_defaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/settings_defaults")
+local DivisionHUD_settings_defaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/defaults")
 
 mod._settings = mod._settings or {}
 
@@ -61,3 +61,5 @@ mod.on_setting_changed = function(setting_id)
 	mod.divisionhud_refresh_settings_cache()
 	divisionhud_apply_settings_handlers("divisionhud_reset_all_settings")
 end
+
+return mod

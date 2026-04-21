@@ -363,32 +363,32 @@ local scenegraph_definition = {
 	},
 }
 
-local DivisionHUDAlertsDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/alerts_definitions")
+local DivisionHUDAlertsDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/alerts_definitions")
 local _division_alerts = DivisionHUDAlertsDefs.build(BAR_WIDTH, BAR_LABEL_W, sc)
 
 for k, v in pairs(_division_alerts.scenegraph_definition) do
 	scenegraph_definition[k] = v
 end
 
-local DivisionHUDVanillaToughnessHealthDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/vanilla_toughness_health_definitions")
-local _division_vanilla_th = DivisionHUDVanillaToughnessHealthDefs.build(BAR_WIDTH, TOUGHNESS_BAR_HEIGHT, HEALTH_BAR_HEIGHT, BAR_LABEL_W, BAR_STACK_GAP)
+local DivisionHUDToughnessHealthDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/toughness_health_definitions")
+local _division_toughness_health = DivisionHUDToughnessHealthDefs.build(BAR_WIDTH, TOUGHNESS_BAR_HEIGHT, HEALTH_BAR_HEIGHT, BAR_LABEL_W, BAR_STACK_GAP)
 
-for k, v in pairs(_division_vanilla_th.scenegraph_definition) do
+for k, v in pairs(_division_toughness_health.scenegraph_definition) do
 	scenegraph_definition[k] = v
 end
 
-local DivisionHUDVanillaStaminaDodgeDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/vanilla_stamina_dodge_definitions")
-local _division_vanilla_stm_ddg = DivisionHUDVanillaStaminaDodgeDefs.build(MAIN_ROW_HEIGHT, BAR_FILL_WIDTH)
+local DivisionHUDStaminaDodgeDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/stamina_dodge_definitions")
+local _division_stamina_dodge = DivisionHUDStaminaDodgeDefs.build(MAIN_ROW_HEIGHT, BAR_FILL_WIDTH)
 
-for k, v in pairs(_division_vanilla_stm_ddg.scenegraph_definition) do
+for k, v in pairs(_division_stamina_dodge.scenegraph_definition) do
 	scenegraph_definition[k] = v
 end
 
-local DivisionHUDBuffRowsDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/core/buff_rows_definitions")
+local DivisionHUDBuffRowsDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/buff_rows_definitions")
 local _division_buff_rows = DivisionHUDBuffRowsDefs.build(
-	_division_vanilla_stm_ddg.buff_layout_from_stm_ddg,
+	_division_stamina_dodge.buff_layout_from_stm_ddg,
 	MAIN_ROW_HEIGHT,
-	_division_vanilla_stm_ddg.extend_below_main_row,
+	_division_stamina_dodge.extend_below_main_row,
 	BAR_FILL_WIDTH
 )
 local _division_buff_rows_base_y = _division_buff_rows.scenegraph_definition
@@ -396,15 +396,15 @@ local _division_buff_rows_base_y = _division_buff_rows.scenegraph_definition
 	and _division_buff_rows.scenegraph_definition.division_buff_rows.position
 	and _division_buff_rows.scenegraph_definition.division_buff_rows.position[2]
 	or 0
-local _division_buff_rows_hidden_stamina_y = _division_vanilla_stm_ddg.buff_layout_from_stm_ddg
-	and _division_vanilla_stm_ddg.buff_layout_from_stm_ddg.stm_top
+local _division_buff_rows_hidden_stamina_y = _division_stamina_dodge.buff_layout_from_stm_ddg
+	and _division_stamina_dodge.buff_layout_from_stm_ddg.stm_top
 	or _division_buff_rows_base_y
 
 for k, v in pairs(_division_buff_rows.scenegraph_definition) do
 	scenegraph_definition[k] = v
 end
 
-local _extend_total = _division_vanilla_stm_ddg.extend_below_main_row + _division_buff_rows.extend_below_buff_rows
+local _extend_total = _division_stamina_dodge.extend_below_main_row + _division_buff_rows.extend_below_buff_rows
 
 scenegraph_definition.boxes_row.size[2] = MAIN_ROW_HEIGHT + _extend_total
 
@@ -911,11 +911,11 @@ for k, v in pairs(_division_alerts.widget_definitions) do
 	widget_definitions[k] = v
 end
 
-for k, v in pairs(_division_vanilla_th.widget_definitions) do
+for k, v in pairs(_division_toughness_health.widget_definitions) do
 	widget_definitions[k] = v
 end
 
-for k, v in pairs(_division_vanilla_stm_ddg.widget_definitions) do
+for k, v in pairs(_division_stamina_dodge.widget_definitions) do
 	widget_definitions[k] = v
 end
 
@@ -923,7 +923,7 @@ for k, v in pairs(_division_buff_rows.widget_definitions) do
 	widget_definitions[k] = v
 end
 
-local VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS = {
+local STAMINA_DODGE_DRAW_LAYER_WIDGETS = {
 	stamina_gauge = true,
 	stamina_bar = true,
 	stamina_depleted_bar = true,
@@ -944,12 +944,12 @@ return {
 	scenegraph_definition = scenegraph_definition,
 	widget_definitions = widget_definitions,
 	buff_rows = _division_buff_rows,
-	vanilla_stamina_dodge_animations = _division_vanilla_stm_ddg.animations,
-	stamina_nodges_definition = _division_vanilla_stm_ddg.stamina_nodges_definition,
-	health_stamina_nodges_definition = _division_vanilla_th.health_stamina_nodges_definition,
-	toughness_stamina_nodges_definition = _division_vanilla_th.toughness_stamina_nodges_definition,
-	dodge_bar_definition = _division_vanilla_stm_ddg.dodge_bar_definition,
-	VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS = VANILLA_STAMINA_DODGE_DRAW_LAYER_WIDGETS,
+	stamina_dodge_animations = _division_stamina_dodge.animations,
+	stamina_nodges_definition = _division_stamina_dodge.stamina_nodges_definition,
+	health_stamina_nodges_definition = _division_toughness_health.health_stamina_nodges_definition,
+	toughness_stamina_nodges_definition = _division_toughness_health.toughness_stamina_nodges_definition,
+	dodge_bar_definition = _division_stamina_dodge.dodge_bar_definition,
+	STAMINA_DODGE_DRAW_LAYER_WIDGETS = STAMINA_DODGE_DRAW_LAYER_WIDGETS,
 	ROOT_LAYOUT_OFFSET_X = ROOT_LAYOUT_OFFSET_X,
 	ROOT_LAYOUT_OFFSET_Y = ROOT_LAYOUT_OFFSET_Y,
 	ROOT_LAYOUT_OFFSET_Z = ROOT_LAYOUT_OFFSET_Z,
@@ -963,8 +963,8 @@ return {
 	ABILITY_BAR_COOLDOWN_COLOR = ABILITY_BAR_COOLDOWN_COLOR,
 	BAR_LABEL_W = BAR_LABEL_W,
 	BAR_FILL_WIDTH = BAR_FILL_WIDTH,
-	division_stamina_bar_width = _division_vanilla_stm_ddg.division_stamina_bar_width,
-	division_dodge_bar_track_width = _division_vanilla_stm_ddg.division_dodge_bar_track_width,
+	division_stamina_bar_width = _division_stamina_dodge.division_stamina_bar_width,
+	division_dodge_bar_track_width = _division_stamina_dodge.division_dodge_bar_track_width,
 	ROW_WIDTH = ROW_WIDTH,
 	RIGHT_SLOT_COUNT = 4,
 	right_slot_widget_names = right_slot_widget_names,
