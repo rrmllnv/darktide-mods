@@ -99,7 +99,7 @@ return {
 			localize = false,
 			title = breed_title("cultist_flamer"),
 			tooltip = tooltip("danger_zone_show_tox_flamer_description"),
-			default_value = d("danger_zone_show_tox_flamer", false),
+			default_value = d("danger_zone_show_tox_flamer", true),
 		},
 		{
 			setting_id = "danger_zone_show_scab_flamer",
@@ -107,14 +107,14 @@ return {
 			localize = false,
 			title = breed_title("renegade_flamer"),
 			tooltip = tooltip("danger_zone_show_scab_flamer_description"),
-			default_value = d("danger_zone_show_scab_flamer", false),
+			default_value = d("danger_zone_show_scab_flamer", true),
 		},
 		{
 			setting_id = "danger_zone_show_bomber_grenade",
 			type = "checkbox",
 			title = "danger_zone_show_bomber_grenade",
 			tooltip = "danger_zone_show_bomber_grenade_description",
-			default_value = d("danger_zone_show_bomber_grenade", false),
+			default_value = d("danger_zone_show_bomber_grenade", true),
 		},
 		{
 			setting_id = "danger_zone_show_explosive_barrel",
