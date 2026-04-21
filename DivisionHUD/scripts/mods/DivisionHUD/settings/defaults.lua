@@ -11,6 +11,7 @@ local defaults = {
 	position_x = 400,
 	position_y = 200,
 	opacity = 1.0,
+	hud_layout_scale = 0.8,
 	show_stamina_bar = true,
 	show_toughness_bar = true,
 	show_health_bar = true,

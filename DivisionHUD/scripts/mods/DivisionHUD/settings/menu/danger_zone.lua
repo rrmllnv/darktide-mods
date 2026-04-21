@@ -1,6 +1,7 @@
 local mod = get_mod("DivisionHUD")
 
 local Defaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/defaults")
+local AlertsBreedTitle = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_breed_title")
 
 if type(Defaults) ~= "table" then
 	Defaults = {}
@@ -41,6 +42,7 @@ return {
 			setting_id = "danger_zone_show_daemonhost",
 			type = "checkbox",
 			title = "danger_zone_show_daemonhost",
+			tooltip_text = "danger_zone_show_daemonhost_description",
 			default_value = d("danger_zone_show_daemonhost", true),
 		},
 		{
@@ -53,18 +55,21 @@ return {
 			setting_id = "danger_zone_show_poxburster",
 			type = "checkbox",
 			title = "danger_zone_show_poxburster",
+			tooltip_text = "danger_zone_show_poxburster_description",
 			default_value = d("danger_zone_show_poxburster", true),
 		},
 		{
 			setting_id = "danger_zone_show_tox_flamer",
 			type = "checkbox",
 			title = "danger_zone_show_tox_flamer",
+			tooltip_text = "danger_zone_show_tox_flamer_description",
 			default_value = d("danger_zone_show_tox_flamer", true),
 		},
 		{
 			setting_id = "danger_zone_show_scab_flamer",
 			type = "checkbox",
 			title = "danger_zone_show_scab_flamer",
+			tooltip_text = "danger_zone_show_scab_flamer_description",
 			default_value = d("danger_zone_show_scab_flamer", true),
 		},
 		{

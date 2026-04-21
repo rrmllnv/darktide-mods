@@ -23,6 +23,10 @@ local function build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_sta
 	local extended_toughness_label_width = bar_label_w + TOUGHNESS_EXTRA_VALUE_LABEL_WIDTH
 	local extended_health_label_width = bar_label_w + HEALTH_EXTRA_VALUE_LABEL_WIDTH
 
+	local toughness_label_y = math.floor(bar_h * 0.5 + 0.5)
+
+	local health_label_y = math.floor(bar_h + bar_stack_gap + (health_bar_h * 0.5) + 0.5)
+
 	return {
 		toughness_value_label = {
 			parent = "root",
@@ -34,7 +38,7 @@ local function build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_sta
 			},
 			position = {
 				-TOUGHNESS_EXTRA_VALUE_LABEL_WIDTH,
-				0,
+				toughness_label_y,
 				0,
 			},
 		},
@@ -62,7 +66,7 @@ local function build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_sta
 			},
 			position = {
 				-HEALTH_EXTRA_VALUE_LABEL_WIDTH,
-				bar_h + bar_stack_gap,
+				health_label_y,
 				0,
 			},
 		},
@@ -128,7 +132,7 @@ local function build(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap)
 		scenegraph_definition = build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap),
 		widget_definitions = {
 		toughness_value_label = create_value_label_widget("toughness_value_label", -3),
-		health_value_label = create_value_label_widget("health_value_label", bar_h + bar_stack_gap - 3),
+		health_value_label = create_value_label_widget("health_value_label", -3),
 			health = UIWidget.create_definition({
 				{
 					pass_type = "rect",

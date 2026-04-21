@@ -19,9 +19,9 @@ return {
 		widgets = {
 			LayoutMenu,
 			BarsMenu,
-			DangerZoneMenu,
 			DynamicMenu,
 			VanillaHudMenu,
+			DangerZoneMenu,
 			AlertsMenu,
 			ProximityMenu,
 			IntegrationsMenu,

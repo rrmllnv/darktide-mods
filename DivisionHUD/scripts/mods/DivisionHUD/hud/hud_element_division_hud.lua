@@ -93,7 +93,16 @@ local RIGHT_SLOT_ICON_FALLBACK = Definitions.RIGHT_SLOT_ICON_FALLBACK
 local DIVISION_BUFF_ROWS_BASE_Y = Definitions.DIVISION_BUFF_ROWS_BASE_Y or 0
 local DIVISION_BUFF_ROWS_HIDDEN_STAMINA_Y = Definitions.DIVISION_BUFF_ROWS_HIDDEN_STAMINA_Y or DIVISION_BUFF_ROWS_BASE_Y
 
-local HUD_LAYOUT_SCALE = Definitions.HUD_LAYOUT_SCALE or 1
+-- Resolve HUD layout scale at runtime from mod settings, falling back to Definitions.
+local function get_hud_layout_scale()
+	local s = mod._settings
+
+	if type(s) == "table" and type(s.hud_layout_scale) == "number" and s.hud_layout_scale == s.hud_layout_scale then
+		return s.hud_layout_scale
+	end
+
+	return Definitions.HUD_LAYOUT_SCALE or 1
+end
 local SLOT_TEXT_FULL_OFFSET_X = Definitions.SLOT_TEXT_FULL_OFFSET_X
 local SLOT_TEXT_MAIN_OFFSET_X = Definitions.SLOT_TEXT_MAIN_OFFSET_X
 local FRACTION_COLOR_GT_MAIN = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_MAIN or 0.75
@@ -540,7 +549,8 @@ HudElementDivisionHUD._compute_dynamic_root_offset = function(self, dt, player)
 	self._dyn_ox = ox
 	self._dyn_oy = oy
 
-	return ox * HUD_LAYOUT_SCALE, oy * HUD_LAYOUT_SCALE
+	-- return raw dynamic offsets (in definition units); caller will apply ratio when positioning
+	return ox, oy
 end
 
 HudElementDivisionHUD._build_extensions = function(self, player_unit)
@@ -1239,11 +1249,13 @@ local ALERT_ANIM_DROP_PX_BASE  = 20
 local ALERT_ANIM_SLIDE_PX_BASE = 20
 
 local function _div_alert_drop_px()
-	return math.max(1, math.floor(ALERT_ANIM_DROP_PX_BASE * (HUD_LAYOUT_SCALE or 1) + 0.5))
+	-- return base unscaled pixels; caller applies runtime ratio
+	return math.max(1, math.floor(ALERT_ANIM_DROP_PX_BASE + 0.5))
 end
 
 local function _div_alert_slide_px()
-	return math.max(1, math.floor(ALERT_ANIM_SLIDE_PX_BASE * (HUD_LAYOUT_SCALE or 1) + 0.5))
+	-- return base unscaled pixels; caller applies runtime ratio
+	return math.max(1, math.floor(ALERT_ANIM_SLIDE_PX_BASE + 0.5))
 end
 
 local function _div_alert_line_key(line)
@@ -1371,6 +1383,9 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 	local by_key = self._div_alert_by_key
 	local drop_px  = _div_alert_drop_px()
 	local slide_px = _div_alert_slide_px()
+	local desired = get_hud_layout_scale()
+	local def_scale = (Definitions and Definitions.HUD_LAYOUT_SCALE) or 1
+	local ratio = (def_scale ~= 0) and (desired / def_scale) or 1
 
 	local feed_key_to_line = {}
 
@@ -1588,8 +1603,8 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 
 	local col_h_int = math.max(0, math.floor(col_h + 0.5))
 
-	self:_set_scenegraph_size("alerts_column", ALERT_BAR_WIDTH, col_h_int)
-	self:set_scenegraph_position("alerts_column", nil, -(col_h_int + ALERTS_TOUGHNESS_GAP))
+	self:_set_scenegraph_size("alerts_column", math.floor(ALERT_BAR_WIDTH * ratio + 0.5), math.floor(col_h_int * ratio + 0.5))
+	self:set_scenegraph_position("alerts_column", nil, -math.floor((col_h_int + ALERTS_TOUGHNESS_GAP) * ratio + 0.5))
 
 	for si = 1, ALERTS_MAX_SLOTS do
 		_div_alert_clear_slot_widget(alert_slot_widget_names[si] and widgets[alert_slot_widget_names[si]])
@@ -1638,12 +1653,15 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		local x_pos = math.floor(item.x_anim + 0.5)
 		local slot_id = "alert_slot_" .. slot_idx
 
-		self:set_scenegraph_position(slot_id, x_pos, y_pos)
-		self:_set_scenegraph_size(slot_id, ALERT_BAR_WIDTH, item.cached_h)
+		local sx = math.floor((x_pos or 0) * ratio + 0.5)
+		local sy = math.floor((y_pos or 0) * ratio + 0.5)
+
+		self:set_scenegraph_position(slot_id, sx, sy)
+		self:_set_scenegraph_size(slot_id, math.floor(ALERT_BAR_WIDTH * ratio + 0.5), math.floor(item.cached_h * ratio + 0.5))
 
 		if w.content.size then
-			w.content.size[1] = ALERT_BAR_WIDTH
-			w.content.size[2] = item.cached_h
+			w.content.size[1] = math.floor(ALERT_BAR_WIDTH * ratio + 0.5)
+			w.content.size[2] = math.floor(item.cached_h * ratio + 0.5)
 		end
 
 		local strip_raw = line.strip_label
@@ -1765,8 +1783,6 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	self._division_buff_rows_base_y = DIVISION_BUFF_ROWS_BASE_Y
 	self._division_buff_rows_hidden_stamina_y = DIVISION_BUFF_ROWS_HIDDEN_STAMINA_Y
 	self._division_buff_rows_current_y = nil
-
-
 	local widgets = self._widgets_by_name
 	local skip_init_hide = Definitions.STAMINA_DODGE_DRAW_LAYER_WIDGETS
 
@@ -1775,6 +1791,116 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 			widget.content.visible = false
 		end
 	end
+	-- Apply runtime HUD scale from settings (scales scenegraph sizes/positions and widget style sizes/offsets).
+	local function apply_runtime_hud_scale(instance)
+		local desired = get_hud_layout_scale()
+		local def_scale = (Definitions and Definitions.HUD_LAYOUT_SCALE) or 1
+		if type(desired) ~= "number" then
+			return
+		end
+
+		local ratio = (def_scale ~= 0) and (desired / def_scale) or 1
+
+		-- Nothing to do if definitions already built with the same scale
+		if ratio == 1 then
+			return
+		end
+
+		-- Scale scenegraph nodes (sizes and positions) by ratio
+		local sg = instance._ui_scenegraph
+
+		if type(sg) == "table" then
+			for id, node in pairs(sg) do
+				if type(node) == "table" then
+					if type(node.size) == "table" then
+					for i = 1, #node.size do
+						if type(node.size[i]) == "number" then
+							node.size[i] = math.max(0, math.floor(node.size[i] * ratio + 0.5))
+						end
+					end
+					end
+
+					if type(node.position) == "table" then
+						if type(node.position[1]) == "number" then
+							node.position[1] = math.floor(node.position[1] * ratio + 0.5)
+						end
+
+						if type(node.position[2]) == "number" then
+							node.position[2] = math.floor(node.position[2] * ratio + 0.5)
+						end
+					end
+				end
+			end
+		end
+
+		-- Scale widget style sizes and offsets
+		local widgets_list = instance._widgets
+
+		if type(widgets_list) == "table" then
+			for _, w in ipairs(widgets_list) do
+				local st = w.style
+
+				if type(st) == "table" then
+					for _, v in pairs(st) do
+						if type(v) == "table" then
+							if type(v.size) == "table" then
+								for i = 1, #v.size do
+							if type(v.size[i]) == "number" then
+										v.size[i] = math.max(0, math.floor(v.size[i] * ratio + 0.5))
+									end
+								end
+							end
+
+							if type(v.default_size) == "table" then
+								for i = 1, #v.default_size do
+									if type(v.default_size[i]) == "number" then
+										v.default_size[i] = math.max(0, math.floor(v.default_size[i] * ratio + 0.5))
+									end
+								end
+							end
+
+							if type(v.font_size) == "number" then
+								v.font_size = math.max(1, math.floor(v.font_size * ratio + 0.5))
+							end
+
+							if type(v.size_addition) == "table" then
+								for i = 1, #v.size_addition do
+									if type(v.size_addition[i]) == "number" then
+										v.size_addition[i] = math.floor(v.size_addition[i] * ratio + 0.5)
+									end
+								end
+							end
+
+							if type(v.offset) == "table" then
+								for i = 1, math.min(2, #v.offset) do
+									if type(v.offset[i]) == "number" then
+										v.offset[i] = math.floor(v.offset[i] * ratio + 0.5)
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+
+		-- Mark widgets dirty so changes are applied
+		if type(instance._widgets) == "table" then
+			for _, w in ipairs(instance._widgets) do
+				w.dirty = true
+			end
+		end
+		-- Ensure scenegraph is updated on next frame
+		instance._update_scenegraph = true
+		-- Record new effective HUD layout scale so future calculations use it as base
+		if type(desired) == "number" then
+			Definitions.HUD_LAYOUT_SCALE = desired
+		end
+	end
+
+	-- Expose on instance and run immediately
+	self._apply_runtime_hud_scale = apply_runtime_hud_scale
+	apply_runtime_hud_scale(self)
 end
 
 HudElementDivisionHUD._update_buff_rows_position = function(self)
@@ -1788,9 +1914,14 @@ HudElementDivisionHUD._update_buff_rows_position = function(self)
 		target_y = self._division_buff_rows_hidden_stamina_y or target_y
 	end
 
-	if self._division_buff_rows_current_y ~= target_y then
-		self:set_scenegraph_position("division_buff_rows", nil, target_y)
-		self._division_buff_rows_current_y = target_y
+	local desired = get_hud_layout_scale()
+	local def_scale = (Definitions and Definitions.HUD_LAYOUT_SCALE) or 1
+	local ratio = (def_scale ~= 0) and (desired / def_scale) or 1
+	local target_y_scaled = math.floor(target_y * ratio + 0.5)
+
+	if self._division_buff_rows_current_y ~= target_y_scaled then
+		self:set_scenegraph_position("division_buff_rows", nil, target_y_scaled)
+		self._division_buff_rows_current_y = target_y_scaled
 	end
 end
 
@@ -1836,12 +1967,16 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 			and HudUtils.custom_hud_get_saved_root_position_for_division_hud
 			and HudUtils.custom_hud_get_saved_root_position_for_division_hud()
 
+		local desired = get_hud_layout_scale()
+		local def_scale = (Definitions and Definitions.HUD_LAYOUT_SCALE) or 1
+		local ratio = (def_scale ~= 0) and (desired / def_scale) or 1
+
 		if integrate_chud and chud_has_division_nodes and chud_root_base then
 			self:set_scenegraph_position(
 				"root",
-				chud_root_base.x + dyn_x,
-				chud_root_base.y + dyn_y,
-				chud_root_base.z,
+				(math.floor((chud_root_base.x or 0) * ratio + 0.5)) + math.floor(dyn_x * ratio + 0.5),
+				(math.floor((chud_root_base.y or 0) * ratio + 0.5)) + math.floor(dyn_y * ratio + 0.5),
+				chud_root_base.z or ROOT_LAYOUT_OFFSET_Z,
 				"left",
 				"top"
 			)
@@ -1849,8 +1984,8 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 		else
 			self:set_scenegraph_position(
 				"root",
-				ROOT_LAYOUT_OFFSET_X + pos_x + dyn_x,
-				ROOT_LAYOUT_OFFSET_Y + pos_y + dyn_y,
+				math.floor((ROOT_LAYOUT_OFFSET_X + pos_x + dyn_x) * ratio + 0.5),
+				math.floor((ROOT_LAYOUT_OFFSET_Y + pos_y + dyn_y) * ratio + 0.5),
 				ROOT_LAYOUT_OFFSET_Z,
 				"center",
 				"center"

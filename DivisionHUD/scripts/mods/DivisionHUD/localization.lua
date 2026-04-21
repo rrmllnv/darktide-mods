@@ -70,9 +70,9 @@ return {
 		["zh-cn"] = "手持设备时：关 — 隐藏 Division HUD；开 — 不隐藏。",
 	},
 	divisionhud_placement = {
-		en = string.rep("\194\160", 8) .. "Position & opacity",
-		ru = string.rep("\194\160", 8) .. "Позиция и прозрачность",
-		["zh-cn"] = string.rep("\194\160", 8) .. "位置与不透明度",
+		en = string.rep("\194\160", 8) .. "Position, opacity & scale",
+		ru = string.rep("\194\160", 8) .. "Позиция, прозрачность и масштаб",
+		["zh-cn"] = string.rep("\194\160", 8) .. "位置、不透明度与缩放",
 	},
 	position_x = {
 		en = "Offset X",
@@ -98,6 +98,16 @@ return {
 		en = "Opacity",
 		ru = "Прозрачность",
 		["zh-cn"] = "不透明度",
+	},
+	hud_scale = {
+		en = "HUD scale",
+		ru = "Масштаб HUD",
+		["zh-cn"] = "界面缩放",
+	},
+	hud_scale_description = {
+		en = "Scale multiplier applied to the whole Division HUD (reference canvas 1920×1080). Values below 1 shrink the HUD, values above 1 enlarge it.",
+		ru = "Множитель масштаба, применяемый ко всему Division HUD (эталонный холст 1920×1080). Значения меньше 1 уменьшают HUD, больше 1 — увеличивают.",
+		["zh-cn"] = "对整个 Division HUD 应用的缩放倍率（参考分辨率 1920×1080）。小于1缩小，大于1放大。",
 	},
 	divisionhud_super_bars = {
 		en = "\238\128\178 COMBAT HUD",
@@ -254,6 +264,11 @@ return {
 		ru = "Демонхост",
 		["zh-cn"] = "恶魔宿主",
 	},
+	danger_zone_show_daemonhost_description = {
+		en = "Show alerts for the Daemonhost unit (spawn and alert stages). Use the separate 'Daemonhost aura' option to show its corruption aura radius.",
+		ru = "Показывать оповещения о самом Демонхосте (спавн и стадии тревоги). Отдельная опция «Аура демонхоста» управляет показом радиуса его коррумпирующей ауры.",
+		["zh-cn"] = "显示有关恶魔宿主的警报（出生与各警戒阶段）。单独的“恶魔宿主光环”选项用于显示其腐蚀光环半径。",
+	},
 	danger_zone_show_daemonhost_aura = {
 		en = "Daemonhost corruption aura",
 		ru = "Аура демонхоста",
@@ -264,15 +279,30 @@ return {
 		ru = "Поксбёрстер",
 		["zh-cn"] = "瘟疫爆弹者",
 	},
+	danger_zone_show_poxburster_description = {
+		en = "Show alerts for Poxburster explosions — uses the Poxburster's explosion radius.",
+		ru = "Показывать оповещения о взрывах Поксбёрстера — используется радиус его взрыва.",
+		["zh-cn"] = "显示瘟疫爆弹者的爆炸警报（使用其爆炸半径）。",
+	},
 	danger_zone_show_tox_flamer = {
 		en = "Tox flamer",
 		ru = "Токс-огнемётчик",
 		["zh-cn"] = "毒焰喷射者",
 	},
+	danger_zone_show_tox_flamer_description = {
+		en = "Show alerts for Tox Flamer (backpack/flare explosions). Uses the flamer explosion radius.",
+		ru = "Показывать оповещения о Токс-огнемётчиках (взрывы ранца). Используется радиус взрыва флеймера.",
+		["zh-cn"] = "显示毒焰喷射者相关警报（背包/喷火器爆炸），使用喷火器爆炸半径。",
+	},
 	danger_zone_show_scab_flamer = {
 		en = "Scab flamer",
 		ru = "Скаб-огнемётчик",
 		["zh-cn"] = "血痂喷火兵",
+	},
+	danger_zone_show_scab_flamer_description = {
+		en = "Show alerts for Scab Flamer (backpack explosions). Uses the flamer explosion radius.",
+		ru = "Показывать оповещения о Скаб-огнемётчиках (взрывы ранца). Используется радиус взрыва флеймера.",
+		["zh-cn"] = "显示血痂喷火兵相关警报（背包爆炸半径）。",
 	},
 	danger_zone_show_bomber_grenade = {
 		en = "Bomber grenade",

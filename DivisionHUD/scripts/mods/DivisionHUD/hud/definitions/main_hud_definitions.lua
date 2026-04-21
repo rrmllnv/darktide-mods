@@ -1,11 +1,22 @@
 local mod = get_mod("DivisionHUD")
 
+local DivisionHUDSettingsDefaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/defaults")
+
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local HudElementPlayerWeaponHandlerSettings = require("scripts/ui/hud/elements/player_weapon_handler/hud_element_player_weapon_handler_settings")
 
 local LAYOUT_SCALE = 0.8
+
+-- Prefer actual mod settings (if loaded), otherwise fall back to defaults file
+local runtime_cfg = (type(mod._settings) == "table" and mod._settings) or DivisionHUDSettingsDefaults
+
+if type(runtime_cfg) == "table" and type(runtime_cfg.hud_layout_scale) == "number" and runtime_cfg.hud_layout_scale == runtime_cfg.hud_layout_scale then
+	LAYOUT_SCALE = runtime_cfg.hud_layout_scale
+elseif type(DivisionHUDSettingsDefaults) == "table" and type(DivisionHUDSettingsDefaults.hud_layout_scale) == "number" and DivisionHUDSettingsDefaults.hud_layout_scale == DivisionHUDSettingsDefaults.hud_layout_scale then
+	LAYOUT_SCALE = DivisionHUDSettingsDefaults.hud_layout_scale
+end
 
 local function sc(n)
 	if n == 0 then

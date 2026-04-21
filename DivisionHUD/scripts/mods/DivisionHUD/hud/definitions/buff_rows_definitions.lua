@@ -13,6 +13,18 @@ M.BUFF_ROWS_COUNT = BUFF_ROWS_COUNT
 M.BUFF_MAX_SLOTS  = BUFF_MAX_SLOTS
 
 local LAYOUT_SCALE = 0.8
+local mod = rawget(_G, "get_mod") and get_mod("DivisionHUD") or nil
+local runtime_cfg = nil
+
+if mod and type(mod._settings) == "table" then
+	runtime_cfg = mod._settings
+else
+	runtime_cfg = mod and mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/defaults") or nil
+end
+
+if type(runtime_cfg) == "table" and type(runtime_cfg.hud_layout_scale) == "number" and runtime_cfg.hud_layout_scale == runtime_cfg.hud_layout_scale then
+	LAYOUT_SCALE = runtime_cfg.hud_layout_scale
+end
 
 local function sc(n)
 	if n == 0 then
@@ -58,15 +70,21 @@ M.build = function(buff_layout_from_stm_ddg, main_row_height, extend_below_main_
 			ddg_visual_bottom_local = lv
 		end
 	end
+	-- determine how many columns fit into available width (allow increasing columns if space allows)
 	local cols        = BUFF_COLS
 	local buff_strip_w = BUFF_COLS * BUFF_SLOT_SPACING
-	local h_step      = BUFF_SLOT_SPACING
-	local row_step    = BUFF_ROW_SPACING
-	local buff_total_h = BUFF_FRAME_SIZE
-
+	-- if caller provided bar_fill_width use it as available width
 	if type(bar_fill_width) == "number" and bar_fill_width == bar_fill_width and bar_fill_width > 0 then
 		buff_strip_w = math.max(BUFF_SLOT_SIZE, math.floor(bar_fill_width + 0.5))
 	end
+
+	-- compute columns that fit into buff_strip_w using slot spacing
+	local computed_cols = math.max(1, math.floor(buff_strip_w / BUFF_SLOT_SPACING + 0.5))
+	cols = math.max(1, computed_cols)
+
+	local h_step      = BUFF_SLOT_SPACING
+	local row_step    = BUFF_ROW_SPACING
+	local buff_total_h = BUFF_FRAME_SIZE
 
 	local buff_x_span = 0
 
@@ -189,7 +207,10 @@ M.build = function(buff_layout_from_stm_ddg, main_row_height, extend_below_main_
 	local widget_definitions = {}
 	local buff_widget_names  = {}
 
-	for i = 1, BUFF_MAX_SLOTS do
+	-- number of widget slots depends on computed columns
+	local buff_max_slots = cols * BUFF_ROWS_COUNT
+
+	for i = 1, buff_max_slots do
 		local name             = "div_buff_" .. i
 		widget_definitions[name] = buff_widget_definition
 		buff_widget_names[i]     = name
@@ -200,7 +221,8 @@ M.build = function(buff_layout_from_stm_ddg, main_row_height, extend_below_main_
 		widget_definitions       = widget_definitions,
 		buff_widget_names        = buff_widget_names,
 		grid_positions           = grid_positions,
-		BUFF_MAX_SLOTS           = BUFF_MAX_SLOTS,
+		BUFF_MAX_SLOTS           = buff_max_slots,
+		BUFF_COLS                = cols,
 		BUFF_SLOT_SPACING        = h_step,
 		BUFF_ROW_SPACING         = row_step,
 		BUFF_SLOT_SIZE           = BUFF_SLOT_SIZE,

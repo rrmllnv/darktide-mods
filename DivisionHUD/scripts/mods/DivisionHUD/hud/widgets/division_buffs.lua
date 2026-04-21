@@ -70,6 +70,68 @@ local function _widget_reset(widget, ui_renderer)
 	end
 end
 
+local function _reapply_buff_widget_icons(self, ratio)
+	if type(ratio) ~= "number" then
+		return
+	end
+
+	local pool = self._div_buff_widget_pool or {}
+
+	for i = 1, #pool do
+		local w = pool[i]
+
+		if not w or not w.style then
+			goto continue
+		end
+
+		-- preserve frame/text original sizes/offsets on first touch
+		if not w._orig_frame_size and w.style.frame and type(w.style.frame.size) == "table" then
+			w._orig_frame_size = { w.style.frame.size[1], w.style.frame.size[2] }
+		end
+
+		if not w._orig_text_bg_size and w.style.text_background and type(w.style.text_background.size) == "table" then
+			w._orig_text_bg_size = { w.style.text_background.size[1], w.style.text_background.size[2] }
+		end
+
+		if not w._orig_text_size and w.style.text and type(w.style.text.size) == "table" then
+			w._orig_text_size = { w.style.text.size[1], w.style.text.size[2] }
+		end
+
+		if not w._orig_text_offset and w.style.text and type(w.style.text.offset) == "table" then
+			w._orig_text_offset = { w.style.text.offset[1] or 0, w.style.text.offset[2] or 0, w.style.text.offset[3] or 0 }
+		end
+
+		-- scale frame size
+		if w._orig_frame_size and w.style.frame and type(w.style.frame.size) == "table" then
+			local fw, fh = w._orig_frame_size[1], w._orig_frame_size[2]
+			w.style.frame.size = { math.max(1, math.floor(fw * ratio + 0.5)), math.max(1, math.floor(fh * ratio + 0.5)) }
+		end
+
+		-- scale text background and text size/offset
+		if w._orig_text_bg_size and w.style.text_background and type(w.style.text_background.size) == "table" then
+			local tbw, tbh = w._orig_text_bg_size[1], w._orig_text_bg_size[2]
+			w.style.text_background.size = { math.max(0, math.floor(tbw * ratio + 0.5)), math.max(1, math.floor(tbh * ratio + 0.5)) }
+		end
+
+		if w._orig_text_size and w.style.text and type(w.style.text.size) == "table" then
+			local tsw, tsh = w._orig_text_size[1], w._orig_text_size[2]
+			w.style.text.size = { math.max(0, math.floor(tsw * ratio + 0.5)), math.max(1, math.floor(tsh * ratio + 0.5)) }
+		end
+
+		if w._orig_text_offset and w.style.text and type(w.style.text.offset) == "table" then
+			w.style.text.offset = {
+				math.floor((w._orig_text_offset[1] or 0) * ratio + 0.5),
+				math.floor((w._orig_text_offset[2] or 0) * ratio + 0.5),
+				w._orig_text_offset[3] or 0,
+			}
+		end
+
+		w.dirty = true
+
+		::continue::
+	end
+end
+
 local function _show_aura_category()
 	local save_manager = Managers.save
 	local show_aura_buff_icons = true
@@ -184,6 +246,9 @@ local function _update_entry_widget(entry, ui_renderer)
 	local widget = entry.widget
 	local buff = entry.buff_instance
 
+	-- runtime ratio (definitions -> desired). Use module-stored ratio as fallback.
+	local ratio = M._div_buff_ratio or 1
+
 	if not widget or not buff then
 		return
 	end
@@ -237,9 +302,10 @@ local function _update_entry_widget(entry, ui_renderer)
 		end
 
 		if content.text and content.text ~= "" then
+			local icon_default = (style.icon and style.icon.default_size and style.icon.default_size[1]) or 38
 			local buff_size = {
-				38,
-				38,
+				math.max(1, math.floor(icon_default * ratio + 0.5)),
+				math.max(1, math.floor(icon_default * ratio + 0.5)),
 			}
 			local text_width = select(1, Text.text_size(ui_renderer, content.text, text_style, buff_size))
 
@@ -302,8 +368,15 @@ M.init = function(self, definitions)
 	self._div_buff_slot_spacing = buff_rows.BUFF_SLOT_SPACING
 	self._div_buff_row_spacing = buff_rows.BUFF_ROW_SPACING
 	self._div_buff_slide_px = buff_rows.BUFF_SLIDE_PX
+	-- store definition build HUD scale and compute runtime ratio
+	self._div_buff_def_hud_layout_scale = definitions.HUD_LAYOUT_SCALE or 1
+	local desired = (mod and type(mod._settings) == "table" and type(mod._settings.hud_layout_scale) == "number" and mod._settings.hud_layout_scale) or self._div_buff_def_hud_layout_scale
+	self._div_buff_ratio = (self._div_buff_def_hud_layout_scale ~= 0) and (desired / self._div_buff_def_hud_layout_scale) or 1
 	self._div_buff_next_start_index = 1
 	self._div_buff_widget_pool = {}
+	-- also expose on module table for local functions
+	M._div_buff_ratio = self._div_buff_ratio
+	M._div_buff_def_hud_layout_scale = self._div_buff_def_hud_layout_scale
 
 	for i, name in ipairs(buff_rows.buff_widget_names) do
 		local widget = widgets[name]
@@ -313,6 +386,9 @@ M.init = function(self, definitions)
 			_widget_reset(widget, nil)
 		end
 	end
+	-- apply icon scaling based on computed ratio (preserve originals and use helper)
+	local r = self._div_buff_ratio or 1
+	_reapply_buff_widget_icons(self, r)
 end
 
 M.update = function(self, dt, t, ui_renderer, opacity)
@@ -327,11 +403,23 @@ M.update = function(self, dt, t, ui_renderer, opacity)
 	end
 
 	local entries = self._div_buff_entries
+	-- Recompute runtime ratio from current settings and reapply icon sizes if changed
+	local desired = (mod and type(mod._settings) == "table" and type(mod._settings.hud_layout_scale) == "number" and mod._settings.hud_layout_scale) or self._div_buff_def_hud_layout_scale
+	local def_scale = self._div_buff_def_hud_layout_scale or 1
+	local current_ratio = (def_scale ~= 0) and (desired / def_scale) or 1
+
+	if current_ratio ~= self._div_buff_ratio then
+		self._div_buff_ratio = current_ratio
+		M._div_buff_ratio = current_ratio
+		_reapply_buff_widget_icons(self, current_ratio)
+	end
+
 	local raw_buffs = buff_extension and buff_extension:buffs() or nil
 	local debug_buffs = mod.divisionhud_debug_get_extra_buffs and mod.divisionhud_debug_get_extra_buffs() or nil
 	local show_aura_category = _show_aura_category()
 	local max_visible = math.min(self._div_buff_max_slots or MAX_BUFFS, MAX_BUFFS)
-	local slide_px = self._div_buff_slide_px
+	local ratio = (type(self._div_buff_ratio) == "number" and self._div_buff_ratio) or 1
+	local slide_px = (self._div_buff_slide_px or 0) * ratio
 
 	for i = 1, #entries do
 		local entry = entries[i]
@@ -492,8 +580,8 @@ M.update = function(self, dt, t, ui_renderer, opacity)
 			if widget and gp then
 				_update_entry_widget(entry, ui_renderer)
 
-				widget.offset[1] = gp.x + math.floor(entry.x_offset + 0.5)
-				widget.offset[2] = gp.y
+				widget.offset[1] = math.floor((gp.x + entry.x_offset) * ratio + 0.5)
+				widget.offset[2] = math.floor(gp.y * ratio + 0.5)
 				widget.alpha_multiplier = opacity
 				widget.content.opacity = entry.alpha
 				widget.content.visible = true
