@@ -92,8 +92,6 @@ local PROX_SCAN_INTERVAL = 0.5
 local RIGHT_SLOT_ICON_FALLBACK = Definitions.RIGHT_SLOT_ICON_FALLBACK
 local DIVISION_BUFF_ROWS_BASE_Y = Definitions.DIVISION_BUFF_ROWS_BASE_Y or 0
 local DIVISION_BUFF_ROWS_HIDDEN_STAMINA_Y = Definitions.DIVISION_BUFF_ROWS_HIDDEN_STAMINA_Y or DIVISION_BUFF_ROWS_BASE_Y
-
--- Resolve HUD layout scale at runtime from mod settings, falling back to Definitions.
 local function get_hud_layout_scale()
 	local s = mod._settings
 
@@ -549,7 +547,6 @@ HudElementDivisionHUD._compute_dynamic_root_offset = function(self, dt, player)
 	self._dyn_ox = ox
 	self._dyn_oy = oy
 
-	-- return raw dynamic offsets (in definition units); caller will apply ratio when positioning
 	return ox, oy
 end
 
@@ -1249,12 +1246,10 @@ local ALERT_ANIM_DROP_PX_BASE  = 20
 local ALERT_ANIM_SLIDE_PX_BASE = 20
 
 local function _div_alert_drop_px()
-	-- return base unscaled pixels; caller applies runtime ratio
 	return math.max(1, math.floor(ALERT_ANIM_DROP_PX_BASE + 0.5))
 end
 
 local function _div_alert_slide_px()
-	-- return base unscaled pixels; caller applies runtime ratio
 	return math.max(1, math.floor(ALERT_ANIM_SLIDE_PX_BASE + 0.5))
 end
 
@@ -1791,7 +1786,6 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 			widget.content.visible = false
 		end
 	end
-	-- Apply runtime HUD scale from settings (scales scenegraph sizes/positions and widget style sizes/offsets).
 	local function apply_runtime_hud_scale(instance)
 		local desired = get_hud_layout_scale()
 		local def_scale = (Definitions and Definitions.HUD_LAYOUT_SCALE) or 1
@@ -1801,12 +1795,10 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 
 		local ratio = (def_scale ~= 0) and (desired / def_scale) or 1
 
-		-- Nothing to do if definitions already built with the same scale
 		if ratio == 1 then
 			return
 		end
 
-		-- Scale scenegraph nodes (sizes and positions) by ratio
 		local sg = instance._ui_scenegraph
 
 		if type(sg) == "table" then
@@ -1833,7 +1825,6 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 			end
 		end
 
-		-- Scale widget style sizes and offsets
 		local widgets_list = instance._widgets
 
 		if type(widgets_list) == "table" then
@@ -1884,21 +1875,17 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 			end
 		end
 
-		-- Mark widgets dirty so changes are applied
 		if type(instance._widgets) == "table" then
 			for _, w in ipairs(instance._widgets) do
 				w.dirty = true
 			end
 		end
-		-- Ensure scenegraph is updated on next frame
 		instance._update_scenegraph = true
-		-- Record new effective HUD layout scale so future calculations use it as base
 		if type(desired) == "number" then
 			Definitions.HUD_LAYOUT_SCALE = desired
 		end
 	end
 
-	-- Expose on instance and run immediately
 	self._apply_runtime_hud_scale = apply_runtime_hud_scale
 	apply_runtime_hud_scale(self)
 end

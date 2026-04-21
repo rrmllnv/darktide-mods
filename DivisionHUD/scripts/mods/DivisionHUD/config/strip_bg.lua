@@ -1,7 +1,3 @@
--- Фон Division HUD: boxes_bg (main_strip_background_fill) и prox_*_bg (proximity_strip_background_fill).
--- Main в меню: 0–3 (plain / оружие+рамка / терминал / чёрный).
--- Proximity в меню: 0–2 без plain → внутри приводится к режимам 1–3.
-
 require("scripts/foundation/utilities/color")
 
 local MATERIAL_GRADIENT_VERTICAL = "content/ui/materials/gradients/gradient_vertical"
@@ -113,7 +109,6 @@ local function tonumber_safe(raw)
 	return raw
 end
 
--- main: значение из выпадающего списка 0–3.
 local function normalize_mode_main(raw, raw_default)
 	local v = tonumber_safe(raw)
 
@@ -130,7 +125,6 @@ local function normalize_mode_main(raw, raw_default)
 	return 0
 end
 
--- proximity: в меню 0–2 → внутренний режим отрисовки 1–3 (без plain).
 local function normalize_mode_proximity(raw, raw_default)
 	local v = tonumber_safe(raw)
 

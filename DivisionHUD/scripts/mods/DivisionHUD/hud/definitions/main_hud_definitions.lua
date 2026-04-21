@@ -9,7 +9,6 @@ local HudElementPlayerWeaponHandlerSettings = require("scripts/ui/hud/elements/p
 
 local LAYOUT_SCALE = 0.8
 
--- Prefer actual mod settings (if loaded), otherwise fall back to defaults file
 local runtime_cfg = (type(mod._settings) == "table" and mod._settings) or DivisionHUDSettingsDefaults
 
 if type(runtime_cfg) == "table" and type(runtime_cfg.hud_layout_scale) == "number" and runtime_cfg.hud_layout_scale == runtime_cfg.hud_layout_scale then

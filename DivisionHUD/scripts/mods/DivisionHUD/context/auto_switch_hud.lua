@@ -1,6 +1,3 @@
--- Настройки группы divisionhud_auto_switch (data.lua): видимость Division HUD по
--- от первого/третьего лица (мод Perspectives, иначе first_person_system) и по слоту устройства в руках.
-
 local mod = get_mod("DivisionHUD")
 local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/data/slot_data")
 

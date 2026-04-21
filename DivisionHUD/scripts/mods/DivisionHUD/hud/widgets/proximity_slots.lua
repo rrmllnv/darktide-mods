@@ -133,7 +133,6 @@ function M.init(self, definitions)
 	self._div_prox_icon_enter_scale = definitions.PROX_ICON_ENTER_SCALE or 0.82
 	self._div_prox_icon_exit_scale = definitions.PROX_ICON_EXIT_SCALE or 0.82
 	self._prox_anim = {}
-	-- Store definition build scale to compute runtime ratio
 	self._prox_def_hud_layout_scale = definitions.HUD_LAYOUT_SCALE or 1
 
 	local widgets = self._widgets_by_name or {}
@@ -325,8 +324,6 @@ function M.update(self, widgets, opacity, dt, proximity_scan, right_slot_icon_fa
 		local desired = (mod and type(mod._settings) == "table" and type(mod._settings.hud_layout_scale) == "number" and mod._settings.hud_layout_scale) or (self._prox_def_hud_layout_scale or 1)
 		local def_scale = self._prox_def_hud_layout_scale or 1
 		local ratio = (def_scale ~= 0) and (desired / def_scale) or 1
-
-		-- Scale grid positions and animated offset by ratio
 		local px = gp.x and math.floor((gp.x * ratio) + 0.5) or 0
 		local py = gp.y and math.floor((gp.y * ratio) + 0.5) or 0
 		local ay = math.floor((anim.y_offset or 0) * ratio + 0.5)

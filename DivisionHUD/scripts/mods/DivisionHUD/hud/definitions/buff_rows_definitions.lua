@@ -70,15 +70,12 @@ M.build = function(buff_layout_from_stm_ddg, main_row_height, extend_below_main_
 			ddg_visual_bottom_local = lv
 		end
 	end
-	-- determine how many columns fit into available width (allow increasing columns if space allows)
 	local cols        = BUFF_COLS
 	local buff_strip_w = BUFF_COLS * BUFF_SLOT_SPACING
-	-- if caller provided bar_fill_width use it as available width
 	if type(bar_fill_width) == "number" and bar_fill_width == bar_fill_width and bar_fill_width > 0 then
 		buff_strip_w = math.max(BUFF_SLOT_SIZE, math.floor(bar_fill_width + 0.5))
 	end
 
-	-- compute columns that fit into buff_strip_w using slot spacing
 	local computed_cols = math.max(1, math.floor(buff_strip_w / BUFF_SLOT_SPACING + 0.5))
 	cols = math.max(1, computed_cols)
 
@@ -207,7 +204,6 @@ M.build = function(buff_layout_from_stm_ddg, main_row_height, extend_below_main_
 	local widget_definitions = {}
 	local buff_widget_names  = {}
 
-	-- number of widget slots depends on computed columns
 	local buff_max_slots = cols * BUFF_ROWS_COUNT
 
 	for i = 1, buff_max_slots do

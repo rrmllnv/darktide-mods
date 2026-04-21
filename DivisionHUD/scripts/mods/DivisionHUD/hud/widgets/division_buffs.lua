@@ -84,7 +84,6 @@ local function _reapply_buff_widget_icons(self, ratio)
 			goto continue
 		end
 
-		-- preserve frame/text original sizes/offsets on first touch
 		if not w._orig_frame_size and w.style.frame and type(w.style.frame.size) == "table" then
 			w._orig_frame_size = { w.style.frame.size[1], w.style.frame.size[2] }
 		end
@@ -101,13 +100,11 @@ local function _reapply_buff_widget_icons(self, ratio)
 			w._orig_text_offset = { w.style.text.offset[1] or 0, w.style.text.offset[2] or 0, w.style.text.offset[3] or 0 }
 		end
 
-		-- scale frame size
 		if w._orig_frame_size and w.style.frame and type(w.style.frame.size) == "table" then
 			local fw, fh = w._orig_frame_size[1], w._orig_frame_size[2]
 			w.style.frame.size = { math.max(1, math.floor(fw * ratio + 0.5)), math.max(1, math.floor(fh * ratio + 0.5)) }
 		end
 
-		-- scale text background and text size/offset
 		if w._orig_text_bg_size and w.style.text_background and type(w.style.text_background.size) == "table" then
 			local tbw, tbh = w._orig_text_bg_size[1], w._orig_text_bg_size[2]
 			w.style.text_background.size = { math.max(0, math.floor(tbw * ratio + 0.5)), math.max(1, math.floor(tbh * ratio + 0.5)) }
@@ -245,8 +242,6 @@ end
 local function _update_entry_widget(entry, ui_renderer)
 	local widget = entry.widget
 	local buff = entry.buff_instance
-
-	-- runtime ratio (definitions -> desired). Use module-stored ratio as fallback.
 	local ratio = M._div_buff_ratio or 1
 
 	if not widget or not buff then
@@ -368,13 +363,11 @@ M.init = function(self, definitions)
 	self._div_buff_slot_spacing = buff_rows.BUFF_SLOT_SPACING
 	self._div_buff_row_spacing = buff_rows.BUFF_ROW_SPACING
 	self._div_buff_slide_px = buff_rows.BUFF_SLIDE_PX
-	-- store definition build HUD scale and compute runtime ratio
 	self._div_buff_def_hud_layout_scale = definitions.HUD_LAYOUT_SCALE or 1
 	local desired = (mod and type(mod._settings) == "table" and type(mod._settings.hud_layout_scale) == "number" and mod._settings.hud_layout_scale) or self._div_buff_def_hud_layout_scale
 	self._div_buff_ratio = (self._div_buff_def_hud_layout_scale ~= 0) and (desired / self._div_buff_def_hud_layout_scale) or 1
 	self._div_buff_next_start_index = 1
 	self._div_buff_widget_pool = {}
-	-- also expose on module table for local functions
 	M._div_buff_ratio = self._div_buff_ratio
 	M._div_buff_def_hud_layout_scale = self._div_buff_def_hud_layout_scale
 
@@ -386,7 +379,6 @@ M.init = function(self, definitions)
 			_widget_reset(widget, nil)
 		end
 	end
-	-- apply icon scaling based on computed ratio (preserve originals and use helper)
 	local r = self._div_buff_ratio or 1
 	_reapply_buff_widget_icons(self, r)
 end
@@ -403,7 +395,6 @@ M.update = function(self, dt, t, ui_renderer, opacity)
 	end
 
 	local entries = self._div_buff_entries
-	-- Recompute runtime ratio from current settings and reapply icon sizes if changed
 	local desired = (mod and type(mod._settings) == "table" and type(mod._settings.hud_layout_scale) == "number" and mod._settings.hud_layout_scale) or self._div_buff_def_hud_layout_scale
 	local def_scale = self._div_buff_def_hud_layout_scale or 1
 	local current_ratio = (def_scale ~= 0) and (desired / def_scale) or 1
