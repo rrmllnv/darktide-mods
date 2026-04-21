@@ -28,6 +28,7 @@ local StaminaDodgeWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/h
 local ToughnessHealthWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/toughness_health")
 local CombatAbilityBar = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/combat_ability_bar")
 local DivisionBuffs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/division_buffs")
+local ProximitySlotsWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/proximity_slots")
 local DivisionHUDSettingsDefaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/defaults")
 local MainStripBackgroundPresets = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/strip_bg")
 
@@ -83,12 +84,7 @@ local ALERTS_MESSAGE_TEXT_WRAP_WIDTH = Definitions.ALERTS_MESSAGE_TEXT_WRAP_WIDT
 local COMBAT_ABILITY_TYPE = "combat_ability"
 local GRENADE_ABILITY_TYPE = "grenade_ability"
 
-local PROX_SLOT_WIDGET_NAMES = Definitions.PROX_SLOT_WIDGET_NAMES
-local PROX_GRID_POSITIONS = Definitions.PROX_GRID_POSITIONS
-local PROX_SLIDE_PX = Definitions.PROX_SLIDE_PX or 8
 local PROX_SCAN_INTERVAL = 0.5
-local PROX_ANIM_ENTER_DUR = 0.15
-local PROX_ANIM_EXIT_DUR = 0.12
 local RIGHT_SLOT_ICON_FALLBACK = Definitions.RIGHT_SLOT_ICON_FALLBACK
 local DIVISION_BUFF_ROWS_BASE_Y = Definitions.DIVISION_BUFF_ROWS_BASE_Y or 0
 local DIVISION_BUFF_ROWS_HIDDEN_STAMINA_Y = Definitions.DIVISION_BUFF_ROWS_HIDDEN_STAMINA_Y or DIVISION_BUFF_ROWS_BASE_Y
@@ -1748,6 +1744,7 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	StaminaDodgeWidget.init(self, Definitions)
 	ToughnessHealthWidget.init(self, Definitions)
 	DivisionBuffs.init(self, Definitions)
+	ProximitySlotsWidget.init(self, Definitions)
 	_div_alert_init(self)
 
 	self:_reset_dynamic_offset_state()
@@ -1980,270 +1977,17 @@ HudElementDivisionHUD._update_proximity_scan = function(self, player_unit, dt)
 end
 
 HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacity, dt)
-	dt = (type(dt) == "number" and dt == dt and dt > 0) and dt or 0
-
-	local s_cfg = mod._settings
-	local prox_data = self._prox_data or {}
-	local enabled = type(s_cfg) ~= "table" or (s_cfg.proximity_enabled ~= false and s_cfg.proximity_enabled ~= 0)
-
-	local show_stimm   = type(s_cfg) ~= "table" or (s_cfg.proximity_show_stimm ~= false and s_cfg.proximity_show_stimm ~= 0)
-
-	local cat_settings = {
-		medical_station  = type(s_cfg) ~= "table" or (s_cfg.proximity_show_medical_station  ~= false and s_cfg.proximity_show_medical_station  ~= 0),
-		medical          = type(s_cfg) ~= "table" or (s_cfg.proximity_show_medical          ~= false and s_cfg.proximity_show_medical          ~= 0),
-		medical_deployed = type(s_cfg) ~= "table" or (s_cfg.proximity_show_medical_deployed ~= false and s_cfg.proximity_show_medical_deployed ~= 0),
-		stimm_corruption = show_stimm,
-		stimm_power      = show_stimm,
-		stimm_speed      = show_stimm,
-		stimm_ability    = show_stimm,
-		ammo_small       = type(s_cfg) ~= "table" or (s_cfg.proximity_show_ammo_small ~= false and s_cfg.proximity_show_ammo_small ~= 0),
-		ammo_large       = type(s_cfg) ~= "table" or (s_cfg.proximity_show_ammo_large ~= false and s_cfg.proximity_show_ammo_large ~= 0),
-		ammo_crate       = type(s_cfg) ~= "table" or (s_cfg.proximity_show_ammo_crate ~= false and s_cfg.proximity_show_ammo_crate ~= 0),
-		grenade          = type(s_cfg) ~= "table" or (s_cfg.proximity_show_grenade    ~= false and s_cfg.proximity_show_grenade    ~= 0),
-		grimoire         = type(s_cfg) ~= "table" or (s_cfg.proximity_show_grimoire   ~= false and s_cfg.proximity_show_grimoire   ~= 0),
-		tome             = type(s_cfg) ~= "table" or (s_cfg.proximity_show_tome       ~= false and s_cfg.proximity_show_tome       ~= 0),
-	}
-
-	if not self._prox_anim then
-		self._prox_anim = {}
-	end
-
-	local slide_px = PROX_SLIDE_PX
-
-	for _, cat in ipairs(ProximityScan.CATEGORIES) do
-		if not self._prox_anim[cat] then
-			self._prox_anim[cat] = { state = "hidden", timer = 0, alpha = 0, y_offset = 0, grid_idx = nil }
-		end
-	end
-
-	for _, cat in ipairs(ProximityScan.CATEGORIES) do
-		local anim = self._prox_anim[cat]
-		local want = enabled and cat_settings[cat] and prox_data[cat] ~= nil
-
-		if want and anim.state == "exit" then
-			local gp = anim.grid_idx and PROX_GRID_POSITIONS and PROX_GRID_POSITIONS[anim.grid_idx]
-			local sd = (gp and gp.is_bottom) and 1 or -1
-
-			anim.state    = "enter"
-			anim.timer    = PROX_ANIM_ENTER_DUR * (1 - anim.alpha)
-			anim.y_offset = sd * slide_px * (1 - anim.alpha)
-		elseif not want and (anim.state == "enter" or anim.state == "hold") then
-			anim.state    = "exit"
-			anim.timer    = PROX_ANIM_EXIT_DUR * (1 - anim.alpha)
-			anim.grid_idx = nil
-		end
-	end
-
-	local active = {}
-
-	for _, cat in ipairs(ProximityScan.CATEGORIES) do
-		local anim = self._prox_anim[cat]
-
-		if anim.state == "enter" or anim.state == "hold" then
-			active[#active + 1] = anim
-		end
-	end
-
-	table.sort(active, function(a, b)
-		local ai = a.grid_idx or math.huge
-		local bi = b.grid_idx or math.huge
-
-		return ai < bi
-	end)
-
-	for new_idx, anim in ipairs(active) do
-		if anim.grid_idx ~= new_idx then
-			anim.grid_idx = new_idx
-			anim.y_offset = 0
-		end
-	end
-
-	local next_idx = #active + 1
-
-	for _, cat in ipairs(ProximityScan.CATEGORIES) do
-		local anim = self._prox_anim[cat]
-		local want = enabled and cat_settings[cat] and prox_data[cat] ~= nil
-
-		if want and anim.state == "hidden" and next_idx <= #PROX_GRID_POSITIONS then
-			local gp = PROX_GRID_POSITIONS[next_idx]
-			local sd = (gp and gp.is_bottom) and 1 or -1
-
-			anim.state    = "enter"
-			anim.timer    = 0
-			anim.alpha    = 0
-			anim.grid_idx = next_idx
-			anim.y_offset = sd * slide_px
-			next_idx      = next_idx + 1
-		end
-	end
-
-	for _, cat in ipairs(ProximityScan.CATEGORIES) do
-		local widget_name = PROX_SLOT_WIDGET_NAMES and PROX_SLOT_WIDGET_NAMES[cat]
-		local widget = widget_name and widgets[widget_name]
-
-		if not widget or not widget.content then
-			goto continue_prox
-		end
-
-		local anim = self._prox_anim[cat]
-		local gp   = anim.grid_idx and PROX_GRID_POSITIONS and PROX_GRID_POSITIONS[anim.grid_idx]
-		local sd   = (gp and gp.is_bottom) and 1 or -1
-
-		anim.timer = anim.timer + dt
-
-		if anim.state == "enter" then
-			local p  = math.min(1, anim.timer / PROX_ANIM_ENTER_DUR)
-			local ep = math.easeOutCubic(p)
-
-			anim.alpha    = ep
-			anim.y_offset = sd * slide_px * (1 - ep)
-
-			if p >= 1 then
-				anim.state    = "hold"
-				anim.alpha    = 1
-				anim.y_offset = 0
-			end
-		elseif anim.state == "hold" then
-			anim.alpha    = 1
-			anim.y_offset = 0
-		elseif anim.state == "exit" then
-			local p  = math.min(1, anim.timer / PROX_ANIM_EXIT_DUR)
-			local ep = math.easeOutCubic(p)
-
-			anim.alpha    = 1 - ep
-			anim.y_offset = sd * slide_px * ep
-
-			if p >= 1 then
-				anim.state    = "hidden"
-				anim.alpha    = 0
-				anim.y_offset = 0
-				anim.grid_idx = nil
-			end
-		end
-
-		gp = anim.grid_idx and PROX_GRID_POSITIONS and PROX_GRID_POSITIONS[anim.grid_idx]
-
-		local bg_w = widgets["prox_" .. cat .. "_bg"]
-
-		if anim.state == "hidden" then
-			widget.content.visible = false
-			widget.dirty = true
-
-			if bg_w then
-				bg_w.content.visible = false
-				bg_w.dirty = true
-			end
-
-			goto continue_prox
-		end
-
-		if not gp then
-			widget.content.visible = false
-			widget.dirty = true
-			goto continue_prox
-		end
-
-		local eff_alpha = opacity * math.max(0, math.min(1, anim.alpha))
-
-		self:set_scenegraph_position(widget_name, gp.x, gp.y + math.floor(anim.y_offset + 0.5))
-
-		if bg_w then
-			bg_w.content.visible = true
-			bg_w.alpha_multiplier = eff_alpha
-			bg_w.dirty = true
-		end
-
-		widget.content.visible = true
-		widget.alpha_multiplier = eff_alpha
-
-		local data = prox_data[cat]
-
-		if data then
-			widget.content.icon = data.icon or RIGHT_SLOT_ICON_FALLBACK
-			widget.content.dist_text = string.format("%dm", data.dist_m)
-			local count_str = (data.count and data.count > 0) and tostring(data.count) or nil
-			local size_str
-
-			if data.size_label_loc_key then
-				local loc = mod:localize(data.size_label_loc_key)
-
-				if type(loc) == "string" and loc ~= "" and not string.find(loc, "^<unlocalized") then
-					size_str = loc
-				else
-					size_str = "big"
-				end
-			else
-				size_str = data.size_label
-			end
-			local label
-
-			if count_str and size_str then
-				label = count_str .. " " .. size_str
-			elseif count_str then
-				label = count_str
-			elseif size_str then
-				label = size_str
-			end
-
-			widget.content.count_text = label or ""
-		end
-
-		local icon_color = widget.style.icon and widget.style.icon.color
-
-		if icon_color then
-			local is_stimm_cat = cat == "stimm_corruption" or cat == "stimm_power" or cat == "stimm_speed" or cat == "stimm_ability"
-
-			if is_stimm_cat and data and data.stimm_id then
-				local stimm_argb = resolve_stimm_slot_main_argb_255(data.stimm_id, s_cfg)
-
-				if is_valid_argb_255(stimm_argb) then
-					icon_color[1] = stimm_argb[1] or 255
-					icon_color[2] = stimm_argb[2] or 255
-					icon_color[3] = stimm_argb[3] or 255
-					icon_color[4] = stimm_argb[4] or 255
-				else
-					icon_color[1] = 255
-					icon_color[2] = 255
-					icon_color[3] = 255
-					icon_color[4] = 255
-				end
-			elseif cat == "medical_deployed" then
-				local tc = UIHudSettings.color_tint_6
-
-				icon_color[1] = tc[1] or 255
-				icon_color[2] = tc[2] or 255
-				icon_color[3] = tc[3] or 255
-				icon_color[4] = tc[4] or 255
-			elseif cat == "ammo_crate" and data and data.prox_icon_tint == "ammo_deployed" then
-				local tc = UIHudSettings.color_tint_ammo_high
-
-				icon_color[1] = tc[1] or 255
-				icon_color[2] = tc[2] or 255
-				icon_color[3] = tc[3] or 255
-				icon_color[4] = tc[4] or 255
-			else
-				icon_color[1] = 255
-				icon_color[2] = 255
-				icon_color[3] = 255
-				icon_color[4] = 255
-			end
-		end
-
-		local text_color = widget.style.dist_text and widget.style.dist_text.text_color
-
-		if text_color then
-			local base_c = DIVISION_SLOT_COUNTER_TEXT_COLOR_DEFAULT
-
-			text_color[1] = base_c[1] or 255
-			text_color[2] = base_c[2] or 255
-			text_color[3] = base_c[3] or 255
-			text_color[4] = base_c[4] or 255
-		end
-
-		widget.dirty = true
-
-		::continue_prox::
-	end
+	ProximitySlotsWidget.update(
+		self,
+		widgets,
+		opacity,
+		dt,
+		ProximityScan,
+		RIGHT_SLOT_ICON_FALLBACK,
+		resolve_stimm_slot_main_argb_255,
+		is_valid_argb_255,
+		DIVISION_SLOT_COUNTER_TEXT_COLOR_DEFAULT
+	)
 end
 
 HudElementDivisionHUD._update_ability_bar = function(self, player_unit, widget, opacity)
@@ -2308,6 +2052,7 @@ HudElementDivisionHUD.destroy = function(self, ui_renderer)
 	StaminaDodgeWidget.destroy(self, ui_renderer)
 	ToughnessHealthWidget.destroy(self, ui_renderer)
 	DivisionBuffs.destroy(self, ui_renderer)
+	ProximitySlotsWidget.destroy(self, ui_renderer)
 
 	HudElementDivisionHUD.super.destroy(self, ui_renderer)
 end
