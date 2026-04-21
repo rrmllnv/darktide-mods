@@ -67,7 +67,7 @@ return {
 			title = "danger_zone_radius",
 			tooltip = "danger_zone_radius_description",
 			default_value = d("danger_zone_radius", 5),
-			range = { 1, 40 },
+			range = { 1, 30 },
 			decimals_number = 0,
 		},
 		{

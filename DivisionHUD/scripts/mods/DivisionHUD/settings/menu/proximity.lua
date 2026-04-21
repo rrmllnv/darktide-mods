@@ -34,7 +34,7 @@ return {
 			title = "proximity_radius",
 			tooltip_text = "proximity_radius_description",
 			default_value = d("proximity_radius", 15),
-			range = { 5, 40 },
+			range = { 5, 30 },
 			decimals_number = 0,
 		},
 		{
