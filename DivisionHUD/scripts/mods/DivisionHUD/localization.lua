@@ -265,14 +265,19 @@ return {
 		["zh-cn"] = "恶魔宿主",
 	},
 	danger_zone_show_daemonhost_description = {
-		en = "Show alerts for the Daemonhost unit (spawn and alert stages). Use the separate 'Daemonhost aura' option to show its corruption aura radius.",
-		ru = "Показывать оповещения о самом Демонхосте (спавн и стадии тревоги). Отдельная опция «Аура демонхоста» управляет показом радиуса его коррумпирующей ауры.",
-		["zh-cn"] = "显示有关恶魔宿主的警报（出生与各警戒阶段）。单独的“恶魔宿主光环”选项用于显示其腐蚀光环半径。",
+		en = "Show alerts for this unit (spawn and alert stages).",
+		ru = "Показывать оповещения для этого юнита (появление и стадии тревоги).",
+		["zh-cn"] = "显示该单位的警报（出生与各警戒阶段）。",
 	},
 	danger_zone_show_daemonhost_aura = {
 		en = "Daemonhost corruption aura",
 		ru = "Аура демонхоста",
 		["zh-cn"] = "恶魔宿主腐化光环",
+	},
+	danger_zone_show_daemonhost_aura_description = {
+		en = "Show the radius of this corruption aura (area effect around the unit).",
+		ru = "Показывать радиус этой коррумпирующей ауры (область воздействия вокруг юнита).",
+		["zh-cn"] = "显示该腐化光环的半径（单位周围的区域效果）。",
 	},
 	danger_zone_show_poxburster = {
 		en = "Poxburster",
@@ -280,9 +285,9 @@ return {
 		["zh-cn"] = "瘟疫爆弹者",
 	},
 	danger_zone_show_poxburster_description = {
-		en = "Show alerts for Poxburster explosions — uses the Poxburster's explosion radius.",
-		ru = "Показывать оповещения о взрывах Поксбёрстера — используется радиус его взрыва.",
-		["zh-cn"] = "显示瘟疫爆弹者的爆炸警报（使用其爆炸半径）。",
+		en = "Show alerts for this explosion threat — uses its explosion radius.",
+		ru = "Показывать оповещения для этой взрывной угрозы — используется её радиус взрыва.",
+		["zh-cn"] = "显示该爆炸威胁的警报（使用其爆炸半径）。",
 	},
 	danger_zone_show_tox_flamer = {
 		en = "Tox flamer",
@@ -290,9 +295,9 @@ return {
 		["zh-cn"] = "毒焰喷射者",
 	},
 	danger_zone_show_tox_flamer_description = {
-		en = "Show alerts for Tox Flamer (backpack/flare explosions). Uses the flamer explosion radius.",
-		ru = "Показывать оповещения о Токс-огнемётчиках (взрывы ранца). Используется радиус взрыва флеймера.",
-		["zh-cn"] = "显示毒焰喷射者相关警报（背包/喷火器爆炸），使用喷火器爆炸半径。",
+		en = "Show alerts for this fire threat (backpack/flare explosions). Uses its explosion radius.",
+		ru = "Показывать оповещения для этой огненной угрозы (взрывы ранца). Используется её радиус взрыва.",
+		["zh-cn"] = "显示该火焰威胁的警报（背包/喷射器爆炸），使用其爆炸半径。",
 	},
 	danger_zone_show_scab_flamer = {
 		en = "Scab flamer",
@@ -300,24 +305,39 @@ return {
 		["zh-cn"] = "血痂喷火兵",
 	},
 	danger_zone_show_scab_flamer_description = {
-		en = "Show alerts for Scab Flamer (backpack explosions). Uses the flamer explosion radius.",
-		ru = "Показывать оповещения о Скаб-огнемётчиках (взрывы ранца). Используется радиус взрыва флеймера.",
-		["zh-cn"] = "显示血痂喷火兵相关警报（背包爆炸半径）。",
+		en = "Show alerts for this fire threat (backpack explosions). Uses its explosion radius.",
+		ru = "Показывать оповещения для этой огненной угрозы (взрывы ранца). Используется её радиус взрыва.",
+		["zh-cn"] = "显示该火焰威胁的警报（背包爆炸），使用其爆炸半径。",
 	},
 	danger_zone_show_bomber_grenade = {
 		en = "Bomber grenade",
 		ru = "Граната бомбардира",
 		["zh-cn"] = "投弹兵手雷",
 	},
+	danger_zone_show_bomber_grenade_description = {
+		en = "Show alerts for Bomber grenade explosions — uses the grenade explosion radius.",
+		ru = "Показывать оповещения о гранатах бомбардира — используется радиус взрыва гранаты.",
+		["zh-cn"] = "显示投弹兵手雷爆炸警报（使用手雷爆炸半径）。",
+	},
 	danger_zone_show_explosive_barrel = {
 		en = "Explosive barrel",
 		ru = "Взрывная бочка",
 		["zh-cn"] = "爆炸桶",
 	},
+	danger_zone_show_explosive_barrel_description = {
+		en = "Show alerts for explosive barrels — uses the barrel explosion radius.",
+		ru = "Показывать оповещения о взрывных бочках — используется радиус взрыва бочки.",
+		["zh-cn"] = "显示爆炸桶的警报（使用其爆炸半径）。",
+	},
 	danger_zone_show_fire_barrel = {
 		en = "Fire barrel",
 		ru = "Огненная бочка",
 		["zh-cn"] = "火焰桶",
+	},
+	danger_zone_show_fire_barrel_description = {
+		en = "Show alerts for fire barrels — uses the fire barrel radius.",
+		ru = "Показывать оповещения о огненных бочках — используется радиус их воздействия.",
+		["zh-cn"] = "显示火焰桶的警报（使用其影响半径）。",
 	},
 	divisionhud_super_dynamic = {
 		en = "\238\129\135 DYNAMIC HUD",
