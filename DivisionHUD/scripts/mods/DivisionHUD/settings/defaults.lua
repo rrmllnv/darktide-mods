@@ -56,6 +56,7 @@ local defaults = {
 	proximity_show_ammo_small = true,
 	proximity_show_ammo_large = true,
 	proximity_show_ammo_crate = true,
+	proximity_show_ammo_crate_deployed = true,
 	proximity_show_grenade = true,
 	proximity_show_grimoire = true,
 	proximity_show_tome = true,

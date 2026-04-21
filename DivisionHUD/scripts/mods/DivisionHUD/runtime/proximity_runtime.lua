@@ -280,7 +280,7 @@ local function _dist_sq(a, b)
 	return dx * dx + dy * dy + dz * dz
 end
 
-local function scan(player_unit, radius)
+local function scan(player_unit, radius, settings)
 	local result = {}
 
 	if not player_unit or not Unit.alive(player_unit) then
@@ -312,9 +312,26 @@ local function scan(player_unit, radius)
 							local dist_sq = _dist_sq(upos, player_pos)
 
 							if dist_sq <= radius_sq then
+								local is_deployed_ammo_crate = pickup_name == "ammo_cache_deployable"
+									or pickup_name == "large_ammunition_crate"
+								local ammo_crate_enabled = type(settings) ~= "table"
+									or (settings.proximity_show_ammo_crate ~= false and settings.proximity_show_ammo_crate ~= 0)
+								local ammo_crate_deployed_enabled = type(settings) ~= "table"
+									or (settings.proximity_show_ammo_crate_deployed ~= false and settings.proximity_show_ammo_crate_deployed ~= 0)
+
+								if pd.cat == "ammo_crate" then
+									if is_deployed_ammo_crate and not ammo_crate_deployed_enabled then
+										goto continue_interactee_unit
+									end
+
+									if not is_deployed_ammo_crate and not ammo_crate_enabled then
+										goto continue_interactee_unit
+									end
+								end
+
 								local prox_icon_tint = nil
 
-								if pd.cat == "ammo_crate" and (pickup_name == "ammo_cache_deployable" or pickup_name == "large_ammunition_crate") then
+								if pd.cat == "ammo_crate" and is_deployed_ammo_crate then
 									prox_icon_tint = "ammo_deployed"
 								end
 
@@ -330,6 +347,8 @@ local function scan(player_unit, radius)
 					end
 				end
 			end
+
+			::continue_interactee_unit::
 		end
 	end
 
@@ -381,6 +400,7 @@ mod.divisionhud_proximity_apply_settings = function(setting_id)
 		or setting_id == "proximity_show_ammo_small"
 		or setting_id == "proximity_show_ammo_large"
 		or setting_id == "proximity_show_ammo_crate"
+		or setting_id == "proximity_show_ammo_crate_deployed"
 		or setting_id == "proximity_show_grenade"
 		or setting_id == "proximity_show_grimoire"
 		or setting_id == "proximity_show_tome"

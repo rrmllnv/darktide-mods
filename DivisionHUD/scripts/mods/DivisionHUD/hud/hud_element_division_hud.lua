@@ -2153,7 +2153,7 @@ HudElementDivisionHUD._update_proximity_scan = function(self, player_unit, dt)
 
 	local radius = (type(s_cfg) == "table" and type(s_cfg.proximity_radius) == "number") and s_cfg.proximity_radius or 15
 
-	self._prox_data = ProximityScan.scan(player_unit, radius)
+	self._prox_data = ProximityScan.scan(player_unit, radius, s_cfg)
 end
 
 HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacity, dt)

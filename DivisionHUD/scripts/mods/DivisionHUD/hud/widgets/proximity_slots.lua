@@ -162,7 +162,9 @@ function M.update(self, widgets, opacity, dt, proximity_scan, right_slot_icon_fa
 		stimm_ability = show_stimm,
 		ammo_small = type(settings) ~= "table" or (settings.proximity_show_ammo_small ~= false and settings.proximity_show_ammo_small ~= 0),
 		ammo_large = type(settings) ~= "table" or (settings.proximity_show_ammo_large ~= false and settings.proximity_show_ammo_large ~= 0),
-		ammo_crate = type(settings) ~= "table" or (settings.proximity_show_ammo_crate ~= false and settings.proximity_show_ammo_crate ~= 0),
+		ammo_crate = type(settings) ~= "table"
+			or (settings.proximity_show_ammo_crate ~= false and settings.proximity_show_ammo_crate ~= 0)
+			or (settings.proximity_show_ammo_crate_deployed ~= false and settings.proximity_show_ammo_crate_deployed ~= 0),
 		grenade = type(settings) ~= "table" or (settings.proximity_show_grenade ~= false and settings.proximity_show_grenade ~= 0),
 		grimoire = type(settings) ~= "table" or (settings.proximity_show_grimoire ~= false and settings.proximity_show_grimoire ~= 0),
 		tome = type(settings) ~= "table" or (settings.proximity_show_tome ~= false and settings.proximity_show_tome ~= 0),

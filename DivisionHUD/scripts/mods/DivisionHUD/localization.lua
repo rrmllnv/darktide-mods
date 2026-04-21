@@ -750,9 +750,19 @@ return {
 		["zh-cn"] = "显示弹药箱",
 	},
 	proximity_show_ammo_crate_description = {
-		en = "Detect ammo crates (pocketable, deployed, and level crates).",
-		ru = "Обнаруживать ящики патронов (карманные, развёрнутые и на уровне).",
-		["zh-cn"] = "检测弹药箱（可携带、已部署和地图内）。",
+		en = "Detect pocketable ammo crates and ammo crates placed on the level.",
+		ru = "Обнаруживать карманные ящики патронов и ящики с патронами, размещённые на уровне.",
+		["zh-cn"] = "检测可携带弹药箱和关卡内放置的弹药箱。",
+	},
+	proximity_show_ammo_crate_deployed = {
+		en = "Show deployed ammo crates",
+		ru = "Показывать развёрнутые ящики патронов",
+		["zh-cn"] = "显示已部署弹药箱",
+	},
+	proximity_show_ammo_crate_deployed_description = {
+		en = "Detect deployed ammo crates placed by players.",
+		ru = "Обнаруживать развёрнутые ящики патронов, выставленные игроками.",
+		["zh-cn"] = "检测玩家放置的已部署弹药箱。",
 	},
 	proximity_show_grenade = {
 		en = "Show grenades",

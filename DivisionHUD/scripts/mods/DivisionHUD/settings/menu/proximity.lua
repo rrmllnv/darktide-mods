@@ -87,6 +87,13 @@ return {
 			default_value = d("proximity_show_ammo_crate", true),
 		},
 		{
+			setting_id = "proximity_show_ammo_crate_deployed",
+			type = "checkbox",
+			title = "proximity_show_ammo_crate_deployed",
+			tooltip_text = "proximity_show_ammo_crate_deployed_description",
+			default_value = d("proximity_show_ammo_crate_deployed", true),
+		},
+		{
 			setting_id = "proximity_show_grenade",
 			type = "checkbox",
 			title = "proximity_show_grenade",
