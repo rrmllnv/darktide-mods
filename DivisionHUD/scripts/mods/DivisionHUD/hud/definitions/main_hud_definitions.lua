@@ -283,6 +283,13 @@ for k, v in pairs(_division_stamina_dodge.scenegraph_definition) do
 	scenegraph_definition[k] = v
 end
 
+local DivisionHUDDangerZoneDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/danger_zone_definitions")
+local _division_danger_zone = DivisionHUDDangerZoneDefs.build(MAIN_ROW_HEIGHT, BAR_FILL_WIDTH)
+
+for k, v in pairs(_division_danger_zone.scenegraph_definition) do
+	scenegraph_definition[k] = v
+end
+
 local DivisionHUDBuffRowsDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/buff_rows_definitions")
 local _division_buff_rows = DivisionHUDBuffRowsDefs.build(
 	_division_stamina_dodge.buff_layout_from_stm_ddg,
@@ -665,6 +672,10 @@ for k, v in pairs(_division_toughness_health.widget_definitions) do
 end
 
 for k, v in pairs(_division_stamina_dodge.widget_definitions) do
+	widget_definitions[k] = v
+end
+
+for k, v in pairs(_division_danger_zone.widget_definitions) do
 	widget_definitions[k] = v
 end
 

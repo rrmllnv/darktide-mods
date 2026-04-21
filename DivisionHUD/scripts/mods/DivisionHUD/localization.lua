@@ -219,6 +219,76 @@ return {
 		ru = "Терминальный градиент черный",
 		["zh-cn"] = "终端渐变黑色",
 	},
+	divisionhud_super_danger_zone = {
+		en = "\238\128\161 DANGER ZONE",
+		ru = "\238\128\161 ОПАСНАЯ ЗОНА",
+		["zh-cn"] = "\238\128\161 危险区域",
+	},
+	danger_zone_label = {
+		en = "Danger zone",
+		ru = "Опасная зона",
+		["zh-cn"] = "危险区域",
+	},
+	danger_zone_enabled = {
+		en = "Enable danger zone",
+		ru = "Включить опасную зону",
+		["zh-cn"] = "启用危险区域",
+	},
+	danger_zone_enabled_description = {
+		en = "Shows the Danger zone block when you approach tracked hazardous areas.",
+		ru = "Показывает блок Danger zone при приближении к отслеживаемым опасным зонам.",
+		["zh-cn"] = "接近已追踪的危险区域时显示 Danger zone 模块。",
+	},
+	danger_zone_radius = {
+		en = "Detection distance (m)",
+		ru = "Расстояние обнаружения (м)",
+		["zh-cn"] = "检测距离（米）",
+	},
+	danger_zone_radius_description = {
+		en = "Maximum distance in meters from the edge of a tracked danger zone to show the Danger zone block.",
+		ru = "Максимальное расстояние в метрах от границы отслеживаемой опасной зоны, на котором показывается блок Danger zone.",
+		["zh-cn"] = "距离已追踪危险区域边缘的最大显示距离（米）。",
+	},
+	danger_zone_show_daemonhost = {
+		en = "Daemonhost",
+		ru = "Демонхост",
+		["zh-cn"] = "恶魔宿主",
+	},
+	danger_zone_show_daemonhost_aura = {
+		en = "Daemonhost corruption aura",
+		ru = "Аура демонхоста",
+		["zh-cn"] = "恶魔宿主腐化光环",
+	},
+	danger_zone_show_poxburster = {
+		en = "Poxburster",
+		ru = "Поксбёрстер",
+		["zh-cn"] = "瘟疫爆弹者",
+	},
+	danger_zone_show_tox_flamer = {
+		en = "Tox flamer",
+		ru = "Токс-огнемётчик",
+		["zh-cn"] = "毒焰喷射者",
+	},
+	danger_zone_show_scab_flamer = {
+		en = "Scab flamer",
+		ru = "Скаб-огнемётчик",
+		["zh-cn"] = "血痂喷火兵",
+	},
+	danger_zone_show_bomber_grenade = {
+		en = "Bomber grenade",
+		ru = "Граната бомбардира",
+		["zh-cn"] = "投弹兵手雷",
+	},
+	danger_zone_show_explosive_barrel = {
+		en = "Explosive barrel",
+		ru = "Взрывная бочка",
+		["zh-cn"] = "爆炸桶",
+	},
+	danger_zone_show_fire_barrel = {
+		en = "Fire barrel",
+		ru = "Огненная бочка",
+		["zh-cn"] = "火焰桶",
+	},
 	divisionhud_super_dynamic = {
 		en = "\238\129\135 DYNAMIC HUD",
 		ru = "\238\129\135 ДИНАМИЧЕСКИЙ HUD",

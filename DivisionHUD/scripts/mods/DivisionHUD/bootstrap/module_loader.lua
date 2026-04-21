@@ -10,6 +10,7 @@ mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/debug_runtime")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/mission_objective_runtime")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/team_alerts_runtime")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/proximity_runtime")
+mod.danger_zone_runtime = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/danger_zone_runtime")
 
 mod.on_all_mods_loaded = function()
 	local bridge = mod.recolor_stimms_bridge

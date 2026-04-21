@@ -24,6 +24,7 @@ local DIVISION_STIMM_SLOT_TYPE_COLORS = {
 
 local Definitions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/main_hud_definitions")
 local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/data/slot_data")
+local DangerZoneWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/danger_zone")
 local StaminaDodgeWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/stamina_dodge")
 local ToughnessHealthWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/toughness_health")
 local CombatAbilityBar = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/combat_ability_bar")
@@ -54,6 +55,7 @@ end
 local DynamicHudContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/dynamic_hud")
 local GameFlowContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/game_flow")
 local AutoSwitchHud = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/auto_switch_hud")
+local DangerZoneRuntime = mod.danger_zone_runtime or mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/danger_zone_runtime")
 local ProximityScan = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/proximity_runtime")
 local HudUtils = mod.hud_utils or {}
 
@@ -84,6 +86,8 @@ local ALERTS_MESSAGE_TEXT_WRAP_WIDTH = Definitions.ALERTS_MESSAGE_TEXT_WRAP_WIDT
 local COMBAT_ABILITY_TYPE = "combat_ability"
 local GRENADE_ABILITY_TYPE = "grenade_ability"
 
+local DANGER_ZONE_SCAN_INTERVAL = 0.1
+local DANGER_ZONE_WARNING_MARGIN = 15
 local PROX_SCAN_INTERVAL = 0.5
 local RIGHT_SLOT_ICON_FALLBACK = Definitions.RIGHT_SLOT_ICON_FALLBACK
 local DIVISION_BUFF_ROWS_BASE_Y = Definitions.DIVISION_BUFF_ROWS_BASE_Y or 0
@@ -1741,6 +1745,7 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 
 	HudElementDivisionHUD.super.init(self, parent, draw_layer, start_scale, definitions)
 
+	DangerZoneWidget.init(self, Definitions)
 	StaminaDodgeWidget.init(self, Definitions)
 	ToughnessHealthWidget.init(self, Definitions)
 	DivisionBuffs.init(self, Definitions)
@@ -1752,6 +1757,8 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	self._cached_wielded_slot_id = nil
 	self._cached_wielded_icon = nil
 	self._cached_auspex_icon = nil
+	self._danger_zone_scan_timer = 0
+	self._danger_zone_data = {}
 	self._prox_scan_timer = 0
 	self._prox_data = {}
 	self._prox_anim = {}
@@ -1775,8 +1782,9 @@ HudElementDivisionHUD._update_buff_rows_position = function(self)
 	local show_stamina = s and s.show_stamina_bar
 	local buffs_enabled = type(s) ~= "table" or (s.buff_rows_enabled ~= false and s.buff_rows_enabled ~= 0)
 	local target_y = self._division_buff_rows_base_y or DIVISION_BUFF_ROWS_BASE_Y
+	local danger_zone_active = self._danger_zone_active == true
 
-	if buffs_enabled and (show_stamina == false or show_stamina == 0) then
+	if buffs_enabled and (show_stamina == false or show_stamina == 0) and not danger_zone_active then
 		target_y = self._division_buff_rows_hidden_stamina_y or target_y
 	end
 
@@ -1787,8 +1795,6 @@ HudElementDivisionHUD._update_buff_rows_position = function(self)
 end
 
 HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_settings, input_service)
-	self:_update_buff_rows_position()
-
 	local is_in_hub = GameFlowContext.is_hub_like()
 	local local_player, player_unit = GameFlowContext.local_player_alive_unit()
 
@@ -1870,6 +1876,8 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 
 	if is_in_hub then
 		self:_reset_dynamic_offset_state()
+		self._danger_zone_active = false
+		self._danger_zone_data = {}
 
 		if mod.alerts_clear then
 			mod.alerts_clear()
@@ -1881,6 +1889,8 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 
 	if not local_player or not player_unit then
 		self:_reset_dynamic_offset_state()
+		self._danger_zone_active = false
+		self._danger_zone_data = {}
 
 		if mod.alerts_clear then
 			mod.alerts_clear()
@@ -1892,6 +1902,8 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 
 	if not hud_enabled then
 		self:_reset_dynamic_offset_state()
+		self._danger_zone_active = false
+		self._danger_zone_data = {}
 
 		if mod.alerts_clear then
 			mod.alerts_clear()
@@ -1943,6 +1955,9 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
 	self:_update_auspex_slot(player_unit, widgets, opacity)
 	self:_update_right_slot_grid(player_unit, widgets, opacity)
+	self:_update_danger_zone_scan(player_unit, dt)
+	self:_update_danger_zone_widget(opacity, dt)
+	self:_update_buff_rows_position()
 	self:_update_proximity_scan(player_unit, dt)
 	self:_update_proximity_widgets(widgets, opacity, dt)
 
@@ -1952,6 +1967,36 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	if buffs_enabled then
 		DivisionBuffs.update(self, dt, t, ui_renderer, opacity)
 	end
+end
+
+HudElementDivisionHUD._update_danger_zone_scan = function(self, player_unit, dt)
+	local s_cfg = mod._settings
+	local enabled = type(s_cfg) ~= "table" or (s_cfg.danger_zone_enabled ~= false and s_cfg.danger_zone_enabled ~= 0)
+
+	if not enabled then
+		self._danger_zone_scan_timer = 0
+		self._danger_zone_data = {}
+		return
+	end
+
+	self._danger_zone_scan_timer = (self._danger_zone_scan_timer or 0) + dt
+
+	if self._danger_zone_scan_timer < DANGER_ZONE_SCAN_INTERVAL then
+		return
+	end
+
+	self._danger_zone_scan_timer = 0
+	local warning_margin = DANGER_ZONE_WARNING_MARGIN
+
+	if type(s_cfg) == "table" and type(s_cfg.danger_zone_radius) == "number" then
+		warning_margin = math.max(0, s_cfg.danger_zone_radius)
+	end
+
+	self._danger_zone_data = DangerZoneRuntime.scan(player_unit, warning_margin, s_cfg)
+end
+
+HudElementDivisionHUD._update_danger_zone_widget = function(self, opacity, dt)
+	DangerZoneWidget.update(self, opacity, dt)
 end
 
 HudElementDivisionHUD._update_proximity_scan = function(self, player_unit, dt)
@@ -2028,7 +2073,7 @@ HudElementDivisionHUD._draw_widgets = function(self, dt, t, input_service, ui_re
 	local s_st = mod._settings
 	local show_stamina = s_st and s_st.show_stamina_bar
 
-	if show_stamina ~= false and show_stamina ~= 0 then
+	if (show_stamina ~= false and show_stamina ~= 0) and not self._danger_zone_active then
 		StaminaDodgeWidget.draw(self, dt, t, input_service, ui_renderer, render_settings)
 	end
 
@@ -2049,6 +2094,7 @@ end
 HudElementDivisionHUD.destroy = function(self, ui_renderer)
 	self:_reset_dynamic_offset_state()
 
+	DangerZoneWidget.destroy(self)
 	StaminaDodgeWidget.destroy(self, ui_renderer)
 	ToughnessHealthWidget.destroy(self, ui_renderer)
 	DivisionBuffs.destroy(self, ui_renderer)

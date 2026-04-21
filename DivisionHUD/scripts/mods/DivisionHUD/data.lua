@@ -3,6 +3,7 @@ local mod = get_mod("DivisionHUD")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/defaults")
 local LayoutMenu = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/menu/layout")
 local BarsMenu = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/menu/bars")
+local DangerZoneMenu = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/menu/danger_zone")
 local DynamicMenu = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/menu/dynamic")
 local VanillaHudMenu = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/menu/vanilla_hud")
 local AlertsMenu = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/menu/alerts")
@@ -18,6 +19,7 @@ return {
 		widgets = {
 			LayoutMenu,
 			BarsMenu,
+			DangerZoneMenu,
 			DynamicMenu,
 			VanillaHudMenu,
 			AlertsMenu,

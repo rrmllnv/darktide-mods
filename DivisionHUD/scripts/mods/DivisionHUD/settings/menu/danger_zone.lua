@@ -1,0 +1,89 @@
+local mod = get_mod("DivisionHUD")
+
+local Defaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/defaults")
+
+if type(Defaults) ~= "table" then
+	Defaults = {}
+end
+
+local function d(key, fallback)
+	local v = Defaults[key]
+
+	if v ~= nil then
+		return v
+	end
+
+	return fallback
+end
+
+return {
+	setting_id = "divisionhud_super_danger_zone",
+	type = "group",
+	title = "divisionhud_super_danger_zone",
+	sub_widgets = {
+		{
+			setting_id = "danger_zone_enabled",
+			type = "checkbox",
+			title = "danger_zone_enabled",
+			tooltip_text = "danger_zone_enabled_description",
+			default_value = d("danger_zone_enabled", true),
+		},
+		{
+			setting_id = "danger_zone_radius",
+			type = "numeric",
+			title = "danger_zone_radius",
+			tooltip_text = "danger_zone_radius_description",
+			default_value = d("danger_zone_radius", 5),
+			range = { 1, 40 },
+			decimals_number = 0,
+		},
+		{
+			setting_id = "danger_zone_show_daemonhost",
+			type = "checkbox",
+			title = "danger_zone_show_daemonhost",
+			default_value = d("danger_zone_show_daemonhost", true),
+		},
+		{
+			setting_id = "danger_zone_show_daemonhost_aura",
+			type = "checkbox",
+			title = "danger_zone_show_daemonhost_aura",
+			default_value = d("danger_zone_show_daemonhost_aura", true),
+		},
+		{
+			setting_id = "danger_zone_show_poxburster",
+			type = "checkbox",
+			title = "danger_zone_show_poxburster",
+			default_value = d("danger_zone_show_poxburster", true),
+		},
+		{
+			setting_id = "danger_zone_show_tox_flamer",
+			type = "checkbox",
+			title = "danger_zone_show_tox_flamer",
+			default_value = d("danger_zone_show_tox_flamer", true),
+		},
+		{
+			setting_id = "danger_zone_show_scab_flamer",
+			type = "checkbox",
+			title = "danger_zone_show_scab_flamer",
+			default_value = d("danger_zone_show_scab_flamer", true),
+		},
+		{
+			setting_id = "danger_zone_show_bomber_grenade",
+			type = "checkbox",
+			title = "danger_zone_show_bomber_grenade",
+			default_value = d("danger_zone_show_bomber_grenade", true),
+		},
+		{
+			setting_id = "danger_zone_show_explosive_barrel",
+			type = "checkbox",
+			title = "danger_zone_show_explosive_barrel",
+			default_value = d("danger_zone_show_explosive_barrel", true),
+		},
+		{
+			setting_id = "danger_zone_show_fire_barrel",
+			type = "checkbox",
+			title = "danger_zone_show_fire_barrel",
+			default_value = d("danger_zone_show_fire_barrel", true),
+		},
+	},
+}
