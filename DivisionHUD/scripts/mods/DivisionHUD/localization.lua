@@ -239,6 +239,11 @@ return {
 		ru = "Опасная зона",
 		["zh-cn"] = "危险区域",
 	},
+	danger_zone_in_zone = {
+		en = "In blast\nzone",
+		ru = "В зоне\nпоражения",
+		["zh-cn"] = "位于\n危险区",
+	},
 	danger_zone_enabled = {
 		en = "Enable danger zone",
 		ru = "Включить опасную зону",

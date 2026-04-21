@@ -295,7 +295,7 @@ for k, v in pairs(_division_stamina_dodge.scenegraph_definition) do
 end
 
 local DivisionHUDDangerZoneDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/danger_zone_definitions")
-local _division_danger_zone = DivisionHUDDangerZoneDefs.build(MAIN_ROW_HEIGHT, BAR_FILL_WIDTH)
+local _division_danger_zone = DivisionHUDDangerZoneDefs.build(MAIN_ROW_HEIGHT, BAR_FILL_WIDTH, PROX_BLOCK_GAP)
 
 for k, v in pairs(_division_danger_zone.scenegraph_definition) do
 	scenegraph_definition[k] = v
@@ -784,4 +784,8 @@ return {
 	PROX_ANIM_EXIT_DUR = _division_proximity_slots.PROX_ANIM_EXIT_DUR,
 	PROX_ICON_ENTER_SCALE = _division_proximity_slots.PROX_ICON_ENTER_SCALE,
 	PROX_ICON_EXIT_SCALE = _division_proximity_slots.PROX_ICON_EXIT_SCALE,
+	DANGER_ZONE_WARNING_WIDTH = _division_danger_zone.DANGER_ZONE_WARNING_WIDTH,
+	DANGER_ZONE_WARNING_OVERLAP = _division_danger_zone.DANGER_ZONE_WARNING_OVERLAP,
+	DANGER_ZONE_WARNING_ENTER_DUR = _division_danger_zone.DANGER_ZONE_WARNING_ENTER_DUR,
+	DANGER_ZONE_WARNING_EXIT_DUR = _division_danger_zone.DANGER_ZONE_WARNING_EXIT_DUR,
 }

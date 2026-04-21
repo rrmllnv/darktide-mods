@@ -1,4 +1,5 @@
 local mod = get_mod("DivisionHUD")
+local PROXIMITY_MAX_HEIGHT_DELTA = 4
 
 local PICKUP_DATA = {
 	small_grenade = {
@@ -280,6 +281,10 @@ local function _dist_sq(a, b)
 	return dx * dx + dy * dy + dz * dz
 end
 
+local function _height_delta(a, b)
+	return math.abs((a and a.z or 0) - (b and b.z or 0))
+end
+
 local function scan(player_unit, radius, settings)
 	local result = {}
 
@@ -309,6 +314,12 @@ local function scan(player_unit, radius, settings)
 
 						if pd then
 							local upos    = Unit.world_position(unit, 1)
+							local height_delta = _height_delta(upos, player_pos)
+
+							if height_delta > PROXIMITY_MAX_HEIGHT_DELTA then
+								goto continue_interactee_unit
+							end
+
 							local dist_sq = _dist_sq(upos, player_pos)
 
 							if dist_sq <= radius_sq then
@@ -365,16 +376,20 @@ local function scan(player_unit, radius, settings)
 
 				if (stt == "medical_crate_deployable" or dt == "medical_crate") and unit_template_name ~= "broker_stimm_field_crate_deployable" then
 					local upos    = Unit.world_position(unit, 1)
-					local dist_sq = _dist_sq(upos, player_pos)
+					local height_delta = _height_delta(upos, player_pos)
 
-					if dist_sq <= radius_sq then
-						_add_result(
-							result, best_dist_sq, med_cat, dist_sq,
-							math.max(0, math.floor(math.sqrt(dist_sq) + 0.5)),
-							MED_DEPLOYED_ICON, nil, nil, nil,
-							nil,
-							nil
-						)
+					if height_delta <= PROXIMITY_MAX_HEIGHT_DELTA then
+						local dist_sq = _dist_sq(upos, player_pos)
+
+						if dist_sq <= radius_sq then
+							_add_result(
+								result, best_dist_sq, med_cat, dist_sq,
+								math.max(0, math.floor(math.sqrt(dist_sq) + 0.5)),
+								MED_DEPLOYED_ICON, nil, nil, nil,
+								nil,
+								nil
+							)
+						end
 					end
 				end
 			end

@@ -14,6 +14,7 @@ local MinionBuffTemplates = require("scripts/settings/buff/minion_buff_templates
 local hazard_state = HazardPropSettings.hazard_state
 local unpack_fn = table.unpack or unpack
 local language_id = Application.user_setting("language_id")
+local DANGER_ZONE_MAX_HEIGHT_DELTA = 4
 
 if type(Localization) ~= "table" then
 	Localization = {}
@@ -475,6 +476,10 @@ local function danger_zone_distance_sq(a, b)
 	return dx * dx + dy * dy + dz * dz
 end
 
+local function danger_zone_height_delta(a, b)
+	return math.abs((a and a.z or 0) - (b and b.z or 0))
+end
+
 local function scan(player_unit, warning_margin, settings)
 	local result = {
 		active = false,
@@ -508,6 +513,12 @@ local function scan(player_unit, warning_margin, settings)
 			local radius = type(source.radius) == "number" and source.radius or 0
 
 			if source_position and radius > 0 then
+				local height_delta = danger_zone_height_delta(source_position, player_position)
+
+				if height_delta > DANGER_ZONE_MAX_HEIGHT_DELTA then
+					goto continue_danger_zone_source
+				end
+
 				local center_distance = math.sqrt(danger_zone_distance_sq(source_position, player_position))
 				local edge_distance = math.max(0, center_distance - radius)
 
@@ -522,6 +533,8 @@ local function scan(player_unit, warning_margin, settings)
 				end
 			end
 		end
+
+		::continue_danger_zone_source::
 	end
 
 	return result
