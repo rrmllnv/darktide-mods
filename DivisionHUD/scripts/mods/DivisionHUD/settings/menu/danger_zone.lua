@@ -2,9 +2,15 @@ local mod = get_mod("DivisionHUD")
 
 local Defaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/defaults")
 local AlertsBreedTitle = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_breed_title")
+local Localization = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/localization")
+local language_id = Application.user_setting("language_id")
 
 if type(Defaults) ~= "table" then
 	Defaults = {}
+end
+
+if type(Localization) ~= "table" then
+	Localization = {}
 end
 
 local function d(key, fallback)
@@ -30,7 +36,17 @@ local function breed_title(breed_id)
 end
 
 local function tooltip(key)
-	return mod:localize(key)
+	local entry = Localization[key]
+
+	if type(entry) == "table" then
+		local text = entry[language_id] or entry.en
+
+		if type(text) == "string" and text ~= "" then
+			return text
+		end
+	end
+
+	return key
 end
 
 return {

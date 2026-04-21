@@ -4,6 +4,8 @@ if type(mod.danger_zone_runtime) == "table" then
 	return mod.danger_zone_runtime
 end
 
+local AlertsBreedTitle = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/alerts_breed_title")
+local Localization = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/localization")
 local ChaosDaemonhostSettings = require("scripts/settings/monster/chaos_daemonhost_settings")
 local ExplosionTemplates = require("scripts/settings/damage/explosion_templates")
 local HazardPropSettings = require("scripts/settings/hazard_prop/hazard_prop_settings")
@@ -11,6 +13,37 @@ local MinionBuffTemplates = require("scripts/settings/buff/minion_buff_templates
 
 local hazard_state = HazardPropSettings.hazard_state
 local unpack_fn = table.unpack or unpack
+local language_id = Application.user_setting("language_id")
+
+if type(Localization) ~= "table" then
+	Localization = {}
+end
+
+local function danger_zone_localize(key, fallback)
+	local entry = Localization[key]
+
+	if type(entry) == "table" then
+		local localized = entry[language_id] or entry.en
+
+		if type(localized) == "string" and localized ~= "" then
+			return localized
+		end
+	end
+
+	return fallback
+end
+
+local function danger_zone_breed_title(breed_id, fallback)
+	if type(AlertsBreedTitle) == "table" and type(AlertsBreedTitle.resolve) == "function" then
+		local title = AlertsBreedTitle.resolve(mod, breed_id)
+
+		if type(title) == "string" and title ~= "" and not string.find(title, "^<unlocalized") then
+			return title
+		end
+	end
+
+	return fallback or breed_id
+end
 
 local function get_corruption_aura_radius()
 	local radius = nil
@@ -63,34 +96,34 @@ local highest_alert_ticking_radius = get_highest_alert_ticking_radius()
 local OUTLINE_TEMPLATES = {
 	templates = {
 		fire_barrel_explosion = {
-			display_name = "Огненная бочка",
+			display_name = danger_zone_localize("danger_zone_show_fire_barrel", "Fire barrel"),
 			setting_id = "danger_zone_show_fire_barrel",
 			setting_group = "fire_barrel_explosion",
 		},
 		scab_flamer_explosion = {
-			display_name = "Скаб-огнемётчик",
+			display_name = danger_zone_breed_title("renegade_flamer", "Scab flamer"),
 			setting_id = "danger_zone_show_scab_flamer",
 			setting_group = "scab_flamer_explosion",
 		},
 		scab_bomber_grenade = {
-			display_name = "Граната бомбардира",
+			display_name = danger_zone_localize("danger_zone_show_bomber_grenade", "Bomber grenade"),
 			setting_id = "danger_zone_show_bomber_grenade",
 			setting_group = "scab_bomber_grenade",
 		},
 		tox_flamer_explosion = {
-			display_name = "Токс-огнемётчик",
+			display_name = danger_zone_breed_title("cultist_flamer", "Tox flamer"),
 			setting_id = "danger_zone_show_tox_flamer",
 			setting_group = "tox_flamer_explosion",
 		},
 		daemonhost_spawn = {
-			display_name = "Демонхост",
+			display_name = danger_zone_breed_title("chaos_daemonhost", "Daemonhost"),
 			radius = ChaosDaemonhostSettings.anger_distances.passive[1].distance,
 			setting_id = "danger_zone_show_daemonhost",
 			setting_group = "daemonhost_spawn",
 			validator = "valid_minion_source",
 		},
 		daemonhost_alert1 = {
-			display_name = "Демонхост",
+			display_name = danger_zone_breed_title("chaos_daemonhost", "Daemonhost"),
 			radius = highest_alert_ticking_radius,
 			setting_id = "danger_zone_show_daemonhost",
 			setting_group = "daemonhost_alert1",
@@ -99,7 +132,7 @@ local OUTLINE_TEMPLATES = {
 			validator = "valid_minion_source",
 		},
 		daemonhost_alert2 = {
-			display_name = "Демонхост",
+			display_name = danger_zone_breed_title("chaos_daemonhost", "Daemonhost"),
 			radius = highest_alert_ticking_radius,
 			setting_id = "danger_zone_show_daemonhost",
 			setting_group = "daemonhost_alert2",
@@ -108,7 +141,7 @@ local OUTLINE_TEMPLATES = {
 			validator = "valid_minion_source",
 		},
 		daemonhost_alert3 = {
-			display_name = "Демонхост",
+			display_name = danger_zone_breed_title("chaos_daemonhost", "Daemonhost"),
 			radius = highest_alert_ticking_radius,
 			setting_id = "danger_zone_show_daemonhost",
 			setting_group = "daemonhost_alert3",
@@ -117,69 +150,69 @@ local OUTLINE_TEMPLATES = {
 			validator = "valid_minion_source",
 		},
 		daemonhost_aura = {
-			display_name = "Аура демонхоста",
+			display_name = danger_zone_localize("danger_zone_show_daemonhost_aura", "Daemonhost corruption aura"),
 			radius = daemonhost_corruption_aura_radius,
 			setting_id = "danger_zone_show_daemonhost_aura",
 			setting_group = "daemonhost_aura",
 			validator = "valid_minion_source",
 		},
 		poxburster_spawn = {
-			display_name = "Поксбёрстер",
+			display_name = danger_zone_breed_title("chaos_poxwalker_bomber", "Poxburster"),
 			radius = ExplosionTemplates.poxwalker_bomber.radius,
 			setting_id = "danger_zone_show_poxburster",
 			setting_group = "poxburster_spawn",
 			validator = "valid_minion_source",
 		},
 		tox_flamer_spawn = {
-			display_name = "Токс-огнемётчик",
+			display_name = danger_zone_breed_title("cultist_flamer", "Tox flamer"),
 			radius = ExplosionTemplates.explosion_settings_cultist_flamer.radius,
 			setting_id = "danger_zone_show_tox_flamer",
 			setting_group = "tox_flamer_spawn",
 		},
 		tox_flamer_fuse = {
-			display_name = "Токс-огнемётчик",
+			display_name = danger_zone_breed_title("cultist_flamer", "Tox flamer"),
 			radius = ExplosionTemplates.explosion_settings_cultist_flamer.radius,
 			setting_id = "danger_zone_show_tox_flamer",
 			setting_group = "tox_flamer_fuse",
 			validator = "valid_minion_source",
 		},
 		scab_flamer_spawn = {
-			display_name = "Скаб-огнемётчик",
+			display_name = danger_zone_breed_title("renegade_flamer", "Scab flamer"),
 			radius = ExplosionTemplates.explosion_settings_renegade_flamer.radius,
 			setting_id = "danger_zone_show_scab_flamer",
 			setting_group = "scab_flamer_spawn",
 			validator = "valid_minion_source",
 		},
 		scab_flamer_fuse = {
-			display_name = "Скаб-огнемётчик",
+			display_name = danger_zone_breed_title("renegade_flamer", "Scab flamer"),
 			radius = ExplosionTemplates.explosion_settings_renegade_flamer.radius,
 			setting_id = "danger_zone_show_scab_flamer",
 			setting_group = "scab_flamer_fuse",
 			validator = "valid_minion_source",
 		},
 		explosive_barrel_spawn = {
-			display_name = "Взрывная бочка",
+			display_name = danger_zone_localize("danger_zone_show_explosive_barrel", "Explosive barrel"),
 			radius = ExplosionTemplates.explosive_barrel.radius,
 			setting_id = "danger_zone_show_explosive_barrel",
 			setting_group = "explosive_barrel_spawn",
 			validator = "valid_barrel_source",
 		},
 		explosive_barrel_fuse = {
-			display_name = "Взрывная бочка",
+			display_name = danger_zone_localize("danger_zone_show_explosive_barrel", "Explosive barrel"),
 			radius = ExplosionTemplates.explosive_barrel.radius,
 			setting_id = "danger_zone_show_explosive_barrel",
 			setting_group = "explosive_barrel_fuse",
 			validator = "valid_barrel_source",
 		},
 		fire_barrel_spawn = {
-			display_name = "Огненная бочка",
+			display_name = danger_zone_localize("danger_zone_show_fire_barrel", "Fire barrel"),
 			radius = ExplosionTemplates.fire_barrel.radius,
 			setting_id = "danger_zone_show_fire_barrel",
 			setting_group = "fire_barrel_spawn",
 			validator = "valid_barrel_source",
 		},
 		fire_barrel_fuse = {
-			display_name = "Огненная бочка",
+			display_name = danger_zone_localize("danger_zone_show_fire_barrel", "Fire barrel"),
 			radius = ExplosionTemplates.fire_barrel.radius,
 			setting_id = "danger_zone_show_fire_barrel",
 			setting_group = "fire_barrel_fuse",
@@ -268,6 +301,32 @@ local function danger_zone_clear_source(unit)
 	tracked_sources[unit] = nil
 end
 
+local function danger_zone_get_system_map(system_name)
+	local extension_manager = Managers.state and Managers.state.extension
+
+	if not extension_manager or not extension_manager.system then
+		return nil
+	end
+
+	local ok_system, system = pcall(function()
+		return extension_manager:system(system_name)
+	end)
+
+	if not ok_system or not system or not system.unit_to_extension_map then
+		return nil
+	end
+
+	local ok_map, map = pcall(function()
+		return system:unit_to_extension_map()
+	end)
+
+	if ok_map and type(map) == "table" then
+		return map
+	end
+
+	return nil
+end
+
 local function danger_zone_track_source(template_id, unit, radius, ...)
 	if not unit or not Unit.is_valid(unit) then
 		return
@@ -287,6 +346,71 @@ local function danger_zone_track_source(template_id, unit, radius, ...)
 		validator = template.validator,
 		validator_args = { ... },
 	}
+end
+
+local function danger_zone_sync_hazard_props()
+	local hazard_prop_map = danger_zone_get_system_map("hazard_prop_system")
+
+	if not hazard_prop_map then
+		return
+	end
+
+	for unit, extension in pairs(hazard_prop_map) do
+		if not unit or not Unit.is_valid(unit) or not extension then
+			danger_zone_clear_source(unit)
+		else
+			local ok_content, content = pcall(function()
+				return extension:content()
+			end)
+			local prop_template = ok_content and OUTLINE_TEMPLATES.prop[content] or nil
+
+			if not prop_template then
+				if tracked_sources[unit] and tracked_sources[unit].validator == "valid_barrel_source" then
+					danger_zone_clear_source(unit)
+				end
+			else
+				local ok_state, state = pcall(function()
+					return extension:current_state()
+				end)
+
+				if not ok_state then
+					goto continue_hazard_prop
+				end
+
+				if state == hazard_state.idle then
+					local template_id = prop_template.spawn
+					local template = OUTLINE_TEMPLATES.templates[template_id]
+
+					if template then
+						danger_zone_track_source(
+							template_id,
+							unit,
+							template.radius,
+							extension,
+							{ hazard_state.idle, hazard_state.triggered }
+						)
+					end
+				elseif state == hazard_state.triggered then
+					local template_id = prop_template.triggered
+					local template = OUTLINE_TEMPLATES.templates[template_id]
+
+					if template then
+						danger_zone_track_source(
+							template_id,
+							unit,
+							template.radius,
+							extension,
+							{ hazard_state.triggered }
+						)
+					end
+				elseif state == hazard_state.exploding or state == hazard_state.broken then
+					danger_zone_clear_source(unit)
+				end
+			end
+		end
+
+		::continue_hazard_prop::
+	end
 end
 
 local function danger_zone_setting_enabled(settings, setting_id)
@@ -364,6 +488,8 @@ local function scan(player_unit, warning_margin, settings)
 	if not player_unit or not Unit.alive(player_unit) then
 		return result
 	end
+
+	danger_zone_sync_hazard_props()
 
 	local player_position = Unit.world_position(player_unit, 1)
 

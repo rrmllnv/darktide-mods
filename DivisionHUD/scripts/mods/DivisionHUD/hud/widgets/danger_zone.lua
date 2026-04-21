@@ -1,5 +1,26 @@
+local mod = get_mod("DivisionHUD")
+local Localization = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/localization")
+local language_id = Application.user_setting("language_id")
+
 local M = {}
-local DANGER_ZONE_LABEL = "Опасная зона"
+
+if type(Localization) ~= "table" then
+	Localization = {}
+end
+
+local function danger_zone_label()
+	local entry = Localization.danger_zone_label
+
+	if type(entry) == "table" then
+		local localized = entry[language_id] or entry.en
+
+		if type(localized) == "string" and localized ~= "" then
+			return localized
+		end
+	end
+
+	return "Danger zone"
+end
 
 local function danger_zone_reset_widget(widget)
 	if not widget or not widget.content then
@@ -7,7 +28,7 @@ local function danger_zone_reset_widget(widget)
 	end
 
 	widget.content.visible = false
-	widget.content.label_text = DANGER_ZONE_LABEL
+	widget.content.label_text = danger_zone_label()
 	widget.content.source_text = ""
 	widget.content.distance_text = "0m"
 	widget.alpha_multiplier = 0
@@ -46,7 +67,7 @@ function M.update(self, opacity, dt)
 	end
 
 	if is_requested then
-		widget.content.label_text = DANGER_ZONE_LABEL
+		widget.content.label_text = danger_zone_label()
 		widget.content.source_text = data.source_name or ""
 		widget.content.distance_text = string.format("%dm", math.max(0, data.distance_m or 0))
 	end
