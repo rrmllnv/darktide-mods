@@ -1,249 +1,331 @@
 local mod = get_mod("ThirdPersonLight")
 
--- Простая проверка режима третьего лица
-local function check_third_person_mode()
-	-- Безопасная проверка всех необходимых объектов
-	if not Managers then
-		return false
-	end
-	
-	if not Managers.player then
-		return false
-	end
+local light_unit = nil
+local dog_light_unit = nil
+local cached_player_unit = nil
+local cached_player_obj = nil
 
-	-- Используем local_player_safe для безопасного получения игрока
-	local player = Managers.player:local_player_safe(1)
-	if not player then
-		return false
-	end
+local flicker_time_remaining = 0.1
+local flicker_target = 1
+local current_intensity = 1
 
-	-- Проверяем что у player есть player_unit
-	if not player.player_unit then
-		return false
-	end
+local light_intensity = mod:get("light_intensity")
+local light_radius = mod:get("light_radius")
+local light_falloff_start = 1
+local color = {
+    r = mod:get("light_color_r") / 255,
+    g = mod:get("light_color_g") / 255,
+    b = mod:get("light_color_b") / 255
+}
 
-	local player_unit = player.player_unit
-	if not Unit.alive(player_unit) then
-		return false
-	end
+local dog_light_enabled = mod:get("enable_dog_light")
+local dog_light_intensity = mod:get("dog_light_intensity")
+local dog_light_radius = mod:get("dog_light_radius")
+local dog_color = {
+    r = mod:get("dog_light_color_r") / 255,
+    g = mod:get("dog_light_color_g") / 255,
+    b = mod:get("dog_light_color_b") / 255
+}
 
-	-- Безопасная проверка расширения
-	local first_person_extension = ScriptUnit.has_extension(player_unit, "first_person_system")
-	if first_person_extension then
-		-- Проверяем _force_third_person_mode от модов третьего лица
-		if first_person_extension._force_third_person_mode == true then
-			return true
-		end
+local flashlight_mode = mod:get("flashlight_mode")
+local flicker_mode = mod:get("flicker_mode")
+local player_light_enabled = mod:get("enable_player_light")
 
-		-- Безопасный вызов wants_first_person_camera
-		local wants_first_person_success, wants_first_person = pcall(function()
-			return first_person_extension:wants_first_person_camera()
-		end)
-		
-		if wants_first_person_success and wants_first_person ~= nil then
-			return not wants_first_person
-		end
-	end
-
-	return false
+local function get_world()
+    if not Managers.world or not Managers.world:has_world("level_world") then
+        return nil
+    end
+    return Managers.world:world("level_world")
 end
 
--- =========================================================================================
--- Камера-свет (независимый источник), по образцу `servo_friend`
--- =========================================================================================
-
-local CAMERA_LIGHT_UNIT = "content/weapons/player/attachments/flashlights/flashlight_01/flashlight_01"
-local CAMERA_LIGHT_IES_PROFILE = "content/environment/ies_profiles/narrow/flashlight_custom_02"
-local CAMERA_LIGHT_COLOR_TEMPERATURE = 8000
-local CAMERA_LIGHT_VOLUMETRIC_INTENSITY = 0.1
-
-local _world = nil
-local _camera_light_world = nil
-local _camera_light_unit = nil
-local _camera_light = nil
-
-local function _get_level_world()
-	if not Managers or not Managers.world then
-		return nil
-	end
-
-	_world = _world or Managers.world:world("level_world")
-
-	return _world
+local function get_local_player_cached()
+    if cached_player_unit then
+        local ok, alive = pcall(function() return ALIVE[cached_player_unit] end)
+        if ok and alive then
+            return cached_player_obj, cached_player_unit
+        end
+        cached_player_unit = nil
+        cached_player_obj = nil
+    end
+    local player_manager = Managers.player
+    if not player_manager then return nil, nil end
+    local player = player_manager:local_player(1)
+    if not player or not player.player_unit then return nil, nil end
+    local unit = player.player_unit
+    local ok, alive = pcall(function() return ALIVE[unit] end)
+    if ok and alive then
+        cached_player_unit = unit
+        cached_player_obj = player
+        return cached_player_obj, cached_player_unit
+    end
+    return nil, nil
 end
 
-local function _destroy_camera_light()
-	-- ВАЖНО: world для юнита должен совпадать с миром, в котором он был создан.
-	-- Иначе `World.update_unit_and_children` / `World.destroy_unit` будут падать с "Unit not found".
-	local world = _camera_light_world or _get_level_world()
-
-	if _camera_light then
-		_camera_light = nil
-	end
-
-	if world and _camera_light_unit and Unit.alive(_camera_light_unit) then
-		pcall(function()
-			World.destroy_unit(world, _camera_light_unit)
-		end)
-	end
-
-	_camera_light_world = nil
-	_camera_light_unit = nil
+local function get_camera_position_and_rotation(player)
+    if not Managers.state or not Managers.state.camera then return nil, nil end
+    local camera_manager = Managers.state.camera
+    local viewport_name = player and player.viewport_name
+    if not viewport_name then return nil, nil end
+    local camera = camera_manager:camera(viewport_name)
+    if not camera then return nil, nil end
+    return Camera.world_position(camera), Camera.world_rotation(camera)
 end
 
-local function _apply_camera_light_settings()
-	if not _camera_light or not _camera_light_unit or not Unit.alive(_camera_light_unit) then
-		return
-	end
-
-	local intensity = mod:get("light_intensity") or 20
-	local range = mod:get("light_range") or 30
-	local angle_deg = mod:get("light_angle") or 35
-	local cast_shadows = mod:get("cast_shadows") == true
-
-	-- В шаблонах игры spot_angle хранится в радианах (см. `FlashlightTemplates`).
-	local angle_rad = math.rad(angle_deg)
-
-	Light.set_enabled(_camera_light, true)
-	Light.set_casts_shadows(_camera_light, cast_shadows)
-	Light.set_ies_profile(_camera_light, CAMERA_LIGHT_IES_PROFILE)
-	Light.set_correlated_color_temperature(_camera_light, CAMERA_LIGHT_COLOR_TEMPERATURE)
-	Light.set_intensity(_camera_light, intensity)
-	Light.set_volumetric_intensity(_camera_light, CAMERA_LIGHT_VOLUMETRIC_INTENSITY)
-	Light.set_spot_angle_start(_camera_light, 0)
-	Light.set_spot_angle_end(_camera_light, angle_rad)
-	Light.set_spot_reflector(_camera_light, false)
-	Light.set_falloff_start(_camera_light, 0)
-	Light.set_falloff_end(_camera_light, range)
-
-	local color = Light.color_with_intensity(_camera_light)
-
-	if color then
-		Unit.set_vector3_for_materials(_camera_light_unit, "light_color", color)
-	end
+local function is_in_hub()
+    if not Managers.state or not Managers.state.game_mode then return false end
+    local gm = Managers.state.game_mode
+    return gm and gm.game_mode_name and gm:game_mode_name() == "hub"
 end
 
-local function _ensure_camera_light()
-	local world = _get_level_world()
+local function is_dark_mission()
+    local template = Managers.state.circumstance and Managers.state.circumstance:template()
+    if template and template.mutators then
+        for _, mutator in pairs(template.mutators) do
+            if mutator == "mutator_darkness_los" then return true end
+        end
+    end
+    return false
+end
 
-	if not world then
-		return false
-	end
+local function can_spawn_light_unit(is_player)
+    if not mod:get("enable_lantern_mod") then return false end
+    if is_player and not player_light_enabled then return false end
+    if is_in_hub() then return false end
+    if mod:get("only_dark_missions") and not is_dark_mission() then return false end
+    return true
+end
 
-	if _camera_light_unit and Unit.alive(_camera_light_unit) and _camera_light then
-		-- Если по какой-то причине мир не сохранён, фиксируем его,
-		-- чтобы последующие `World.*` шли в корректный world.
-		_camera_light_world = _camera_light_world or world
+local function destroy_light(unit_ref)
+    local world = get_world()
+    if world and unit_ref and Unit.alive(unit_ref) then
+        World.destroy_unit(world, unit_ref)
+    end
+end
 
-		return true
-	end
+local function spawn_light()
+    if not can_spawn_light_unit(true) then
+        destroy_light(light_unit)
+        light_unit = nil
+        return
+    end
+    local player, unit = get_local_player_cached()
+    local world = get_world()
+    if not unit or not world then return end
+    if light_unit and Unit.alive(light_unit) then return end
+    local pos = Unit.world_position(unit, 1)
+    if not flashlight_mode then pos = pos + Vector3(0,0,1) end
+    local rot = Quaternion.identity()
+    light_unit = World.spawn_unit_ex(world, "core/units/light", nil, pos, rot)
+    if light_unit and Unit.alive(light_unit) then
+        local light_obj = Unit.light(light_unit, 1)
+        if light_obj then
+            Light.set_enabled(light_obj, true)
+            Light.set_color_filter(light_obj, Vector3(color.r, color.g, color.b))
+            Light.set_falloff_start(light_obj, light_falloff_start)
+            Light.set_falloff_end(light_obj, light_radius)
+            Light.set_volumetric_intensity(light_obj, 0.3)
+            Light.set_intensity(light_obj, light_intensity)
+            if flashlight_mode then
+                Light.set_type(light_obj, "spot")
+                Light.set_spot_angle_start(light_obj, 5 / 180 * math.pi)
+                Light.set_spot_angle_end(light_obj, 70 / 180 * math.pi)
+            else
+                Light.set_type(light_obj, "omni")
+            end
+        end
+    end
+end
 
-	_destroy_camera_light()
+local function get_dog_unit()
+    local player, unit = get_local_player_cached()
+    if not player or not unit then return nil end
 
-	-- Спавним юнит фонарика (пакет уже прописан в `ThirdPersonLight.mod`).
-	local spawn_success, spawned_unit = pcall(function()
-		return World.spawn_unit_ex(world, CAMERA_LIGHT_UNIT, nil, Vector3.zero(), Quaternion.identity())
-	end)
+    local ok, spawner = pcall(ScriptUnit.extension, unit, "companion_spawner_system")
+    if not ok or not spawner then return nil end
 
-	if not spawn_success then
-		_destroy_camera_light()
-		return false
-	end
+    local ok2, companion_units = pcall(spawner.companion_units, spawner)
+    
+    if not ok2 or not companion_units or #companion_units == 0 then 
+        return nil 
+    end
 
-	_camera_light_unit = spawned_unit
-	_camera_light_world = world
+    local dog_unit = companion_units[1]
 
-	if not _camera_light_unit or not Unit.alive(_camera_light_unit) then
-		_destroy_camera_light()
-		return false
-	end
+    if not dog_unit or not ALIVE[dog_unit] then 
+        return nil 
+    end
 
-	if Unit.num_lights(_camera_light_unit) <= 0 then
-		_destroy_camera_light()
-		return false
-	end
+    return dog_unit
+end
 
-	_camera_light = Unit.light(_camera_light_unit, 1)
+local function spawn_dog_light()
+    if not dog_light_enabled or not can_spawn_light_unit(false) then return end
+    local world = get_world()
+    if not world then return end
+    local dog = get_dog_unit()
+    if not dog then return end
+    if dog_light_unit and Unit.alive(dog_light_unit) then return end
+    local pos = Unit.world_position(dog, 1) + Vector3(0,0,1)
+    local rot = Quaternion.identity()
+    dog_light_unit = World.spawn_unit_ex(world, "core/units/light", nil, pos, rot)
+    if dog_light_unit and Unit.alive(dog_light_unit) then
+        local light_obj = Unit.light(dog_light_unit, 1)
+        if light_obj then
+            Light.set_enabled(light_obj, true)
+            Light.set_color_filter(light_obj, Vector3(dog_color.r, dog_color.g, dog_color.b))
+            Light.set_falloff_start(light_obj, 0.5)
+            Light.set_falloff_end(light_obj, dog_light_radius)
+            Light.set_volumetric_intensity(light_obj, 0.25)
+            Light.set_intensity(light_obj, dog_light_intensity)
+            Light.set_type(light_obj, "omni")
+        end
+    end
+end
 
-	if not _camera_light then
-		_destroy_camera_light()
-		return false
-	end
+local function update_dog_light(dt)
+    if not dog_light_enabled or not can_spawn_light_unit(false) then
+        if dog_light_unit then destroy_light(dog_light_unit) dog_light_unit=nil end
+        return
+    end
+    local dog = get_dog_unit()
+    if not dog or not ALIVE[dog] then
+        if dog_light_unit then destroy_light(dog_light_unit) dog_light_unit=nil end
+        return
+    end
+    if not dog_light_unit or not Unit.alive(dog_light_unit) then
+        spawn_dog_light()
+        return
+    end
+    local pos = Unit.world_position(dog, 1) + Vector3(0,0,1)
+    Unit.set_local_position(dog_light_unit, 1, pos)
+end
 
-	_apply_camera_light_settings()
-	return true
+local function lerp(a,b,t) return a+(b-a)*t end
+
+local function apply_flicker_effect(dt)
+    if not flicker_mode or not light_unit or not Unit.alive(light_unit) then return end
+    flicker_time_remaining = flicker_time_remaining - dt
+    if flicker_time_remaining <=0 then
+        flicker_time_remaining = 0.1 + math.random()*0.05
+        flicker_target = math.random()*0.8 + 0.6
+    end
+    current_intensity = lerp(current_intensity, flicker_target, 5*dt)
+    local light_obj = Unit.light(light_unit, 1)
+    if light_obj then Light.set_intensity(light_obj, light_intensity*current_intensity) end
+end
+
+local function update_light_position(dt)
+    if not can_spawn_light_unit(true) then
+        destroy_light(light_unit)
+        light_unit=nil
+        return
+    end
+    local world = get_world()
+    if not world then return end
+    local player, unit = get_local_player_cached()
+    if not unit then return end
+    if not light_unit or not Unit.alive(light_unit) then
+        spawn_light()
+        return
+    end
+    local pos, rot
+    if flashlight_mode then
+        pos, rot = get_camera_position_and_rotation(player)
+    else
+        pos = Unit.world_position(unit, 1) + Vector3(0,0,1)
+        rot = Quaternion.identity()
+    end
+    if not pos then return end
+    Unit.set_local_position(light_unit, 1, pos)
+    if rot then Unit.set_local_rotation(light_unit, 1, rot) end
+    apply_flicker_effect(dt)
 end
 
 mod.update = function(dt)
-	if not mod:get("enable_light") then
-		_destroy_camera_light()
+	local gm = Managers.state.game_mode
+	if not gm then return end
+	local name = gm:game_mode_name()
+	if name ~= "coop_complete_objective" and name ~= "shooting_range" and name ~= "expedition" and name ~= "survival" then
 		return
 	end
 
-	if not check_third_person_mode() then
-		_destroy_camera_light()
-		return
-	end
-
-	local player_manager = Managers and Managers.player
-	local camera_manager = Managers and Managers.state and Managers.state.camera
-
-	if not player_manager or not camera_manager then
-		return
-	end
-
-	local player = player_manager:local_player_safe(1)
-	local viewport_name = player and player.viewport_name
-
-	if not viewport_name or not camera_manager.camera_position or not camera_manager.camera_rotation then
-		return
-	end
-
-	-- Защита от краша: viewport может быть ещё не создан (см. `CameraManager.has_viewport` в исходниках).
-	if camera_manager.has_viewport and not camera_manager:has_viewport(viewport_name) then
-		return
-	end
-
-	if not _ensure_camera_light() then
-		return
-	end
-	
-	-- Юнит мог быть удалён между кадрами/переходами (хаб/миссия). Проверяем максимально рано.
-	if not _camera_light_unit or not Unit.alive(_camera_light_unit) then
-		_destroy_camera_light()
-		return
-	end
-
-	local camera_position = camera_manager:camera_position(viewport_name)
-	local camera_rotation = camera_manager:camera_rotation(viewport_name)
-
-	if not camera_position or not camera_rotation then
-		return
-	end
-
-	Unit.set_local_position(_camera_light_unit, 1, camera_position)
-	Unit.set_local_rotation(_camera_light_unit, 1, camera_rotation)
-
-	local world = _camera_light_world or _get_level_world()
-
-	if world then
-		local ok = pcall(function()
-			World.update_unit_and_children(world, _camera_light_unit)
-		end)
-
-		if not ok then
-			_destroy_camera_light()
-			return
-		end
-	end
+    update_light_position(dt)
+    update_dog_light(dt)
 end
 
--- Обработка изменения настроек
-mod.on_setting_changed = function(setting_id)
-	_apply_camera_light_settings()
+function mod.toggle_lantern()
+    local current = mod:get("enable_lantern_mod")
+    mod:set("enable_lantern_mod", not current)
+    if current then
+        mod:notify("Lantern disabled")
+        destroy_light(light_unit)
+        destroy_light(dog_light_unit)
+        light_unit=nil
+        dog_light_unit=nil
+    else
+        mod:notify("Lantern enabled")
+        spawn_light()
+        spawn_dog_light()
+    end
 end
 
--- Выгрузка мода
-mod.on_unload = function(exit_game)
-	_destroy_camera_light()
+function mod.toggle_flashlight()
+    flashlight_mode = not flashlight_mode
+    mod:set("flashlight_mode", flashlight_mode)
+    if flashlight_mode then
+        mod:notify("Flashlight mode enabled")
+    else
+        mod:notify("Flashlight mode disabled")
+    end
+    destroy_light(light_unit)
+    spawn_light()
+end
+
+function mod.toggle_player_light()
+	player_light_enabled = not player_light_enabled 
+    mod:set("enable_player_light", player_light_enabled)
+	if player_light_enabled then
+        mod:notify("Player light enabled")
+    else
+        mod:notify("Player light disabled")
+    end
+end
+
+function mod.toggle_dog_light()
+	dog_light_enabled = not dog_light_enabled 
+    mod:set("enable_dog_light", dog_light_enabled)
+	if dog_light_enabled then
+        mod:notify("Dog light enabled")
+    else
+        mod:notify("Dog light disabled")
+    end
+end
+
+mod.on_setting_changed = function(setting_name)
+    if setting_name=="light_radius" then light_radius=mod:get("light_radius")
+    elseif setting_name=="light_intensity" then light_intensity=mod:get("light_intensity")
+    elseif setting_name=="light_color_r" or setting_name=="light_color_g" or setting_name=="light_color_b" then
+        color={r=mod:get("light_color_r")/255,g=mod:get("light_color_g")/255,b=mod:get("light_color_b")/255}
+    elseif setting_name=="dog_light_radius" then dog_light_radius=mod:get("dog_light_radius")
+    elseif setting_name=="dog_light_intensity" then dog_light_intensity=mod:get("dog_light_intensity")
+    elseif setting_name=="dog_light_color_r" or setting_name=="dog_light_color_g" or setting_name=="dog_light_color_b" then
+        dog_color={r=mod:get("dog_light_color_r")/255,g=mod:get("dog_light_color_g")/255,b=mod:get("dog_light_color_b")/255}
+    elseif setting_name=="enable_dog_light" then dog_light_enabled=mod:get("enable_dog_light")
+    elseif setting_name=="enable_player_light" then player_light_enabled=mod:get("enable_player_light")
+    elseif setting_name=="flashlight_mode" then flashlight_mode=mod:get("flashlight_mode")
+    elseif setting_name=="flicker_mode" then flicker_mode=mod:get("flicker_mode")
+    else return end
+    destroy_light(light_unit)
+    destroy_light(dog_light_unit)
+    light_unit=nil
+    dog_light_unit=nil
+    spawn_light()
+    spawn_dog_light()
+end
+
+mod.on_disabled = function()
+    destroy_light(light_unit)
+    destroy_light(dog_light_unit)
+    light_unit=nil
+    dog_light_unit=nil
 end
