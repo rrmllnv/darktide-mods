@@ -13,17 +13,17 @@ return {
                 text = mod:localize("general_settings"),
                 sub_widgets = {
                     {
-                        setting_id = "enable_lantern_mod",
+                        setting_id = "enable_mod",
                         type = "checkbox",
                         default_value = true,
                     },
                     {
-                        setting_id = "latnern_toggle_key",
+                        setting_id = "mod_toggle_key",
                         type = "keybind",
                         default_value = {},
                         keybind_trigger = "pressed",
                         keybind_type = "function_call",
-                        function_name = "toggle_lantern",
+                        function_name = "toggle_mod",
                     },
                     {
                         setting_id = "only_dark_missions",

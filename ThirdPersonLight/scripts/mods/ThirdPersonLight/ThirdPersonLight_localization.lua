@@ -4,10 +4,10 @@ return {
 		ru = "Свет третьего лица",
 	},
 	mod_description = {
-		en = "Adds a dynamic light source near the player or dog during dark missions to improve visibility or simply for aesthetics",
-		ru = "Добавляет динамический источник света рядом с игроком или собакой на тёмных миссиях для улучшения видимости или просто для эстетики",
+		en = "Adds a dynamic light source near the player during dark missions to improve visibility or simply for aesthetics",
+		ru = "Добавляет динамический источник света рядом с игроком на тёмных миссиях для улучшения видимости или просто для эстетики",
 	},
-	enable_lantern_mod = {
+	enable_mod = {
 		en = "Enable mod",
 		ru = "Включить мод",
 	},
@@ -39,7 +39,7 @@ return {
 		en = "Light radius",
 		ru = "Радиус света",
 	},
-	latnern_toggle_key = {
+	mod_toggle_key = {
 		en = "Toggle mod hotkey",
 		ru = "Горячая клавиша включения мода",
 	},
@@ -51,19 +51,19 @@ return {
 		en = "Toggle player light hotkey",
 		ru = "Горячая клавиша света игрока",
 	},
-	dog_light_toggle_key = {
-		en = "Toggle dog light hotkey",
-		ru = "Горячая клавиша света собаки",
-	},
 	general_group = {
 		en = "General Settings",
 		ru = "Общие настройки",
 	},
-	dog_light_group = {
-		en = "Dog Light Settings",
-		ru = "Настройки света собаки",
+	general_settings = {
+		en = "General Settings",
+		ru = "Общие настройки",
 	},
 	player_light_group = {
+		en = "Player Light Settings",
+		ru = "Настройки света игрока",
+	},
+	player_light_settings = {
 		en = "Player Light Settings",
 		ru = "Настройки света игрока",
 	},
@@ -76,28 +76,28 @@ return {
 		ru = "Включить эффект мерцания",
 	},
 
-	enable_dog_light = {
-		en = "Enable dog light",
-		ru = "Включить свет собаки",
+	notify_mod_enabled = {
+		en = "Light enabled",
+		ru = "Свет включён",
 	},
-	dog_light_radius = {
-		en = "Dog light radius",
-		ru = "Радиус света собаки",
+	notify_mod_disabled = {
+		en = "Light disabled",
+		ru = "Свет выключен",
 	},
-	dog_light_intensity = {
-		en = "Dog light intensity",
-		ru = "Яркость света собаки",
+	notify_flashlight_enabled = {
+		en = "Flashlight mode enabled",
+		ru = "Режим фонарика включён",
 	},
-	dog_light_color_r = {
-		en = "Dog light color Red",
-		ru = "Цвет света собаки — красный",
+	notify_flashlight_disabled = {
+		en = "Flashlight mode disabled",
+		ru = "Режим фонарика выключен",
 	},
-	dog_light_color_g = {
-		en = "Dog light color Green",
-		ru = "Цвет света собаки — зелёный",
+	notify_player_light_enabled = {
+		en = "Player light enabled",
+		ru = "Свет игрока включён",
 	},
-	dog_light_color_b = {
-		en = "Dog light color Blue",
-		ru = "Цвет света собаки — синий",
+	notify_player_light_disabled = {
+		en = "Player light disabled",
+		ru = "Свет игрока выключен",
 	},
 }
