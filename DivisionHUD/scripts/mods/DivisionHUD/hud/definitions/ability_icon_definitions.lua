@@ -3,15 +3,19 @@ local UIWidget = require("scripts/managers/ui/ui_widget")
 local M = {}
 
 local ABILITY_ICON_GAP = 6
-local ABILITY_ICON_SIZE = 32
+local ABILITY_ICON_HEIGHT = 32
+local ABILITY_ICON_NATIVE_W = 92
+local ABILITY_ICON_NATIVE_H = 80
+local ABILITY_ICON_WIDTH = math.floor(ABILITY_ICON_HEIGHT * ABILITY_ICON_NATIVE_W / ABILITY_ICON_NATIVE_H + 0.5)
+local ABILITY_ICON_SIZE = ABILITY_ICON_WIDTH
 local ABILITY_ICON_OVERLAP = 8
 local ABILITY_ICON_ENTER_DUR = 0.2
 local ABILITY_ICON_EXIT_DUR = 0.16
 local ABILITY_ICON_MATERIAL = "content/ui/materials/icons/talents/hud/combat_container"
 
 local function build_scenegraph(ability_bar_width, ability_bar_strip_height)
-	local area_width = ABILITY_ICON_SIZE
-	local area_height = ABILITY_ICON_SIZE
+	local area_width = ABILITY_ICON_WIDTH
+	local area_height = ABILITY_ICON_HEIGHT
 	local anchor_x = ability_bar_width + ABILITY_ICON_GAP
 
 	return {
@@ -33,7 +37,8 @@ local function build_scenegraph(ability_bar_width, ability_bar_strip_height)
 end
 
 local function build_widget_definition()
-	local size = ABILITY_ICON_SIZE
+	local w = ABILITY_ICON_WIDTH
+	local h = ABILITY_ICON_HEIGHT
 
 	return UIWidget.create_definition({
 		{
@@ -47,7 +52,7 @@ local function build_widget_definition()
 					progress = 1,
 					talent_icon = nil,
 				},
-				size = { size, size },
+				size = { w, h },
 				offset = { 0, 0, 1 },
 				color = { 255, 255, 255, 255 },
 			},
