@@ -15,7 +15,7 @@ local hazard_state = HazardPropSettings.hazard_state
 local unpack_fn = table.unpack or unpack
 local language_id = Application.user_setting("language_id")
 local DANGER_ZONE_MAX_HEIGHT_DELTA = 4
-local DANGER_ZONE_MAX_HEIGHT_UP_LOS = 5
+local DANGER_ZONE_MAX_HEIGHT_UP_LOS = 6
 local DANGER_ZONE_MAX_HEIGHT_DOWN_LOS = 2
 
 if type(Localization) ~= "table" then
