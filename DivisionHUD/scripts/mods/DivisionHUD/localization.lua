@@ -134,6 +134,11 @@ return {
 		ru = "Полоса способности",
 		["zh-cn"] = "技能冷却条",
 	},
+	show_ability_icon = {
+		en = "Ability icon",
+		ru = "Иконка способности",
+		["zh-cn"] = "技能图标",
+	},
 	stimm_slot_icon_tint_by_type = {
 		en = "Color pocket stimm icon",
 		ru = "Цвет иконки шприца",

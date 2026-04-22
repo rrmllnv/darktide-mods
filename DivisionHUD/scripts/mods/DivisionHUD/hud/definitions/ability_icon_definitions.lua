@@ -3,21 +3,38 @@ local UIWidget = require("scripts/managers/ui/ui_widget")
 
 local M = {}
 
-local ABILITY_ICON_GAP = 6
-local ABILITY_ICON_HEIGHT = 32
+local ABILITY_ICON_BASE_GAP = 8
+local ABILITY_ICON_BASE_HEIGHT = 48
+local ABILITY_ICON_BASE_OVERLAP = 12
 local ABILITY_ICON_NATIVE_W = 92
 local ABILITY_ICON_NATIVE_H = 80
-local ABILITY_ICON_WIDTH = math.floor(ABILITY_ICON_HEIGHT * ABILITY_ICON_NATIVE_W / ABILITY_ICON_NATIVE_H + 0.5)
 local ABILITY_ICON_FRAME_NATIVE = 128
-local ABILITY_ICON_FRAME_SCALE = ABILITY_ICON_HEIGHT / ABILITY_ICON_NATIVE_H
-local ABILITY_ICON_FRAME_SIZE = math.floor(ABILITY_ICON_FRAME_NATIVE * ABILITY_ICON_FRAME_SCALE + 0.5)
-local ABILITY_ICON_SIZE = ABILITY_ICON_WIDTH
-local ABILITY_ICON_OVERLAP = 8
 local ABILITY_ICON_ENTER_DUR = 0.2
 local ABILITY_ICON_EXIT_DUR = 0.16
 local ABILITY_ICON_MATERIAL = "content/ui/materials/icons/talents/hud/combat_container"
 local ABILITY_ICON_FRAME_MATERIAL = "content/ui/materials/icons/talents/hud/combat_frame_inner"
 local ABILITY_ICON_GLOW_MATERIAL = "content/ui/materials/effects/hud/combat_talent_glow"
+
+local function _identity_sc(n)
+	return n
+end
+
+local function _resolve_metrics(sc)
+	local sc_fn = type(sc) == "function" and sc or _identity_sc
+	local height = math.max(1, sc_fn(ABILITY_ICON_BASE_HEIGHT))
+	local width = math.max(1, math.floor(height * ABILITY_ICON_NATIVE_W / ABILITY_ICON_NATIVE_H + 0.5))
+	local frame_size = math.max(1, math.floor(ABILITY_ICON_FRAME_NATIVE * (height / ABILITY_ICON_NATIVE_H) + 0.5))
+	local gap = math.max(0, sc_fn(ABILITY_ICON_BASE_GAP))
+	local overlap = math.max(0, sc_fn(ABILITY_ICON_BASE_OVERLAP))
+
+	return {
+		width = width,
+		height = height,
+		frame_size = frame_size,
+		gap = gap,
+		overlap = overlap,
+	}
+end
 
 local function _hud_color(name, alpha)
 	local getter = UIHudSettings and UIHudSettings.get_hud_color
@@ -45,10 +62,10 @@ M.COOLDOWN_COLORS = {
 	frame_glow = _hud_color("color_tint_main_3", 0),
 }
 
-local function build_scenegraph(ability_bar_width, ability_bar_strip_height)
-	local area_width = ABILITY_ICON_WIDTH
-	local area_height = ABILITY_ICON_HEIGHT
-	local anchor_x = ability_bar_width + ABILITY_ICON_GAP
+local function build_scenegraph(ability_bar_width, metrics)
+	local area_width = metrics.width
+	local area_height = metrics.height
+	local anchor_x = ability_bar_width + metrics.gap
 
 	return {
 		div_ability_icon_anchor = {
@@ -68,10 +85,10 @@ local function build_scenegraph(ability_bar_width, ability_bar_strip_height)
 	}
 end
 
-local function build_widget_definition()
-	local w = ABILITY_ICON_WIDTH
-	local h = ABILITY_ICON_HEIGHT
-	local frame_size = ABILITY_ICON_FRAME_SIZE
+local function build_widget_definition(metrics)
+	local w = metrics.width
+	local h = metrics.height
+	local frame_size = metrics.frame_size
 
 	return UIWidget.create_definition({
 		{
@@ -120,16 +137,17 @@ local function build_widget_definition()
 	}, "div_ability_icon_area")
 end
 
-function M.build(ability_bar_width, ability_bar_strip_height)
-	local scenegraph_definition = build_scenegraph(ability_bar_width, ability_bar_strip_height)
+function M.build(ability_bar_width, ability_bar_strip_height, sc)
+	local metrics = _resolve_metrics(sc)
+	local scenegraph_definition = build_scenegraph(ability_bar_width, metrics)
 
 	return {
 		scenegraph_definition = scenegraph_definition,
 		widget_definitions = {
-			ability_icon = build_widget_definition(),
+			ability_icon = build_widget_definition(metrics),
 		},
-		ABILITY_ICON_SIZE = ABILITY_ICON_SIZE,
-		ABILITY_ICON_OVERLAP = ABILITY_ICON_OVERLAP,
+		ABILITY_ICON_SIZE = metrics.width,
+		ABILITY_ICON_OVERLAP = metrics.overlap,
 		ABILITY_ICON_ENTER_DUR = ABILITY_ICON_ENTER_DUR,
 		ABILITY_ICON_EXIT_DUR = ABILITY_ICON_EXIT_DUR,
 		ABILITY_ICON_ACTIVE_COLORS = M.ACTIVE_COLORS,

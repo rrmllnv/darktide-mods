@@ -16,6 +16,7 @@ local defaults = {
 	show_toughness_bar = true,
 	show_health_bar = true,
 	show_ability_timer = true,
+	show_ability_icon = true,
 	danger_zone_enabled = true,
 	danger_zone_radius = 5,
 	danger_zone_los_check = true,

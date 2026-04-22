@@ -42,6 +42,11 @@ return {
 			default_value = d("show_ability_timer", true),
 		},
 		{
+			setting_id = "show_ability_icon",
+			type = "checkbox",
+			default_value = d("show_ability_icon", true),
+		},
+		{
 			setting_id = "stimm_slot_icon_tint_by_type",
 			type = "checkbox",
 			title = "stimm_slot_icon_tint_by_type",

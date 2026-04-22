@@ -269,7 +269,7 @@ function M.update(self, player_unit, opacity, dt)
 	end
 
 	local settings = mod._settings
-	local feature_enabled = type(settings) ~= "table" or settings.show_ability_timer ~= false and settings.show_ability_timer ~= 0
+	local feature_enabled = type(settings) ~= "table" or settings.show_ability_icon ~= false and settings.show_ability_icon ~= 0
 	local is_requested = false
 
 	if feature_enabled and player_unit and ALIVE[player_unit] then

@@ -643,7 +643,7 @@ local function create_weapon_wielded_slot_widget(scenegraph_id)
 end
 
 local DivisionHUDAbilityIconDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/ability_icon_definitions")
-local _division_ability_icon = DivisionHUDAbilityIconDefs.build(BAR_WIDTH, ABILITY_BAR_STRIP_HEIGHT)
+local _division_ability_icon = DivisionHUDAbilityIconDefs.build(BAR_WIDTH, ABILITY_BAR_STRIP_HEIGHT, sc)
 
 for k, v in pairs(_division_ability_icon.scenegraph_definition) do
 	scenegraph_definition[k] = v
