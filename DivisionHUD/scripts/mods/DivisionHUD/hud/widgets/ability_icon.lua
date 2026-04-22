@@ -92,6 +92,18 @@ local function resolve_ability_icon(self, player_unit)
 	return icon
 end
 
+local function _duration_buff_progress(buff_extension, buff_name)
+	if not buff_extension or type(buff_name) ~= "string" or buff_name == "" then
+		return nil
+	end
+
+	if (buff_extension:current_stacks(buff_name) or 0) <= 0 then
+		return nil
+	end
+
+	return buff_extension:buff_duration_progress(buff_name)
+end
+
 local function compute_cooldown_progress(player_unit)
 	local ability_extension = ScriptUnit.has_extension(player_unit, "ability_system")
 
@@ -101,14 +113,122 @@ local function compute_cooldown_progress(player_unit)
 
 	local max_cd = ability_extension:max_ability_cooldown(COMBAT_ABILITY_TYPE) or 0
 	local rem_cd = ability_extension:remaining_ability_cooldown(COMBAT_ABILITY_TYPE) or 0
+	local progress
 
-	if max_cd <= 0 then
-		return 1
+	if max_cd > 0 then
+		progress = 1 - math.min(1, math.max(0, rem_cd / max_cd))
+
+		if progress == 0 then
+			progress = 1
+		end
+	else
+		progress = 0
 	end
 
-	local progress = 1 - math.min(1, math.max(0, rem_cd / max_cd))
+	if not ability_extension.ability_pause_cooldown_settings then
+		return progress
+	end
+
+	local pause_settings = ability_extension:ability_pause_cooldown_settings(COMBAT_ABILITY_TYPE)
+
+	if type(pause_settings) ~= "table" then
+		return progress
+	end
+
+	local tracking = pause_settings.duration_tracking_buff
+
+	if not tracking then
+		return progress
+	end
+
+	local buff_extension = ScriptUnit.has_extension(player_unit, "buff_system")
+
+	if not buff_extension then
+		return progress
+	end
+
+	if type(tracking) == "table" then
+		for i = 1, #tracking do
+			local p = _duration_buff_progress(buff_extension, tracking[i])
+
+			if p then
+				return p
+			end
+		end
+	else
+		local p = _duration_buff_progress(buff_extension, tracking)
+
+		if p then
+			return p
+		end
+	end
 
 	return progress
+end
+
+local function copy_color_into(dst, src)
+	if type(dst) ~= "table" or type(src) ~= "table" then
+		return false
+	end
+
+	local changed = false
+
+	for i = 1, 4 do
+		if dst[i] ~= src[i] then
+			dst[i] = src[i]
+			changed = true
+		end
+	end
+
+	return changed
+end
+
+local function apply_state_colors(self, widget, state)
+	if not widget or not widget.style then
+		return
+	end
+
+	local palette = state == "cooldown" and self._ability_icon_cooldown_colors or self._ability_icon_active_colors
+
+	if type(palette) ~= "table" then
+		return
+	end
+
+	local dirty = false
+	local style = widget.style
+
+	for pass_id, color in pairs(palette) do
+		local pass_style = style[pass_id]
+
+		if pass_style and pass_style.color and copy_color_into(pass_style.color, color) then
+			dirty = true
+		end
+	end
+
+	if dirty then
+		widget.dirty = true
+	end
+end
+
+local function is_ability_on_cooldown(player_unit)
+	local ability_extension = ScriptUnit.has_extension(player_unit, "ability_system")
+
+	if not ability_extension or not ability_extension:ability_is_equipped(COMBAT_ABILITY_TYPE) then
+		return false
+	end
+
+	local max_cd = ability_extension:max_ability_cooldown(COMBAT_ABILITY_TYPE) or 0
+	local rem_cd = ability_extension:remaining_ability_cooldown(COMBAT_ABILITY_TYPE) or 0
+
+	if max_cd > 0 and rem_cd > 0 then
+		return true
+	end
+
+	if CombatAbilityBar.is_ability_effect_active and CombatAbilityBar.is_ability_effect_active(player_unit, COMBAT_ABILITY_TYPE) then
+		return true
+	end
+
+	return false
 end
 
 function M.init(self, definitions)
@@ -116,6 +236,9 @@ function M.init(self, definitions)
 	self._ability_icon_unit = nil
 	self._ability_icon_name = nil
 	self._ability_icon_value = nil
+	self._ability_icon_state = nil
+	self._ability_icon_active_colors = definitions and definitions.ABILITY_ICON_ACTIVE_COLORS
+	self._ability_icon_cooldown_colors = definitions and definitions.ABILITY_ICON_COOLDOWN_COLORS
 
 	local size = (definitions and definitions.ABILITY_ICON_SIZE) or 28
 	local overlap = (definitions and definitions.ABILITY_ICON_OVERLAP) or 8
@@ -186,6 +309,7 @@ function M.update(self, player_unit, opacity, dt)
 	if alpha <= 0 and not is_requested then
 		reset_widget(widget)
 		reset_anim(self)
+		self._ability_icon_state = nil
 
 		if self.set_scenegraph_position then
 			self:set_scenegraph_position("div_ability_icon_area", hidden_x, 0)
@@ -210,6 +334,15 @@ function M.update(self, player_unit, opacity, dt)
 		if widget.content.duration_progress ~= progress then
 			widget.content.duration_progress = progress
 			widget.dirty = true
+		end
+
+		local on_cooldown = is_ability_on_cooldown(player_unit)
+		local target_state = on_cooldown and "cooldown" or "active"
+
+		if self._ability_icon_state ~= target_state then
+			self._ability_icon_state = target_state
+
+			apply_state_colors(self, widget, target_state)
 		end
 	end
 
@@ -267,6 +400,7 @@ function M.destroy(self)
 	self._ability_icon_unit = nil
 	self._ability_icon_name = nil
 	self._ability_icon_value = nil
+	self._ability_icon_state = nil
 
 	if self.set_scenegraph_position then
 		self:set_scenegraph_position("div_ability_icon_area", self._ability_icon_hidden_x or 0, 0)
