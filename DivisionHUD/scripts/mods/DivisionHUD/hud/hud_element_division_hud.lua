@@ -28,6 +28,7 @@ local DangerZoneWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud
 local StaminaDodgeWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/stamina_dodge")
 local ToughnessHealthWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/toughness_health")
 local CombatAbilityBar = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/combat_ability_bar")
+local AbilityIconWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/ability_icon")
 local DivisionBuffs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/division_buffs")
 local ProximitySlotsWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/proximity_slots")
 local DivisionHUDSettingsDefaults = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/defaults")
@@ -1763,6 +1764,7 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	ToughnessHealthWidget.init(self, Definitions)
 	DivisionBuffs.init(self, Definitions)
 	ProximitySlotsWidget.init(self, Definitions)
+	AbilityIconWidget.init(self, Definitions)
 	_div_alert_init(self)
 
 	self:_reset_dynamic_offset_state()
@@ -2072,7 +2074,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 		boxes_bg.dirty = true
 	end
 
-	self:_update_ability_bar(player_unit, widgets.ability_bar, opacity)
+	self:_update_ability_bar(player_unit, widgets.ability_bar, opacity, dt)
 	self:_update_expedition_salvage(local_player, widgets.expedition_salvage, opacity)
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
 	self:_update_auspex_slot(player_unit, widgets, opacity)
@@ -2157,8 +2159,9 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 	)
 end
 
-HudElementDivisionHUD._update_ability_bar = function(self, player_unit, widget, opacity)
+HudElementDivisionHUD._update_ability_bar = function(self, player_unit, widget, opacity, dt)
 	CombatAbilityBar.update(player_unit, widget, opacity, Definitions, COMBAT_ABILITY_TYPE)
+	AbilityIconWidget.update(self, player_unit, opacity, dt)
 end
 
 HudElementDivisionHUD._set_all_visible = function(self, visible)
@@ -2221,6 +2224,7 @@ HudElementDivisionHUD.destroy = function(self, ui_renderer)
 	ToughnessHealthWidget.destroy(self, ui_renderer)
 	DivisionBuffs.destroy(self, ui_renderer)
 	ProximitySlotsWidget.destroy(self, ui_renderer)
+	AbilityIconWidget.destroy(self)
 
 	HudElementDivisionHUD.super.destroy(self, ui_renderer)
 end

@@ -915,6 +915,97 @@ local function apply_ability_segment_style(seg_style, offset_x, width, rgba, opa
 	seg_style.color[4] = rgba[4] or 255
 end
 
+function M.is_ability_in_use_or_on_cooldown(player_unit, combat_ability_type)
+	if not player_unit then
+		return false
+	end
+
+	local ability_extension = ScriptUnit.has_extension(player_unit, "ability_system")
+
+	if not ability_extension or not ability_extension:ability_is_equipped(combat_ability_type) then
+		return false
+	end
+
+	local max_cooldown = ability_extension:max_ability_cooldown(combat_ability_type) or 0
+	local remaining_cooldown = ability_extension:remaining_ability_cooldown(combat_ability_type) or 0
+
+	if max_cooldown > 0 and remaining_cooldown > 0 then
+		return true
+	end
+
+	return M.is_ability_effect_active(player_unit, combat_ability_type)
+end
+
+function M.is_ability_effect_active(player_unit, combat_ability_type)
+	if not player_unit then
+		return false
+	end
+
+	if combat_ability_is_active(player_unit) then
+		return true
+	end
+
+	local ability_extension = ScriptUnit.has_extension(player_unit, "ability_system")
+
+	if not ability_extension or not ability_extension:ability_is_equipped(combat_ability_type) then
+		return false
+	end
+
+	local buff_extension = ScriptUnit.has_extension(player_unit, "buff_system")
+	local equipped_abilities = ability_extension:equipped_abilities()
+	local ability_row = equipped_abilities and equipped_abilities[combat_ability_type]
+	local template_key = ability_row and ability_row.ability_template
+	local tweak_data = ability_row and ability_row.ability_template_tweak_data
+	local ability_template = template_key and AbilityTemplates[template_key]
+	local buff_candidates = collect_duration_buff_candidates(ability_template, tweak_data, {})
+
+	append_manual_ability_group_buff_candidates(ability_row, buff_candidates)
+
+	local buff_overlay_progress = buff_extension and best_buff_overlay_progress(buff_extension, buff_candidates)
+
+	if buff_overlay_progress and buff_overlay_progress > 0 then
+		return true
+	end
+
+	local psyker_force_field_overlay_progress = psyker_force_field_bar_fill_progress(player_unit, ability_row)
+
+	if psyker_force_field_overlay_progress and psyker_force_field_overlay_progress > 0 then
+		return true
+	end
+
+	local psyker_overcharge_overlay_progress = psyker_overcharge_stance_bar_fill_progress(player_unit, ability_row, buff_extension)
+
+	if psyker_overcharge_overlay_progress and psyker_overcharge_overlay_progress > 0 then
+		return true
+	end
+
+	local tracked_deployable_overlay_progress = tracked_deployable_bar_fill_progress(ability_row)
+
+	if tracked_deployable_overlay_progress and tracked_deployable_overlay_progress > 0 then
+		return true
+	end
+
+	local relic_channel_fill = weapon_zealot_channel_bar_fill_progress(player_unit)
+
+	if relic_channel_fill and relic_channel_fill > 0 then
+		return true
+	end
+
+	local lunge_overlay_progress = lunge_remaining_progress(player_unit)
+
+	if lunge_overlay_progress and lunge_overlay_progress > 0 then
+		return true
+	end
+
+	local timed_overlay_progress = timed_action_remaining_progress(player_unit, ability_extension, ability_row)
+
+	if timed_overlay_progress and timed_overlay_progress > 0 then
+		return true
+	end
+
+	return false
+end
+
 function M.update(player_unit, widget, opacity, definitions, combat_ability_type)
 	local settings = mod._settings
 	local show_ability = settings and settings.show_ability_timer

@@ -642,6 +642,13 @@ local function create_weapon_wielded_slot_widget(scenegraph_id)
 	}, scenegraph_id)
 end
 
+local DivisionHUDAbilityIconDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/ability_icon_definitions")
+local _division_ability_icon = DivisionHUDAbilityIconDefs.build(BAR_WIDTH, ABILITY_BAR_STRIP_HEIGHT)
+
+for k, v in pairs(_division_ability_icon.scenegraph_definition) do
+	scenegraph_definition[k] = v
+end
+
 local DivisionHUDProximitySlotsDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/proximity_slots_definitions")
 local _division_proximity_slots = DivisionHUDProximitySlotsDefs.build({
 	sc = sc,
@@ -690,6 +697,10 @@ for k, v in pairs(_division_danger_zone.widget_definitions) do
 end
 
 for k, v in pairs(_division_proximity_slots.widget_definitions) do
+	widget_definitions[k] = v
+end
+
+for k, v in pairs(_division_ability_icon.widget_definitions) do
 	widget_definitions[k] = v
 end
 
@@ -787,4 +798,8 @@ return {
 	DANGER_ZONE_WARNING_OVERLAP = _division_danger_zone.DANGER_ZONE_WARNING_OVERLAP,
 	DANGER_ZONE_WARNING_ENTER_DUR = _division_danger_zone.DANGER_ZONE_WARNING_ENTER_DUR,
 	DANGER_ZONE_WARNING_EXIT_DUR = _division_danger_zone.DANGER_ZONE_WARNING_EXIT_DUR,
+	ABILITY_ICON_SIZE = _division_ability_icon.ABILITY_ICON_SIZE,
+	ABILITY_ICON_OVERLAP = _division_ability_icon.ABILITY_ICON_OVERLAP,
+	ABILITY_ICON_ENTER_DUR = _division_ability_icon.ABILITY_ICON_ENTER_DUR,
+	ABILITY_ICON_EXIT_DUR = _division_ability_icon.ABILITY_ICON_EXIT_DUR,
 }
