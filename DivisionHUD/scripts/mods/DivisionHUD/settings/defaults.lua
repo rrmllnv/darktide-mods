@@ -18,6 +18,7 @@ local defaults = {
 	show_ability_timer = true,
 	danger_zone_enabled = true,
 	danger_zone_radius = 5,
+	danger_zone_los_check = true,
 	danger_zone_show_daemonhost = true,
 	danger_zone_show_daemonhost_aura = true,
 	danger_zone_show_poxburster = true,

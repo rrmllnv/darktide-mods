@@ -264,6 +264,16 @@ return {
 		ru = "Максимальное расстояние в метрах от границы отслеживаемой опасной зоны, на котором показывается блок Danger zone.",
 		["zh-cn"] = "距离已追踪危险区域边缘的最大显示距离（米）。",
 	},
+	danger_zone_los_check = {
+		en = "Account for obstacles (line of sight)",
+		ru = "Учитывать препятствия (видимость)",
+		["zh-cn"] = "考虑遮挡物（视线）",
+	},
+	danger_zone_los_check_description = {
+		en = "Ignore danger sources separated from you by walls, floors or bridges (line-of-sight raycast). Disable to use distance only.",
+		ru = "Игнорировать источники опасности, отделённые от вас стенами, полом или мостом (проверка прямой видимости лучом). Отключите, чтобы учитывать только расстояние.",
+		["zh-cn"] = "忽略被墙壁、楼板或桥梁分隔的危险源（视线射线检测）。关闭则仅按距离判定。",
+	},
 	danger_zone_show_daemonhost = {
 		en = "Daemonhost",
 		ru = "Демонхост",

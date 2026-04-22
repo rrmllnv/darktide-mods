@@ -71,6 +71,13 @@ return {
 			decimals_number = 0,
 		},
 		{
+			setting_id = "danger_zone_los_check",
+			type = "checkbox",
+			title = "danger_zone_los_check",
+			tooltip = "danger_zone_los_check_description",
+			default_value = d("danger_zone_los_check", true),
+		},
+		{
 			setting_id = "danger_zone_show_daemonhost",
 			type = "checkbox",
 			localize = false,

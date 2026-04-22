@@ -74,6 +74,8 @@ end
 function M.init(self, definitions)
 	self._danger_zone_alpha_mult = 0
 	self._danger_zone_active = false
+	self._danger_zone_request_hold = 0
+	self._danger_zone_last_data = nil
 	self._danger_zone_warning_slide_px = math.max(
 		0,
 		(definitions and definitions.DANGER_ZONE_WARNING_WIDTH or 84) - (definitions and definitions.DANGER_ZONE_WARNING_OVERLAP or 10)
@@ -81,6 +83,7 @@ function M.init(self, definitions)
 	self._danger_zone_warning_enter_dur = (definitions and definitions.DANGER_ZONE_WARNING_ENTER_DUR) or 0.2
 	self._danger_zone_warning_exit_dur = (definitions and definitions.DANGER_ZONE_WARNING_EXIT_DUR) or 0.16
 	self._danger_zone_warning_hidden_x = -self._danger_zone_warning_slide_px
+	self._danger_zone_request_hold_dur = (definitions and definitions.DANGER_ZONE_REQUEST_HOLD_DUR) or 0.3
 	danger_zone_reset_warning_anim(self)
 
 	local widget = self._widgets_by_name and self._widgets_by_name.danger_zone
@@ -100,8 +103,30 @@ function M.update(self, opacity, dt)
 	local widget = self._widgets_by_name and self._widgets_by_name.danger_zone
 	local warning_widget = self._widgets_by_name and self._widgets_by_name.danger_zone_warning
 	local data = self._danger_zone_data or {}
-	local is_requested = data.active == true
-	local is_inside_zone = is_requested and math.max(0, data.distance_m or 0) <= 0
+	local raw_requested = data.active == true
+	local hold_dur = self._danger_zone_request_hold_dur or 0.3
+	local hold_left = self._danger_zone_request_hold or 0
+
+	if raw_requested then
+		hold_left = hold_dur
+		self._danger_zone_last_data = {
+			source_name = data.source_name or "",
+			distance_m = data.distance_m or 0,
+			template_id = data.template_id,
+		}
+	else
+		hold_left = math.max(0, hold_left - dt)
+
+		if hold_left <= 0 then
+			self._danger_zone_last_data = nil
+		end
+	end
+
+	self._danger_zone_request_hold = hold_left
+
+	local is_requested = raw_requested or hold_left > 0
+	local effective_data = raw_requested and data or (self._danger_zone_last_data or data)
+	local is_inside_zone = raw_requested and math.max(0, data.distance_m or 0) <= 0
 	local alpha = self._danger_zone_alpha_mult or 0
 	local alpha_speed = is_requested and 10 or 6
 	local warning_anim = self._danger_zone_warning_anim
@@ -139,8 +164,8 @@ function M.update(self, opacity, dt)
 
 	if is_requested then
 		widget.content.label_text = danger_zone_label()
-		widget.content.source_text = data.source_name or ""
-		local distance_m = math.max(0, data.distance_m or 0)
+		widget.content.source_text = effective_data.source_name or ""
+		local distance_m = math.max(0, effective_data.distance_m or 0)
 		widget.content.distance_text = distance_m > 0 and string.format("%dm", distance_m) or ""
 		warning_widget.content.warning_text = danger_zone_warning_label()
 	end
@@ -215,6 +240,8 @@ function M.destroy(self)
 
 	self._danger_zone_alpha_mult = 0
 	self._danger_zone_active = false
+	self._danger_zone_request_hold = 0
+	self._danger_zone_last_data = nil
 
 	if self.set_scenegraph_position then
 		self:set_scenegraph_position("div_danger_zone_warning_area", self._danger_zone_warning_hidden_x or 0, 0)

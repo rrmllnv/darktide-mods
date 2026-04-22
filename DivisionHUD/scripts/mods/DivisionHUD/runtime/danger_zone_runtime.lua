@@ -15,6 +15,8 @@ local hazard_state = HazardPropSettings.hazard_state
 local unpack_fn = table.unpack or unpack
 local language_id = Application.user_setting("language_id")
 local DANGER_ZONE_MAX_HEIGHT_DELTA = 4
+local DANGER_ZONE_MAX_HEIGHT_UP_LOS = 5
+local DANGER_ZONE_MAX_HEIGHT_DOWN_LOS = 2
 
 if type(Localization) ~= "table" then
 	Localization = {}
@@ -480,6 +482,82 @@ local function danger_zone_height_delta(a, b)
 	return math.abs((a and a.z or 0) - (b and b.z or 0))
 end
 
+local DANGER_ZONE_LOS_FILTER = "filter_minion_line_of_sight_check"
+local DANGER_ZONE_LOS_END_MARGIN = 0.5
+local DANGER_ZONE_LOS_HIT_ACTOR_INDEX = 4
+
+local function danger_zone_get_physics_world(player_unit)
+	local interaction_extension = ScriptUnit.has_extension(player_unit, "interaction_system")
+	local physics_world = interaction_extension and interaction_extension._physics_world
+
+	if physics_world then
+		return physics_world
+	end
+
+	local world_manager = Managers.world
+
+	if world_manager and world_manager.has_world and world_manager:has_world("level_world") then
+		local ok_world, world = pcall(world_manager.world, world_manager, "level_world")
+
+		if ok_world and world then
+			local ok_pw, pw = pcall(World.physics_world, world)
+
+			if ok_pw and pw then
+				return pw
+			end
+		end
+	end
+
+	return nil
+end
+
+local function danger_zone_has_line_of_sight(physics_world, from_pos, to_pos, source_unit)
+	if not physics_world or not from_pos or not to_pos then
+		return true
+	end
+
+	local from_z = from_pos.z + 0.8
+	local from = Vector3(from_pos.x, from_pos.y, from_z)
+	local target_z = math.max(to_pos.z + 0.5, from_z)
+	local target = Vector3(to_pos.x, to_pos.y, target_z)
+	local full_delta = target - from
+	local full_distance = Vector3.length(full_delta)
+
+	if full_distance <= DANGER_ZONE_LOS_END_MARGIN then
+		return true
+	end
+
+	local direction = Vector3.normalize(full_delta)
+	local ray_distance = full_distance - DANGER_ZONE_LOS_END_MARGIN
+
+	local ok, hits = pcall(
+		PhysicsWorld.raycast,
+		physics_world,
+		from,
+		direction,
+		ray_distance,
+		"all",
+		"collision_filter",
+		DANGER_ZONE_LOS_FILTER
+	)
+
+	if not ok or not hits then
+		return true
+	end
+
+	for i = 1, #hits do
+		local hit = hits[i]
+		local hit_actor = hit and hit[DANGER_ZONE_LOS_HIT_ACTOR_INDEX]
+		local hit_unit = hit_actor and Actor.unit(hit_actor)
+
+		if hit_unit ~= source_unit then
+			return false
+		end
+	end
+
+	return true
+end
+
 local function scan(player_unit, warning_margin, settings)
 	local result = {
 		active = false,
@@ -504,6 +582,8 @@ local function scan(player_unit, warning_margin, settings)
 
 	local margin = type(warning_margin) == "number" and warning_margin or 15
 	local best_edge_distance = nil
+	local los_check_enabled = danger_zone_setting_enabled(settings, "danger_zone_los_check")
+	local physics_world = los_check_enabled and danger_zone_get_physics_world(player_unit) or nil
 
 	for unit, source in pairs(tracked_sources) do
 		if not unit or not Unit.is_valid(unit) then
@@ -513,16 +593,32 @@ local function scan(player_unit, warning_margin, settings)
 			local radius = type(source.radius) == "number" and source.radius or 0
 
 			if source_position and radius > 0 then
-				local height_delta = danger_zone_height_delta(source_position, player_position)
+				local signed_dz = (source_position.z or 0) - (player_position.z or 0)
 
-				if height_delta > DANGER_ZONE_MAX_HEIGHT_DELTA then
-					goto continue_danger_zone_source
+				if los_check_enabled then
+					if signed_dz >= 0 then
+						if signed_dz > DANGER_ZONE_MAX_HEIGHT_UP_LOS then
+							goto continue_danger_zone_source
+						end
+					else
+						if -signed_dz > DANGER_ZONE_MAX_HEIGHT_DOWN_LOS then
+							goto continue_danger_zone_source
+						end
+					end
+				else
+					if math.abs(signed_dz) > DANGER_ZONE_MAX_HEIGHT_DELTA then
+						goto continue_danger_zone_source
+					end
 				end
 
 				local center_distance = math.sqrt(danger_zone_distance_sq(source_position, player_position))
 				local edge_distance = math.max(0, center_distance - radius)
 
 				if edge_distance <= margin and (best_edge_distance == nil or edge_distance < best_edge_distance) then
+					if physics_world and not danger_zone_has_line_of_sight(physics_world, player_position, source_position, unit) then
+						goto continue_danger_zone_source
+					end
+
 					best_edge_distance = edge_distance
 					result.active = true
 					result.distance_m = math.max(0, math.floor(edge_distance + 0.5))
