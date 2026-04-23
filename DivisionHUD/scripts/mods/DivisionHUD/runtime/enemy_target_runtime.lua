@@ -204,7 +204,9 @@ local function _collect_debuffs(unit)
 	local buff_extension = ScriptUnit.has_extension(unit, "buff_system")
 	local buffs = buff_extension and buff_extension:buffs() or nil
 	local keywords = buff_extension and buff_extension:keywords() or nil
-	local grouped = {}
+	local active = {}
+	local grouped_dot = {}
+	local grouped_utility = {}
 	local result = {}
 
 	local function calc_stack_buff_percentage(val, stacks, stat_name)
@@ -254,39 +256,58 @@ local function _collect_debuffs(unit)
 		return ""
 	end
 
-	local function add_entry(name, stacks)
+	local function add_active_entry(name, stacks, max_stacks, stat_buffs, conditional_stat_buffs, debuff_type)
 		local debuff = DEBUFFS[name]
 
 		if not debuff then
-			return
-		end
-
-		local style = DEBUFF_STYLES[debuff.group]
-
-		if not style then
-			return
-		end
-
-		local key = debuff.type .. ":" .. debuff.group
-		local existing = grouped[key]
-
-		if existing then
-			existing.stacks = (existing.stacks or 0) + (stacks or 1)
-			return
+			return nil
 		end
 
 		local entry = {
 			name = name,
-			type = debuff.type,
+			type = debuff_type or debuff.type,
 			group = debuff.group,
-			icon = style.icon,
-			colour = style.colour,
-			label = style.label or debuff.group or name,
 			stacks = stacks or 1,
+			max_stacks = max_stacks,
+			stat_buffs = stat_buffs,
+			conditional_stat_buffs = conditional_stat_buffs,
 		}
 
-		grouped[key] = entry
-		result[#result + 1] = entry
+		active[#active + 1] = entry
+
+		return entry
+	end
+
+	local function combine_entries(entries)
+		for i = 1, #entries do
+			local entry = entries[i]
+			local debuff = DEBUFFS[entry.name]
+			local style = debuff and DEBUFF_STYLES[debuff.group] or nil
+			local icon = style and style.icon or entry.name
+			local target_map = entry.type == "dot" and grouped_dot or grouped_utility
+			local existing = target_map[icon]
+
+			if existing then
+				existing.stacks = (existing.stacks or 0) + (entry.stacks or 0)
+				existing.max_stacks = (existing.max_stacks or 0) + (entry.max_stacks or 0)
+				existing.stat_buffs = existing.stat_buffs or entry.stat_buffs
+				existing.conditional_stat_buffs = existing.conditional_stat_buffs or entry.conditional_stat_buffs
+			else
+				local combined_entry = {
+					name = entry.name,
+					type = entry.type,
+					group = entry.group,
+					stacks = entry.stacks,
+					max_stacks = entry.max_stacks,
+					stat_buffs = entry.stat_buffs,
+					conditional_stat_buffs = entry.conditional_stat_buffs,
+					combined = true,
+				}
+
+				target_map[icon] = combined_entry
+				result[#result + 1] = combined_entry
+			end
+		end
 	end
 
 	if buffs then
@@ -299,18 +320,13 @@ local function _collect_debuffs(unit)
 				local template = buff.template and buff:template() or nil
 				local stat_buffs = template and template.stat_buffs or nil
 				local conditional_stat_buffs = template and template.conditional_stat_buffs or nil
+				local max_stacks = template and template.max_stacks or nil
 
-				add_entry(name, stacks)
-
-				local debuff = DEBUFFS[name]
-				local style = DEBUFF_STYLES[debuff.group]
-				local key = debuff.type .. ":" .. debuff.group
-				local existing = grouped[key]
-
-				if existing then
-					existing.stat_buffs = existing.stat_buffs or stat_buffs
-					existing.conditional_stat_buffs = existing.conditional_stat_buffs or conditional_stat_buffs
+				if name == "increase_damage_taken" then
+					max_stacks = 1
 				end
+
+				add_active_entry(name, stacks, max_stacks, stat_buffs, conditional_stat_buffs, DEBUFFS[name].type)
 			end
 		end
 	end
@@ -320,10 +336,12 @@ local function _collect_debuffs(unit)
 			local name = keywords[i]
 
 			if name and DEBUFFS[name] then
-				add_entry(name, 1)
+				add_active_entry(name, 1, nil, nil, nil, DEBUFFS[name].type)
 			end
 		end
 	end
+
+	combine_entries(active)
 
 	table.sort(result, function(a, b)
 		if a.type ~= b.type then
@@ -339,7 +357,12 @@ local function _collect_debuffs(unit)
 
 	for i = 1, #result do
 		local entry = result[i]
+		local debuff = DEBUFFS[entry.name]
+		local style = debuff and DEBUFF_STYLES[debuff.group] or nil
 
+		entry.icon = style and style.icon or "content/ui/materials/icons/generic/danger"
+		entry.colour = style and style.colour or { 255, 255, 255, 255 }
+		entry.label = style and style.label or entry.group or entry.name
 		entry.value_text = resolve_value_text(entry)
 	end
 
