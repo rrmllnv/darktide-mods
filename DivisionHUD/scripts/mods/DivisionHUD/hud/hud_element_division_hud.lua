@@ -2055,6 +2055,25 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 		end
 	end
 
+	if type(MainStripBackgroundPresets.normalize_mode_enemy_target) == "function" then
+		local fill_mode_enemy = MainStripBackgroundPresets.normalize_mode_enemy_target(
+			type(mod._settings) == "table" and mod._settings.enemy_target_strip_background_fill,
+			DivisionHUDSettingsDefaults.enemy_target_strip_background_fill
+		)
+
+		if self._enemy_target_strip_background_fill_mode_cache ~= fill_mode_enemy then
+			self._enemy_target_strip_background_fill_mode_cache = fill_mode_enemy
+
+			if fill_mode_enemy ~= 0 then
+				MainStripBackgroundPresets.apply_strip_background_to_widget(widgets.enemy_target_bg, fill_mode_enemy - 1)
+			end
+		end
+
+		self._enemy_target_bg_enabled = fill_mode_enemy ~= 0
+	else
+		self._enemy_target_bg_enabled = false
+	end
+
 	local boxes_bg = widgets.boxes_bg
 
 	if boxes_bg then

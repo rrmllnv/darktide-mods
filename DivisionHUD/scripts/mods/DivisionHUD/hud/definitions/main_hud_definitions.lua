@@ -304,16 +304,7 @@ for k, v in pairs(_division_expedition_salvage.scenegraph_definition) do
 end
 
 local DivisionHUDEnemyTargetDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/enemy_target_definitions")
-local _division_enemy_target = DivisionHUDEnemyTargetDefs.build({
-	sc = sc,
-	right_gap = RIGHT_GAP,
-	right_bottom_slot_width = RIGHT_BOTTOM_SLOT_WIDTH,
-	main_row_height = MAIN_ROW_HEIGHT,
-})
-
-for k, v in pairs(_division_enemy_target.scenegraph_definition) do
-	scenegraph_definition[k] = v
-end
+local _division_enemy_target
 
 local DivisionHUDBuffRowsDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/buff_rows_definitions")
 local _division_buff_rows = DivisionHUDBuffRowsDefs.build(
@@ -637,6 +628,19 @@ local DivisionHUDAbilityIconDefs = mod:io_dofile("DivisionHUD/scripts/mods/Divis
 local _division_ability_icon = DivisionHUDAbilityIconDefs.build(BAR_WIDTH, ABILITY_BAR_STRIP_HEIGHT, sc)
 
 for k, v in pairs(_division_ability_icon.scenegraph_definition) do
+	scenegraph_definition[k] = v
+end
+
+_division_enemy_target = DivisionHUDEnemyTargetDefs.build({
+	sc = sc,
+	right_gap = RIGHT_GAP,
+	right_bottom_slot_width = RIGHT_BOTTOM_SLOT_WIDTH,
+	main_row_height = MAIN_ROW_HEIGHT,
+	build_terminal_gradient_frame_corner_passes = build_terminal_gradient_frame_corner_passes,
+	strip_bg_widget_content_defaults = strip_bg_widget_content_defaults,
+})
+
+for k, v in pairs(_division_enemy_target.scenegraph_definition) do
 	scenegraph_definition[k] = v
 end
 

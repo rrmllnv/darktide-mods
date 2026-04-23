@@ -12,6 +12,8 @@ function M.build(params)
 	local right_gap = params.right_gap
 	local right_bottom_slot_width = params.right_bottom_slot_width
 	local main_row_height = params.main_row_height
+	local build_frame_fn = params.build_terminal_gradient_frame_corner_passes
+	local defaults_fn = params.strip_bg_widget_content_defaults
 	local expedition_salvage_slot_w = math.max(right_bottom_slot_width, sc(72))
 	local expedition_salvage_slot_x = -(expedition_salvage_slot_w + right_gap)
 	local block_width = math.max(sc(232), expedition_salvage_slot_w + sc(156))
@@ -212,6 +214,18 @@ function M.build(params)
 		}
 	end
 
+	local widget_definitions = {
+		enemy_target = definition,
+	}
+
+	if type(build_frame_fn) == "function" and type(defaults_fn) == "function" then
+		widget_definitions.enemy_target_bg = UIWidget.create_definition(
+			build_frame_fn(block_width, block_height, 0, 1, 2, 3),
+			"division_enemy_target_area",
+			defaults_fn()
+		)
+	end
+
 	return {
 		scenegraph_definition = {
 			division_enemy_target_anchor = {
@@ -229,9 +243,7 @@ function M.build(params)
 				position = { 0, 0, 0 },
 			},
 		},
-		widget_definitions = {
-			enemy_target = definition,
-		},
+		widget_definitions = widget_definitions,
 		ENEMY_TARGET_MAX_DEBUFF_SLOTS = MAX_DEBUFF_ROWS,
 		ENEMY_TARGET_SLIDE_PX = slide_px,
 		ENEMY_TARGET_ENTER_DUR = ENEMY_TARGET_ENTER_DUR,

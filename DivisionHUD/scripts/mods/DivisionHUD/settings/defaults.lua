@@ -72,6 +72,7 @@ local defaults = {
 	buff_rows_enabled = true,
 	main_strip_background_fill = 0,
 	proximity_strip_background_fill = 1,
+	enemy_target_strip_background_fill = 0,
 	integration_custom_hud = false,
 	integration_stimm_countdown = true,
 	integration_recolor_stimms = false,

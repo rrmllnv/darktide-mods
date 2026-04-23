@@ -234,6 +234,21 @@ return {
 		ru = "Терминальный градиент черный",
 		["zh-cn"] = "终端渐变黑色",
 	},
+	enemy_target_strip_background_fill = {
+		en = "Enemy target block background",
+		ru = "Фон блока вражеской цели",
+		["zh-cn"] = "敌人目标块背景",
+	},
+	enemy_target_strip_background_fill_description = {
+		en = "Fill behind the enemy target block (separate from weapon and proximity slots).",
+		ru = "Заливка под блоком вражеской цели (отдельно от слотов оружия и proximity).",
+		["zh-cn"] = "敌人目标块背后的填充（与武器/近距离槽分开）。",
+	},
+	enemy_target_strip_background_fill_none = {
+		en = "No background",
+		ru = "Без фона",
+		["zh-cn"] = "无背景",
+	},
 	divisionhud_super_danger_zone = {
 		en = "\238\128\161 DANGER ZONE",
 		ru = "\238\128\161 ОПАСНАЯ ЗОНА",

@@ -127,5 +127,34 @@ return {
 				},
 			},
 		},
+		{
+			setting_id = "enemy_target_strip_background_fill",
+			type = "dropdown",
+			title = "enemy_target_strip_background_fill",
+			tooltip_text = "enemy_target_strip_background_fill_description",
+			default_value = d("enemy_target_strip_background_fill", 0),
+			options = {
+				{
+					text = "enemy_target_strip_background_fill_none",
+					value = 0,
+				},
+				{
+					text = "main_strip_background_fill_weapon_hud_plain",
+					value = 1,
+				},
+				{
+					text = "main_strip_background_fill_weapon_hud",
+					value = 2,
+				},
+				{
+					text = "main_strip_background_fill_terminal",
+					value = 3,
+				},
+				{
+					text = "main_strip_background_fill_black",
+					value = 4,
+				},
+			},
+		},
 	},
 }
