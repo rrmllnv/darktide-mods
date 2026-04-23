@@ -210,6 +210,34 @@ local function apply_state_colors(self, widget, state)
 	end
 end
 
+local function _duration_buff_is_active(buff_extension, tracking)
+	if not buff_extension or not tracking then
+		return false
+	end
+
+	if type(tracking) == "table" then
+		for i = 1, #tracking do
+			local name = tracking[i]
+
+			if type(name) == "string" and (buff_extension:current_stacks(name) or 0) > 0 then
+				local p = buff_extension:buff_duration_progress(name) or 0
+
+				if p > 0 then
+					return true
+				end
+			end
+		end
+
+		return false
+	end
+
+	if type(tracking) ~= "string" or (buff_extension:current_stacks(tracking) or 0) <= 0 then
+		return false
+	end
+
+	return (buff_extension:buff_duration_progress(tracking) or 0) > 0
+end
+
 local function is_ability_on_cooldown(player_unit)
 	local ability_extension = ScriptUnit.has_extension(player_unit, "ability_system")
 
@@ -219,16 +247,36 @@ local function is_ability_on_cooldown(player_unit)
 
 	local max_cd = ability_extension:max_ability_cooldown(COMBAT_ABILITY_TYPE) or 0
 	local rem_cd = ability_extension:remaining_ability_cooldown(COMBAT_ABILITY_TYPE) or 0
+	local cooldown_progress = 1
 
-	if max_cd > 0 and rem_cd > 0 then
-		return true
+	if max_cd > 0 then
+		cooldown_progress = 1 - math.min(1, math.max(0, rem_cd / max_cd))
+
+		if cooldown_progress == 0 then
+			cooldown_progress = 1
+		end
 	end
 
-	if CombatAbilityBar.is_ability_effect_active and CombatAbilityBar.is_ability_effect_active(player_unit, COMBAT_ABILITY_TYPE) then
-		return true
+	local in_process_of_going_on_cooldown = false
+	local force_on_cooldown = false
+
+	if ability_extension.ability_pause_cooldown_settings then
+		local pause_settings = ability_extension:ability_pause_cooldown_settings(COMBAT_ABILITY_TYPE)
+
+		if type(pause_settings) == "table" then
+			local buff_extension = ScriptUnit.has_extension(player_unit, "buff_system")
+
+			if _duration_buff_is_active(buff_extension, pause_settings.duration_tracking_buff) then
+				in_process_of_going_on_cooldown = true
+			end
+
+			if _duration_buff_is_active(buff_extension, pause_settings.on_cooldown_tracking_buff) then
+				force_on_cooldown = true
+			end
+		end
 	end
 
-	return false
+	return (cooldown_progress ~= 1 and not in_process_of_going_on_cooldown) or force_on_cooldown
 end
 
 function M.init(self, definitions)
