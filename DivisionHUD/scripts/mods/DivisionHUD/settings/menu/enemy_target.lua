@@ -56,7 +56,7 @@ return {
 			title = "enemy_target_hold_time",
 			tooltip_text = "enemy_target_hold_time_description",
 			default_value = d("enemy_target_hold_time", 5),
-			range = { 1, 15 },
+			range = { 1, 60 },
 			decimals_number = 0,
 		},
 		{
