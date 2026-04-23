@@ -900,9 +900,9 @@ return {
 		["zh-cn"] = "显示时间",
 	},
 	enemy_target_hold_time_description = {
-		en = "How many seconds the block remains visible after the trigger event.",
-		ru = "Сколько секунд блок остается видимым после события-триггера.",
-		["zh-cn"] = "触发后模块保持显示的秒数。",
+		en = "How many seconds the block remains visible after a hit trigger (does not affect hover).",
+		ru = "Сколько секунд блок остается видимым после триггера попадания (не влияет на наведение).",
+		["zh-cn"] = "命中触发后模块保持显示的秒数（不影响瞄准触发）。",
 	},
 	enemy_target_groups = {
 		en = string.rep("\194\160", 8) .. "Enemy groups",
