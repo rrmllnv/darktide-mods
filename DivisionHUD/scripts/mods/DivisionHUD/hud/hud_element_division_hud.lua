@@ -6,7 +6,6 @@ local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local Ammo = require("scripts/utilities/ammo")
 local PlayerCharacterConstants = require("scripts/settings/player_character/player_character_constants")
 local Text = require("scripts/utilities/ui/text")
-local WalletSettings = require("scripts/settings/wallet_settings")
 
 require("scripts/foundation/utilities/color")
 
@@ -25,6 +24,7 @@ local DIVISION_STIMM_SLOT_TYPE_COLORS = {
 local Definitions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/main_hud_definitions")
 local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/data/slot_data")
 local DangerZoneWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/danger_zone")
+local ExpeditionSalvageWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/expedition_salvage")
 local StaminaDodgeWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/stamina_dodge")
 local ToughnessHealthWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/toughness_health")
 local CombatAbilityBar = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/combat_ability_bar")
@@ -908,62 +908,7 @@ HudElementDivisionHUD._update_ammo_big = function(self, player_unit, widget, opa
 end
 
 HudElementDivisionHUD._update_expedition_salvage = function(self, local_player, widget, opacity)
-	if not widget or not widget.content or not widget.style then
-		return
-	end
-
-	local game_mode_manager = Managers.state and Managers.state.game_mode
-	local game_mode = game_mode_manager and game_mode_manager:game_mode()
-	local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
-
-	if game_mode_name ~= "expedition" or not game_mode or not game_mode.expedition_currency then
-		widget.content.visible = false
-		widget.dirty = true
-
-		return
-	end
-
-	if not local_player or not local_player.is_human_controlled or not local_player:is_human_controlled() then
-		widget.content.visible = false
-		widget.dirty = true
-
-		return
-	end
-
-	local peer_id = local_player.peer_id and local_player:peer_id()
-	local amount = 0
-
-	if peer_id then
-		local ok, v = pcall(function()
-			return game_mode:expedition_currency(peer_id)
-		end)
-
-		if ok and type(v) == "number" then
-			amount = v
-		elseif ok and v ~= nil then
-			amount = tonumber(v) or 0
-		end
-	end
-
-	local salvage_settings = WalletSettings.expedition_salvage
-	local string_symbol = salvage_settings and salvage_settings.string_symbol or ""
-
-	widget.content.visible = true
-	widget.content.text = string.format("%s %s", Text.format_currency(math.floor(amount + 0.5)), string_symbol)
-
-	local text_color = widget.style.text and widget.style.text.text_color
-
-	if text_color then
-		local base = UIHudSettings.color_tint_main_1
-		local eff = opacity
-
-		text_color[1] = math.floor((base[1] or 255) * eff)
-		text_color[2] = base[2] or 255
-		text_color[3] = base[3] or 255
-		text_color[4] = base[4] or 255
-	end
-
-	widget.dirty = true
+	ExpeditionSalvageWidget.update(self, local_player, widget, opacity)
 end
 
 HudElementDivisionHUD._update_auspex_slot = function(self, player_unit, widgets, opacity)
@@ -1760,6 +1705,7 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	HudElementDivisionHUD.super.init(self, parent, draw_layer, start_scale, definitions)
 
 	DangerZoneWidget.init(self, Definitions)
+	ExpeditionSalvageWidget.init(self)
 	StaminaDodgeWidget.init(self, Definitions)
 	ToughnessHealthWidget.init(self, Definitions)
 	DivisionBuffs.init(self, Definitions)
@@ -2220,6 +2166,7 @@ HudElementDivisionHUD.destroy = function(self, ui_renderer)
 	self:_reset_dynamic_offset_state()
 
 	DangerZoneWidget.destroy(self)
+	ExpeditionSalvageWidget.destroy(self)
 	StaminaDodgeWidget.destroy(self, ui_renderer)
 	ToughnessHealthWidget.destroy(self, ui_renderer)
 	DivisionBuffs.destroy(self, ui_renderer)
