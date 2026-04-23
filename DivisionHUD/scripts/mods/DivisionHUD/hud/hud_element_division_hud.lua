@@ -938,7 +938,13 @@ HudElementDivisionHUD._update_enemy_target_scan = function(self, player_unit, dt
 	end
 
 	self._enemy_target_scan_timer = 0
-	self._enemy_target_data = EnemyTargetRuntime.scan(player_unit)
+	local enemy_target_runtime = mod.enemy_target_runtime or EnemyTargetRuntime
+
+	if enemy_target_runtime and type(enemy_target_runtime.scan) == "function" then
+		self._enemy_target_data = enemy_target_runtime.scan(player_unit)
+	else
+		self._enemy_target_data = {}
+	end
 end
 
 HudElementDivisionHUD._update_enemy_target_widget = function(self, widgets, opacity, dt)

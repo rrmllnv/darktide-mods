@@ -27,7 +27,7 @@ function M.build(params)
 	local health_info_y = top_y + name_height + sc(3)
 	local health_text_height = sc(15)
 	local debuff_value_font = sc(15)
-	local debuff_value_max_chars = 3
+	local debuff_value_max_chars = 5
 	local debuff_value_char_width_mul = 0.58
 	local debuff_icon_size = sc(18)
 	local debuff_row_height = sc(18)

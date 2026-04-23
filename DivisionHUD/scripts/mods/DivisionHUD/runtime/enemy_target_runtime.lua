@@ -1,11 +1,9 @@
 local mod = get_mod("DivisionHUD")
 
-if type(mod.enemy_target_runtime) == "table" then
-	return mod.enemy_target_runtime
-end
-
 local EnemyDebuffs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/enemy_debuffs")
 local BuffSettings = require("scripts/settings/buff/buff_settings")
+local AttackSettings = require("scripts/settings/damage/attack_settings")
+local HudUtils = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/util/hud_utils")
 
 if type(EnemyDebuffs) ~= "table" then
 	EnemyDebuffs = {}
@@ -14,6 +12,7 @@ end
 local DEBUFF_STYLES = EnemyDebuffs.DEBUFF_STYLES or {}
 local DEBUFFS = EnemyDebuffs.DEBUFFS or {}
 local stat_buff_types = BuffSettings.stat_buff_types
+local attack_results = AttackSettings.attack_results
 local armor_type_string_lookup = {
 	armored = "loc_weapon_stats_display_armored",
 	berserker = "loc_weapon_stats_display_berzerker",
@@ -23,54 +22,31 @@ local armor_type_string_lookup = {
 	unarmored = "loc_weapon_stats_display_unarmored",
 }
 
-local TRIGGER_HOLD_SECONDS = 5
-local TRIGGER_PRIORITY = {
-	"hover",
-	"hit",
-}
-
 local BLACKLIST_BREEDS = {
 	sand_vortex = true,
 	nurgle_flies = true,
 	attack_valkyrie = true,
 }
 
-local state = mod.enemy_target_runtime_state or {
-	reasons = {},
+local DIRECT_ATTACK_TYPES = {
+	melee = true,
+	ranged = true,
+	explosion = true,
+	push = true,
+	companion_dog = true,
 }
 
-mod.enemy_target_runtime_state = state
+mod.enemy_target_runtime_broadphase_results = nil
+mod.enemy_target_runtime_state = nil
+mod.enemy_target_runtime_health_samples = nil
+
+local hit_state = {
+	unit = nil,
+	expires_at = 0,
+}
 
 local function _is_alive_unit(unit)
 	return unit and HEALTH_ALIVE[unit] and Unit.alive(unit)
-end
-
-local function _gameplay_time()
-	local hud_utils = mod.hud_utils or {}
-
-	if type(hud_utils.safe_gameplay_time) == "function" then
-		local t = hud_utils.safe_gameplay_time()
-
-		if type(t) == "number" and t == t then
-			return t
-		end
-	end
-
-	local time_manager = Managers and Managers.time
-
-	if not time_manager or type(time_manager.time) ~= "function" then
-		return nil
-	end
-
-	local ok_time, t = pcall(function()
-		return time_manager:time("gameplay")
-	end)
-
-	if ok_time and type(t) == "number" and t == t then
-		return t
-	end
-
-	return nil
 end
 
 local function _setting_enabled(key, fallback)
@@ -97,6 +73,16 @@ local function _setting_number(key, fallback)
 	end
 
 	return fallback
+end
+
+local function _now()
+	local t = HudUtils.safe_gameplay_time()
+
+	if type(t) == "number" then
+		return t
+	end
+
+	return 0
 end
 
 local function _get_breed_tags(unit)
@@ -146,6 +132,12 @@ local function _is_allowed_breed_type(breed_type)
 	end
 
 	return false
+end
+
+local function _resolve_side_system()
+	local extension_manager = Managers.state and Managers.state.extension
+
+	return extension_manager and extension_manager:system("side_system") or nil
 end
 
 local function _is_enemy_side(player_unit, unit, side_system)
@@ -198,6 +190,129 @@ local function _is_allowed_enemy_target(player_unit, unit, side_system)
 	local breed_type = _find_breed_category(unit)
 
 	return _is_allowed_breed_type(breed_type)
+end
+
+local function _smart_targeting_aim_unit(player_unit, side_system)
+	if not _is_alive_unit(player_unit) then
+		return nil
+	end
+
+	local smart_targeting_extension = ScriptUnit.has_extension(player_unit, "smart_targeting_system")
+
+	if not smart_targeting_extension then
+		return nil
+	end
+
+	local targeting_data = smart_targeting_extension:targeting_data()
+	local aim_unit = targeting_data and targeting_data.unit
+
+	if _is_allowed_enemy_target(player_unit, aim_unit, side_system) then
+		return aim_unit
+	end
+
+	return nil
+end
+
+local function _local_player_unit()
+	local player_manager = Managers.player
+
+	if not player_manager then
+		return nil
+	end
+
+	local player = player_manager:local_player(1)
+
+	return player and player.player_unit or nil
+end
+
+local function _is_local_player_attacker(attacking_unit)
+	if not attacking_unit then
+		return false
+	end
+
+	local player_unit_spawn_manager = Managers.state and Managers.state.player_unit_spawn
+
+	if not player_unit_spawn_manager then
+		return false
+	end
+
+	local attacking_player = player_unit_spawn_manager:owner(attacking_unit)
+	local local_player = Managers.player and Managers.player:local_player(1)
+
+	if not attacking_player or not local_player then
+		return false
+	end
+
+	return attacking_player == local_player
+end
+
+local function _get_hit_target(player_unit, side_system)
+	if not hit_state.unit then
+		return nil
+	end
+
+	if not _is_allowed_enemy_target(player_unit, hit_state.unit, side_system) then
+		hit_state.unit = nil
+		hit_state.expires_at = 0
+
+		return nil
+	end
+
+	if _now() > (hit_state.expires_at or 0) then
+		hit_state.unit = nil
+		hit_state.expires_at = 0
+
+		return nil
+	end
+
+	return hit_state.unit
+end
+
+local function _on_attack_result(_, damage_profile, attacked_unit, attacking_unit, attack_direction, hit_world_position, hit_weakspot, damage, attack_result, attack_type, damage_efficiency, is_critical_strike)
+	if not _setting_enabled("enemy_target_enabled", true) then
+		return
+	end
+
+	if not _setting_enabled("enemy_target_show_on_hit", true) then
+		return
+	end
+
+	if type(damage) ~= "number" or damage <= 0 then
+		return
+	end
+
+	if attack_result == attack_results.friendly_fire then
+		return
+	end
+
+	if not DIRECT_ATTACK_TYPES[attack_type] then
+		return
+	end
+
+	if not _is_local_player_attacker(attacking_unit) then
+		return
+	end
+
+	local player_unit = _local_player_unit()
+	local side_system = _resolve_side_system()
+
+	if not player_unit or not side_system then
+		return
+	end
+
+	if not _is_allowed_enemy_target(player_unit, attacked_unit, side_system) then
+		return
+	end
+
+	local hold_time = _setting_number("enemy_target_hold_time", 5)
+
+	hit_state.unit = attacked_unit
+	hit_state.expires_at = _now() + hold_time
+end
+
+if not mod.enemy_target_runtime_hooked then
+	mod:hook_safe("AttackReportManager", "add_attack_result", _on_attack_result)
+	mod.enemy_target_runtime_hooked = true
 end
 
 local function _collect_debuffs(unit)
@@ -434,81 +549,10 @@ local function _build_result(unit)
 	}
 end
 
-local function _set_trigger(reason, unit, now)
-	if not reason or not unit or type(now) ~= "number" then
-		return
-	end
-
-	local hold_seconds = math.max(1, _setting_number("enemy_target_hold_time", TRIGGER_HOLD_SECONDS))
-
-	state.reasons[reason] = {
-		unit = unit,
-		expires_at = now + hold_seconds,
-	}
-end
-
-local function _clear_trigger(reason)
-	state.reasons[reason] = nil
-end
-
-local function _hover_target_unit(player_unit, side_system)
-	local interactor_extension = ScriptUnit.has_extension(player_unit, "interactor_system")
-	local interactor_target_unit = interactor_extension and interactor_extension:target_unit()
-	local interactor_smart_tag_extension = interactor_target_unit and ScriptUnit.has_extension(interactor_target_unit, "smart_tag_system")
-
-	if interactor_smart_tag_extension and _is_allowed_enemy_target(player_unit, interactor_target_unit, side_system) then
-		return interactor_target_unit
-	end
-
-	local smart_targeting_extension = ScriptUnit.has_extension(player_unit, "smart_targeting_system")
-
-	if smart_targeting_extension and smart_targeting_extension.force_update_smart_tag_targets then
-		smart_targeting_extension:force_update_smart_tag_targets()
-	end
-
-	local targeting_data = smart_targeting_extension and smart_targeting_extension:smart_tag_targeting_data()
-	local target_unit = targeting_data and targeting_data.unit
-
-	if _is_allowed_enemy_target(player_unit, target_unit, side_system) then
-		return target_unit
-	end
-
-	return nil
-end
-
-local function _cleanup_reasons(player_unit, side_system, now)
-	local reasons = state.reasons
-
-	for reason, entry in pairs(reasons) do
-		local expires_at = entry and entry.expires_at
-		local unit = entry and entry.unit
-		local expired = type(expires_at) ~= "number" or type(now) ~= "number" or expires_at <= now
-
-		if expired or not _is_allowed_enemy_target(player_unit, unit, side_system) then
-			reasons[reason] = nil
-		end
-	end
-end
-
-local function _pick_trigger_unit(player_unit, side_system)
-	local reasons = state.reasons
-
-	for i = 1, #TRIGGER_PRIORITY do
-		local reason = TRIGGER_PRIORITY[i]
-		local entry = reasons[reason]
-		local unit = entry and entry.unit
-
-		if _is_allowed_enemy_target(player_unit, unit, side_system) then
-			return unit
-		end
-	end
-
-	return nil
-end
-
 local function scan(player_unit)
 	if not _setting_enabled("enemy_target_enabled", true) then
-		state.reasons = {}
+		hit_state.unit = nil
+		hit_state.expires_at = 0
 
 		return {
 			active = false,
@@ -516,13 +560,15 @@ local function scan(player_unit)
 	end
 
 	if not _is_alive_unit(player_unit) then
+		hit_state.unit = nil
+		hit_state.expires_at = 0
+
 		return {
 			active = false,
 		}
 	end
 
-	local extension_manager = Managers.state and Managers.state.extension
-	local side_system = extension_manager and extension_manager:system("side_system")
+	local side_system = _resolve_side_system()
 
 	if not side_system then
 		return {
@@ -530,64 +576,28 @@ local function scan(player_unit)
 		}
 	end
 
-	local now = _gameplay_time()
-	local hover_enabled = _setting_enabled("enemy_target_show_on_hover", true)
-	local hover_unit = hover_enabled and _hover_target_unit(player_unit, side_system) or nil
+	local target_unit = nil
 
-	if hover_unit and type(now) == "number" then
-		_set_trigger("hover", hover_unit, now)
-	elseif not hover_enabled then
-		_clear_trigger("hover")
+	if _setting_enabled("enemy_target_show_on_hover", false) then
+		target_unit = _smart_targeting_aim_unit(player_unit, side_system)
 	end
 
-	if type(now) == "number" then
-		_cleanup_reasons(player_unit, side_system, now)
+	if not target_unit and _setting_enabled("enemy_target_show_on_hit", true) then
+		target_unit = _get_hit_target(player_unit, side_system)
 	end
 
-	local selected_unit = _pick_trigger_unit(player_unit, side_system)
-
-	if not selected_unit then
+	if not target_unit then
 		return {
 			active = false,
 		}
 	end
 
-	return _build_result(selected_unit)
+	return _build_result(target_unit)
 end
 
 local EnemyTargetRuntime = {
 	scan = scan,
 }
-
-if mod.enemy_target_runtime_hooks_registered ~= true then
-	mod.enemy_target_runtime_hooks_registered = true
-
-	local function on_set_last_damaging_unit(self, last_damaging_unit)
-		if not _setting_enabled("enemy_target_enabled", true) or not _setting_enabled("enemy_target_show_on_hit", true) then
-			return
-		end
-
-		local local_player = Managers.player and Managers.player:local_player(1)
-		local player_unit = local_player and local_player.player_unit
-		local attacked_unit = self and self._unit
-		local now = _gameplay_time()
-		local extension_manager = Managers.state and Managers.state.extension
-		local side_system = extension_manager and extension_manager:system("side_system")
-
-		if not player_unit or not attacked_unit or not side_system or last_damaging_unit ~= player_unit or type(now) ~= "number" then
-			return
-		end
-
-		if not _is_allowed_enemy_target(player_unit, attacked_unit, side_system) then
-			return
-		end
-
-		_set_trigger("hit", attacked_unit, now)
-	end
-
-	mod:hook_safe("HealthExtension", "set_last_damaging_unit", on_set_last_damaging_unit)
-	mod:hook_safe("HuskHealthExtension", "set_last_damaging_unit", on_set_last_damaging_unit)
-end
 
 mod.enemy_target_runtime = EnemyTargetRuntime
 
