@@ -246,7 +246,7 @@ function M.init(self, definitions)
 	self._ability_icon_slide_px = math.max(0, size - overlap)
 	self._ability_icon_enter_dur = (definitions and definitions.ABILITY_ICON_ENTER_DUR) or 0.2
 	self._ability_icon_exit_dur = (definitions and definitions.ABILITY_ICON_EXIT_DUR) or 0.16
-	self._ability_icon_hidden_x = -self._ability_icon_slide_px
+	self._ability_icon_hidden_x = self._ability_icon_slide_px
 
 	reset_anim(self)
 

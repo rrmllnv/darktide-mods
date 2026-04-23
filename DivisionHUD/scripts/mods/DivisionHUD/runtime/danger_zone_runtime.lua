@@ -482,9 +482,19 @@ local function danger_zone_height_delta(a, b)
 	return math.abs((a and a.z or 0) - (b and b.z or 0))
 end
 
-local DANGER_ZONE_LOS_FILTER = "filter_minion_line_of_sight_check"
+local DANGER_ZONE_LOS_FILTER = "filter_player_character_shooting_raycast"
 local DANGER_ZONE_LOS_END_MARGIN = 0.5
 local DANGER_ZONE_LOS_HIT_ACTOR_INDEX = 4
+local DANGER_ZONE_LOS_EYE_OFFSET = 1.65
+local DANGER_ZONE_LOS_TARGET_OFFSETS = {
+	{ 0, 0, 0 },
+	{ 0, 0, 0.4 },
+	{ 0, 0, -0.4 },
+	{ 0.4, 0, 0 },
+	{ -0.4, 0, 0 },
+	{ 0, 0.4, 0 },
+	{ 0, -0.4, 0 },
+}
 
 local function danger_zone_get_physics_world(player_unit)
 	local interaction_extension = ScriptUnit.has_extension(player_unit, "interaction_system")
@@ -511,15 +521,7 @@ local function danger_zone_get_physics_world(player_unit)
 	return nil
 end
 
-local function danger_zone_has_line_of_sight(physics_world, from_pos, to_pos, source_unit)
-	if not physics_world or not from_pos or not to_pos then
-		return true
-	end
-
-	local from_z = from_pos.z + 0.8
-	local from = Vector3(from_pos.x, from_pos.y, from_z)
-	local target_z = math.max(to_pos.z + 0.5, from_z)
-	local target = Vector3(to_pos.x, to_pos.y, target_z)
+local function danger_zone_ray_clear(physics_world, from, target, source_unit)
 	local full_delta = target - from
 	local full_distance = Vector3.length(full_delta)
 
@@ -541,7 +543,11 @@ local function danger_zone_has_line_of_sight(physics_world, from_pos, to_pos, so
 		DANGER_ZONE_LOS_FILTER
 	)
 
-	if not ok or not hits then
+	if not ok then
+		return true
+	end
+
+	if not hits then
 		return true
 	end
 
@@ -556,6 +562,25 @@ local function danger_zone_has_line_of_sight(physics_world, from_pos, to_pos, so
 	end
 
 	return true
+end
+
+local function danger_zone_has_line_of_sight(physics_world, from_pos, to_pos, source_unit)
+	if not physics_world or not from_pos or not to_pos then
+		return true
+	end
+
+	local from = Vector3(from_pos.x, from_pos.y, from_pos.z + DANGER_ZONE_LOS_EYE_OFFSET)
+
+	for i = 1, #DANGER_ZONE_LOS_TARGET_OFFSETS do
+		local offset = DANGER_ZONE_LOS_TARGET_OFFSETS[i]
+		local target = Vector3(to_pos.x + offset[1], to_pos.y + offset[2], to_pos.z + offset[3])
+
+		if danger_zone_ray_clear(physics_world, from, target, source_unit) then
+			return true
+		end
+	end
+
+	return false
 end
 
 local function scan(player_unit, warning_margin, settings)
