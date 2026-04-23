@@ -16,7 +16,7 @@ local unpack_fn = table.unpack or unpack
 local language_id = Application.user_setting("language_id")
 local DANGER_ZONE_MAX_HEIGHT_DELTA = 4
 local DANGER_ZONE_MAX_HEIGHT_UP_LOS = 6
-local DANGER_ZONE_MAX_HEIGHT_DOWN_LOS = 2
+local DANGER_ZONE_MAX_HEIGHT_DOWN_LOS = 1
 
 if type(Localization) ~= "table" then
 	Localization = {}
@@ -482,7 +482,7 @@ local function danger_zone_height_delta(a, b)
 	return math.abs((a and a.z or 0) - (b and b.z or 0))
 end
 
-local DANGER_ZONE_LOS_FILTER = "filter_player_character_shooting_raycast"
+local DANGER_ZONE_LOS_FILTER = "filter_interactable_line_of_sight_marker_check"
 local DANGER_ZONE_LOS_END_MARGIN = 0.5
 local DANGER_ZONE_LOS_HIT_ACTOR_INDEX = 4
 local DANGER_ZONE_LOS_EYE_OFFSET = 1.65
