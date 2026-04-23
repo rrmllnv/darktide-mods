@@ -20,21 +20,23 @@ function M.build(params)
 	local padding_x = sc(6)
 	local top_y = sc(3)
 	local name_height = sc(17)
-	local top_row_height = sc(14)
-	local health_bar_height = sc(8)
-	local health_bar_y = top_y + top_row_height + sc(2)
-	local health_info_y = health_bar_y + health_bar_height + sc(3)
+	local health_bar_width = sc(8)
+	local health_bar_gap = sc(4)
+	local content_right_inset = padding_x + health_bar_width + health_bar_gap
+	local content_width = block_width - padding_x - content_right_inset
+	local health_info_y = top_y + name_height + sc(3)
 	local health_text_height = sc(15)
 	local debuff_value_font = sc(15)
-	local debuff_value_max_chars = 5
+	local debuff_value_max_chars = 3
 	local debuff_value_char_width_mul = 0.58
 	local debuff_icon_size = sc(18)
 	local debuff_row_height = sc(18)
-	local debuff_start_y = health_info_y + health_text_height + sc(3)
+	local debuff_start_y = health_info_y + health_text_height + sc(4)
 	local block_height = math.max(main_row_height, debuff_start_y + debuff_row_height * MAX_DEBUFF_ROWS + sc(5))
-	local value_width = math.max(sc(30), math.ceil(debuff_value_font * debuff_value_max_chars * debuff_value_char_width_mul))
+	local value_width = math.max(sc(24), math.ceil(debuff_value_font * debuff_value_max_chars * debuff_value_char_width_mul))
 	local debuff_gap = 0
-	local icon_x = block_width - padding_x - value_width - debuff_gap - debuff_icon_size
+	local bar_x = block_width - padding_x - health_bar_width
+	local icon_x = bar_x - health_bar_gap - value_width - debuff_gap - debuff_icon_size
 	local value_x = icon_x + debuff_icon_size + debuff_gap
 	local name_width = math.max(sc(104), icon_x - padding_x - debuff_gap)
 
@@ -47,8 +49,8 @@ function M.build(params)
 	title_style.text_horizontal_alignment = "right"
 	title_style.text_vertical_alignment = "top"
 	title_style.text_color = table.clone(UIHudSettings.color_tint_main_1)
-	title_style.size = { block_width - padding_x * 2, name_height }
-	title_style.offset = { -padding_x, top_y, 4 }
+	title_style.size = { content_width, name_height }
+	title_style.offset = { -content_right_inset, top_y, 4 }
 	title_style.truncated = true
 	title_style.max_lines = 1
 
@@ -61,34 +63,12 @@ function M.build(params)
 	health_text_style.text_horizontal_alignment = "right"
 	health_text_style.text_vertical_alignment = "top"
 	health_text_style.text_color = table.clone(UIHudSettings.color_tint_main_1)
-	health_text_style.size = { block_width - padding_x * 2, health_text_height }
-	health_text_style.offset = { -padding_x, health_info_y, 4 }
+	health_text_style.size = { content_width, health_text_height }
+	health_text_style.offset = { -content_right_inset, health_info_y, 4 }
 	health_text_style.truncated = true
 	health_text_style.max_lines = 1
 
 	local passes = {
-		{
-			pass_type = "rect",
-			style_id = "background",
-			style = {
-				horizontal_alignment = "center",
-				vertical_alignment = "top",
-				offset = { 0, 0, 1 },
-				size = { block_width, block_height },
-				color = { 125, UIHudSettings.color_tint_0[2], UIHudSettings.color_tint_0[3], UIHudSettings.color_tint_0[4] },
-			},
-		},
-		{
-			pass_type = "rect",
-			style_id = "accent",
-			style = {
-				horizontal_alignment = "center",
-				vertical_alignment = "top",
-				offset = { 0, 1, 2 },
-				size = { block_width, 2 },
-				color = table.clone(UIHudSettings.color_tint_alert_2),
-			},
-		},
 		{
 			pass_type = "text",
 			value_id = "name_text",
@@ -102,8 +82,8 @@ function M.build(params)
 			style = {
 				horizontal_alignment = "left",
 				vertical_alignment = "top",
-				offset = { padding_x, health_bar_y, 3 },
-				size = { block_width - padding_x * 2, health_bar_height },
+				offset = { bar_x, 0, 3 },
+				size = { health_bar_width, block_height },
 				color = { 140, UIHudSettings.color_tint_0[2], UIHudSettings.color_tint_0[3], UIHudSettings.color_tint_0[4] },
 			},
 		},
@@ -113,9 +93,10 @@ function M.build(params)
 			style = {
 				horizontal_alignment = "left",
 				vertical_alignment = "top",
-				offset = { padding_x, health_bar_y, 4 },
-				size = { block_width - padding_x * 2, health_bar_height },
-				default_size = { block_width - padding_x * 2, health_bar_height },
+				offset = { bar_x, 0, 4 },
+				default_offset = { bar_x, 0, 4 },
+				size = { health_bar_width, block_height },
+				default_size = { health_bar_width, block_height },
 				color = table.clone(UIHudSettings.color_tint_alert_2),
 			},
 		},

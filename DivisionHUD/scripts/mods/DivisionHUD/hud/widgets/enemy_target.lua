@@ -20,10 +20,17 @@ local function reset_widget(widget, max_debuff_slots)
 
 	local health_fill_style = widget.style.health_bar_fill
 	local default_size = health_fill_style and health_fill_style.default_size
+	local default_offset = health_fill_style and health_fill_style.default_offset
 
 	if health_fill_style and default_size then
-		health_fill_style.size[1] = 0
-		health_fill_style.size[2] = default_size[2]
+		health_fill_style.size[1] = default_size[1]
+		health_fill_style.size[2] = 0
+
+		if default_offset then
+			health_fill_style.offset[1] = default_offset[1]
+			health_fill_style.offset[2] = default_offset[2] + default_size[2]
+			health_fill_style.offset[3] = default_offset[3]
+		end
 	end
 
 	for i = 1, max_debuff_slots do
@@ -122,11 +129,20 @@ function M.update(self, widget, opacity, dt)
 
 		local health_fill_style = widget.style.health_bar_fill
 		local default_size = health_fill_style and health_fill_style.default_size
+		local default_offset = health_fill_style and health_fill_style.default_offset
 		local health_fraction = math.max(0, math.min(1, data.health_fraction or 0))
 
 		if health_fill_style and default_size then
-			health_fill_style.size[1] = math.floor(default_size[1] * health_fraction + 0.5)
-			health_fill_style.size[2] = default_size[2]
+			local fill_height = math.floor(default_size[2] * health_fraction + 0.5)
+
+			health_fill_style.size[1] = default_size[1]
+			health_fill_style.size[2] = fill_height
+
+			if default_offset then
+				health_fill_style.offset[1] = default_offset[1]
+				health_fill_style.offset[2] = default_offset[2] + (default_size[2] - fill_height)
+				health_fill_style.offset[3] = default_offset[3]
+			end
 		end
 
 		local debuffs = data.debuffs or {}
