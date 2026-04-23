@@ -1,0 +1,203 @@
+return {
+	DEBUFF_STYLES = {
+		generic = {
+			icon = "content/ui/materials/icons/weapons/actions/linesman",
+			colour = { 255, 150, 150, 150 },
+			label = "Generic",
+		},
+		bleed = {
+			icon = "content/ui/materials/icons/presets/preset_13",
+			colour = { 255, 255, 0, 0 },
+			label = "Bleed",
+		},
+		fire = {
+			icon = "content/ui/materials/icons/presets/preset_20",
+			colour = { 255, 250, 150, 20 },
+			label = "Fire",
+		},
+		warp = {
+			icon = "content/ui/materials/icons/circumstances/havoc/havoc_mutator_ember",
+			colour = { 255, 120, 200, 255 },
+			label = "Warp",
+		},
+		shock = {
+			icon = "content/ui/materials/icons/presets/preset_11",
+			colour = { 255, 255, 255, 0 },
+			label = "Shock",
+		},
+		toxin = {
+			icon = "content/ui/materials/icons/circumstances/havoc/havoc_mutator_nurgle",
+			colour = { 255, 50, 255, 20 },
+			label = "Toxin",
+		},
+		rending = {
+			icon = "content/ui/materials/icons/circumstances/havoc/havoc_mutator_rotten_armor",
+			colour = { 255, 172, 115, 255 },
+			label = "Rending",
+		},
+		arbites = {
+			icon = "content/ui/materials/icons/circumstances/havoc/havoc_mutator_rampaging_enemies",
+			colour = { 255, 0, 144, 255 },
+			label = "Arbites",
+		},
+		rage = {
+			icon = "content/ui/materials/icons/presets/preset_18",
+			colour = { 255, 255, 117, 255 },
+			label = "Rage",
+		},
+		stagger = {
+			icon = "content/ui/materials/icons/throwables/hud/small/party_non_grenade",
+			colour = { 255, 100, 200, 255 },
+			label = "Stagger",
+		},
+		blind = {
+			icon = "content/ui/materials/icons/circumstances/ventilation_purge_01",
+			colour = { 255, 200, 200, 200 },
+			label = "Blind",
+		},
+		damage_taken = {
+			icon = "content/ui/materials/icons/player_states/dead",
+			colour = { 255, 255, 185, 100 },
+			label = "Damage",
+		},
+		melee_damage_taken = {
+			icon = "content/ui/materials/icons/weapons/actions/melee",
+			colour = { 255, 255, 242, 99 },
+			label = "Melee Damage",
+		},
+		stagger_damage = {
+			icon = "content/ui/materials/icons/weapons/actions/melee_hand",
+			colour = { 255, 124, 227, 187 },
+			label = "Stagger Damage",
+		},
+		bleed_damage = {
+			icon = "content/ui/materials/icons/presets/preset_13",
+			colour = { 255, 255, 40, 40 },
+			label = "Bleed Damage",
+		},
+		toxin_damage = {
+			icon = "content/ui/materials/icons/player_states/dead",
+			colour = { 255, 80, 255, 80 },
+			label = "Toxin Damage",
+		},
+	},
+	DEBUFFS = {
+		bleed = { name = "bleed", type = "dot", group = "bleed" },
+		flamer_assault = { name = "flamer_assault", type = "dot", group = "fire" },
+		flame_grenade_liquid_area = { name = "flame_grenade_liquid_area", type = "dot", group = "fire" },
+		warp_fire = { name = "warp_fire", type = "dot", group = "warp" },
+		shock_effect = { name = "shock_effect", type = "dot", group = "shock" },
+		neurotoxin_interval_buff = { name = "neurotoxin_interval_buff", type = "dot", group = "toxin" },
+		neurotoxin_interval_buff2 = { name = "neurotoxin_interval_buff2", type = "dot", group = "toxin" },
+		neurotoxin_interval_buff3 = { name = "neurotoxin_interval_buff3", type = "dot", group = "toxin" },
+		exploding_toxin_interval_buff = { name = "exploding_toxin_interval_buff", type = "dot", group = "toxin" },
+		rending_debuff = { name = "rending_debuff", type = "utility", group = "rending" },
+		rending_debuff_medium = { name = "rending_debuff_medium", type = "utility", group = "rending" },
+		rending_burn_debuff = { name = "rending_burn_debuff", type = "utility", group = "rending" },
+		saw_rending_debuff = { name = "saw_rending_debuff", type = "utility", group = "rending" },
+		increase_impact_received_while_staggered = {
+			name = "increase_impact_received_while_staggered",
+			type = "utility",
+			group = "rending",
+		},
+		increase_damage_received_while_staggered = {
+			name = "increase_damage_received_while_staggered",
+			type = "utility",
+			group = "stagger_damage",
+		},
+		power_maul_sticky_tick = { name = "power_maul_sticky_tick", type = "utility", group = "generic" },
+		increase_damage_taken = { name = "increase_damage_taken", type = "utility", group = "damage_taken" },
+		psyker_force_staff_quick_attack_debuff = {
+			name = "psyker_force_staff_quick_attack_debuff",
+			type = "utility",
+			group = "warp",
+		},
+		psyker_heavy_swings_shock = { name = "psyker_heavy_swings_shock", type = "utility", group = "shock" },
+		psyker_heavy_swings_shock_improved = {
+			name = "psyker_heavy_swings_shock_improved",
+			type = "utility",
+			group = "shock",
+		},
+		psyker_protectorate_spread_chain_lightning_interval = {
+			name = "psyker_protectorate_spread_chain_lightning_interval",
+			type = "utility",
+			group = "shock",
+		},
+		psyker_protectorate_spread_chain_lightning_interval_improved = {
+			name = "psyker_protectorate_spread_chain_lightning_interval_improved",
+			type = "utility",
+			group = "shock",
+		},
+		psyker_protectorate_spread_charged_chain_lightning_interval = {
+			name = "psyker_protectorate_spread_charged_chain_lightning_interval",
+			type = "utility",
+			group = "shock",
+		},
+		psyker_protectorate_spread_charged_chain_lightning_interval_improved = {
+			name = "psyker_protectorate_spread_charged_chain_lightning_interval_improved",
+			type = "utility",
+			group = "shock",
+		},
+		psyker_discharge_damage_debuff = {
+			name = "psyker_discharge_damage_debuff",
+			type = "utility",
+			group = "damage_taken",
+		},
+		ogryn_recieve_damage_taken_increase_debuff = {
+			name = "ogryn_recieve_damage_taken_increase_debuff",
+			type = "utility",
+			group = "damage_taken",
+		},
+		ogryn_taunt_increased_damage_taken_buff = {
+			name = "ogryn_taunt_increased_damage_taken_buff",
+			type = "utility",
+			group = "damage_taken",
+		},
+		ogryn_staggering_damage_taken_increase = {
+			name = "ogryn_staggering_damage_taken_increase",
+			type = "utility",
+			group = "melee_damage_taken",
+		},
+		veteran_improved_tag_debuff = {
+			name = "veteran_improved_tag_debuff",
+			type = "utility",
+			group = "damage_taken",
+		},
+		zealot_bled_enemies_take_more_damage_effect = {
+			name = "zealot_bled_enemies_take_more_damage_effect",
+			type = "utility",
+			group = "bleed_damage",
+		},
+		adamant_drone_enemy_debuff = { name = "adamant_drone_enemy_debuff", type = "utility", group = "arbites" },
+		adamant_drone_talent_debuff = { name = "adamant_drone_talent_debuff", type = "utility", group = "arbites" },
+		adamant_melee_weakspot_hits_count_as_stagger_debuff = {
+			name = "adamant_melee_weakspot_hits_count_as_stagger_debuff",
+			type = "utility",
+			group = "rending",
+		},
+		adamant_staggered_enemies_deal_less_damage_debuff = {
+			name = "adamant_staggered_enemies_deal_less_damage_debuff",
+			type = "utility",
+			group = "rending",
+		},
+		adamant_staggering_increases_damage_taken = {
+			name = "adamant_staggering_increases_damage_taken",
+			type = "utility",
+			group = "stagger_damage",
+		},
+		broker_punk_rage_improved_shout_debuff = {
+			name = "broker_punk_rage_improved_shout_debuff",
+			type = "utility",
+			group = "rage",
+		},
+		shock_grenade_interval = { name = "shock_grenade_interval", type = "utility", group = "stagger" },
+		in_smoke_fog = { name = "in_smoke_fog", type = "utility", group = "blind" },
+		toxin_damage_debuff = { name = "toxin_damage_debuff", type = "utility", group = "toxin" },
+		toxin_damage_debuff_monster = { name = "toxin_damage_debuff_monster", type = "utility", group = "toxin" },
+		broker_passive_toxin_infected_enemies_take_increased_damage_debuff = {
+			name = "broker_passive_toxin_infected_enemies_take_increased_damage_debuff",
+			type = "utility",
+			group = "toxin_damage",
+		},
+	},
+}

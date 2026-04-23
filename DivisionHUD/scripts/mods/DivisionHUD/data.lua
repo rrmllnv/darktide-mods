@@ -8,6 +8,7 @@ local DynamicMenu = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings
 local VanillaHudMenu = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/menu/vanilla_hud")
 local AlertsMenu = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/menu/alerts")
 local ProximityMenu = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/menu/proximity")
+local EnemyTargetMenu = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/menu/enemy_target")
 local IntegrationsMenu = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/menu/integrations")
 local SystemMenu = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/settings/menu/system")
 
@@ -24,6 +25,7 @@ return {
 			DangerZoneMenu,
 			AlertsMenu,
 			ProximityMenu,
+			EnemyTargetMenu,
 			IntegrationsMenu,
 			SystemMenu,
 		},

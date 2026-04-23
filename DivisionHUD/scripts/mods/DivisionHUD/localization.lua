@@ -849,6 +849,101 @@ return {
 		ru = "Если включено и мод RecolorStimms загружен и включён, цвета иконки карманного шприца берутся из него (get_stimm_argb_255). Иначе используются встроенные цвета шприцев.",
 		["zh-cn"] = "启用后，注射器图标颜色将从 RecolorStimms 读取；未启用时使用内置颜色。",
 	},
+	divisionhud_super_enemy_target = {
+		en = "\238\128\178 ENEMY TARGET",
+		ru = "\238\128\178 ВРАЖЕСКАЯ ЦЕЛЬ",
+		["zh-cn"] = "\238\128\178 敌方目标",
+	},
+	enemy_target_enabled = {
+		en = "Enable enemy target block",
+		ru = "Включить блок вражеской цели",
+		["zh-cn"] = "启用敌方目标模块",
+	},
+	enemy_target_enabled_description = {
+		en = "Shows or hides the enemy target block.",
+		ru = "Показывает или скрывает блок вражеской цели.",
+		["zh-cn"] = "显示或隐藏敌方目标模块。",
+	},
+	enemy_target_sources = {
+		en = string.rep("\194\160", 8) .. "Information sources",
+		ru = string.rep("\194\160", 8) .. "Источники информации",
+		["zh-cn"] = string.rep("\194\160", 8) .. "信息来源",
+	},
+	enemy_target_sources_description = {
+		en = "Choose which events are allowed to show the enemy target block.",
+		ru = "Выберите, какие события могут показывать блок цели.",
+		["zh-cn"] = "选择哪些事件可以显示敌方目标模块。",
+	},
+	enemy_target_show_on_hover = {
+		en = "Hover enemy",
+		ru = "Наведение на врага",
+		["zh-cn"] = "瞄准敌人",
+	},
+	enemy_target_show_on_hover_description = {
+		en = "Show the block when the current target under the crosshair is an allowed enemy.",
+		ru = "Показывать блок, когда текущая цель под прицелом является допустимым врагом.",
+		["zh-cn"] = "当准星下的当前目标是允许的敌人时显示模块。",
+	},
+	enemy_target_show_on_hit = {
+		en = "Hit enemy",
+		ru = "Попадание по врагу",
+		["zh-cn"] = "命中敌人",
+	},
+	enemy_target_show_on_hit_description = {
+		en = "Show the block when you damage an allowed enemy.",
+		ru = "Показывать блок, когда вы наносите урон допустимому врагу.",
+		["zh-cn"] = "当你对允许的敌人造成伤害时显示模块。",
+	},
+	enemy_target_hold_time = {
+		en = "Display time",
+		ru = "Время показа",
+		["zh-cn"] = "显示时间",
+	},
+	enemy_target_hold_time_description = {
+		en = "How many seconds the block remains visible after the trigger event.",
+		ru = "Сколько секунд блок остается видимым после события-триггера.",
+		["zh-cn"] = "触发后模块保持显示的秒数。",
+	},
+	enemy_target_groups = {
+		en = string.rep("\194\160", 8) .. "Enemy groups",
+		ru = string.rep("\194\160", 8) .. "Группы врагов",
+		["zh-cn"] = string.rep("\194\160", 8) .. "敌人分组",
+	},
+	enemy_target_groups_description = {
+		en = "Choose which enemy groups are allowed to appear in the block.",
+		ru = "Выберите, какие группы врагов можно показывать в блоке.",
+		["zh-cn"] = "选择允许在模块中显示的敌人分组。",
+	},
+	enemy_target_show_boss = {
+		en = "Boss",
+		ru = "Боссы",
+		["zh-cn"] = "Boss",
+	},
+	enemy_target_show_boss_description = {
+		en = "Allow bosses in the enemy target block.",
+		ru = "Разрешить показ боссов в блоке цели.",
+		["zh-cn"] = "允许在敌方目标模块中显示 Boss。",
+	},
+	enemy_target_show_elite = {
+		en = "Elite",
+		ru = "Элита",
+		["zh-cn"] = "精英",
+	},
+	enemy_target_show_elite_description = {
+		en = "Allow elites in the enemy target block.",
+		ru = "Разрешить показ элиты в блоке цели.",
+		["zh-cn"] = "允许在敌方目标模块中显示精英。",
+	},
+	enemy_target_show_special = {
+		en = "Special",
+		ru = "Специалисты",
+		["zh-cn"] = "专家",
+	},
+	enemy_target_show_special_description = {
+		en = "Allow specials in the enemy target block.",
+		ru = "Разрешить показ специалистов в блоке цели.",
+		["zh-cn"] = "允许在敌方目标模块中显示专家。",
+	},
 	divisionhud_super_system = {
 		en = "\238\128\169 SYSTEM SETTINGS",
 		ru = "\238\128\169 СИСТЕМНЫЕ НАСТРОЙКИ",
@@ -883,5 +978,55 @@ return {
 		en = "Division HUD: settings restored to defaults.",
 		ru = "Division HUD: настройки сброшены к значениям по умолчанию.",
 		["zh-cn"] = "全境封锁 HUD：已恢复默认设置。",
+	},
+	enemy_target_type_monster = {
+		en = "Miniboss",
+		ru = "Минибосс",
+		["zh-cn"] = "小BOSS",
+	},
+	enemy_target_type_captain = {
+		en = "Boss",
+		ru = "Босс",
+		["zh-cn"] = "BOSS",
+	},
+	enemy_target_type_disabler = {
+		en = "Disabler",
+		ru = "Контроль",
+		["zh-cn"] = "控制专家",
+	},
+	enemy_target_type_witch = {
+		en = "Daemonhost",
+		ru = "Демонхост",
+		["zh-cn"] = "恶魔宿主",
+	},
+	enemy_target_type_sniper = {
+		en = "Sniper",
+		ru = "Снайпер",
+		["zh-cn"] = "狙击手",
+	},
+	enemy_target_type_far = {
+		en = "Ranged elite",
+		ru = "Дальний элитник",
+		["zh-cn"] = "远程精英",
+	},
+	enemy_target_type_elite = {
+		en = "Melee elite",
+		ru = "Ближний элитник",
+		["zh-cn"] = "近战精英",
+	},
+	enemy_target_type_special = {
+		en = "Special",
+		ru = "Специалист",
+		["zh-cn"] = "输出专家",
+	},
+	enemy_target_type_horde = {
+		en = "Horde",
+		ru = "Орда",
+		["zh-cn"] = "尸潮怪",
+	},
+	enemy_target_type_enemy = {
+		en = "Enemy",
+		ru = "Враг",
+		["zh-cn"] = "敌人",
 	},
 }

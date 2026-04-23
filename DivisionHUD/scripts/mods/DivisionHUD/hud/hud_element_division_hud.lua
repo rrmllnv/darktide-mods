@@ -24,6 +24,7 @@ local DIVISION_STIMM_SLOT_TYPE_COLORS = {
 local Definitions = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/main_hud_definitions")
 local SlotData = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/data/slot_data")
 local DangerZoneWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/danger_zone")
+local EnemyTargetWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/enemy_target")
 local ExpeditionSalvageWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/expedition_salvage")
 local StaminaDodgeWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/stamina_dodge")
 local ToughnessHealthWidget = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/widgets/toughness_health")
@@ -57,6 +58,7 @@ local DynamicHudContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/co
 local GameFlowContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/game_flow")
 local AutoSwitchHud = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/auto_switch_hud")
 local DangerZoneRuntime = mod.danger_zone_runtime or mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/danger_zone_runtime")
+local EnemyTargetRuntime = mod.enemy_target_runtime or mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/enemy_target_runtime")
 local ProximityScan = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/proximity_runtime")
 local HudUtils = mod.hud_utils or {}
 
@@ -89,6 +91,7 @@ local GRENADE_ABILITY_TYPE = "grenade_ability"
 
 local DANGER_ZONE_SCAN_INTERVAL = 0.1
 local DANGER_ZONE_WARNING_MARGIN = 15
+local ENEMY_TARGET_SCAN_INTERVAL = 0.1
 local PROX_SCAN_INTERVAL = 0.5
 local RIGHT_SLOT_ICON_FALLBACK = Definitions.RIGHT_SLOT_ICON_FALLBACK
 local DIVISION_BUFF_ROWS_BASE_Y = Definitions.DIVISION_BUFF_ROWS_BASE_Y or 0
@@ -908,7 +911,38 @@ HudElementDivisionHUD._update_ammo_big = function(self, player_unit, widget, opa
 end
 
 HudElementDivisionHUD._update_expedition_salvage = function(self, local_player, widget, opacity)
+	if self._enemy_target_data and self._enemy_target_data.active == true then
+		if widget and widget.content then
+			widget.content.visible = false
+			widget.alpha_multiplier = 0
+			widget.dirty = true
+		end
+
+		return
+	end
+
 	ExpeditionSalvageWidget.update(self, local_player, widget, opacity)
+end
+
+HudElementDivisionHUD._update_enemy_target_scan = function(self, player_unit, dt)
+	if not player_unit or not Unit.alive(player_unit) then
+		self._enemy_target_scan_timer = 0
+		self._enemy_target_data = {}
+		return
+	end
+
+	self._enemy_target_scan_timer = (self._enemy_target_scan_timer or 0) + dt
+
+	if self._enemy_target_scan_timer < ENEMY_TARGET_SCAN_INTERVAL then
+		return
+	end
+
+	self._enemy_target_scan_timer = 0
+	self._enemy_target_data = EnemyTargetRuntime.scan(player_unit)
+end
+
+HudElementDivisionHUD._update_enemy_target_widget = function(self, widgets, opacity, dt)
+	EnemyTargetWidget.update(self, widgets.enemy_target, opacity, dt)
 end
 
 HudElementDivisionHUD._update_auspex_slot = function(self, player_unit, widgets, opacity)
@@ -1705,6 +1739,7 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	HudElementDivisionHUD.super.init(self, parent, draw_layer, start_scale, definitions)
 
 	DangerZoneWidget.init(self, Definitions)
+	EnemyTargetWidget.init(self, Definitions)
 	ExpeditionSalvageWidget.init(self)
 	StaminaDodgeWidget.init(self, Definitions)
 	ToughnessHealthWidget.init(self, Definitions)
@@ -1720,6 +1755,8 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	self._cached_auspex_icon = nil
 	self._danger_zone_scan_timer = 0
 	self._danger_zone_data = {}
+	self._enemy_target_scan_timer = 0
+	self._enemy_target_data = {}
 	self._prox_scan_timer = 0
 	self._prox_data = {}
 	self._prox_anim = {}
@@ -2021,6 +2058,8 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	end
 
 	self:_update_ability_bar(player_unit, widgets.ability_bar, opacity, dt)
+	self:_update_enemy_target_scan(player_unit, dt)
+	self:_update_enemy_target_widget(widgets, opacity, dt)
 	self:_update_expedition_salvage(local_player, widgets.expedition_salvage, opacity)
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
 	self:_update_auspex_slot(player_unit, widgets, opacity)
@@ -2166,6 +2205,7 @@ HudElementDivisionHUD.destroy = function(self, ui_renderer)
 	self:_reset_dynamic_offset_state()
 
 	DangerZoneWidget.destroy(self)
+	EnemyTargetWidget.destroy(self)
 	ExpeditionSalvageWidget.destroy(self)
 	StaminaDodgeWidget.destroy(self, ui_renderer)
 	ToughnessHealthWidget.destroy(self, ui_renderer)

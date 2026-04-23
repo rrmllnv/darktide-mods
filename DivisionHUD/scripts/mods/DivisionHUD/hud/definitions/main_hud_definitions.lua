@@ -303,6 +303,18 @@ for k, v in pairs(_division_expedition_salvage.scenegraph_definition) do
 	scenegraph_definition[k] = v
 end
 
+local DivisionHUDEnemyTargetDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/enemy_target_definitions")
+local _division_enemy_target = DivisionHUDEnemyTargetDefs.build({
+	sc = sc,
+	right_gap = RIGHT_GAP,
+	right_bottom_slot_width = RIGHT_BOTTOM_SLOT_WIDTH,
+	main_row_height = MAIN_ROW_HEIGHT,
+})
+
+for k, v in pairs(_division_enemy_target.scenegraph_definition) do
+	scenegraph_definition[k] = v
+end
+
 local DivisionHUDBuffRowsDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/buff_rows_definitions")
 local _division_buff_rows = DivisionHUDBuffRowsDefs.build(
 	_division_stamina_dodge.buff_layout_from_stm_ddg,
@@ -678,6 +690,10 @@ for k, v in pairs(_division_expedition_salvage.widget_definitions) do
 	widget_definitions[k] = v
 end
 
+for k, v in pairs(_division_enemy_target.widget_definitions) do
+	widget_definitions[k] = v
+end
+
 for k, v in pairs(_division_proximity_slots.widget_definitions) do
 	widget_definitions[k] = v
 end
@@ -780,6 +796,7 @@ return {
 	DANGER_ZONE_WARNING_OVERLAP = _division_danger_zone.DANGER_ZONE_WARNING_OVERLAP,
 	DANGER_ZONE_WARNING_ENTER_DUR = _division_danger_zone.DANGER_ZONE_WARNING_ENTER_DUR,
 	DANGER_ZONE_WARNING_EXIT_DUR = _division_danger_zone.DANGER_ZONE_WARNING_EXIT_DUR,
+	ENEMY_TARGET_MAX_DEBUFF_SLOTS = _division_enemy_target.ENEMY_TARGET_MAX_DEBUFF_SLOTS,
 	ABILITY_ICON_SIZE = _division_ability_icon.ABILITY_ICON_SIZE,
 	ABILITY_ICON_OVERLAP = _division_ability_icon.ABILITY_ICON_OVERLAP,
 	ABILITY_ICON_ENTER_DUR = _division_ability_icon.ABILITY_ICON_ENTER_DUR,
