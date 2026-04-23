@@ -64,6 +64,7 @@ function M.update(self, local_player, widget, opacity)
 
 	widget.content.visible = true
 	widget.content.text = string.format("%s %s", Text.format_currency(math.floor(amount + 0.5)), string_symbol)
+	widget.alpha_multiplier = opacity or 1
 
 	local text_color = widget.style.text and widget.style.text.text_color
 

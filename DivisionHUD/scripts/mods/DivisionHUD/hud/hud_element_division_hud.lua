@@ -911,7 +911,10 @@ HudElementDivisionHUD._update_ammo_big = function(self, player_unit, widget, opa
 end
 
 HudElementDivisionHUD._update_expedition_salvage = function(self, local_player, widget, opacity)
-	if self._enemy_target_data and self._enemy_target_data.active == true then
+	local enemy_target_active = self._enemy_target_data and self._enemy_target_data.active == true
+	local enemy_target_bg_visible = enemy_target_active and self._enemy_target_bg_enabled == true
+
+	if enemy_target_bg_visible then
 		if widget and widget.content then
 			widget.content.visible = false
 			widget.alpha_multiplier = 0
