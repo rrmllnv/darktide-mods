@@ -23,6 +23,7 @@ local debug_state = {
 	invulnerability_expire_t = nil,
 	alert_instance_seq = 0,
 	enemy_target_override = nil,
+	expedition_salvage_override = nil,
 }
 
 local DEBUG_FAKE_BUFF_TEMPLATE = {
@@ -76,6 +77,7 @@ local function clear_debug_state()
 	debug_state.invulnerability_start_t = nil
 	debug_state.invulnerability_expire_t = nil
 	debug_state.enemy_target_override = nil
+	debug_state.expedition_salvage_override = nil
 end
 
 local DEBUG_MAX_DEBUFF_ROWS = 9
@@ -294,6 +296,14 @@ mod.divisionhud_debug_update = function()
 			debug_state.enemy_target_override = _build_debug_enemy_target_data()
 		end
 	end
+
+	if key_pressed("numpad 4") then
+		if debug_state.expedition_salvage_override then
+			debug_state.expedition_salvage_override = nil
+		else
+			debug_state.expedition_salvage_override = math.random(1, 999999)
+		end
+	end
 end
 
 mod.divisionhud_debug_get_extra_buffs = function()
@@ -332,6 +342,14 @@ mod.divisionhud_debug_get_enemy_target_override = function()
 	end
 
 	return debug_state.enemy_target_override
+end
+
+mod.divisionhud_debug_get_expedition_salvage_override = function()
+	if not debug_enabled() then
+		return nil
+	end
+
+	return debug_state.expedition_salvage_override
 end
 
 mod.divisionhud_debug_get_toughness_override = function()

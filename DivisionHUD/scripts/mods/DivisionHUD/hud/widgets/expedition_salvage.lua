@@ -1,3 +1,5 @@
+local mod = get_mod("DivisionHUD")
+
 local Text = require("scripts/utilities/ui/text")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local WalletSettings = require("scripts/settings/wallet_settings")
@@ -26,36 +28,42 @@ function M.update(self, local_player, widget, opacity)
 		return
 	end
 
-	local game_mode_manager = Managers.state and Managers.state.game_mode
-	local game_mode = game_mode_manager and game_mode_manager:game_mode()
-	local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
-
-	if game_mode_name ~= "expedition" or not game_mode or not game_mode.expedition_currency then
-		widget.content.visible = false
-		widget.dirty = true
-
-		return
-	end
-
-	if not local_player or not local_player.is_human_controlled or not local_player:is_human_controlled() then
-		widget.content.visible = false
-		widget.dirty = true
-
-		return
-	end
-
-	local peer_id = local_player.peer_id and local_player:peer_id()
+	local debug_override = type(mod.divisionhud_debug_get_expedition_salvage_override) == "function" and mod.divisionhud_debug_get_expedition_salvage_override() or nil
 	local amount = 0
 
-	if peer_id then
-		local ok, value = pcall(function()
-			return game_mode:expedition_currency(peer_id)
-		end)
+	if type(debug_override) == "number" then
+		amount = debug_override
+	else
+		local game_mode_manager = Managers.state and Managers.state.game_mode
+		local game_mode = game_mode_manager and game_mode_manager:game_mode()
+		local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
 
-		if ok and type(value) == "number" then
-			amount = value
-		elseif ok and value ~= nil then
-			amount = tonumber(value) or 0
+		if game_mode_name ~= "expedition" or not game_mode or not game_mode.expedition_currency then
+			widget.content.visible = false
+			widget.dirty = true
+
+			return
+		end
+
+		if not local_player or not local_player.is_human_controlled or not local_player:is_human_controlled() then
+			widget.content.visible = false
+			widget.dirty = true
+
+			return
+		end
+
+		local peer_id = local_player.peer_id and local_player:peer_id()
+
+		if peer_id then
+			local ok, value = pcall(function()
+				return game_mode:expedition_currency(peer_id)
+			end)
+
+			if ok and type(value) == "number" then
+				amount = value
+			elseif ok and value ~= nil then
+				amount = tonumber(value) or 0
+			end
 		end
 	end
 
