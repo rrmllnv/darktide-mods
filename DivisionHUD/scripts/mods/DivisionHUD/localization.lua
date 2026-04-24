@@ -1044,4 +1044,84 @@ return {
 		ru = "Враг",
 		["zh-cn"] = "敌人",
 	},
+	enemy_target_debuff_label_generic = {
+		en = "Generic",
+		ru = "Прочее",
+		["zh-cn"] = "通用",
+	},
+	enemy_target_debuff_label_bleed = {
+		en = "Bleed",
+		ru = "Кровотечение",
+		["zh-cn"] = "流血",
+	},
+	enemy_target_debuff_label_fire = {
+		en = "Fire",
+		ru = "Поджог",
+		["zh-cn"] = "燃烧",
+	},
+	enemy_target_debuff_label_warp = {
+		en = "Warp",
+		ru = "Варп",
+		["zh-cn"] = "灵能",
+	},
+	enemy_target_debuff_label_shock = {
+		en = "Shock",
+		ru = "Шок",
+		["zh-cn"] = "电击",
+	},
+	enemy_target_debuff_label_toxin = {
+		en = "Toxin",
+		ru = "Токсин",
+		["zh-cn"] = "中毒",
+	},
+	enemy_target_debuff_label_rending = {
+		en = "Rending",
+		ru = "Пробив брони",
+		["zh-cn"] = "破甲",
+	},
+	enemy_target_debuff_label_arbites = {
+		en = "Arbites",
+		ru = "Арбитр",
+		["zh-cn"] = "仲裁者",
+	},
+	enemy_target_debuff_label_rage = {
+		en = "Rage",
+		ru = "Ярость",
+		["zh-cn"] = "狂怒",
+	},
+	enemy_target_debuff_label_stagger = {
+		en = "Stagger",
+		ru = "Оглушение",
+		["zh-cn"] = "击晕",
+	},
+	enemy_target_debuff_label_blind = {
+		en = "Blind",
+		ru = "Ослепление",
+		["zh-cn"] = "致盲",
+	},
+	enemy_target_debuff_label_damage_taken = {
+		en = "Damage",
+		ru = "Урон",
+		["zh-cn"] = "易伤",
+	},
+	enemy_target_debuff_label_melee_damage_taken = {
+		en = "Melee Damage",
+		ru = "Урон в ближнем",
+		["zh-cn"] = "近战易伤",
+	},
+	enemy_target_debuff_label_stagger_damage = {
+		en = "Stagger Damage",
+		ru = "Урон по оглушённому",
+		["zh-cn"] = "击晕易伤",
+	},
+	enemy_target_debuff_label_bleed_damage = {
+		en = "Bleed Damage",
+		ru = "Урон по кровящему",
+		["zh-cn"] = "流血易伤",
+	},
+	enemy_target_debuff_label_toxin_damage = {
+		en = "Toxin Damage",
+		ru = "Урон по отравленному",
+		["zh-cn"] = "中毒易伤",
+	},
 }

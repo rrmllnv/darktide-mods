@@ -477,7 +477,19 @@ local function _collect_debuffs(unit)
 
 		entry.icon = style and style.icon or "content/ui/materials/icons/generic/danger"
 		entry.colour = style and style.colour or { 255, 255, 255, 255 }
-		entry.label = style and style.label or entry.group or entry.name
+
+		local localized_label = nil
+		local loc_key = style and style.localization_key
+
+		if loc_key then
+			local loc_value = mod:localize(loc_key)
+
+			if type(loc_value) == "string" and loc_value ~= "" and not string.find(loc_value, "^<") then
+				localized_label = loc_value
+			end
+		end
+
+		entry.label = localized_label or (style and style.label) or entry.group or entry.name
 		entry.value_text = resolve_value_text(entry)
 	end
 
