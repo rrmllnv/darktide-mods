@@ -348,7 +348,7 @@ M._update_dodge_amount = function(self, t, ui_renderer)
 end
 
 M._update_dodging_data = function(self, player_extensions)
-	local current_max_effective_dodges = self._max_effective_dodges or 0
+	local current_max_effective_dodges = 0
 
 	if player_extensions then
 		local unit_data_extension = player_extensions.unit_data
@@ -360,13 +360,9 @@ M._update_dodging_data = function(self, player_extensions)
 			local slide_character_state_component = unit_data_extension:read_component("slide_character_state")
 			local character_state_component = unit_data_extension:read_component("character_state")
 			local fixed_t = FixedFrame.get_latest_fixed_time()
-			local ok, num_effective_dodges = pcall(Dodge.num_effective_dodges, player_extensions.unit)
+			local num_effective_dodges = Dodge.num_effective_dodges(player_extensions.unit)
 
-			if not ok or type(num_effective_dodges) ~= "number" then
-				return self._max_effective_dodges or 0
-			end
-
-			current_max_effective_dodges = math.max(math.floor(num_effective_dodges), 0)
+			current_max_effective_dodges = math.floor(num_effective_dodges)
 
 			local is_vaulting = movement_state_component.method == "vaulting"
 			local is_lunging = movement_state_component.method == "lunging"
@@ -469,6 +465,7 @@ M._draw_dodge_bars = function(self, dt, t, ui_renderer)
 
 		M._check_animation_triggers(self, dodge_bar, entered_dodging_state_this_frame, dodge_was_spent, is_dodge_bar_available, is_dodge_on_cooldown)
 		M._update_dodge_bars_background_colors(self, dodge_bar, is_dodge_bar_available, is_dodge_on_cooldown)
+		M._sync_dodge_bar_visual_state(self, dodge_bar, is_dodge_bar_available, is_dodge_on_cooldown)
 
 		dodge_bar_widget_offset[1] = x_offset
 
@@ -502,6 +499,30 @@ M._check_animation_triggers = function(self, dodge_bar, entered_dodging_state_th
 			dodge_bar.status = "available"
 		end
 	end
+end
+
+M._sync_dodge_bar_visual_state = function(self, dodge_bar, is_dodge_bar_available, is_dodge_on_cooldown)
+	if dodge_bar.animation_id then
+		return
+	end
+
+	local dodge_bar_widget = dodge_bar.widget
+	local widget_style = dodge_bar_widget.style
+	local fill_style = widget_style.bar_fill
+	local fill_color = fill_style.color
+	local target_color
+
+	if is_dodge_bar_available then
+		target_color = is_dodge_on_cooldown and DODGE_BAR_STATE_COLORS_BAR_FILL.available_on_cooldown or DODGE_BAR_STATE_COLORS_BAR_FILL.available
+	else
+		target_color = DODGE_BAR_STATE_COLORS_BAR_FILL.spent
+	end
+
+	fill_style.size_addition[2] = 0
+	fill_color[1] = target_color[1]
+	fill_color[2] = target_color[2]
+	fill_color[3] = target_color[3]
+	fill_color[4] = target_color[4]
 end
 
 M._update_dodge_bars_background_colors = function(self, dodge_bar, is_dodge_bar_available, is_dodge_on_cooldown)

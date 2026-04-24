@@ -88,7 +88,7 @@ end
 local function create_value_label_style(y_offset, sc, text_color)
 	local style = table.clone(UIFontSettings.body_small)
 
-	style.font_size = sc(18)
+	style.font_size = sc(20)
 	style.offset = {
 		sc(-4),
 		y_offset or 0,

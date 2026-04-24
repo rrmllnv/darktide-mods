@@ -146,7 +146,7 @@ end
 local function build_value_text_style(sc)
 	local style = table.clone(UIFontSettings.body_small)
 
-	style.font_size = sc(18)
+	style.font_size = sc(20)
 	style.offset = {
 		sc(-82),
 		sc(-12),
