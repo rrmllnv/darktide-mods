@@ -951,7 +951,7 @@ HudElementDivisionHUD._update_enemy_target_widget = function(self, widgets, opac
 	local data = self._enemy_target_data
 	local debuffs = data and data.debuffs
 
-	self._enemy_target_overflow_active = data and data.active == true and type(debuffs) == "table" and #debuffs > 3 or false
+	self._enemy_target_overflow_active = data and data.active == true and type(debuffs) == "table" and #debuffs > 2 or false
 
 	EnemyTargetWidget.update(self, widgets.enemy_target, opacity, dt)
 end
