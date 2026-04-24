@@ -358,7 +358,7 @@ M._update_dodging_data = function(self, player_extensions)
 			local slide_character_state_component = unit_data_extension:read_component("slide_character_state")
 			local character_state_component = unit_data_extension:read_component("character_state")
 			local fixed_t = FixedFrame.get_latest_fixed_time()
-			local num_effective_dodges = Dodge.num_effective_dodges(player_extensions.unit, weapon_extension)
+			local num_effective_dodges = Dodge.num_effective_dodges(player_extensions.unit)
 
 			current_max_effective_dodges = math.floor(num_effective_dodges)
 
