@@ -85,7 +85,7 @@ local function build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_sta
 	}
 end
 
-local function create_value_label_style(y_offset, sc)
+local function create_value_label_style(y_offset, sc, text_color)
 	local style = table.clone(UIFontSettings.body_small)
 
 	style.font_size = sc(18)
@@ -99,20 +99,20 @@ local function create_value_label_style(y_offset, sc)
 	style.horizontal_alignment = "right"
 	style.text_horizontal_alignment = "right"
 	style.text_vertical_alignment = "center"
-	style.text_color = UIHudSettings.color_tint_main_1
+	style.text_color = text_color and table.clone(text_color) or UIHudSettings.color_tint_main_1
 	style.drop_shadow = true
 
 	return style
 end
 
-local function create_value_label_widget(scenegraph_id, y_offset, sc)
+local function create_value_label_widget(scenegraph_id, y_offset, sc, text_color)
 	return UIWidget.create_definition({
 		{
 			pass_type = "text",
 			style_id = "text",
 			value_id = "text",
 			value = "0",
-			style = create_value_label_style(y_offset, sc),
+			style = create_value_label_style(y_offset, sc, text_color),
 		},
 	}, scenegraph_id)
 end
@@ -124,7 +124,7 @@ local function build(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap, sc)
 
 	local toughness_extra_label_w = sc(64)
 	local health_extra_label_w = sc(24)
-	local label_y_offset = sc(-3)
+	local label_y_offset = sc(-7)
 	local bar_size = {
 		bar_w,
 		bar_h,
@@ -137,8 +137,8 @@ local function build(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap, sc)
 	return {
 		scenegraph_definition = build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap, toughness_extra_label_w, health_extra_label_w),
 		widget_definitions = {
-		toughness_value_label = create_value_label_widget("toughness_value_label", label_y_offset, sc),
-		health_value_label = create_value_label_widget("health_value_label", label_y_offset, sc),
+			toughness_value_label = create_value_label_widget("toughness_value_label", label_y_offset, sc, TOUGHNESS_BAR_FILL_COLOR),
+			health_value_label = create_value_label_widget("health_value_label", label_y_offset, sc),
 			health = UIWidget.create_definition({
 				{
 					pass_type = "rect",
