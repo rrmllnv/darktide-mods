@@ -16,12 +16,10 @@ local STAMINA_BAR_COLOR = HudElementStaminaSettings.STAMINA_BAR_COLOR
 local HEALTH_BAR_FILL_COLOR = UIHudSettings.color_tint_1
 local TOUGHNESS_BAR_FILL_COLOR = UIHudSettings.color_tint_6
 local WOUNDS_BAR_FILL_COLOR = UIHudSettings.color_tint_8
-local TOUGHNESS_EXTRA_VALUE_LABEL_WIDTH = 64
-local HEALTH_EXTRA_VALUE_LABEL_WIDTH = 24
 
-local function build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap)
-	local extended_toughness_label_width = bar_label_w + TOUGHNESS_EXTRA_VALUE_LABEL_WIDTH
-	local extended_health_label_width = bar_label_w + HEALTH_EXTRA_VALUE_LABEL_WIDTH
+local function build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap, toughness_extra_label_w, health_extra_label_w)
+	local extended_toughness_label_width = bar_label_w + toughness_extra_label_w
+	local extended_health_label_width = bar_label_w + health_extra_label_w
 
 	local toughness_label_y = math.floor(bar_h * 0.5 + 0.5)
 
@@ -37,7 +35,7 @@ local function build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_sta
 				bar_h,
 			},
 			position = {
-				-TOUGHNESS_EXTRA_VALUE_LABEL_WIDTH,
+				-toughness_extra_label_w,
 				toughness_label_y,
 				0,
 			},
@@ -65,7 +63,7 @@ local function build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_sta
 				health_bar_h,
 			},
 			position = {
-				-HEALTH_EXTRA_VALUE_LABEL_WIDTH,
+				-health_extra_label_w,
 				health_label_y,
 				0,
 			},
@@ -87,11 +85,12 @@ local function build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_sta
 	}
 end
 
-local function create_value_label_style(y_offset)
+local function create_value_label_style(y_offset, sc)
 	local style = table.clone(UIFontSettings.body_small)
 
+	style.font_size = sc(18)
 	style.offset = {
-		-4,
+		sc(-4),
 		y_offset or 0,
 		3,
 	}
@@ -106,19 +105,26 @@ local function create_value_label_style(y_offset)
 	return style
 end
 
-local function create_value_label_widget(scenegraph_id, y_offset)
+local function create_value_label_widget(scenegraph_id, y_offset, sc)
 	return UIWidget.create_definition({
 		{
 			pass_type = "text",
 			style_id = "text",
 			value_id = "text",
 			value = "0",
-			style = create_value_label_style(y_offset),
+			style = create_value_label_style(y_offset, sc),
 		},
 	}, scenegraph_id)
 end
 
-local function build(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap)
+local function build(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap, sc)
+	if type(sc) ~= "function" then
+		sc = function(n) return n end
+	end
+
+	local toughness_extra_label_w = sc(64)
+	local health_extra_label_w = sc(24)
+	local label_y_offset = sc(-3)
 	local bar_size = {
 		bar_w,
 		bar_h,
@@ -129,10 +135,10 @@ local function build(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap)
 	}
 
 	return {
-		scenegraph_definition = build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap),
+		scenegraph_definition = build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap, toughness_extra_label_w, health_extra_label_w),
 		widget_definitions = {
-		toughness_value_label = create_value_label_widget("toughness_value_label", -3),
-		health_value_label = create_value_label_widget("health_value_label", -3),
+		toughness_value_label = create_value_label_widget("toughness_value_label", label_y_offset, sc),
+		health_value_label = create_value_label_widget("health_value_label", label_y_offset, sc),
 			health = UIWidget.create_definition({
 				{
 					pass_type = "rect",

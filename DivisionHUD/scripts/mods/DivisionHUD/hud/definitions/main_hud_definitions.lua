@@ -269,14 +269,14 @@ for k, v in pairs(_division_alerts.scenegraph_definition) do
 end
 
 local DivisionHUDToughnessHealthDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/toughness_health_definitions")
-local _division_toughness_health = DivisionHUDToughnessHealthDefs.build(BAR_WIDTH, TOUGHNESS_BAR_HEIGHT, HEALTH_BAR_HEIGHT, BAR_LABEL_W, BAR_STACK_GAP)
+local _division_toughness_health = DivisionHUDToughnessHealthDefs.build(BAR_WIDTH, TOUGHNESS_BAR_HEIGHT, HEALTH_BAR_HEIGHT, BAR_LABEL_W, BAR_STACK_GAP, sc)
 
 for k, v in pairs(_division_toughness_health.scenegraph_definition) do
 	scenegraph_definition[k] = v
 end
 
 local DivisionHUDStaminaDodgeDefs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/hud/definitions/stamina_dodge_definitions")
-local _division_stamina_dodge = DivisionHUDStaminaDodgeDefs.build(MAIN_ROW_HEIGHT, BAR_FILL_WIDTH)
+local _division_stamina_dodge = DivisionHUDStaminaDodgeDefs.build(MAIN_ROW_HEIGHT, BAR_FILL_WIDTH, sc)
 
 for k, v in pairs(_division_stamina_dodge.scenegraph_definition) do
 	scenegraph_definition[k] = v

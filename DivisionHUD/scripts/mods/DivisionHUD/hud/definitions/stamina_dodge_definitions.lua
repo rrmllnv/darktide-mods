@@ -143,24 +143,29 @@ local function build_scenegraph(main_row_height, track_width_px)
 	}, extend_below_main, buff_layout_from_stm_ddg
 end
 
-local value_text_style = table.clone(UIFontSettings.body_small)
+local function build_value_text_style(sc)
+	local style = table.clone(UIFontSettings.body_small)
 
-value_text_style.offset = {
-	-82,
-	-12,
-	3,
-}
-value_text_style.size = {
-	78,
-	30,
-}
-value_text_style.vertical_alignment = "top"
-value_text_style.horizontal_alignment = "left"
-value_text_style.text_horizontal_alignment = "right"
-value_text_style.text_vertical_alignment = "top"
-value_text_style.text_color = UIHudSettings.color_tint_main_1
+	style.font_size = sc(18)
+	style.offset = {
+		sc(-82),
+		sc(-12),
+		3,
+	}
+	style.size = {
+		sc(78),
+		sc(30),
+	}
+	style.vertical_alignment = "top"
+	style.horizontal_alignment = "left"
+	style.text_horizontal_alignment = "right"
+	style.text_vertical_alignment = "top"
+	style.text_color = UIHudSettings.color_tint_main_1
 
-local function build_widget_definitions()
+	return style
+end
+
+local function build_widget_definitions(value_text_style)
 	return {
 		stamina_gauge = UIWidget.create_definition({
 			{
@@ -548,12 +553,17 @@ local animations = {
 	},
 }
 
-local function build(main_row_height, bar_fill_width)
+local function build(main_row_height, bar_fill_width, sc)
+	if type(sc) ~= "function" then
+		sc = function(n) return n end
+	end
+
 	local vanilla_track = stm_bar_size[1]
 	local requested = type(bar_fill_width) == "number" and bar_fill_width or vanilla_track
 	local track_width_px = math.max(1, math.floor(requested + 0.5))
 	local sg, extend_below, buff_layout_from_stm_ddg = build_scenegraph(main_row_height, track_width_px)
-	local wdefs = build_widget_definitions()
+	local value_text_style = build_value_text_style(sc)
+	local wdefs = build_widget_definitions(value_text_style)
 	local ddg_top_from_boxes_row = 0
 
 	if type(buff_layout_from_stm_ddg) == "table" and type(buff_layout_from_stm_ddg.ddg_top) == "number" and buff_layout_from_stm_ddg.ddg_top == buff_layout_from_stm_ddg.ddg_top then
