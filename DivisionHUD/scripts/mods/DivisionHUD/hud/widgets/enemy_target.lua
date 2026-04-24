@@ -43,16 +43,6 @@ local function reset_widget(widget, max_debuff_slots)
 	widget.dirty = true
 end
 
-local function reset_bg_widget(widget)
-	if not widget or not widget.content then
-		return
-	end
-
-	widget.content.visible = false
-	widget.alpha_multiplier = 0
-	widget.dirty = true
-end
-
 local function reset_anim(self)
 	self._enemy_target_anim = {
 		state = "hidden",
@@ -74,10 +64,8 @@ function M.init(self, definitions)
 
 	local widgets_by_name = self._widgets_by_name
 	local widget = widgets_by_name and widgets_by_name.enemy_target
-	local widget_bg = widgets_by_name and widgets_by_name.enemy_target_bg
 
 	reset_widget(widget, self._enemy_target_max_debuff_slots)
-	reset_bg_widget(widget_bg)
 
 	if self.set_scenegraph_position then
 		self:set_scenegraph_position("division_enemy_target_area", self._enemy_target_hidden_x or 0, 0)
@@ -91,10 +79,7 @@ function M.update(self, widget, opacity, dt)
 
 	dt = (type(dt) == "number" and dt == dt and dt > 0) and dt or 0
 
-	local widgets_by_name = self._widgets_by_name
-	local widget_bg = widgets_by_name and widgets_by_name.enemy_target_bg
-	local bg_enabled = self._enemy_target_bg_enabled == true
-	local max_debuff_slots = self._enemy_target_max_debuff_slots or 6
+	local max_debuff_slots = self._enemy_target_max_debuff_slots or 9
 	local data = self._enemy_target_data or {}
 	local is_requested = data.active == true
 	local alpha = self._enemy_target_alpha_mult or 0
@@ -128,7 +113,6 @@ function M.update(self, widget, opacity, dt)
 
 	if alpha <= 0 and not is_requested then
 		reset_widget(widget, max_debuff_slots)
-		reset_bg_widget(widget_bg)
 
 		reset_anim(self)
 
@@ -235,21 +219,8 @@ function M.update(self, widget, opacity, dt)
 	if anim.state ~= "hidden" and (anim.alpha or 0) > 0 then
 		widget.content.visible = true
 		widget.alpha_multiplier = opacity * alpha * anim.alpha
-
-		if widget_bg and widget_bg.content then
-			if bg_enabled then
-				widget_bg.content.visible = true
-				widget_bg.alpha_multiplier = opacity * alpha * anim.alpha
-			else
-				widget_bg.content.visible = false
-				widget_bg.alpha_multiplier = 0
-			end
-
-			widget_bg.dirty = true
-		end
 	else
 		reset_widget(widget, max_debuff_slots)
-		reset_bg_widget(widget_bg)
 	end
 
 	widget.dirty = true
@@ -258,10 +229,8 @@ end
 function M.destroy(self)
 	local widgets_by_name = self._widgets_by_name
 	local widget = widgets_by_name and widgets_by_name.enemy_target
-	local widget_bg = widgets_by_name and widgets_by_name.enemy_target_bg
 
-	reset_widget(widget, self._enemy_target_max_debuff_slots or 6)
-	reset_bg_widget(widget_bg)
+	reset_widget(widget, self._enemy_target_max_debuff_slots or 9)
 	reset_anim(self)
 
 	self._enemy_target_alpha_mult = 0

@@ -219,7 +219,9 @@ M._draw_stamina_chunks = function(self, dt, t, ui_renderer)
 	local stamina_text_style = gauge_widget.style.value_text
 	local stamina_text_color = stamina_text_style.text_color
 
-	stamina_text_color[1] = self._show_stamina_percentage_text and 255 or 0
+	local hide_stamina_value = self._enemy_target_overflow_active == true
+
+	stamina_text_color[1] = (self._show_stamina_percentage_text and not hide_stamina_value) and 255 or 0
 	gauge_widget.content.value_text = string.format("%.0f%%", math.clamp(stamina_fraction, 0, 1) * 100)
 
 	local spacing = HudElementStaminaSettings.spacing

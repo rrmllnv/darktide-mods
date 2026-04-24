@@ -636,8 +636,6 @@ _division_enemy_target = DivisionHUDEnemyTargetDefs.build({
 	right_gap = RIGHT_GAP,
 	right_bottom_slot_width = RIGHT_BOTTOM_SLOT_WIDTH,
 	main_row_height = MAIN_ROW_HEIGHT,
-	build_terminal_gradient_frame_corner_passes = build_terminal_gradient_frame_corner_passes,
-	strip_bg_widget_content_defaults = strip_bg_widget_content_defaults,
 })
 
 for k, v in pairs(_division_enemy_target.scenegraph_definition) do

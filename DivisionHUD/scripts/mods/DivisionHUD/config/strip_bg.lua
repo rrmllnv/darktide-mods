@@ -141,22 +141,6 @@ local function normalize_mode_proximity(raw, raw_default)
 	return 1
 end
 
-local function normalize_mode_enemy_target(raw, raw_default)
-	local v = tonumber_safe(raw)
-
-	if v == 0 or v == 1 or v == 2 or v == 3 or v == 4 then
-		return v
-	end
-
-	local d = tonumber_safe(raw_default)
-
-	if d == 0 or d == 1 or d == 2 or d == 3 or d == 4 then
-		return d
-	end
-
-	return 0
-end
-
 local function apply_strip_background_to_widget(widget, internal_mode)
 	if not widget or not widget.content then
 		return
@@ -196,10 +180,8 @@ return {
 	PRESETS = PRESETS,
 	DROPDOWN_VALUES_MAIN = { 0, 1, 2, 3 },
 	DROPDOWN_VALUES_PROXIMITY = { 0, 1, 2 },
-	DROPDOWN_VALUES_ENEMY_TARGET = { 0, 1, 2, 3, 4 },
 	normalize_mode_main = normalize_mode_main,
 	normalize_mode_proximity = normalize_mode_proximity,
-	normalize_mode_enemy_target = normalize_mode_enemy_target,
 	resolve_preset = resolve_preset,
 	apply_strip_background_to_widget = apply_strip_background_to_widget,
 }

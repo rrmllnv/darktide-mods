@@ -3,9 +3,7 @@ local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 
 local M = {}
-local MAX_DEBUFF_ROWS = 3
-local MAX_DEBUFF_COLS = 2
-local MAX_DEBUFF_SLOTS = MAX_DEBUFF_ROWS * MAX_DEBUFF_COLS
+local MAX_DEBUFF_ROWS = 9
 local ENEMY_TARGET_ENTER_DUR = 0.2
 local ENEMY_TARGET_EXIT_DUR = 0.16
 
@@ -14,8 +12,6 @@ function M.build(params)
 	local right_gap = params.right_gap
 	local right_bottom_slot_width = params.right_bottom_slot_width
 	local main_row_height = params.main_row_height
-	local build_frame_fn = params.build_terminal_gradient_frame_corner_passes
-	local defaults_fn = params.strip_bg_widget_content_defaults
 	local expedition_salvage_slot_w = math.max(right_bottom_slot_width, sc(72))
 	local expedition_salvage_slot_x = -(expedition_salvage_slot_w + right_gap)
 	local padding_x = sc(6)
@@ -34,30 +30,18 @@ function M.build(params)
 	local debuff_start_y = health_info_y + health_text_height + sc(4)
 	local debuff_gap = 0
 	local debuff_name_min_width = sc(104)
-	local debuff_middle_gap_min = sc(16)
 	local value_width = math.max(sc(24), math.ceil(debuff_value_font * debuff_value_max_chars * debuff_value_char_width_mul))
-	local column_inner_width = debuff_name_min_width + debuff_gap + debuff_icon_size + debuff_gap + value_width
-	local block_width_for_cols = padding_x + column_inner_width * MAX_DEBUFF_COLS + debuff_middle_gap_min * (MAX_DEBUFF_COLS - 1) + content_right_inset
-	local block_width = math.max(sc(232), expedition_salvage_slot_w + sc(156), block_width_for_cols)
+	local block_width = math.max(sc(232), expedition_salvage_slot_w + sc(156))
 	local block_x = expedition_salvage_slot_x + expedition_salvage_slot_w - block_width
 	local slide_px = math.max(sc(40), block_width - expedition_salvage_slot_w)
 	local content_width = block_width - padding_x - content_right_inset
+	local health_bar_height = main_row_height
 	local block_height = math.max(main_row_height, debuff_start_y + debuff_row_height * MAX_DEBUFF_ROWS + sc(5))
-	local debuff_middle_gap = block_width - (padding_x + column_inner_width * MAX_DEBUFF_COLS + content_right_inset)
-
-	if debuff_middle_gap < debuff_middle_gap_min then
-		debuff_middle_gap = debuff_middle_gap_min
-	end
-
 	local bar_x = block_width - padding_x - health_bar_width
-	local icon_x_right = bar_x - health_bar_gap - value_width - debuff_gap - debuff_icon_size
-	local value_x_right = icon_x_right + debuff_icon_size + debuff_gap
-	local name_x_right = padding_x + column_inner_width + debuff_middle_gap
-	local name_width_right = math.max(debuff_name_min_width, icon_x_right - debuff_gap - name_x_right)
-	local icon_x_left = padding_x
-	local value_x_left = icon_x_left + debuff_icon_size + debuff_gap
-	local name_x_left = value_x_left + value_width + debuff_gap
-	local name_width_left = math.max(debuff_name_min_width, padding_x + column_inner_width - name_x_left)
+	local icon_x = bar_x - health_bar_gap - value_width - debuff_gap - debuff_icon_size
+	local value_x = icon_x + debuff_icon_size + debuff_gap
+	local name_x = padding_x
+	local name_width = math.max(debuff_name_min_width, icon_x - debuff_gap - name_x)
 
 	local title_style = table.clone(UIFontSettings.hud_body)
 
@@ -102,7 +86,7 @@ function M.build(params)
 				horizontal_alignment = "left",
 				vertical_alignment = "top",
 				offset = { bar_x, 0, 3 },
-				size = { health_bar_width, block_height },
+				size = { health_bar_width, health_bar_height },
 				color = { 140, UIHudSettings.color_tint_0[2], UIHudSettings.color_tint_0[3], UIHudSettings.color_tint_0[4] },
 			},
 		},
@@ -114,8 +98,8 @@ function M.build(params)
 				vertical_alignment = "top",
 				offset = { bar_x, 0, 4 },
 				default_offset = { bar_x, 0, 4 },
-				size = { health_bar_width, block_height },
-				default_size = { health_bar_width, block_height },
+				size = { health_bar_width, health_bar_height },
+				default_size = { health_bar_width, health_bar_height },
 				color = table.clone(UIHudSettings.color_tint_alert_2),
 			},
 		},
@@ -128,7 +112,7 @@ function M.build(params)
 		},
 	}
 
-	for i = 1, MAX_DEBUFF_SLOTS do
+	for i = 1, MAX_DEBUFF_ROWS do
 		local icon_id = "debuff_icon_" .. i
 		local value_id = "debuff_value_" .. i
 		local name_id = "debuff_name_" .. i
@@ -172,16 +156,8 @@ function M.build(params)
 
 	local definition = UIWidget.create_definition(passes, "division_enemy_target_area")
 
-	for i = 1, MAX_DEBUFF_SLOTS do
-		local col_index = math.floor((i - 1) / MAX_DEBUFF_ROWS)
-		local row_index = (i - 1) % MAX_DEBUFF_ROWS
-		local row_y = debuff_start_y + row_index * debuff_row_height
-		local is_left_col = col_index == 1
-		local icon_x = is_left_col and icon_x_left or icon_x_right
-		local value_x = is_left_col and value_x_left or value_x_right
-		local name_x = is_left_col and name_x_left or name_x_right
-		local name_width = is_left_col and name_width_left or name_width_right
-		local name_text_align = is_left_col and "left" or "right"
+	for i = 1, MAX_DEBUFF_ROWS do
+		local row_y = debuff_start_y + (i - 1) * debuff_row_height
 		local icon_id = "debuff_icon_" .. i
 		local value_id = "debuff_value_" .. i
 		local name_id = "debuff_name_" .. i
@@ -224,7 +200,7 @@ function M.build(params)
 		definition.style[name_id] = {
 			horizontal_alignment = "left",
 			vertical_alignment = "top",
-			text_horizontal_alignment = name_text_align,
+			text_horizontal_alignment = "right",
 			text_vertical_alignment = "center",
 			offset = { name_x, row_y, 6 },
 			font_type = UIFontSettings.hud_body.font_type,
@@ -242,14 +218,6 @@ function M.build(params)
 	local widget_definitions = {
 		enemy_target = definition,
 	}
-
-	if type(build_frame_fn) == "function" and type(defaults_fn) == "function" then
-		widget_definitions.enemy_target_bg = UIWidget.create_definition(
-			build_frame_fn(block_width, block_height, 0, 1, 2, 3),
-			"division_enemy_target_area",
-			defaults_fn()
-		)
-	end
 
 	return {
 		scenegraph_definition = {
@@ -269,7 +237,7 @@ function M.build(params)
 			},
 		},
 		widget_definitions = widget_definitions,
-		ENEMY_TARGET_MAX_DEBUFF_SLOTS = MAX_DEBUFF_SLOTS,
+		ENEMY_TARGET_MAX_DEBUFF_SLOTS = MAX_DEBUFF_ROWS,
 		ENEMY_TARGET_SLIDE_PX = slide_px,
 		ENEMY_TARGET_ENTER_DUR = ENEMY_TARGET_ENTER_DUR,
 		ENEMY_TARGET_EXIT_DUR = ENEMY_TARGET_EXIT_DUR,

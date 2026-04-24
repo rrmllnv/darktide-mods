@@ -911,10 +911,7 @@ HudElementDivisionHUD._update_ammo_big = function(self, player_unit, widget, opa
 end
 
 HudElementDivisionHUD._update_expedition_salvage = function(self, local_player, widget, opacity)
-	local enemy_target_active = self._enemy_target_data and self._enemy_target_data.active == true
-	local enemy_target_bg_visible = enemy_target_active and self._enemy_target_bg_enabled == true
-
-	if enemy_target_bg_visible then
+	if self._enemy_target_data and self._enemy_target_data.active == true then
 		if widget and widget.content then
 			widget.content.visible = false
 			widget.alpha_multiplier = 0
@@ -951,6 +948,11 @@ HudElementDivisionHUD._update_enemy_target_scan = function(self, player_unit, dt
 end
 
 HudElementDivisionHUD._update_enemy_target_widget = function(self, widgets, opacity, dt)
+	local data = self._enemy_target_data
+	local debuffs = data and data.debuffs
+
+	self._enemy_target_overflow_active = data and data.active == true and type(debuffs) == "table" and #debuffs > 3 or false
+
 	EnemyTargetWidget.update(self, widgets.enemy_target, opacity, dt)
 end
 
@@ -2056,25 +2058,6 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 
 			MainStripBackgroundPresets.apply_strip_background_to_widget(widgets["prox_" .. cat .. "_bg"], fill_mode_prox)
 		end
-	end
-
-	if type(MainStripBackgroundPresets.normalize_mode_enemy_target) == "function" then
-		local fill_mode_enemy = MainStripBackgroundPresets.normalize_mode_enemy_target(
-			type(mod._settings) == "table" and mod._settings.enemy_target_strip_background_fill,
-			DivisionHUDSettingsDefaults.enemy_target_strip_background_fill
-		)
-
-		if self._enemy_target_strip_background_fill_mode_cache ~= fill_mode_enemy then
-			self._enemy_target_strip_background_fill_mode_cache = fill_mode_enemy
-
-			if fill_mode_enemy ~= 0 then
-				MainStripBackgroundPresets.apply_strip_background_to_widget(widgets.enemy_target_bg, fill_mode_enemy - 1)
-			end
-		end
-
-		self._enemy_target_bg_enabled = fill_mode_enemy ~= 0
-	else
-		self._enemy_target_bg_enabled = false
 	end
 
 	local boxes_bg = widgets.boxes_bg
