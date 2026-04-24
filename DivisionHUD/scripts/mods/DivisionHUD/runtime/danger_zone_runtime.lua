@@ -688,6 +688,10 @@ if mod.danger_zone_hooks_registered ~= true then
 	mod:hook_safe("UIManager", "cb_on_game_state_change", function()
 		table.clear(tracked_sources)
 		table.clear(source_unit_map)
+
+		if type(mod.divisionhud_clear_tracked_deployables) == "function" then
+			mod.divisionhud_clear_tracked_deployables()
+		end
 	end)
 
 	mod:hook_safe("LiquidAreaExtension", "init", function(self, _, _, extension_init_data)

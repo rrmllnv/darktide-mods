@@ -17,7 +17,7 @@ local function divisionhud_apply_settings_handlers(setting_id)
 		local fn = mod[APPLY_SETTINGS_HANDLERS[i]]
 
 		if type(fn) == "function" then
-			fn(setting_id)
+			pcall(fn, setting_id)
 		end
 	end
 end

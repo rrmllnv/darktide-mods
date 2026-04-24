@@ -104,6 +104,44 @@ local function _apply_text_alpha(widget, base_text_color)
 	_apply_count_alpha(widget)
 end
 
+local function _category_enabled(settings, cat, show_stimm)
+	if type(settings) ~= "table" then
+		return true
+	end
+
+	if cat == "medical_station" then
+		return settings.proximity_show_medical_station ~= false and settings.proximity_show_medical_station ~= 0
+	elseif cat == "medical" then
+		return settings.proximity_show_medical ~= false and settings.proximity_show_medical ~= 0
+	elseif cat == "medical_deployed" then
+		return settings.proximity_show_medical_deployed ~= false and settings.proximity_show_medical_deployed ~= 0
+	elseif cat == "stimm_corruption" or cat == "stimm_power" or cat == "stimm_speed" or cat == "stimm_ability" then
+		return show_stimm
+	elseif cat == "ammo_small" then
+		return settings.proximity_show_ammo_small ~= false and settings.proximity_show_ammo_small ~= 0
+	elseif cat == "ammo_large" then
+		return settings.proximity_show_ammo_large ~= false and settings.proximity_show_ammo_large ~= 0
+	elseif cat == "ammo_crate" then
+		return (settings.proximity_show_ammo_crate ~= false and settings.proximity_show_ammo_crate ~= 0)
+			or (settings.proximity_show_ammo_crate_deployed ~= false and settings.proximity_show_ammo_crate_deployed ~= 0)
+	elseif cat == "grenade" then
+		return settings.proximity_show_grenade ~= false and settings.proximity_show_grenade ~= 0
+	elseif cat == "grimoire" then
+		return settings.proximity_show_grimoire ~= false and settings.proximity_show_grimoire ~= 0
+	elseif cat == "tome" then
+		return settings.proximity_show_tome ~= false and settings.proximity_show_tome ~= 0
+	end
+
+	return false
+end
+
+local function _compare_anim_grid_index(a, b)
+	local ai = a.grid_idx or math.huge
+	local bi = b.grid_idx or math.huge
+
+	return ai < bi
+end
+
 local function _ensure_anim_state(self, categories)
 	self._prox_anim = self._prox_anim or {}
 
@@ -133,6 +171,7 @@ function M.init(self, definitions)
 	self._div_prox_icon_enter_scale = definitions.PROX_ICON_ENTER_SCALE or 0.82
 	self._div_prox_icon_exit_scale = definitions.PROX_ICON_EXIT_SCALE or 0.82
 	self._prox_anim = {}
+	self._prox_active = {}
 	self._prox_def_hud_layout_scale = definitions.HUD_LAYOUT_SCALE or 1
 
 	local widgets = self._widgets_by_name or {}
@@ -151,23 +190,6 @@ function M.update(self, widgets, opacity, dt, proximity_scan, right_slot_icon_fa
 	local categories = proximity_scan and proximity_scan.CATEGORIES or {}
 	local enabled = type(settings) ~= "table" or (settings.proximity_enabled ~= false and settings.proximity_enabled ~= 0)
 	local show_stimm = type(settings) ~= "table" or (settings.proximity_show_stimm ~= false and settings.proximity_show_stimm ~= 0)
-	local cat_settings = {
-		medical_station = type(settings) ~= "table" or (settings.proximity_show_medical_station ~= false and settings.proximity_show_medical_station ~= 0),
-		medical = type(settings) ~= "table" or (settings.proximity_show_medical ~= false and settings.proximity_show_medical ~= 0),
-		medical_deployed = type(settings) ~= "table" or (settings.proximity_show_medical_deployed ~= false and settings.proximity_show_medical_deployed ~= 0),
-		stimm_corruption = show_stimm,
-		stimm_power = show_stimm,
-		stimm_speed = show_stimm,
-		stimm_ability = show_stimm,
-		ammo_small = type(settings) ~= "table" or (settings.proximity_show_ammo_small ~= false and settings.proximity_show_ammo_small ~= 0),
-		ammo_large = type(settings) ~= "table" or (settings.proximity_show_ammo_large ~= false and settings.proximity_show_ammo_large ~= 0),
-		ammo_crate = type(settings) ~= "table"
-			or (settings.proximity_show_ammo_crate ~= false and settings.proximity_show_ammo_crate ~= 0)
-			or (settings.proximity_show_ammo_crate_deployed ~= false and settings.proximity_show_ammo_crate_deployed ~= 0),
-		grenade = type(settings) ~= "table" or (settings.proximity_show_grenade ~= false and settings.proximity_show_grenade ~= 0),
-		grimoire = type(settings) ~= "table" or (settings.proximity_show_grimoire ~= false and settings.proximity_show_grimoire ~= 0),
-		tome = type(settings) ~= "table" or (settings.proximity_show_tome ~= false and settings.proximity_show_tome ~= 0),
-	}
 
 	_ensure_anim_state(self, categories)
 
@@ -182,7 +204,7 @@ function M.update(self, widgets, opacity, dt, proximity_scan, right_slot_icon_fa
 	for i = 1, #categories do
 		local cat = categories[i]
 		local anim = self._prox_anim[cat]
-		local want = enabled and cat_settings[cat] and prox_data[cat] ~= nil
+		local want = enabled and _category_enabled(settings, cat, show_stimm) and prox_data[cat] ~= nil
 
 		if want and anim.state == "exit" then
 			local gp = anim.grid_idx and grid_positions[anim.grid_idx]
@@ -198,7 +220,10 @@ function M.update(self, widgets, opacity, dt, proximity_scan, right_slot_icon_fa
 		end
 	end
 
-	local active = {}
+	local active = self._prox_active or {}
+
+	self._prox_active = active
+	table.clear(active)
 
 	for i = 1, #categories do
 		local cat = categories[i]
@@ -209,12 +234,7 @@ function M.update(self, widgets, opacity, dt, proximity_scan, right_slot_icon_fa
 		end
 	end
 
-	table.sort(active, function(a, b)
-		local ai = a.grid_idx or math.huge
-		local bi = b.grid_idx or math.huge
-
-		return ai < bi
-	end)
+	table.sort(active, _compare_anim_grid_index)
 
 	for new_idx, anim in ipairs(active) do
 		if anim.grid_idx ~= new_idx then
@@ -229,7 +249,7 @@ function M.update(self, widgets, opacity, dt, proximity_scan, right_slot_icon_fa
 	for i = 1, #categories do
 		local cat = categories[i]
 		local anim = self._prox_anim[cat]
-		local want = enabled and cat_settings[cat] and prox_data[cat] ~= nil
+		local want = enabled and _category_enabled(settings, cat, show_stimm) and prox_data[cat] ~= nil
 
 		if want and anim.state == "hidden" and next_idx <= #grid_positions then
 			local gp = grid_positions[next_idx]

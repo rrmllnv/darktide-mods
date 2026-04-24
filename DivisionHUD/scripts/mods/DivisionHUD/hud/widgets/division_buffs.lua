@@ -102,25 +102,26 @@ local function _reapply_buff_widget_icons(self, ratio)
 
 		if w._orig_frame_size and w.style.frame and type(w.style.frame.size) == "table" then
 			local fw, fh = w._orig_frame_size[1], w._orig_frame_size[2]
-			w.style.frame.size = { math.max(1, math.floor(fw * ratio + 0.5)), math.max(1, math.floor(fh * ratio + 0.5)) }
+			w.style.frame.size[1] = math.max(1, math.floor(fw * ratio + 0.5))
+			w.style.frame.size[2] = math.max(1, math.floor(fh * ratio + 0.5))
 		end
 
 		if w._orig_text_bg_size and w.style.text_background and type(w.style.text_background.size) == "table" then
 			local tbw, tbh = w._orig_text_bg_size[1], w._orig_text_bg_size[2]
-			w.style.text_background.size = { math.max(0, math.floor(tbw * ratio + 0.5)), math.max(1, math.floor(tbh * ratio + 0.5)) }
+			w.style.text_background.size[1] = math.max(0, math.floor(tbw * ratio + 0.5))
+			w.style.text_background.size[2] = math.max(1, math.floor(tbh * ratio + 0.5))
 		end
 
 		if w._orig_text_size and w.style.text and type(w.style.text.size) == "table" then
 			local tsw, tsh = w._orig_text_size[1], w._orig_text_size[2]
-			w.style.text.size = { math.max(0, math.floor(tsw * ratio + 0.5)), math.max(1, math.floor(tsh * ratio + 0.5)) }
+			w.style.text.size[1] = math.max(0, math.floor(tsw * ratio + 0.5))
+			w.style.text.size[2] = math.max(1, math.floor(tsh * ratio + 0.5))
 		end
 
 		if w._orig_text_offset and w.style.text and type(w.style.text.offset) == "table" then
-			w.style.text.offset = {
-				math.floor((w._orig_text_offset[1] or 0) * ratio + 0.5),
-				math.floor((w._orig_text_offset[2] or 0) * ratio + 0.5),
-				w._orig_text_offset[3] or 0,
-			}
+			w.style.text.offset[1] = math.floor((w._orig_text_offset[1] or 0) * ratio + 0.5)
+			w.style.text.offset[2] = math.floor((w._orig_text_offset[2] or 0) * ratio + 0.5)
+			w.style.text.offset[3] = w._orig_text_offset[3] or 0
 		end
 
 		w.dirty = true
@@ -298,10 +299,12 @@ local function _update_entry_widget(entry, ui_renderer)
 
 		if content.text and content.text ~= "" then
 			local icon_default = (style.icon and style.icon.default_size and style.icon.default_size[1]) or 38
-			local buff_size = {
-				math.max(1, math.floor(icon_default * ratio + 0.5)),
-				math.max(1, math.floor(icon_default * ratio + 0.5)),
-			}
+			local buff_size = widget._division_buff_text_size or {}
+
+			widget._division_buff_text_size = buff_size
+			buff_size[1] = math.max(1, math.floor(icon_default * ratio + 0.5))
+			buff_size[2] = math.max(1, math.floor(icon_default * ratio + 0.5))
+
 			local text_width = select(1, Text.text_size(ui_renderer, content.text, text_style, buff_size))
 
 			if text_width then
@@ -363,6 +366,9 @@ M.init = function(self, definitions)
 	self._div_buff_slot_spacing = buff_rows.BUFF_SLOT_SPACING
 	self._div_buff_row_spacing = buff_rows.BUFF_ROW_SPACING
 	self._div_buff_slide_px = buff_rows.BUFF_SLIDE_PX
+	self._div_buff_sortable = {}
+	self._div_buff_selected = {}
+	self._div_buff_selected_lookup = {}
 	self._div_buff_def_hud_layout_scale = definitions.HUD_LAYOUT_SCALE or 1
 	local desired = (mod and type(mod._settings) == "table" and type(mod._settings.hud_layout_scale) == "number" and mod._settings.hud_layout_scale) or self._div_buff_def_hud_layout_scale
 	self._div_buff_ratio = (self._div_buff_def_hud_layout_scale ~= 0) and (desired / self._div_buff_def_hud_layout_scale) or 1
@@ -439,7 +445,10 @@ M.update = function(self, dt, t, ui_renderer, opacity)
 		end
 	end
 
-	local sortable = {}
+	local sortable = self._div_buff_sortable or {}
+
+	self._div_buff_sortable = sortable
+	table.clear(sortable)
 
 	for i = 1, #entries do
 		local entry = entries[i]
@@ -472,10 +481,16 @@ M.update = function(self, dt, t, ui_renderer, opacity)
 
 	table.sort(sortable, _compare_entries)
 
-	local selected = {}
+	local selected = self._div_buff_selected or {}
+	local selected_lookup = self._div_buff_selected_lookup or {}
 	local selected_count = 0
 	local negative_count = 0
 	local positive_count = 0
+
+	self._div_buff_selected = selected
+	self._div_buff_selected_lookup = selected_lookup
+	table.clear(selected)
+	table.clear(selected_lookup)
 
 	for i = 1, #sortable do
 		local entry = sortable[i]
@@ -496,8 +511,6 @@ M.update = function(self, dt, t, ui_renderer, opacity)
 			selected[selected_count] = entry
 		end
 	end
-
-	local selected_lookup = {}
 
 	for i = 1, #selected do
 		local entry = selected[i]
@@ -630,6 +643,9 @@ M.destroy = function(self, ui_renderer)
 
 	self._div_buff_entries = {}
 	self._div_buff_widget_pool = {}
+	self._div_buff_sortable = {}
+	self._div_buff_selected = {}
+	self._div_buff_selected_lookup = {}
 end
 
 return M

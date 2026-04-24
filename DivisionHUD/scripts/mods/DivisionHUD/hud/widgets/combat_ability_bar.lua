@@ -286,11 +286,11 @@ local function compact_overlay_entries(entry_list)
 		return entry_list
 	end
 
-	local compacted_entries = {}
+	local write_index = 0
+	local last_entry = nil
 
 	for i = 1, #entry_list do
 		local current_entry = entry_list[i]
-		local last_entry = compacted_entries[#compacted_entries]
 		local current_start = current_entry and current_entry.start_time
 		local last_start = last_entry and last_entry.start_time
 		local should_merge = false
@@ -325,32 +325,44 @@ local function compact_overlay_entries(entry_list)
 				last_entry.key = current_entry.key
 			end
 		else
-			compacted_entries[#compacted_entries + 1] = current_entry
+			write_index = write_index + 1
+			entry_list[write_index] = current_entry
+			last_entry = current_entry
 		end
 	end
 
-	table.clear(entry_list)
-
-	for i = 1, #compacted_entries do
-		entry_list[i] = compacted_entries[i]
+	for i = write_index + 1, #entry_list do
+		entry_list[i] = nil
 	end
 
 	return entry_list
 end
 
-local function assign_overlay_entries_to_slots(entry_list, spent_segments, slot_keys)
+local function assign_overlay_entries_to_slots(entry_list, spent_segments, slot_keys, scratch)
+	scratch = scratch or {}
+
+	local assigned_entries = scratch.assigned_entries or {}
+	local next_slot_keys = scratch.next_slot_keys or {}
+	local entry_by_key = scratch.entry_by_key or {}
+	local unassigned_entries = scratch.unassigned_entries or {}
+
+	scratch.assigned_entries = assigned_entries
+	scratch.next_slot_keys = next_slot_keys
+	scratch.entry_by_key = entry_by_key
+	scratch.unassigned_entries = unassigned_entries
+
+	table.clear(assigned_entries)
+	table.clear(next_slot_keys)
+	table.clear(entry_by_key)
+	table.clear(unassigned_entries)
+
 	if spent_segments <= 0 then
 		if type(slot_keys) == "table" then
 			table.clear(slot_keys)
 		end
 
-		return {}
+		return assigned_entries
 	end
-
-	local assigned_entries = {}
-	local next_slot_keys = {}
-	local entry_by_key = {}
-	local unassigned_entries = {}
 
 	if type(entry_list) == "table" then
 		for i = 1, #entry_list do
@@ -412,12 +424,13 @@ local function assign_overlay_entries_to_slots(entry_list, spent_segments, slot_
 	return assigned_entries
 end
 
-local function collect_buff_overlay_entries(buff_extension, candidate_list, entry_list)
+local function collect_buff_overlay_entries(buff_extension, candidate_list, entry_list, wanted_templates)
 	if not buff_extension or type(candidate_list) ~= "table" or type(entry_list) ~= "table" or #candidate_list == 0 then
 		return entry_list
 	end
 
-	local wanted_templates = {}
+	wanted_templates = wanted_templates or {}
+	table.clear(wanted_templates)
 
 	for i = 1, #candidate_list do
 		wanted_templates[candidate_list[i]] = true
@@ -426,6 +439,8 @@ local function collect_buff_overlay_entries(buff_extension, candidate_list, entr
 	local buff_instances = buff_extension._buffs
 
 	if type(buff_instances) ~= "table" then
+		table.clear(wanted_templates)
+
 		return entry_list
 	end
 
@@ -444,6 +459,8 @@ local function collect_buff_overlay_entries(buff_extension, candidate_list, entr
 			append_overlay_entry(entry_list, progress, remaining_time, start_time, nil, entry_key)
 		end
 	end
+
+	table.clear(wanted_templates)
 
 	return entry_list
 end
@@ -1057,12 +1074,26 @@ function M.update(player_unit, widget, opacity, definitions, combat_ability_type
 	local template_key = ability_row and ability_row.ability_template
 	local tweak_data = ability_row and ability_row.ability_template_tweak_data
 	local ability_template = template_key and AbilityTemplates[template_key]
-	local buff_candidates = collect_duration_buff_candidates(ability_template, tweak_data, {})
+	local content = widget.content
+	local buff_candidates = content.divisionhud_buff_candidate_buffer or {}
+	local active_overlay_entries = content.divisionhud_overlay_entry_buffer or {}
+	local wanted_templates = content.divisionhud_wanted_template_buffer or {}
+	local overlay_assign_scratch = content.divisionhud_overlay_assign_scratch or {}
+
+	content.divisionhud_buff_candidate_buffer = buff_candidates
+	content.divisionhud_overlay_entry_buffer = active_overlay_entries
+	content.divisionhud_wanted_template_buffer = wanted_templates
+	content.divisionhud_overlay_assign_scratch = overlay_assign_scratch
+
+	table.clear(buff_candidates)
+	table.clear(active_overlay_entries)
+	table.clear(wanted_templates)
+
+	collect_duration_buff_candidates(ability_template, tweak_data, buff_candidates)
 	local suppress_base_cooldown_visual = ability_row and ability_row.ability_group == "psyker_shout" and combat_ability_is_active(player_unit)
 
 	append_manual_ability_group_buff_candidates(ability_row, buff_candidates)
 
-	local active_overlay_entries = {}
 	local buff_overlay_progress = buff_extension and best_buff_overlay_progress(buff_extension, buff_candidates)
 	local psyker_force_field_overlay_progress = psyker_force_field_bar_fill_progress(player_unit, ability_row)
 	local psyker_overcharge_overlay_progress = psyker_overcharge_stance_bar_fill_progress(player_unit, ability_row, buff_extension)
@@ -1078,7 +1109,7 @@ function M.update(player_unit, widget, opacity, definitions, combat_ability_type
 		base_active_partial_fill = false
 	end
 
-	collect_buff_overlay_entries(buff_extension, buff_candidates, active_overlay_entries)
+	collect_buff_overlay_entries(buff_extension, buff_candidates, active_overlay_entries, wanted_templates)
 	collect_psyker_force_field_overlay_entries(player_unit, ability_row, active_overlay_entries)
 	collect_psyker_overcharge_overlay_entries(player_unit, ability_row, buff_extension, active_overlay_entries)
 	collect_tracked_deployable_overlay_entries(ability_row, active_overlay_entries)
@@ -1153,7 +1184,7 @@ function M.update(player_unit, widget, opacity, definitions, combat_ability_type
 		local ox = 0
 		local spent_segments = math.max(n - remaining, 0)
 		local overlay_slot_keys = widget.content.overlay_slot_keys or {}
-		local slotted_overlay_entries = assign_overlay_entries_to_slots(active_overlay_entries, spent_segments, overlay_slot_keys)
+		local slotted_overlay_entries = assign_overlay_entries_to_slots(active_overlay_entries, spent_segments, overlay_slot_keys, overlay_assign_scratch)
 		local recharge_slot_index = nil
 
 		for slot_index = 1, spent_segments do

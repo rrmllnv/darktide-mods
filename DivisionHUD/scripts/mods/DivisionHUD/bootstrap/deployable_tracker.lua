@@ -1,5 +1,23 @@
 local mod = get_mod("DivisionHUD")
 
+mod.tracked_deployables = mod.tracked_deployables or {}
+
+if mod._divisionhud_deployable_tracker_hooked then
+	return mod
+end
+
+mod._divisionhud_deployable_tracker_hooked = true
+
+local function division_hud_clear_tracked_deployables()
+	if type(mod.tracked_deployables) == "table" then
+		table.clear(mod.tracked_deployables)
+	else
+		mod.tracked_deployables = {}
+	end
+end
+
+mod.divisionhud_clear_tracked_deployables = division_hud_clear_tracked_deployables
+
 local function division_hud_add_tracked_deployable(unit, name, duration)
 	if not unit or type(name) ~= "string" or type(duration) ~= "number" or duration <= 0 then
 		return

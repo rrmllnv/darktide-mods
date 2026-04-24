@@ -987,33 +987,37 @@ mod.alerts_on_unit_spawner_spawn_husk = function(spawner_manager, game_object_id
 	alerts_on_unit_spawn_for_alert_categories(raw_breed_name, unit, t)
 end
 
-mod:hook_safe("UnitSpawnerManager", "_add_network_unit", function(self, unit, game_object_id, is_husk)
-	local game_session = Managers.state.game_session and Managers.state.game_session:game_session()
+if not mod._divisionhud_alerts_spawn_hooked then
+	mod._divisionhud_alerts_spawn_hooked = true
 
-	if not game_session then
-		return
-	end
+	mod:hook_safe("UnitSpawnerManager", "_add_network_unit", function(self, unit, game_object_id, is_husk)
+		local game_session = Managers.state.game_session and Managers.state.game_session:game_session()
 
-	local is_server = Managers.state.game_session:is_server()
+		if not game_session then
+			return
+		end
 
-	if not is_server then
-		return
-	end
+		local is_server = Managers.state.game_session:is_server()
 
-	if not GameSession.has_game_object_field(game_session, game_object_id, "breed_id") then
-		return
-	end
+		if not is_server then
+			return
+		end
 
-	local breed_id = GameSession.game_object_field(game_session, game_object_id, "breed_id")
-	local raw_breed_name = NetworkLookup.breed_names[breed_id]
-	local t = alerts_gameplay_time()
+		if not GameSession.has_game_object_field(game_session, game_object_id, "breed_id") then
+			return
+		end
 
-	if not t then
-		return
-	end
+		local breed_id = GameSession.game_object_field(game_session, game_object_id, "breed_id")
+		local raw_breed_name = NetworkLookup.breed_names[breed_id]
+		local t = alerts_gameplay_time()
 
-	alerts_on_unit_spawn_for_alert_categories(raw_breed_name, unit, t)
-end)
+		if not t then
+			return
+		end
+
+		alerts_on_unit_spawn_for_alert_categories(raw_breed_name, unit, t)
+	end)
+end
 
 mod.divisionhud_alerts_apply_settings = function(setting_id)
 	local relevant = setting_id == "divisionhud_reset_all_settings"

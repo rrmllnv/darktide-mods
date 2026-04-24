@@ -62,9 +62,7 @@ mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, para
 end)
 
 mod:hook("MechanismManager", "mechanism_data", function(func, self)
-	if self and self._mechanism then
-		return func(self)
-	end
+	return func(self)
 end)
 
 return mod

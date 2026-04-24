@@ -85,6 +85,7 @@ local ALERTS_BODY_HEIGHT_MAX = Definitions.ALERTS_BODY_HEIGHT_MAX
 local ALERTS_MESSAGE_TEXT_VERTICAL_INSET = Definitions.ALERTS_MESSAGE_TEXT_VERTICAL_INSET
 local ALERTS_MESSAGE_TEXT_OFFSET_Y = Definitions.ALERTS_MESSAGE_TEXT_OFFSET_Y or 0
 local ALERTS_MESSAGE_TEXT_WRAP_WIDTH = Definitions.ALERTS_MESSAGE_TEXT_WRAP_WIDTH
+local DEFAULT_HUD_LAYOUT_SCALE = Definitions.HUD_LAYOUT_SCALE or 1
 
 local COMBAT_ABILITY_TYPE = "combat_ability"
 local GRENADE_ABILITY_TYPE = "grenade_ability"
@@ -103,8 +104,20 @@ local function get_hud_layout_scale()
 		return s.hud_layout_scale
 	end
 
-	return Definitions.HUD_LAYOUT_SCALE or 1
+	return DEFAULT_HUD_LAYOUT_SCALE
 end
+
+local function get_hud_layout_runtime_ratio(instance)
+	local desired = get_hud_layout_scale()
+	local applied = instance and instance._division_runtime_hud_layout_scale or DEFAULT_HUD_LAYOUT_SCALE
+
+	if type(applied) ~= "number" or applied == 0 then
+		applied = DEFAULT_HUD_LAYOUT_SCALE
+	end
+
+	return (applied ~= 0) and (desired / applied) or 1
+end
+
 local SLOT_TEXT_FULL_OFFSET_X = Definitions.SLOT_TEXT_FULL_OFFSET_X
 local SLOT_TEXT_MAIN_OFFSET_X = Definitions.SLOT_TEXT_MAIN_OFFSET_X
 local FRACTION_COLOR_GT_MAIN = Definitions.AMMO_TEXT_COLOR_FRACTION_GT_MAIN or 0.75
@@ -1275,6 +1288,14 @@ end
 
 local function _div_alert_init(self)
 	self._div_alert_by_key = {}
+	self._div_alert_feed_key_to_line = {}
+	self._div_alert_stack = {}
+	self._div_alert_to_remove = {}
+	self._div_alert_render_list = {}
+	self._div_alert_text_height_size = {
+		ALERTS_MESSAGE_TEXT_WRAP_WIDTH,
+		4096,
+	}
 	self._div_alert_col_h  = 0
 	self._div_alert_next_enter_t = nil
 end
@@ -1324,7 +1345,7 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 	local alerts_mirror_ui = mission_mirror or team_mirror
 
 	if alerts_master_off and not alerts_mirror_ui then
-		self._div_alert_by_key = {}
+		table.clear(self._div_alert_by_key)
 		self._div_alert_col_h  = 0
 		self._div_alert_next_enter_t = nil
 
@@ -1378,11 +1399,12 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 	local by_key = self._div_alert_by_key
 	local drop_px  = _div_alert_drop_px()
 	local slide_px = _div_alert_slide_px()
-	local desired = get_hud_layout_scale()
-	local def_scale = (Definitions and Definitions.HUD_LAYOUT_SCALE) or 1
-	local ratio = (def_scale ~= 0) and (desired / def_scale) or 1
+	local ratio = get_hud_layout_runtime_ratio(self)
 
-	local feed_key_to_line = {}
+	local feed_key_to_line = self._div_alert_feed_key_to_line or {}
+
+	self._div_alert_feed_key_to_line = feed_key_to_line
+	table.clear(feed_key_to_line)
 
 	for i = 1, n do
 		local k = _div_alert_line_key(lines[i])
@@ -1470,10 +1492,13 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 				local body_h = ALERTS_BODY_HEIGHT_MIN
 
 				if ui_renderer and scratch_msg_st and type(ALERTS_MESSAGE_TEXT_WRAP_WIDTH) == "number" and type(ALERTS_MESSAGE_TEXT_VERTICAL_INSET) == "number" then
-					local measured = Text.text_height(ui_renderer, line.text, scratch_msg_st, {
-						ALERTS_MESSAGE_TEXT_WRAP_WIDTH,
-						4096,
-					}, true)
+					local text_height_size = self._div_alert_text_height_size or {}
+
+					self._div_alert_text_height_size = text_height_size
+					text_height_size[1] = ALERTS_MESSAGE_TEXT_WRAP_WIDTH
+					text_height_size[2] = 4096
+
+					local measured = Text.text_height(ui_renderer, line.text, scratch_msg_st, text_height_size, true)
 
 					body_h = math.ceil(measured + ALERTS_MESSAGE_TEXT_VERTICAL_INSET + ALERTS_MESSAGE_TEXT_OFFSET_Y)
 					body_h = math.clamp(body_h, ALERTS_BODY_HEIGHT_MIN, ALERTS_BODY_HEIGHT_MAX)
@@ -1486,7 +1511,10 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		end
 	end
 
-	local stack = {}
+	local stack = self._div_alert_stack or {}
+
+	self._div_alert_stack = stack
+	table.clear(stack)
 
 	for i = n, 1, -1 do
 		local k = _div_alert_line_key(lines[i])
@@ -1544,7 +1572,10 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		end
 	end
 
-	local to_remove = {}
+	local to_remove = self._div_alert_to_remove or {}
+
+	self._div_alert_to_remove = to_remove
+	table.clear(to_remove)
 
 	for k, item in pairs(by_key) do
 		item.timer = item.timer + dt
@@ -1605,7 +1636,10 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 		_div_alert_clear_slot_widget(alert_slot_widget_names[si] and widgets[alert_slot_widget_names[si]])
 	end
 
-	local render_list = {}
+	local render_list = self._div_alert_render_list or {}
+
+	self._div_alert_render_list = render_list
+	table.clear(render_list)
 
 	for _, item in ipairs(stack) do
 		render_list[#render_list + 1] = item
@@ -1793,12 +1827,15 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	end
 	local function apply_runtime_hud_scale(instance)
 		local desired = get_hud_layout_scale()
-		local def_scale = (Definitions and Definitions.HUD_LAYOUT_SCALE) or 1
+		local def_scale = DEFAULT_HUD_LAYOUT_SCALE
 		if type(desired) ~= "number" then
 			return
 		end
 
 		local ratio = (def_scale ~= 0) and (desired / def_scale) or 1
+
+		instance._division_runtime_hud_layout_scale = desired
+		instance._division_runtime_hud_layout_ratio = ratio
 
 		if ratio == 1 then
 			return
@@ -1886,9 +1923,6 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 			end
 		end
 		instance._update_scenegraph = true
-		if type(desired) == "number" then
-			Definitions.HUD_LAYOUT_SCALE = desired
-		end
 	end
 
 	self._apply_runtime_hud_scale = apply_runtime_hud_scale
@@ -1906,9 +1940,7 @@ HudElementDivisionHUD._update_buff_rows_position = function(self)
 		target_y = self._division_buff_rows_hidden_stamina_y or target_y
 	end
 
-	local desired = get_hud_layout_scale()
-	local def_scale = (Definitions and Definitions.HUD_LAYOUT_SCALE) or 1
-	local ratio = (def_scale ~= 0) and (desired / def_scale) or 1
+	local ratio = get_hud_layout_runtime_ratio(self)
 	local target_y_scaled = math.floor(target_y * ratio + 0.5)
 
 	if self._division_buff_rows_current_y ~= target_y_scaled then
@@ -1959,9 +1991,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 			and HudUtils.custom_hud_get_saved_root_position_for_division_hud
 			and HudUtils.custom_hud_get_saved_root_position_for_division_hud()
 
-		local desired = get_hud_layout_scale()
-		local def_scale = (Definitions and Definitions.HUD_LAYOUT_SCALE) or 1
-		local ratio = (def_scale ~= 0) and (desired / def_scale) or 1
+		local ratio = get_hud_layout_runtime_ratio(self)
 
 		if integrate_chud and chud_has_division_nodes and chud_root_base then
 			self:set_scenegraph_position(
