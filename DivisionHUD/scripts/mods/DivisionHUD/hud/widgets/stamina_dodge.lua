@@ -348,7 +348,7 @@ M._update_dodge_amount = function(self, t, ui_renderer)
 end
 
 M._update_dodging_data = function(self, player_extensions)
-	local current_max_effective_dodges = 0
+	local current_max_effective_dodges = self._max_effective_dodges or 0
 
 	if player_extensions then
 		local unit_data_extension = player_extensions.unit_data
@@ -362,11 +362,11 @@ M._update_dodging_data = function(self, player_extensions)
 			local fixed_t = FixedFrame.get_latest_fixed_time()
 			local ok, num_effective_dodges = pcall(Dodge.num_effective_dodges, player_extensions.unit)
 
-			if not ok or type(num_effective_dodges) ~= "number" or num_effective_dodges < 2 then
+			if not ok or type(num_effective_dodges) ~= "number" then
 				return self._max_effective_dodges or 0
 			end
 
-			current_max_effective_dodges = math.floor(num_effective_dodges)
+			current_max_effective_dodges = math.max(math.floor(num_effective_dodges), 0)
 
 			local is_vaulting = movement_state_component.method == "vaulting"
 			local is_lunging = movement_state_component.method == "lunging"
