@@ -301,7 +301,7 @@ mod.divisionhud_debug_update = function()
 		if debug_state.expedition_salvage_override then
 			debug_state.expedition_salvage_override = nil
 		else
-			debug_state.expedition_salvage_override = math.random(1, 999999)
+			debug_state.expedition_salvage_override = math.random(1, 99999)
 		end
 	end
 end

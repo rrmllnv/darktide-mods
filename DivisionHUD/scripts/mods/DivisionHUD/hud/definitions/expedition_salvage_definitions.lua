@@ -11,7 +11,10 @@ function M.build(params)
 	local right_bottom_slot_width = params.right_bottom_slot_width
 	local right_bottom_slot_height = params.right_bottom_slot_height
 	local slot_text_font = params.slot_text_font
-	local expedition_salvage_slot_w = math.max(right_bottom_slot_width, sc(72))
+	local salvage_max_chars = 9
+	local salvage_char_width_mul = 0.58
+	local salvage_text_min_w = math.ceil(slot_text_font * salvage_max_chars * salvage_char_width_mul)
+	local expedition_salvage_slot_w = math.max(right_bottom_slot_width, sc(72), salvage_text_min_w)
 	local expedition_salvage_slot_x = -(expedition_salvage_slot_w + right_gap)
 
 	local text_style = table.clone(UIFontSettings.hud_body)
