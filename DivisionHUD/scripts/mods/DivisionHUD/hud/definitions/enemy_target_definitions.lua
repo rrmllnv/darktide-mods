@@ -32,9 +32,9 @@ function M.build(params)
 	local debuff_row_height = sc(24)
 	local debuff_start_y = health_info_y + health_text_height + sc(4)
 	local debuff_gap = sc(4)
-	local debuff_name_min_width = sc(112)
+	local debuff_name_min_width = sc(168)
 	local value_width = math.max(sc(36), math.ceil(debuff_value_font * debuff_value_max_chars * debuff_value_char_width_mul))
-	local block_width = math.max(sc(232), expedition_salvage_slot_w + sc(156))
+	local block_width = math.max(sc(288), expedition_salvage_slot_w + sc(212))
 	local block_x = expedition_salvage_slot_x + expedition_salvage_slot_w - block_width
 	local slide_px = math.max(sc(40), block_width - expedition_salvage_slot_w)
 	local content_width = block_width - padding_x - content_right_inset

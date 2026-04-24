@@ -4,6 +4,7 @@ local Stamina = require("scripts/utilities/attack/stamina")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local FixedFrame = require("scripts/utilities/fixed_frame")
 local Dodge = require("scripts/extension_systems/character_state_machine/character_states/utilities/dodge")
+local WeaponDodgeTemplates = require("scripts/settings/dodge/weapon_dodge_templates")
 local DODGE_BAR_STATE_COLORS_BAR_FILL = HudElementDodgeCounterSettings.DODGE_BAR_STATE_COLORS_BAR_FILL
 local DODGE_BAR_STATE_COLORS_BAR_BACKGROUND = HudElementDodgeCounterSettings.DODGE_BAR_STATE_COLORS_BAR_BACKGROUND
 local STAMINA_NODGES_COLOR = HudElementStaminaSettings.STAMINA_NODGES_COLOR
@@ -347,6 +348,35 @@ M._update_dodge_amount = function(self, t, ui_renderer)
 	end
 end
 
+M._compute_num_effective_dodges_safe = function(player_extensions, unit_data_extension)
+	local unit = player_extensions.unit
+	local num_effective_dodges = Dodge.num_effective_dodges(unit)
+
+	if num_effective_dodges and num_effective_dodges >= 2 then
+		return num_effective_dodges
+	end
+
+	local twk = unit_data_extension and unit_data_extension:read_component("weapon_tweak_templates")
+	local name = twk and twk.dodge_template_name
+
+	if not name or name == "none" then
+		return num_effective_dodges or 0
+	end
+
+	local raw_name = string.gsub(name, "^base_", "")
+	local raw_template = WeaponDodgeTemplates[raw_name]
+
+	if not raw_template or not raw_template.diminishing_return_start then
+		return num_effective_dodges or 0
+	end
+
+	local drs = raw_template.diminishing_return_start
+	local base_drs = type(drs) == "table" and (drs.lerp_basic or 2) or drs or 2
+	local extras = Dodge.extra_consecutive_dodges(unit, player_extensions.buff) or 0
+
+	return base_drs + extras
+end
+
 M._update_dodging_data = function(self, player_extensions)
 	local current_max_effective_dodges = 0
 
@@ -360,7 +390,7 @@ M._update_dodging_data = function(self, player_extensions)
 			local slide_character_state_component = unit_data_extension:read_component("slide_character_state")
 			local character_state_component = unit_data_extension:read_component("character_state")
 			local fixed_t = FixedFrame.get_latest_fixed_time()
-			local num_effective_dodges = Dodge.num_effective_dodges(player_extensions.unit)
+			local num_effective_dodges = M._compute_num_effective_dodges_safe(player_extensions, unit_data_extension)
 
 			current_max_effective_dodges = math.floor(num_effective_dodges)
 
