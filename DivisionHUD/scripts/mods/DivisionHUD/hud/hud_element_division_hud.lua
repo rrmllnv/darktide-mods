@@ -938,6 +938,15 @@ HudElementDivisionHUD._update_enemy_target_scan = function(self, player_unit, dt
 	end
 
 	self._enemy_target_scan_timer = 0
+
+	local debug_override = type(mod.divisionhud_debug_get_enemy_target_override) == "function" and mod.divisionhud_debug_get_enemy_target_override() or nil
+
+	if type(debug_override) == "table" then
+		self._enemy_target_data = debug_override
+
+		return
+	end
+
 	local enemy_target_runtime = mod.enemy_target_runtime or EnemyTargetRuntime
 
 	if enemy_target_runtime and type(enemy_target_runtime.scan) == "function" then

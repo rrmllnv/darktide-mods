@@ -557,7 +557,7 @@ local function _build_result(unit)
 		health_current = health_extension:current_health(),
 		health_max = health_extension:max_health(),
 		health_fraction = health_extension:current_health_percent(),
-		debuffs = _collect_debuffs(unit),
+		debuffs = _setting_enabled("enemy_target_show_debuffs", true) and _collect_debuffs(unit) or {},
 	}
 end
 

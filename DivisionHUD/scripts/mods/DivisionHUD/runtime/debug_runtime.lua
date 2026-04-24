@@ -7,8 +7,10 @@ end
 mod._divisionhud_debug_hooked = true
 
 local BuffSettings = require("scripts/settings/buff/buff_settings")
+local EnemyDebuffs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/enemy_debuffs")
 
 local buff_categories = BuffSettings.buff_categories
+local DEBUG_DEBUFF_STYLES = type(EnemyDebuffs) == "table" and EnemyDebuffs.DEBUFF_STYLES or {}
 
 local DEBUG_ALERT_STRIP = "DEBUG"
 local DEBUG_ALERT_TEXT = "Enemies nearby"
@@ -20,6 +22,7 @@ local debug_state = {
 	invulnerability_start_t = nil,
 	invulnerability_expire_t = nil,
 	alert_instance_seq = 0,
+	enemy_target_override = nil,
 }
 
 local DEBUG_FAKE_BUFF_TEMPLATE = {
@@ -72,6 +75,90 @@ end
 local function clear_debug_state()
 	debug_state.invulnerability_start_t = nil
 	debug_state.invulnerability_expire_t = nil
+	debug_state.enemy_target_override = nil
+end
+
+local DEBUG_MAX_DEBUFF_ROWS = 9
+local DEBUG_BREED_TYPES = { "elite", "special", "monster", "captain" }
+
+local function _debug_random_value_text()
+	local mode = math.random(1, 5)
+
+	if mode == 1 then
+		return string.format("x%d", math.random(2, 99))
+	elseif mode == 2 then
+		return string.format("+%d%%", math.random(5, 200))
+	elseif mode == 3 then
+		return string.format("+%d.%d%%", math.random(1, 99), math.random(0, 9))
+	elseif mode == 4 then
+		return string.format("x%d", math.random(2, 9))
+	end
+
+	return string.format("-%d%%", math.random(5, 75))
+end
+
+local function _shuffled_style_keys()
+	local keys = {}
+
+	for group_key in pairs(DEBUG_DEBUFF_STYLES) do
+		keys[#keys + 1] = group_key
+	end
+
+	for i = #keys, 2, -1 do
+		local j = math.random(1, i)
+
+		keys[i], keys[j] = keys[j], keys[i]
+	end
+
+	return keys
+end
+
+local function _build_debug_enemy_target_data()
+	local keys = _shuffled_style_keys()
+	local total = math.min(#keys, DEBUG_MAX_DEBUFF_ROWS)
+	local count = total > 0 and math.random(1, total) or 0
+	local debuffs = {}
+
+	for i = 1, count do
+		local group_key = keys[i]
+		local style = DEBUG_DEBUFF_STYLES[group_key]
+		local label = nil
+		local loc_key = style and style.localization_key
+
+		if loc_key then
+			local loc_value = mod:localize(loc_key)
+
+			if type(loc_value) == "string" and loc_value ~= "" and not string.find(loc_value, "^<") then
+				label = loc_value
+			end
+		end
+
+		debuffs[#debuffs + 1] = {
+			name = group_key,
+			type = "dot",
+			group = group_key,
+			stacks = math.random(1, 5),
+			icon = style and style.icon or "content/ui/materials/icons/generic/danger",
+			colour = style and style.colour or { 255, 255, 255, 255 },
+			label = label or (style and style.label) or group_key,
+			value_text = _debug_random_value_text(),
+		}
+	end
+
+	local breed_type = DEBUG_BREED_TYPES[math.random(1, #DEBUG_BREED_TYPES)]
+	local health_max = math.random(5, 250) * 100
+	local health_fraction = math.random(5, 100) / 100
+
+	return {
+		active = true,
+		name = "DEBUG TARGET",
+		type_text = breed_type,
+		breed_type = breed_type,
+		health_current = math.floor(health_max * health_fraction),
+		health_max = health_max,
+		health_fraction = health_fraction,
+		debuffs = debuffs,
+	}
 end
 
 mod.divisionhud_debug_apply_settings = function(setting_id)
@@ -199,6 +286,14 @@ mod.divisionhud_debug_update = function()
 		debug_state.invulnerability_start_t = game_t
 		debug_state.invulnerability_expire_t = game_t + DEBUG_INVULNERABILITY_DURATION
 	end
+
+	if key_pressed("numpad 3") then
+		if debug_state.enemy_target_override then
+			debug_state.enemy_target_override = nil
+		else
+			debug_state.enemy_target_override = _build_debug_enemy_target_data()
+		end
+	end
 end
 
 mod.divisionhud_debug_get_extra_buffs = function()
@@ -229,6 +324,14 @@ mod.divisionhud_debug_get_timed_gold_bar_progress = function()
 	end
 
 	return invulnerability_progress(game_t)
+end
+
+mod.divisionhud_debug_get_enemy_target_override = function()
+	if not debug_enabled() then
+		return nil
+	end
+
+	return debug_state.enemy_target_override
 end
 
 mod.divisionhud_debug_get_toughness_override = function()

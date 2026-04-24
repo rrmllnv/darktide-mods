@@ -904,6 +904,16 @@ return {
 		ru = "Сколько секунд блок остается видимым после триггера попадания (не влияет на наведение).",
 		["zh-cn"] = "命中触发后模块保持显示的秒数（不影响瞄准触发）。",
 	},
+	enemy_target_show_debuffs = {
+		en = "Show debuffs",
+		ru = "Показывать дебафы",
+		["zh-cn"] = "显示减益",
+	},
+	enemy_target_show_debuffs_description = {
+		en = "Show the list of active debuffs on the enemy target inside the block.",
+		ru = "Показывать список активных дебафов на вражеской цели внутри блока.",
+		["zh-cn"] = "在模块中显示敌方目标身上的有效减益列表。",
+	},
 	enemy_target_groups = {
 		en = string.rep("\194\160", 8) .. "Enemy groups",
 		ru = string.rep("\194\160", 8) .. "Группы врагов",
