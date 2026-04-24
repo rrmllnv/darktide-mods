@@ -16,16 +16,16 @@ function M.build(params)
 	local expedition_salvage_slot_x = -(expedition_salvage_slot_w + right_gap)
 	local padding_x = sc(6)
 	local top_y = sc(3)
-	local title_font = sc(20)
-	local health_text_font = sc(20)
+	local title_font = sc(18)
+	local health_text_font = sc(18)
 	local name_height = sc(24)
 	local health_bar_width = sc(8)
 	local health_bar_gap = sc(4)
 	local content_right_inset = padding_x + health_bar_width + health_bar_gap
 	local health_info_y = top_y + name_height + sc(3)
 	local health_text_height = sc(24)
-	local debuff_value_font = sc(20)
-	local debuff_name_font = sc(20)
+	local debuff_value_font = sc(18)
+	local debuff_name_font = sc(18)
 	local debuff_value_max_chars = 6
 	local debuff_value_char_width_mul = 0.58
 	local debuff_icon_size = sc(24)
@@ -47,7 +47,7 @@ function M.build(params)
 	local name_x = padding_x
 	local name_width = math.max(debuff_name_min_width, value_x - debuff_gap - name_x)
 
-	local title_style = table.clone(UIFontSettings.hud_body)
+	local title_style = table.clone(UIFontSettings.body_small)
 
 	title_style.font_size = title_font
 	title_style.drop_shadow = true
@@ -61,7 +61,7 @@ function M.build(params)
 	title_style.truncated = true
 	title_style.max_lines = 1
 
-	local health_text_style = table.clone(UIFontSettings.hud_body)
+	local health_text_style = table.clone(UIFontSettings.body_small)
 
 	health_text_style.font_size = health_text_font
 	health_text_style.drop_shadow = true
@@ -182,7 +182,7 @@ function M.build(params)
 			text_horizontal_alignment = "right",
 			text_vertical_alignment = "center",
 			offset = { value_x, row_y, 7 },
-			font_type = UIFontSettings.hud_body.font_type,
+			font_type = UIFontSettings.body_small.font_type,
 			font_size = debuff_value_font,
 			text_color = table.clone(UIHudSettings.color_tint_main_1),
 			size = { value_width, debuff_row_height },
@@ -196,7 +196,7 @@ function M.build(params)
 			text_horizontal_alignment = "right",
 			text_vertical_alignment = "center",
 			offset = { value_x + sc(1), row_y, 6 },
-			font_type = UIFontSettings.hud_body.font_type,
+			font_type = UIFontSettings.body_small.font_type,
 			font_size = debuff_value_font,
 			text_color = { 255, 0, 0, 0 },
 			size = { value_width, debuff_row_height },
@@ -207,7 +207,7 @@ function M.build(params)
 			text_horizontal_alignment = "right",
 			text_vertical_alignment = "center",
 			offset = { name_x, row_y, 6 },
-			font_type = UIFontSettings.hud_body.font_type,
+			font_type = UIFontSettings.body_small.font_type,
 			font_size = debuff_name_font,
 			text_color = table.clone(UIHudSettings.color_tint_main_1),
 			size = { name_width, debuff_row_height },

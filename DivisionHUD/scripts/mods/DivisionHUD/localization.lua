@@ -880,9 +880,9 @@ return {
 		["zh-cn"] = "瞄准敌人",
 	},
 	enemy_target_show_on_hover_description = {
-		en = "Show the block when the current target under the crosshair is an allowed enemy.",
-		ru = "Показывать блок, когда текущая цель под прицелом является допустимым врагом.",
-		["zh-cn"] = "当准星下的当前目标是允许的敌人时显示模块。",
+		en = "Show the block when the current target is under the crosshair.",
+		ru = "Показывать блок, когда текущая цель находится под прицелом.",
+		["zh-cn"] = "当当前目标处于准星下时显示模块。",
 	},
 	enemy_target_show_on_hit = {
 		en = "Hit enemy",
@@ -890,9 +890,9 @@ return {
 		["zh-cn"] = "命中敌人",
 	},
 	enemy_target_show_on_hit_description = {
-		en = "Show the block when you damage an allowed enemy.",
-		ru = "Показывать блок, когда вы наносите урон допустимому врагу.",
-		["zh-cn"] = "当你对允许的敌人造成伤害时显示模块。",
+		en = "Show the block when you damage an enemy.",
+		ru = "Показывать блок, когда вы наносите урон врагу.",
+		["zh-cn"] = "当你对敌人造成伤害时显示模块。",
 	},
 	enemy_target_hold_time = {
 		en = "Display time",
