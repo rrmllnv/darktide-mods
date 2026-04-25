@@ -315,7 +315,7 @@ local function _on_attack_result(_, damage_profile, attacked_unit, attacking_uni
 		return
 	end
 
-	local hold_time = _setting_number("enemy_target_hold_time", 5)
+	local hold_time = _setting_number("enemy_target_hold_time", 30)
 
 	hit_state.unit = attacked_unit
 	hit_state.expires_at = _now() + hold_time
