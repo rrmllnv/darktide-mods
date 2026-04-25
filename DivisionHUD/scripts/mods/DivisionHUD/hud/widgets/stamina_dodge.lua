@@ -90,6 +90,26 @@ M.destroy = function(self, ui_renderer)
 	end
 end
 
+local function resolve_dodge_player_extensions(parent)
+	local player_extensions = parent and parent.player_extensions and parent:player_extensions() or nil
+	local player_unit = player_extensions and player_extensions.unit
+
+	if not player_unit and parent and type(parent.player_unit) == "function" then
+		player_unit = parent:player_unit()
+	end
+
+	if not player_unit then
+		return player_extensions
+	end
+
+	player_extensions = player_extensions or {}
+	player_extensions.unit = player_unit
+	player_extensions.unit_data = player_extensions.unit_data or ScriptUnit.has_extension(player_unit, "unit_data_system")
+	player_extensions.weapon = player_extensions.weapon or ScriptUnit.has_extension(player_unit, "weapon_system")
+
+	return player_extensions
+end
+
 M._update_stamina_amount = function(self)
 	local num_stamina_chunks = 0
 	local parent = self._parent
@@ -310,51 +330,53 @@ M._remove_dodge_bar = function(self, ui_renderer)
 	local dodge_bar = self._dodge_bars[dodge_bar_index]
 	local widget = dodge_bar.widget
 
+	if dodge_bar.animation_id then
+		self:_stop_animation(dodge_bar.animation_id)
+
+		dodge_bar.animation_id = nil
+	end
+
 	self:_unregister_widget_name(widget.name)
 	UIWidget.destroy(ui_renderer, widget)
 
 	self._dodge_bars[#self._dodge_bars] = nil
 end
 
+M._sync_dodge_bar_amount = function(self, current_max_effective_dodges, ui_renderer)
+	self._max_effective_dodges = current_max_effective_dodges
+
+	local segment_spacing = HudElementDodgeCounterSettings.spacing
+	local total_segment_spacing = segment_spacing * math.max(current_max_effective_dodges - 1, 0)
+	local total_bar_length = self._division_dodge_bar_track_width - total_segment_spacing
+
+	self._dodge_bar_width = math.round(current_max_effective_dodges > 0 and total_bar_length / current_max_effective_dodges or total_bar_length)
+
+	while #self._dodge_bars > current_max_effective_dodges do
+		M._remove_dodge_bar(self, ui_renderer)
+	end
+
+	while #self._dodge_bars < current_max_effective_dodges do
+		M._add_dodge_bar(self)
+	end
+
+	self._start_on_half_bar = false
+end
+
 M._update_dodge_amount = function(self, t, ui_renderer)
 	local parent = self._parent
-	local player_extensions = parent:player_extensions()
+	local player_extensions = resolve_dodge_player_extensions(parent)
 	local current_max_effective_dodges = M._update_dodging_data(self, player_extensions)
-	local max_effective_dodges_changed = current_max_effective_dodges ~= self._max_effective_dodges
 
-	if max_effective_dodges_changed then
-		local amount_difference = (self._max_effective_dodges or 0) - current_max_effective_dodges
-
-		self._max_effective_dodges = current_max_effective_dodges
-
-		local segment_spacing = HudElementDodgeCounterSettings.spacing
-		local total_segment_spacing = segment_spacing * math.max(current_max_effective_dodges - 1, 0)
-		local total_bar_length = self._division_dodge_bar_track_width - total_segment_spacing
-
-		self._dodge_bar_width = math.round(current_max_effective_dodges > 0 and total_bar_length / current_max_effective_dodges or total_bar_length)
-
-		local add_dodges = amount_difference < 0
-
-		for i = 1, math.abs(amount_difference) do
-			if add_dodges then
-				M._add_dodge_bar(self)
-			else
-				M._remove_dodge_bar(self, ui_renderer)
-			end
-		end
-
-		self._start_on_half_bar = false
-	end
+	M._sync_dodge_bar_amount(self, current_max_effective_dodges, ui_renderer)
 end
 
 M._update_dodging_data = function(self, player_extensions)
-	local current_max_effective_dodges = self._max_effective_dodges or 0
+	local current_max_effective_dodges = 0
 
 	if player_extensions then
 		local player_unit = player_extensions.unit
 		local unit_data_extension = player_extensions.unit_data
 		local weapon_extension = player_extensions.weapon
-		local buff_extension = player_extensions.buff
 
 		if player_unit and unit_data_extension and weapon_extension then
 			local movement_state_component = unit_data_extension and unit_data_extension:read_component("movement_state")
@@ -362,7 +384,7 @@ M._update_dodging_data = function(self, player_extensions)
 			local slide_character_state_component = unit_data_extension:read_component("slide_character_state")
 			local character_state_component = unit_data_extension:read_component("character_state")
 			local fixed_t = FixedFrame.get_latest_fixed_time()
-			local num_effective_dodges = Dodge.num_effective_dodges(player_unit, weapon_extension, buff_extension)
+			local num_effective_dodges = Dodge.num_effective_dodges(player_unit)
 
 			current_max_effective_dodges = math.floor(num_effective_dodges)
 
