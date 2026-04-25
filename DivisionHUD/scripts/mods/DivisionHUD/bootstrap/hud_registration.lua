@@ -1,11 +1,5 @@
 local mod = get_mod("DivisionHUD")
 
-local SessionVector = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/session_vector")
-
-if not SessionVector.can_continue() then
-	return mod
-end
-
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local ELEMENT_CLASS_NAME = "HudElementDivisionHUD"
 local ELEMENT_FILENAME = "DivisionHUD/scripts/mods/DivisionHUD/hud/hud_element_division_hud"

@@ -1,11 +1,5 @@
 local mod = get_mod("DivisionHUD")
 
-local SessionVector = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/session_vector")
-
-if not SessionVector.can_continue() then
-	return mod
-end
-
 local EnemyDebuffs = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/enemy_debuffs")
 local BuffSettings = require("scripts/settings/buff/buff_settings")
 local AttackSettings = require("scripts/settings/damage/attack_settings")

@@ -1,11 +1,5 @@
 local mod = get_mod("DivisionHUD")
 
-local SessionVector = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/session_vector")
-
-if not SessionVector.can_continue() then
-	return
-end
-
 if mod._divisionhud_wielded_weapon_icon_tint_loaded then
 	return
 end

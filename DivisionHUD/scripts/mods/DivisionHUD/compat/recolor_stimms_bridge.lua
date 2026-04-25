@@ -4,12 +4,6 @@ if not mod then
 	return {}
 end
 
-local SessionVector = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/session_vector")
-
-if not SessionVector.can_continue() then
-	return {}
-end
-
 mod.recolor_stimms_bridge = mod.recolor_stimms_bridge or {}
 
 local Bridge = mod.recolor_stimms_bridge

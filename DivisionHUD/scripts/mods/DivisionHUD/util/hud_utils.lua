@@ -1,11 +1,5 @@
 local mod = get_mod("DivisionHUD")
 
-local SessionVector = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/session_vector")
-
-if not SessionVector.can_continue() then
-	return mod.hud_utils or {}
-end
-
 mod.hud_utils = mod.hud_utils or {}
 local HudUtils = mod.hud_utils
 
