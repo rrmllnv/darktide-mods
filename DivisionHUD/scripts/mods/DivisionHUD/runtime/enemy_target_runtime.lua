@@ -327,10 +327,8 @@ local function _on_rpc_attack_result(_, channel_id, damage_profile_id, attacked_
 	local attack_result = attack_result_id and NetworkLookup.attack_results[attack_result_id]
 	local attack_type = attack_type_id and NetworkLookup.attack_types[attack_type_id]
 	local damage_efficiency = damage_efficiency_id and NetworkLookup.damage_efficiencies[damage_efficiency_id]
-	local damage_profile_name = damage_profile_id and NetworkLookup.damage_profile_templates[damage_profile_id]
-	local damage_profile = damage_profile_name and DamageProfileTemplates[damage_profile_name]
 
-	_on_attack_result(nil, damage_profile, attacked_unit, attacking_unit, attack_direction, hit_world_position, hit_weakspot, damage, attack_result, attack_type, damage_efficiency, is_critical_strike)
+	_on_attack_result(nil, nil, attacked_unit, attacking_unit, attack_direction, hit_world_position, hit_weakspot, damage, attack_result, attack_type, damage_efficiency, is_critical_strike)
 end
 
 mod.enemy_target_runtime_on_attack_result = _on_attack_result
