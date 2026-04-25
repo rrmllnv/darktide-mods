@@ -1,12 +1,65 @@
 local mod = get_mod("DivisionHUD")
 
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
+local ELEMENT_CLASS_NAME = "HudElementDivisionHUD"
+local ELEMENT_FILENAME = "DivisionHUD/scripts/mods/DivisionHUD/hud/hud_element_division_hud"
 
-UIHudSettings.element_draw_layers["HudElementDivisionHUD"] = 301
+local function remove_existing_division_hud_element()
+	local ui_manager = Managers.ui
+	local hud = ui_manager and ui_manager._hud
+	local elements = hud and hud._elements
+	local element = elements and elements[ELEMENT_CLASS_NAME]
+
+	if not element then
+		return
+	end
+
+	local elements_array = hud._elements_array
+
+	if elements_array then
+		local element_index = table.index_of(elements_array, element)
+
+		if element_index ~= -1 then
+			table.remove(elements_array, element_index)
+		end
+	end
+
+	local visibility_groups = hud._visibility_groups
+
+	if visibility_groups then
+		for _, visibility_group in ipairs(visibility_groups) do
+			local visible_elements = visibility_group.visible_elements
+
+			if visible_elements then
+				visible_elements[ELEMENT_CLASS_NAME] = nil
+			end
+		end
+	end
+
+	if hud._elements_hud_scale_lookup then
+		hud._elements_hud_scale_lookup[ELEMENT_CLASS_NAME] = nil
+	end
+
+	if hud._elements_hud_retained_mode_lookup then
+		hud._elements_hud_retained_mode_lookup[ELEMENT_CLASS_NAME] = nil
+	end
+
+	elements[ELEMENT_CLASS_NAME] = nil
+
+	if element.destroy then
+		element:destroy(hud._ui_renderer)
+	end
+
+	mod:remove_require_path(ELEMENT_FILENAME)
+end
+
+UIHudSettings.element_draw_layers[ELEMENT_CLASS_NAME] = 301
+
+remove_existing_division_hud_element()
 
 mod:register_hud_element({
-	filename = "DivisionHUD/scripts/mods/DivisionHUD/hud/hud_element_division_hud",
-	class_name = "HudElementDivisionHUD",
+	filename = ELEMENT_FILENAME,
+	class_name = ELEMENT_CLASS_NAME,
 	use_hud_scale = true,
 	visibility_groups = {
 		"alive",

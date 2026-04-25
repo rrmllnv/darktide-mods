@@ -28,14 +28,6 @@ local BLACKLIST_BREEDS = {
 	attack_valkyrie = true,
 }
 
-local DIRECT_ATTACK_TYPES = {
-	melee = true,
-	ranged = true,
-	explosion = true,
-	push = true,
-	companion_dog = true,
-}
-
 mod.enemy_target_runtime_broadphase_results = nil
 mod.enemy_target_runtime_state = nil
 mod.enemy_target_runtime_health_samples = nil
@@ -192,6 +184,25 @@ local function _is_allowed_enemy_target(player_unit, unit, side_system)
 	return _is_allowed_breed_type(breed_type)
 end
 
+local function _is_allowed_hit_target(unit)
+	if not _is_alive_unit(unit) then
+		return false
+	end
+
+	local unit_data_extension = ScriptUnit.has_extension(unit, "unit_data_system")
+	local breed = unit_data_extension and unit_data_extension:breed()
+
+	if not breed or BLACKLIST_BREEDS[breed.name] then
+		return false
+	end
+
+	if not ScriptUnit.has_extension(unit, "health_system") then
+		return false
+	end
+
+	return _is_allowed_breed_type(_find_breed_category(unit))
+end
+
 local function _smart_targeting_aim_unit(player_unit, side_system)
 	if not _is_alive_unit(player_unit) then
 		return nil
@@ -230,6 +241,12 @@ local function _is_local_player_attacker(attacking_unit)
 		return false
 	end
 
+	local local_player = Managers.player and Managers.player:local_player(1)
+
+	if local_player and local_player.player_unit == attacking_unit then
+		return true
+	end
+
 	local player_unit_spawn_manager = Managers.state and Managers.state.player_unit_spawn
 
 	if not player_unit_spawn_manager then
@@ -237,7 +254,6 @@ local function _is_local_player_attacker(attacking_unit)
 	end
 
 	local attacking_player = player_unit_spawn_manager:owner(attacking_unit)
-	local local_player = Managers.player and Managers.player:local_player(1)
 
 	if not attacking_player or not local_player then
 		return false
@@ -285,22 +301,11 @@ local function _on_attack_result(_, damage_profile, attacked_unit, attacking_uni
 		return
 	end
 
-	if not DIRECT_ATTACK_TYPES[attack_type] then
-		return
-	end
-
 	if not _is_local_player_attacker(attacking_unit) then
 		return
 	end
 
-	local player_unit = _local_player_unit()
-	local side_system = _resolve_side_system()
-
-	if not player_unit or not side_system then
-		return
-	end
-
-	if not _is_allowed_enemy_target(player_unit, attacked_unit, side_system) then
+	if not _is_allowed_hit_target(attacked_unit) then
 		return
 	end
 
@@ -310,9 +315,41 @@ local function _on_attack_result(_, damage_profile, attacked_unit, attacking_uni
 	hit_state.expires_at = _now() + hold_time
 end
 
-if not mod.enemy_target_runtime_hooked then
-	mod:hook_safe("AttackReportManager", "add_attack_result", _on_attack_result)
-	mod.enemy_target_runtime_hooked = true
+local function _on_rpc_attack_result(_, channel_id, damage_profile_id, attacked_unit_id, attacked_unit_is_level_unit, attacking_unit_id, attack_direction, hit_world_position, hit_weakspot, damage, attack_result_id, attack_type_id, damage_efficiency_id, is_critical_strike)
+	local unit_spawner_manager = Managers.state and Managers.state.unit_spawner
+
+	if not unit_spawner_manager then
+		return
+	end
+
+	local attacked_unit = attacked_unit_id and unit_spawner_manager:unit(attacked_unit_id, attacked_unit_is_level_unit)
+	local attacking_unit = attacking_unit_id and unit_spawner_manager:unit(attacking_unit_id)
+	local attack_result = attack_result_id and NetworkLookup.attack_results[attack_result_id]
+	local attack_type = attack_type_id and NetworkLookup.attack_types[attack_type_id]
+	local damage_efficiency = damage_efficiency_id and NetworkLookup.damage_efficiencies[damage_efficiency_id]
+	local damage_profile_name = damage_profile_id and NetworkLookup.damage_profile_templates[damage_profile_id]
+	local damage_profile = damage_profile_name and DamageProfileTemplates[damage_profile_name]
+
+	_on_attack_result(nil, damage_profile, attacked_unit, attacking_unit, attack_direction, hit_world_position, hit_weakspot, damage, attack_result, attack_type, damage_efficiency, is_critical_strike)
+end
+
+mod.enemy_target_runtime_on_attack_result = _on_attack_result
+mod.enemy_target_runtime_on_rpc_attack_result = _on_rpc_attack_result
+
+if not mod.enemy_target_runtime_add_attack_result_hooked then
+	mod:hook_safe(CLASS.AttackReportManager, "add_attack_result", function(...)
+		return mod.enemy_target_runtime_on_attack_result(...)
+	end)
+
+	mod.enemy_target_runtime_add_attack_result_hooked = true
+end
+
+if not mod.enemy_target_runtime_rpc_attack_result_hooked then
+	mod:hook_safe(CLASS.AttackReportManager, "rpc_add_attack_result", function(...)
+		return mod.enemy_target_runtime_on_rpc_attack_result(...)
+	end)
+
+	mod.enemy_target_runtime_rpc_attack_result_hooked = true
 end
 
 local function _collect_debuffs(unit)
@@ -590,12 +627,12 @@ local function scan(player_unit)
 
 	local target_unit = nil
 
-	if _setting_enabled("enemy_target_show_on_hover", false) then
-		target_unit = _smart_targeting_aim_unit(player_unit, side_system)
+	if _setting_enabled("enemy_target_show_on_hit", true) then
+		target_unit = _get_hit_target(player_unit, side_system)
 	end
 
-	if not target_unit and _setting_enabled("enemy_target_show_on_hit", true) then
-		target_unit = _get_hit_target(player_unit, side_system)
+	if not target_unit and _setting_enabled("enemy_target_show_on_hover", false) then
+		target_unit = _smart_targeting_aim_unit(player_unit, side_system)
 	end
 
 	if not target_unit then
