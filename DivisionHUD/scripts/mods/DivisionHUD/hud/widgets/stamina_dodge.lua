@@ -308,6 +308,17 @@ end
 M._remove_dodge_bar = function(self, ui_renderer)
 	local dodge_bar_index = #self._dodge_bars
 	local dodge_bar = self._dodge_bars[dodge_bar_index]
+
+	if not dodge_bar then
+		return
+	end
+
+	if dodge_bar.animation_id then
+		self:_stop_animation(dodge_bar.animation_id)
+
+		dodge_bar.animation_id = nil
+	end
+
 	local widget = dodge_bar.widget
 
 	self:_unregister_widget_name(widget.name)
@@ -320,6 +331,11 @@ M._update_dodge_amount = function(self, t, ui_renderer)
 	local parent = self._parent
 	local player_extensions = parent and parent:player_extensions()
 	local current_max_effective_dodges = M._update_dodging_data(self, player_extensions)
+
+	if current_max_effective_dodges == nil then
+		return
+	end
+
 	local max_effective_dodges_changed = current_max_effective_dodges ~= self._max_effective_dodges
 
 	if max_effective_dodges_changed then
@@ -348,19 +364,25 @@ M._update_dodge_amount = function(self, t, ui_renderer)
 end
 
 M._update_dodging_data = function(self, player_extensions)
-	local current_max_effective_dodges = 0
+	local current_max_effective_dodges
 
 	if player_extensions then
 		local unit_data_extension = player_extensions.unit_data
 		local weapon_extension = player_extensions.weapon
+		local buff_extension = player_extensions.buff
 
 		if unit_data_extension and weapon_extension then
-			local movement_state_component = unit_data_extension and unit_data_extension:read_component("movement_state")
+			local movement_state_component = unit_data_extension:read_component("movement_state")
 			local dodge_character_state_component = unit_data_extension:read_component("dodge_character_state")
 			local slide_character_state_component = unit_data_extension:read_component("slide_character_state")
 			local character_state_component = unit_data_extension:read_component("character_state")
 			local fixed_t = FixedFrame.get_latest_fixed_time()
-			local num_effective_dodges = Dodge.num_effective_dodges(player_extensions.unit)
+
+			if not movement_state_component or not dodge_character_state_component or not slide_character_state_component or not character_state_component then
+				return nil
+			end
+
+			local num_effective_dodges = Dodge.num_effective_dodges(player_extensions.unit, weapon_extension, buff_extension)
 
 			current_max_effective_dodges = math.floor(num_effective_dodges)
 
