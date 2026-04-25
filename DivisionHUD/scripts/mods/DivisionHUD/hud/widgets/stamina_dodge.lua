@@ -348,19 +348,21 @@ M._update_dodge_amount = function(self, t, ui_renderer)
 end
 
 M._update_dodging_data = function(self, player_extensions)
-	local current_max_effective_dodges = 0
+	local current_max_effective_dodges = self._max_effective_dodges or 0
 
 	if player_extensions then
+		local player_unit = player_extensions.unit
 		local unit_data_extension = player_extensions.unit_data
 		local weapon_extension = player_extensions.weapon
+		local buff_extension = player_extensions.buff
 
-		if unit_data_extension and weapon_extension then
+		if player_unit and unit_data_extension and weapon_extension then
 			local movement_state_component = unit_data_extension and unit_data_extension:read_component("movement_state")
 			local dodge_character_state_component = unit_data_extension:read_component("dodge_character_state")
 			local slide_character_state_component = unit_data_extension:read_component("slide_character_state")
 			local character_state_component = unit_data_extension:read_component("character_state")
 			local fixed_t = FixedFrame.get_latest_fixed_time()
-			local num_effective_dodges = Dodge.num_effective_dodges(player_extensions.unit)
+			local num_effective_dodges = Dodge.num_effective_dodges(player_unit, weapon_extension, buff_extension)
 
 			current_max_effective_dodges = math.floor(num_effective_dodges)
 
