@@ -100,9 +100,9 @@ return {
 		["zh-cn"] = "不透明度",
 	},
 	hud_scale = {
-		en = "HUD scale",
-		ru = "Масштаб HUD",
-		["zh-cn"] = "界面缩放",
+		en = "Scale",
+		ru = "Масштаб",
+		["zh-cn"] = "缩放",
 	},
 	hud_scale_description = {
 		en = "Scale multiplier applied to the whole Division HUD (reference canvas 1920×1080). Values below 1 shrink the HUD, values above 1 enlarge it.",
@@ -895,9 +895,9 @@ return {
 		["zh-cn"] = "当你对敌人造成伤害时显示模块。",
 	},
 	enemy_target_hold_time = {
-		en = "Display time",
-		ru = "Время показа",
-		["zh-cn"] = "显示时间",
+		en = "Display time (seconds)",
+		ru = "Время показа (сек.)",
+		["zh-cn"] = "显示时间（秒）",
 	},
 	enemy_target_hold_time_description = {
 		en = "How many seconds the block remains visible after a hit trigger (does not affect hover).",
