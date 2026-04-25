@@ -855,9 +855,9 @@ return {
 		["zh-cn"] = "\238\128\178 敌方目标",
 	},
 	enemy_target_enabled = {
-		en = "Enable enemy target block",
-		ru = "Включить блок вражеской цели",
-		["zh-cn"] = "启用敌方目标模块",
+		en = "Enable enemy target",
+		ru = "Включить вражескую цель",
+		["zh-cn"] = "启用敌方目标",
 	},
 	enemy_target_enabled_description = {
 		en = "Shows or hides the enemy target block.",
