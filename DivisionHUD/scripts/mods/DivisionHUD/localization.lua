@@ -370,9 +370,9 @@ return {
 		["zh-cn"] = "动态界面",
 	},
 	dynamic_hud_strength = {
-		en = "HUD shift strength",
-		ru = "Сила сдвига HUD",
-		["zh-cn"] = "界面偏移强度",
+		en = "Shift strength",
+		ru = "Сила сдвига",
+		["zh-cn"] = "偏移强度",
 	},
 	dynamic_hud_pitch_ratio = {
 		en = "Vertical ratio",
