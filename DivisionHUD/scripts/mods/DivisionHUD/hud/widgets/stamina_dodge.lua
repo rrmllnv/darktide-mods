@@ -90,26 +90,6 @@ M.destroy = function(self, ui_renderer)
 	end
 end
 
-local function resolve_dodge_player_extensions(parent)
-	local player_extensions = parent and parent.player_extensions and parent:player_extensions() or nil
-	local player_unit = player_extensions and player_extensions.unit
-
-	if not player_unit and parent and type(parent.player_unit) == "function" then
-		player_unit = parent:player_unit()
-	end
-
-	if not player_unit then
-		return player_extensions
-	end
-
-	player_extensions = player_extensions or {}
-	player_extensions.unit = player_unit
-	player_extensions.unit_data = player_extensions.unit_data or ScriptUnit.has_extension(player_unit, "unit_data_system")
-	player_extensions.weapon = player_extensions.weapon or ScriptUnit.has_extension(player_unit, "weapon_system")
-
-	return player_extensions
-end
-
 M._update_stamina_amount = function(self)
 	local num_stamina_chunks = 0
 	local parent = self._parent
@@ -330,61 +310,57 @@ M._remove_dodge_bar = function(self, ui_renderer)
 	local dodge_bar = self._dodge_bars[dodge_bar_index]
 	local widget = dodge_bar.widget
 
-	if dodge_bar.animation_id then
-		self:_stop_animation(dodge_bar.animation_id)
-
-		dodge_bar.animation_id = nil
-	end
-
 	self:_unregister_widget_name(widget.name)
 	UIWidget.destroy(ui_renderer, widget)
 
 	self._dodge_bars[#self._dodge_bars] = nil
 end
 
-M._sync_dodge_bar_amount = function(self, current_max_effective_dodges, ui_renderer)
-	self._max_effective_dodges = current_max_effective_dodges
-
-	local segment_spacing = HudElementDodgeCounterSettings.spacing
-	local total_segment_spacing = segment_spacing * math.max(current_max_effective_dodges - 1, 0)
-	local total_bar_length = self._division_dodge_bar_track_width - total_segment_spacing
-
-	self._dodge_bar_width = math.round(current_max_effective_dodges > 0 and total_bar_length / current_max_effective_dodges or total_bar_length)
-
-	while #self._dodge_bars > current_max_effective_dodges do
-		M._remove_dodge_bar(self, ui_renderer)
-	end
-
-	while #self._dodge_bars < current_max_effective_dodges do
-		M._add_dodge_bar(self)
-	end
-
-	self._start_on_half_bar = false
-end
-
 M._update_dodge_amount = function(self, t, ui_renderer)
 	local parent = self._parent
-	local player_extensions = resolve_dodge_player_extensions(parent)
+	local player_extensions = parent:player_extensions()
 	local current_max_effective_dodges = M._update_dodging_data(self, player_extensions)
+	local max_effective_dodges_changed = current_max_effective_dodges ~= self._max_effective_dodges
 
-	M._sync_dodge_bar_amount(self, current_max_effective_dodges, ui_renderer)
+	if max_effective_dodges_changed then
+		local amount_difference = (self._max_effective_dodges or 0) - current_max_effective_dodges
+
+		self._max_effective_dodges = current_max_effective_dodges
+
+		local segment_spacing = HudElementDodgeCounterSettings.spacing
+		local total_segment_spacing = segment_spacing * math.max(current_max_effective_dodges - 1, 0)
+		local total_bar_length = self._division_dodge_bar_track_width - total_segment_spacing
+
+		self._dodge_bar_width = math.round(current_max_effective_dodges > 0 and total_bar_length / current_max_effective_dodges or total_bar_length)
+
+		local add_dodges = amount_difference < 0
+
+		for i = 1, math.abs(amount_difference) do
+			if add_dodges then
+				M._add_dodge_bar(self)
+			else
+				M._remove_dodge_bar(self, ui_renderer)
+			end
+		end
+
+		self._start_on_half_bar = false
+	end
 end
 
 M._update_dodging_data = function(self, player_extensions)
 	local current_max_effective_dodges = 0
 
 	if player_extensions then
-		local player_unit = player_extensions.unit
 		local unit_data_extension = player_extensions.unit_data
 		local weapon_extension = player_extensions.weapon
 
-		if player_unit and unit_data_extension and weapon_extension then
+		if unit_data_extension and weapon_extension then
 			local movement_state_component = unit_data_extension and unit_data_extension:read_component("movement_state")
 			local dodge_character_state_component = unit_data_extension:read_component("dodge_character_state")
 			local slide_character_state_component = unit_data_extension:read_component("slide_character_state")
 			local character_state_component = unit_data_extension:read_component("character_state")
 			local fixed_t = FixedFrame.get_latest_fixed_time()
-			local num_effective_dodges = Dodge.num_effective_dodges(player_unit)
+			local num_effective_dodges = Dodge.num_effective_dodges(player_extensions.unit)
 
 			current_max_effective_dodges = math.floor(num_effective_dodges)
 
@@ -464,6 +440,10 @@ M._draw_dodge_bars = function(self, dt, t, ui_renderer)
 	local entered_dodging_state_this_frame = self._entered_dodge_cooldown_this_frame
 	local dodge_bars = self._dodge_bars
 
+	while #dodge_bars < max_effective_dodges do
+		M._add_dodge_bar(self)
+	end
+
 	for i = 1, max_effective_dodges do
 		local bar_index = max_effective_dodges - i + 1
 		local dodge_bar = dodge_bars[i]
@@ -479,13 +459,36 @@ M._draw_dodge_bars = function(self, dt, t, ui_renderer)
 
 		M._check_animation_triggers(self, dodge_bar, entered_dodging_state_this_frame, dodge_was_spent, is_dodge_bar_available, is_dodge_on_cooldown)
 		M._update_dodge_bars_background_colors(self, dodge_bar, is_dodge_bar_available, is_dodge_on_cooldown)
+		M._sync_dodge_bar_visual_state(dodge_bar, is_dodge_bar_available, is_dodge_on_cooldown)
 
+		dodge_bar_widget.content.visible = true
+		dodge_bar_widget.dirty = true
 		dodge_bar_widget_offset[1] = x_offset
 
 		UIWidget.draw(dodge_bar_widget, ui_renderer)
 
 		x_offset = x_offset - dodge_bar_width - spacing
 	end
+end
+
+M._sync_dodge_bar_visual_state = function(dodge_bar, is_dodge_bar_available, is_dodge_on_cooldown)
+	if dodge_bar.animation_id then
+		return
+	end
+
+	local dodge_bar_widget = dodge_bar.widget
+	local widget_style = dodge_bar_widget.style
+	local fill_style = widget_style.bar_fill
+	local fill_color = is_dodge_bar_available
+		and (is_dodge_on_cooldown and DODGE_BAR_STATE_COLORS_BAR_FILL.available_on_cooldown or DODGE_BAR_STATE_COLORS_BAR_FILL.available)
+		or DODGE_BAR_STATE_COLORS_BAR_FILL.spent
+
+	fill_style.size_addition[1] = 0
+	fill_style.size_addition[2] = 0
+	fill_style.color[1] = fill_color[1]
+	fill_style.color[2] = fill_color[2]
+	fill_style.color[3] = fill_color[3]
+	fill_style.color[4] = fill_color[4]
 end
 
 M._check_animation_triggers = function(self, dodge_bar, entered_dodging_state_this_frame, dodge_was_spent, is_dodge_bar_available, is_dodge_on_cooldown)
@@ -579,10 +582,19 @@ M.draw = function(self, dt, t, input_service, ui_renderer, render_settings)
 
 	if ddg_a ~= 0 then
 		local previous_alpha_multiplier = render_settings.alpha_multiplier
+		local dodge_gauge_widget = self._widgets_by_name.dodge_gauge
+		local dodge_value_text_style = dodge_gauge_widget.style.value_text
+		local dodge_value_text_color = dodge_value_text_style.text_color
+		local max_effective_dodges = self._max_effective_dodges or 0
+		local effective_dodges_left = self._effective_dodges_left or 0
+		local hide_dodge_value = self._enemy_target_overflow_active == true
 
 		render_settings.alpha_multiplier = (previous_alpha_multiplier or 1) * ddg_a
 
-		UIWidget.draw(self._widgets_by_name.dodge_gauge, ui_renderer)
+		dodge_value_text_color[1] = (self._show_stamina_percentage_text and not hide_dodge_value) and 255 or 0
+		dodge_gauge_widget.content.value_text = string.format("%d/%d", effective_dodges_left, max_effective_dodges)
+
+		UIWidget.draw(dodge_gauge_widget, ui_renderer)
 		UIWidget.draw(self._widgets_by_name.wide_bar, ui_renderer)
 		M._draw_dodge_bars(self, dt, t, ui_renderer)
 

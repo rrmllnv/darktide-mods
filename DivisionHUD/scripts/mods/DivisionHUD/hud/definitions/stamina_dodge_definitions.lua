@@ -166,6 +166,11 @@ local function build_value_text_style(sc)
 end
 
 local function build_widget_definitions(value_text_style)
+	local dodge_value_text_style = table.clone(value_text_style)
+
+	dodge_value_text_style.offset = table.clone(value_text_style.offset)
+	dodge_value_text_style.offset[2] = -1
+
 	return {
 		stamina_gauge = UIWidget.create_definition({
 			{
@@ -272,6 +277,13 @@ local function build_widget_definitions(value_text_style)
 			},
 		}, "div_stamina_bar"),
 		dodge_gauge = UIWidget.create_definition({
+			{
+				pass_type = "text",
+				style_id = "value_text",
+				value_id = "value_text",
+				value = "0/0",
+				style = dodge_value_text_style,
+			},
 			{
 				pass_type = "texture",
 				style_id = "warning",
