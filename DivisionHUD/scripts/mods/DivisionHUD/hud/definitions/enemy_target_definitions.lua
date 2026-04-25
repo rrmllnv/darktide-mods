@@ -3,7 +3,7 @@ local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 
 local M = {}
-local MAX_DEBUFF_ROWS = 9
+local MAX_DEBUFF_ROWS = 16
 local ENEMY_TARGET_ENTER_DUR = 0.2
 local ENEMY_TARGET_EXIT_DUR = 0.16
 

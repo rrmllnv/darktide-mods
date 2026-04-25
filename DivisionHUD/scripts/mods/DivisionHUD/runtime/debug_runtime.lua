@@ -17,6 +17,24 @@ local DEBUG_ALERT_TEXT = "Enemies nearby"
 local DEBUG_INVULNERABILITY_DURATION = 8
 local DEBUG_TOUGHNESS_BASE_VALUE = 17000
 local DEBUG_TOUGHNESS_BONUS_VALUE = 125
+local DEBUG_DEBUFF_STYLE_ORDER = {
+	"generic",
+	"bleed",
+	"fire",
+	"warp",
+	"shock",
+	"toxin",
+	"rending",
+	"arbites",
+	"rage",
+	"stagger",
+	"blind",
+	"damage_taken",
+	"melee_damage_taken",
+	"stagger_damage",
+	"bleed_damage",
+	"toxin_damage",
+}
 
 local debug_state = {
 	invulnerability_start_t = nil,
@@ -80,52 +98,20 @@ local function clear_debug_state()
 	debug_state.expedition_salvage_override = nil
 end
 
-local DEBUG_MAX_DEBUFF_ROWS = 9
 local DEBUG_BREED_TYPES = { "elite", "special", "monster", "captain" }
 
-local function _debug_random_value_text()
-	local mode = math.random(1, 5)
-
-	if mode == 1 then
-		return string.format("x%d", math.random(2, 99))
-	elseif mode == 2 then
-		return string.format("+%d%%", math.random(5, 200))
-	elseif mode == 3 then
-		return string.format("+%d.%d%%", math.random(1, 99), math.random(0, 9))
-	elseif mode == 4 then
-		return string.format("x%d", math.random(2, 9))
-	end
-
-	return string.format("-%d%%", math.random(5, 75))
-end
-
-local function _shuffled_style_keys()
-	local keys = {}
-
-	for group_key in pairs(DEBUG_DEBUFF_STYLES) do
-		keys[#keys + 1] = group_key
-	end
-
-	for i = #keys, 2, -1 do
-		local j = math.random(1, i)
-
-		keys[i], keys[j] = keys[j], keys[i]
-	end
-
-	return keys
-end
-
 local function _build_debug_enemy_target_data()
-	local keys = _shuffled_style_keys()
-	local total = math.min(#keys, DEBUG_MAX_DEBUFF_ROWS)
-	local count = total > 0 and math.random(1, total) or 0
 	local debuffs = {}
 
-	for i = 1, count do
-		local group_key = keys[i]
+	for i = 1, #DEBUG_DEBUFF_STYLE_ORDER do
+		local group_key = DEBUG_DEBUFF_STYLE_ORDER[i]
 		local style = DEBUG_DEBUFF_STYLES[group_key]
 		local label = nil
 		local loc_key = style and style.localization_key
+
+		if not style then
+			goto continue_debug_debuff
+		end
 
 		if loc_key then
 			local loc_value = mod:localize(loc_key)
@@ -139,17 +125,19 @@ local function _build_debug_enemy_target_data()
 			name = group_key,
 			type = "dot",
 			group = group_key,
-			stacks = math.random(1, 5),
+			stacks = i,
 			icon = style and style.icon or "content/ui/materials/icons/generic/danger",
 			colour = style and style.colour or { 255, 255, 255, 255 },
 			label = label or (style and style.label) or group_key,
-			value_text = _debug_random_value_text(),
+			value_text = tostring(i),
 		}
+
+		::continue_debug_debuff::
 	end
 
-	local breed_type = DEBUG_BREED_TYPES[math.random(1, #DEBUG_BREED_TYPES)]
-	local health_max = math.random(5, 250) * 100
-	local health_fraction = math.random(5, 100) / 100
+	local breed_type = DEBUG_BREED_TYPES[1]
+	local health_max = 25000
+	local health_fraction = 0.75
 
 	return {
 		active = true,

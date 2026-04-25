@@ -31,7 +31,7 @@ return {
 			localization_key = "enemy_target_debuff_label_shock",
 		},
 		toxin = {
-			icon = "content/ui/materials/icons/circumstances/havoc/havoc_mutator_nurgle",
+			icon = "content/ui/materials/hud/interactions/icons/pocketable_syringe_corruption",
 			colour = { 255, 50, 255, 20 },
 			label = "Toxin",
 			localization_key = "enemy_target_debuff_label_toxin",
@@ -67,7 +67,7 @@ return {
 			localization_key = "enemy_target_debuff_label_blind",
 		},
 		damage_taken = {
-			icon = "content/ui/materials/icons/player_states/dead",
+			icon = "content/ui/materials/hud/interactions/icons/pocketable_syringe_power",
 			colour = { 255, 255, 185, 100 },
 			label = "Damage",
 			localization_key = "enemy_target_debuff_label_damage_taken",
@@ -91,7 +91,7 @@ return {
 			localization_key = "enemy_target_debuff_label_bleed_damage",
 		},
 		toxin_damage = {
-			icon = "content/ui/materials/icons/player_states/dead",
+			icon = "content/ui/materials/hud/interactions/icons/pocketable_syringe_power",
 			colour = { 255, 80, 255, 80 },
 			label = "Toxin Damage",
 			localization_key = "enemy_target_debuff_label_toxin_damage",
