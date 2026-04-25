@@ -1,11 +1,5 @@
 return {
 	DEBUFF_STYLES = {
-		generic = {
-			icon = "content/ui/materials/icons/weapons/actions/linesman",
-			colour = { 255, 150, 150, 150 },
-			label = "Generic",
-			localization_key = "enemy_target_debuff_label_generic",
-		},
 		bleed = {
 			icon = "content/ui/materials/icons/presets/preset_13",
 			colour = { 255, 255, 0, 0 },
@@ -27,74 +21,68 @@ return {
 		shock = {
 			icon = "content/ui/materials/icons/presets/preset_11",
 			colour = { 255, 255, 255, 0 },
-			label = "Shock",
+			label = "Electroshock",
 			localization_key = "enemy_target_debuff_label_shock",
 		},
 		toxin = {
 			icon = "content/ui/materials/hud/interactions/icons/pocketable_syringe_corruption",
 			colour = { 255, 50, 255, 20 },
-			label = "Toxin",
+			label = "Poison",
 			localization_key = "enemy_target_debuff_label_toxin",
 		},
 		rending = {
 			icon = "content/ui/materials/icons/circumstances/havoc/havoc_mutator_rotten_armor",
 			colour = { 255, 172, 115, 255 },
-			label = "Rending",
+			label = "Armor Break",
 			localization_key = "enemy_target_debuff_label_rending",
-		},
-		arbites = {
-			icon = "content/ui/materials/icons/circumstances/havoc/havoc_mutator_rampaging_enemies",
-			colour = { 255, 0, 144, 255 },
-			label = "Arbites",
-			localization_key = "enemy_target_debuff_label_arbites",
-		},
-		rage = {
-			icon = "content/ui/materials/icons/presets/preset_18",
-			colour = { 255, 255, 117, 255 },
-			label = "Rage",
-			localization_key = "enemy_target_debuff_label_rage",
 		},
 		stagger = {
 			icon = "content/ui/materials/icons/throwables/hud/small/party_non_grenade",
 			colour = { 255, 100, 200, 255 },
-			label = "Stagger",
+			label = "Stun",
 			localization_key = "enemy_target_debuff_label_stagger",
 		},
 		blind = {
 			icon = "content/ui/materials/icons/circumstances/ventilation_purge_01",
 			colour = { 255, 200, 200, 200 },
-			label = "Blind",
+			label = "Smoke Effect",
 			localization_key = "enemy_target_debuff_label_blind",
 		},
 		damage_taken = {
 			icon = "content/ui/materials/hud/interactions/icons/pocketable_syringe_power",
 			colour = { 255, 255, 185, 100 },
-			label = "Damage",
+			label = "More Damage",
 			localization_key = "enemy_target_debuff_label_damage_taken",
 		},
 		melee_damage_taken = {
 			icon = "content/ui/materials/icons/weapons/actions/melee",
 			colour = { 255, 255, 242, 99 },
-			label = "Melee Damage",
+			label = "More Melee Damage",
 			localization_key = "enemy_target_debuff_label_melee_damage_taken",
 		},
 		stagger_damage = {
 			icon = "content/ui/materials/icons/weapons/actions/melee_hand",
 			colour = { 255, 124, 227, 187 },
-			label = "Stagger Damage",
+			label = "More Stunned Damage",
 			localization_key = "enemy_target_debuff_label_stagger_damage",
 		},
-		bleed_damage = {
-			icon = "content/ui/materials/icons/presets/preset_13",
-			colour = { 255, 255, 40, 40 },
-			label = "Bleed Damage",
-			localization_key = "enemy_target_debuff_label_bleed_damage",
+		impact_taken = {
+			icon = "content/ui/materials/icons/presets/preset_18",
+			colour = { 255, 124, 227, 187 },
+			label = "Easier to Stun",
+			localization_key = "enemy_target_debuff_label_impact_taken",
 		},
-		toxin_damage = {
-			icon = "content/ui/materials/hud/interactions/icons/pocketable_syringe_power",
-			colour = { 255, 80, 255, 80 },
-			label = "Toxin Damage",
-			localization_key = "enemy_target_debuff_label_toxin_damage",
+		count_as_stagger = {
+			icon = "content/ui/materials/icons/throwables/hud/small/party_non_grenade",
+			colour = { 255, 100, 200, 255 },
+			label = "Stun Effect",
+			localization_key = "enemy_target_debuff_label_count_as_stagger",
+		},
+		damage_dealt_down = {
+			icon = "content/ui/materials/icons/circumstances/havoc/havoc_mutator_rampaging_enemies",
+			colour = { 255, 0, 144, 255 },
+			label = "Weakening Effect",
+			localization_key = "enemy_target_debuff_label_damage_dealt_down",
 		},
 	},
 	DEBUFFS = {
@@ -114,14 +102,14 @@ return {
 		increase_impact_received_while_staggered = {
 			name = "increase_impact_received_while_staggered",
 			type = "utility",
-			group = "rending",
+			group = "impact_taken",
 		},
 		increase_damage_received_while_staggered = {
 			name = "increase_damage_received_while_staggered",
 			type = "utility",
 			group = "stagger_damage",
 		},
-		power_maul_sticky_tick = { name = "power_maul_sticky_tick", type = "utility", group = "generic" },
+		power_maul_sticky_tick = { name = "power_maul_sticky_tick", type = "utility", group = "stagger" },
 		increase_damage_taken = { name = "increase_damage_taken", type = "utility", group = "damage_taken" },
 		psyker_force_staff_quick_attack_debuff = {
 			name = "psyker_force_staff_quick_attack_debuff",
@@ -182,19 +170,23 @@ return {
 		zealot_bled_enemies_take_more_damage_effect = {
 			name = "zealot_bled_enemies_take_more_damage_effect",
 			type = "utility",
-			group = "bleed_damage",
+			group = "damage_taken",
 		},
-		adamant_drone_enemy_debuff = { name = "adamant_drone_enemy_debuff", type = "utility", group = "arbites" },
-		adamant_drone_talent_debuff = { name = "adamant_drone_talent_debuff", type = "utility", group = "arbites" },
+		adamant_drone_enemy_debuff = { name = "adamant_drone_enemy_debuff", type = "utility", group = "damage_taken" },
+		adamant_drone_talent_debuff = {
+			name = "adamant_drone_talent_debuff",
+			type = "utility",
+			group = "damage_dealt_down",
+		},
 		adamant_melee_weakspot_hits_count_as_stagger_debuff = {
 			name = "adamant_melee_weakspot_hits_count_as_stagger_debuff",
 			type = "utility",
-			group = "rending",
+			group = "count_as_stagger",
 		},
 		adamant_staggered_enemies_deal_less_damage_debuff = {
 			name = "adamant_staggered_enemies_deal_less_damage_debuff",
 			type = "utility",
-			group = "rending",
+			group = "damage_dealt_down",
 		},
 		adamant_staggering_increases_damage_taken = {
 			name = "adamant_staggering_increases_damage_taken",
@@ -204,16 +196,16 @@ return {
 		broker_punk_rage_improved_shout_debuff = {
 			name = "broker_punk_rage_improved_shout_debuff",
 			type = "utility",
-			group = "rage",
+			group = "damage_dealt_down",
 		},
 		shock_grenade_interval = { name = "shock_grenade_interval", type = "utility", group = "stagger" },
 		in_smoke_fog = { name = "in_smoke_fog", type = "utility", group = "blind" },
-		toxin_damage_debuff = { name = "toxin_damage_debuff", type = "utility", group = "toxin" },
-		toxin_damage_debuff_monster = { name = "toxin_damage_debuff_monster", type = "utility", group = "toxin" },
+		toxin_damage_debuff = { name = "toxin_damage_debuff", type = "utility", group = "damage_dealt_down" },
+		toxin_damage_debuff_monster = { name = "toxin_damage_debuff_monster", type = "utility", group = "damage_dealt_down" },
 		broker_passive_toxin_infected_enemies_take_increased_damage_debuff = {
 			name = "broker_passive_toxin_infected_enemies_take_increased_damage_debuff",
 			type = "utility",
-			group = "toxin_damage",
+			group = "damage_taken",
 		},
 	},
 }

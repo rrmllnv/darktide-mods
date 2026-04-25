@@ -18,22 +18,20 @@ local DEBUG_INVULNERABILITY_DURATION = 8
 local DEBUG_TOUGHNESS_BASE_VALUE = 17000
 local DEBUG_TOUGHNESS_BONUS_VALUE = 125
 local DEBUG_DEBUFF_STYLE_ORDER = {
-	"generic",
 	"bleed",
 	"fire",
 	"warp",
 	"shock",
 	"toxin",
 	"rending",
-	"arbites",
-	"rage",
 	"stagger",
 	"blind",
 	"damage_taken",
 	"melee_damage_taken",
 	"stagger_damage",
-	"bleed_damage",
-	"toxin_damage",
+	"impact_taken",
+	"count_as_stagger",
+	"damage_dealt_down",
 }
 
 local debug_state = {

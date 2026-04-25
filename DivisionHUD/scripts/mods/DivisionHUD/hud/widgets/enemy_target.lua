@@ -1,5 +1,13 @@
 local M = {}
 
+local function color_text(text, color)
+	if text == "" or type(color) ~= "table" then
+		return text
+	end
+
+	return "{#color(" .. tostring(color[2] or 255) .. "," .. tostring(color[3] or 255) .. "," .. tostring(color[4] or 255) .. ")}" .. text .. "{#reset()}"
+end
+
 local function round_to_int(value)
 	if value >= 0 then
 		return math.floor(value + 0.5)
@@ -35,8 +43,8 @@ local function reset_widget(widget, max_debuff_slots)
 
 	for i = 1, max_debuff_slots do
 		widget.content["debuff_icon_" .. i] = nil
-		widget.content["debuff_name_" .. i] = ""
-		widget.content["debuff_value_" .. i] = ""
+		widget.content["debuff_text_" .. i] = ""
+		widget.content["debuff_text_" .. i .. "_outline_text"] = ""
 	end
 
 	widget.alpha_multiplier = 0
@@ -151,14 +159,24 @@ function M.update(self, widget, opacity, dt)
 		for i = 1, max_debuff_slots do
 			local debuff = debuffs[i]
 			local icon_id = "debuff_icon_" .. i
-			local name_id = "debuff_name_" .. i
-			local value_id = "debuff_value_" .. i
+			local text_id = "debuff_text_" .. i
+			local outline_id = text_id .. "_outline_text"
 			local icon_style = widget.style[icon_id]
 
 			if debuff then
+				local label = debuff.label or ""
+				local value_text = debuff.value_text or ""
+				local colored_value_text = color_text(value_text, debuff.colour)
+
 				widget.content[icon_id] = debuff.icon
-				widget.content[name_id] = debuff.label or ""
-				widget.content[value_id] = debuff.value_text or ""
+
+				if label ~= "" and value_text ~= "" then
+					widget.content[text_id] = label .. " " .. colored_value_text
+					widget.content[outline_id] = label .. " " .. value_text
+				else
+					widget.content[text_id] = label ~= "" and label or colored_value_text
+					widget.content[outline_id] = label ~= "" and label or value_text
+				end
 
 				if icon_style and debuff.colour then
 					icon_style.color[1] = 255
@@ -168,8 +186,8 @@ function M.update(self, widget, opacity, dt)
 				end
 			else
 				widget.content[icon_id] = nil
-				widget.content[name_id] = ""
-				widget.content[value_id] = ""
+				widget.content[text_id] = ""
+				widget.content[outline_id] = ""
 
 				if icon_style then
 					icon_style.color[1] = 255

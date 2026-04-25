@@ -1039,11 +1039,6 @@ return {
 		ru = "Враг",
 		["zh-cn"] = "敌人",
 	},
-	enemy_target_debuff_label_generic = {
-		en = "Generic",
-		ru = "Прочее",
-		["zh-cn"] = "通用",
-	},
 	enemy_target_debuff_label_bleed = {
 		en = "Bleed",
 		ru = "Кровотечение",
@@ -1060,63 +1055,58 @@ return {
 		["zh-cn"] = "灵能",
 	},
 	enemy_target_debuff_label_shock = {
-		en = "Shock",
-		ru = "Шок",
+		en = "Electroshock",
+		ru = "Электрошок",
 		["zh-cn"] = "电击",
 	},
 	enemy_target_debuff_label_toxin = {
-		en = "Toxin",
-		ru = "Токсин",
+		en = "Poison",
+		ru = "Отравление",
 		["zh-cn"] = "中毒",
 	},
 	enemy_target_debuff_label_rending = {
-		en = "Rending",
-		ru = "Пробив брони",
+		en = "Armor Break",
+		ru = "Пробитие брони",
 		["zh-cn"] = "破甲",
 	},
-	enemy_target_debuff_label_arbites = {
-		en = "Arbites",
-		ru = "Арбитр",
-		["zh-cn"] = "仲裁者",
-	},
-	enemy_target_debuff_label_rage = {
-		en = "Rage",
-		ru = "Ярость",
-		["zh-cn"] = "狂怒",
-	},
 	enemy_target_debuff_label_stagger = {
-		en = "Stagger",
+		en = "Stun",
 		ru = "Оглушение",
 		["zh-cn"] = "击晕",
 	},
 	enemy_target_debuff_label_blind = {
-		en = "Blind",
-		ru = "Ослепление",
+		en = "Smoke Effect",
+		ru = "Эффект дыма",
 		["zh-cn"] = "致盲",
 	},
 	enemy_target_debuff_label_damage_taken = {
-		en = "Damage",
-		ru = "Урон",
+		en = "More Damage",
+		ru = "Больше урона",
 		["zh-cn"] = "易伤",
 	},
 	enemy_target_debuff_label_melee_damage_taken = {
-		en = "Melee Damage",
-		ru = "Урон в ближнем",
+		en = "More Melee Damage",
+		ru = "Больше урона вблизи",
 		["zh-cn"] = "近战易伤",
 	},
 	enemy_target_debuff_label_stagger_damage = {
-		en = "Stagger Damage",
-		ru = "Урон по оглушённому",
+		en = "More Stunned Damage",
+		ru = "Больше урона оглушённому",
 		["zh-cn"] = "击晕易伤",
 	},
-	enemy_target_debuff_label_bleed_damage = {
-		en = "Bleed Damage",
-		ru = "Урон по кровящему",
-		["zh-cn"] = "流血易伤",
+	enemy_target_debuff_label_impact_taken = {
+		en = "Easier to Stun",
+		ru = "Легче оглушить",
+		["zh-cn"] = "更易硬直",
 	},
-	enemy_target_debuff_label_toxin_damage = {
-		en = "Toxin Damage",
-		ru = "Урон по отравленному",
-		["zh-cn"] = "中毒易伤",
+	enemy_target_debuff_label_count_as_stagger = {
+		en = "Stun Effect",
+		ru = "Эффект ошеломления",
+		["zh-cn"] = "硬直目标",
+	},
+	enemy_target_debuff_label_damage_dealt_down = {
+		en = "Weakening Effect",
+		ru = "Эффект ослабления",
+		["zh-cn"] = "攻击削弱",
 	},
 }

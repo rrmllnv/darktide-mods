@@ -25,17 +25,13 @@ function M.build(params)
 	local content_right_inset = padding_x + health_bar_width + health_bar_gap
 	local health_info_y = top_y + name_height + sc(3)
 	local health_text_height = sc(24)
-	local debuff_value_font = slot_text_font
-	local debuff_name_font = slot_text_font
-	local debuff_value_max_chars = 6
-	local debuff_value_char_width_mul = 0.58
+	local debuff_text_font = slot_text_font
 	local debuff_icon_size = sc(24)
 	local debuff_row_height = sc(24)
 	local debuff_start_y = health_info_y + health_text_height + sc(4)
 	local debuff_gap = sc(4)
-	local debuff_name_min_width = sc(220)
-	local value_width = math.max(sc(48), math.ceil(debuff_value_font * debuff_value_max_chars * debuff_value_char_width_mul))
-	local block_width = math.max(sc(352), expedition_salvage_slot_w + sc(276))
+	local debuff_text_min_width = sc(300)
+	local block_width = math.max(sc(440), expedition_salvage_slot_w + sc(364))
 	local block_x = expedition_salvage_slot_x + expedition_salvage_slot_w - block_width
 	local slide_px = math.max(sc(40), block_width - expedition_salvage_slot_w)
 	local content_width = block_width - padding_x - content_right_inset
@@ -44,9 +40,8 @@ function M.build(params)
 	local bar_x = block_width - padding_x - health_bar_width
 	local content_right_x = block_width - content_right_inset
 	local icon_x = content_right_x - debuff_icon_size
-	local value_x = icon_x - debuff_gap - value_width
-	local name_x = padding_x
-	local name_width = math.max(debuff_name_min_width, value_x - debuff_gap - name_x)
+	local text_x = padding_x
+	local text_width = math.max(debuff_text_min_width, icon_x - debuff_gap - text_x)
 
 	local title_style = table.clone(UIFontSettings.body_small)
 
@@ -119,8 +114,8 @@ function M.build(params)
 
 	for i = 1, MAX_DEBUFF_ROWS do
 		local icon_id = "debuff_icon_" .. i
-		local value_id = "debuff_value_" .. i
-		local name_id = "debuff_name_" .. i
+		local text_id = "debuff_text_" .. i
+		local outline_id = text_id .. "_outline_text"
 
 		passes[#passes + 1] = {
 			pass_type = "texture",
@@ -133,28 +128,19 @@ function M.build(params)
 
 		passes[#passes + 1] = {
 			pass_type = "text",
-			style_id = value_id,
-			value_id = value_id,
+			style_id = text_id,
+			value_id = text_id,
 			visibility_function = function(content)
-				return content[value_id] ~= ""
+				return content[text_id] ~= ""
 			end,
 		}
 
 		passes[#passes + 1] = {
 			pass_type = "text",
-			style_id = value_id .. "_outline",
-			value_id = value_id,
+			style_id = text_id .. "_outline",
+			value_id = outline_id,
 			visibility_function = function(content)
-				return content[value_id] ~= ""
-			end,
-		}
-
-		passes[#passes + 1] = {
-			pass_type = "text",
-			style_id = name_id,
-			value_id = name_id,
-			visibility_function = function(content)
-				return content[name_id] ~= ""
+				return content[outline_id] ~= ""
 			end,
 		}
 	end
@@ -164,12 +150,12 @@ function M.build(params)
 	for i = 1, MAX_DEBUFF_ROWS do
 		local row_y = debuff_start_y + (i - 1) * debuff_row_height
 		local icon_id = "debuff_icon_" .. i
-		local value_id = "debuff_value_" .. i
-		local name_id = "debuff_name_" .. i
+		local text_id = "debuff_text_" .. i
+		local outline_id = text_id .. "_outline_text"
 
 		definition.content[icon_id] = nil
-		definition.content[value_id] = ""
-		definition.content[name_id] = ""
+		definition.content[text_id] = ""
+		definition.content[outline_id] = ""
 		definition.style[icon_id] = {
 			horizontal_alignment = "left",
 			vertical_alignment = "top",
@@ -177,46 +163,34 @@ function M.build(params)
 			size = { debuff_icon_size, debuff_icon_size },
 			color = { 255, 255, 255, 255 },
 		}
-		definition.style[value_id] = {
+		definition.style[text_id] = {
 			horizontal_alignment = "left",
 			vertical_alignment = "top",
 			text_horizontal_alignment = "right",
 			text_vertical_alignment = "center",
-			offset = { value_x, row_y, 7 },
+			offset = { text_x, row_y, 7 },
 			font_type = UIFontSettings.body_small.font_type,
-			font_size = debuff_value_font,
+			font_size = debuff_text_font,
 			text_color = table.clone(UIHudSettings.color_tint_main_1),
-			size = { value_width, debuff_row_height },
-			drop_shadow = true,
-			shadow_offset = { 1, -1 },
-			shadow_color = { 200, 0, 0, 0 },
-		}
-		definition.style[value_id .. "_outline"] = {
-			horizontal_alignment = "left",
-			vertical_alignment = "top",
-			text_horizontal_alignment = "right",
-			text_vertical_alignment = "center",
-			offset = { value_x + sc(1), row_y, 6 },
-			font_type = UIFontSettings.body_small.font_type,
-			font_size = debuff_value_font,
-			text_color = { 255, 0, 0, 0 },
-			size = { value_width, debuff_row_height },
-		}
-		definition.style[name_id] = {
-			horizontal_alignment = "left",
-			vertical_alignment = "top",
-			text_horizontal_alignment = "right",
-			text_vertical_alignment = "center",
-			offset = { name_x, row_y, 6 },
-			font_type = UIFontSettings.body_small.font_type,
-			font_size = debuff_name_font,
-			text_color = table.clone(UIHudSettings.color_tint_main_1),
-			size = { name_width, debuff_row_height },
+			size = { text_width, debuff_row_height },
 			truncated = true,
 			max_lines = 1,
 			drop_shadow = true,
 			shadow_offset = { 1, -1 },
 			shadow_color = { 200, 0, 0, 0 },
+		}
+		definition.style[text_id .. "_outline"] = {
+			horizontal_alignment = "left",
+			vertical_alignment = "top",
+			text_horizontal_alignment = "right",
+			text_vertical_alignment = "center",
+			offset = { text_x + sc(1), row_y, 6 },
+			font_type = UIFontSettings.body_small.font_type,
+			font_size = debuff_text_font,
+			text_color = { 255, 0, 0, 0 },
+			size = { text_width, debuff_row_height },
+			truncated = true,
+			max_lines = 1,
 		}
 	end
 
