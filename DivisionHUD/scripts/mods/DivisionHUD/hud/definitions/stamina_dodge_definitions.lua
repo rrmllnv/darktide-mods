@@ -554,23 +554,11 @@ local animations = {
 }
 
 local function build(main_row_height, bar_fill_width, sc)
-	if type(sc) ~= "function" then
-		sc = function(n) return n end
-	end
-
-	local vanilla_track = stm_bar_size[1]
-	local requested = type(bar_fill_width) == "number" and bar_fill_width or vanilla_track
-	local track_width_px = math.max(1, math.floor(requested + 0.5))
+	local track_width_px = math.max(1, math.floor(bar_fill_width + 0.5))
 	local sg, extend_below, buff_layout_from_stm_ddg = build_scenegraph(main_row_height, track_width_px)
 	local value_text_style = build_value_text_style(sc)
 	local wdefs = build_widget_definitions(value_text_style)
-	local ddg_top_from_boxes_row = 0
-
-	if type(buff_layout_from_stm_ddg) == "table" and type(buff_layout_from_stm_ddg.ddg_top) == "number" and buff_layout_from_stm_ddg.ddg_top == buff_layout_from_stm_ddg.ddg_top then
-		ddg_top_from_boxes_row = buff_layout_from_stm_ddg.ddg_top
-	elseif sg and sg.div_dodge_area and type(sg.div_dodge_area.position) == "table" then
-		ddg_top_from_boxes_row = sg.div_dodge_area.position[2] or 0
-	end
+	local ddg_top_from_boxes_row = buff_layout_from_stm_ddg.ddg_top
 
 	return {
 		scenegraph_definition = sg,

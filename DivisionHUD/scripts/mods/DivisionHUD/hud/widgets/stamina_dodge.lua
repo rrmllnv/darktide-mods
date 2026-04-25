@@ -308,17 +308,6 @@ end
 M._remove_dodge_bar = function(self, ui_renderer)
 	local dodge_bar_index = #self._dodge_bars
 	local dodge_bar = self._dodge_bars[dodge_bar_index]
-
-	if not dodge_bar then
-		return
-	end
-
-	if dodge_bar.animation_id then
-		self:_stop_animation(dodge_bar.animation_id)
-
-		dodge_bar.animation_id = nil
-	end
-
 	local widget = dodge_bar.widget
 
 	self:_unregister_widget_name(widget.name)
@@ -329,13 +318,8 @@ end
 
 M._update_dodge_amount = function(self, t, ui_renderer)
 	local parent = self._parent
-	local player_extensions = parent and parent:player_extensions()
+	local player_extensions = parent:player_extensions()
 	local current_max_effective_dodges = M._update_dodging_data(self, player_extensions)
-
-	if current_max_effective_dodges == nil then
-		return
-	end
-
 	local max_effective_dodges_changed = current_max_effective_dodges ~= self._max_effective_dodges
 
 	if max_effective_dodges_changed then
@@ -364,25 +348,19 @@ M._update_dodge_amount = function(self, t, ui_renderer)
 end
 
 M._update_dodging_data = function(self, player_extensions)
-	local current_max_effective_dodges
+	local current_max_effective_dodges = 0
 
 	if player_extensions then
 		local unit_data_extension = player_extensions.unit_data
 		local weapon_extension = player_extensions.weapon
-		local buff_extension = player_extensions.buff
 
 		if unit_data_extension and weapon_extension then
-			local movement_state_component = unit_data_extension:read_component("movement_state")
+			local movement_state_component = unit_data_extension and unit_data_extension:read_component("movement_state")
 			local dodge_character_state_component = unit_data_extension:read_component("dodge_character_state")
 			local slide_character_state_component = unit_data_extension:read_component("slide_character_state")
 			local character_state_component = unit_data_extension:read_component("character_state")
 			local fixed_t = FixedFrame.get_latest_fixed_time()
-
-			if not movement_state_component or not dodge_character_state_component or not slide_character_state_component or not character_state_component then
-				return nil
-			end
-
-			local num_effective_dodges = Dodge.num_effective_dodges(player_extensions.unit, weapon_extension, buff_extension)
+			local num_effective_dodges = Dodge.num_effective_dodges(player_extensions.unit)
 
 			current_max_effective_dodges = math.floor(num_effective_dodges)
 
@@ -424,7 +402,7 @@ M._update_dodge_visibility = function(self, dt)
 	local visibility_setting = self._stamina_dodge_visibility_setting
 	local should_always_be_visible = visibility_setting == "always_dodge" or visibility_setting == "always_both"
 	local is_visibility_enabled = should_always_be_visible or visibility_setting ~= "dodge_disabled" and visibility_setting ~= "both_disabled"
-	local draw = should_always_be_visible or is_visibility_enabled and (consecutive_dodges_performed > 0 or fixed_t <= (consecutive_dodges_cooldown or 0) + 1)
+	local draw = should_always_be_visible or is_visibility_enabled and (consecutive_dodges_performed > 0 or fixed_t <= consecutive_dodges_cooldown + 1)
 
 	self._dodge_is_active = draw
 
@@ -448,11 +426,6 @@ end
 
 M._draw_dodge_bars = function(self, dt, t, ui_renderer)
 	local max_effective_dodges = self._max_effective_dodges
-
-	if max_effective_dodges < 1 then
-		return
-	end
-
 	local effective_dodges_left = self._effective_dodges_left
 
 	if self._triggered_ineffective_dodge then
@@ -470,11 +443,6 @@ M._draw_dodge_bars = function(self, dt, t, ui_renderer)
 	for i = 1, max_effective_dodges do
 		local bar_index = max_effective_dodges - i + 1
 		local dodge_bar = dodge_bars[i]
-
-		if not dodge_bar then
-			return
-		end
-
 		local dodge_bar_widget = dodge_bar.widget
 		local dodge_bar_widget_style_fill = dodge_bar_widget.style.bar_fill
 		local dodge_bar_widget_style_background = dodge_bar_widget.style.bar_background
@@ -487,7 +455,6 @@ M._draw_dodge_bars = function(self, dt, t, ui_renderer)
 
 		M._check_animation_triggers(self, dodge_bar, entered_dodging_state_this_frame, dodge_was_spent, is_dodge_bar_available, is_dodge_on_cooldown)
 		M._update_dodge_bars_background_colors(self, dodge_bar, is_dodge_bar_available, is_dodge_on_cooldown)
-		M._sync_dodge_bar_visual_state(self, dodge_bar, is_dodge_bar_available, is_dodge_on_cooldown)
 
 		dodge_bar_widget_offset[1] = x_offset
 
@@ -521,30 +488,6 @@ M._check_animation_triggers = function(self, dodge_bar, entered_dodging_state_th
 			dodge_bar.status = "available"
 		end
 	end
-end
-
-M._sync_dodge_bar_visual_state = function(self, dodge_bar, is_dodge_bar_available, is_dodge_on_cooldown)
-	if dodge_bar.animation_id then
-		return
-	end
-
-	local dodge_bar_widget = dodge_bar.widget
-	local widget_style = dodge_bar_widget.style
-	local fill_style = widget_style.bar_fill
-	local fill_color = fill_style.color
-	local target_color
-
-	if is_dodge_bar_available then
-		target_color = is_dodge_on_cooldown and DODGE_BAR_STATE_COLORS_BAR_FILL.available_on_cooldown or DODGE_BAR_STATE_COLORS_BAR_FILL.available
-	else
-		target_color = DODGE_BAR_STATE_COLORS_BAR_FILL.spent
-	end
-
-	fill_style.size_addition[2] = 0
-	fill_color[1] = target_color[1]
-	fill_color[2] = target_color[2]
-	fill_color[3] = target_color[3]
-	fill_color[4] = target_color[4]
 end
 
 M._update_dodge_bars_background_colors = function(self, dodge_bar, is_dodge_bar_available, is_dodge_on_cooldown)
