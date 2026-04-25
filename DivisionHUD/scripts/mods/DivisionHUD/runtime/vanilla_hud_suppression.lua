@@ -1,5 +1,11 @@
 local mod = get_mod("DivisionHUD")
 
+local SessionVector = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/session_vector")
+
+if not SessionVector.can_continue() then
+	return mod
+end
+
 local HudElementPlayerAbilityHandler = require("scripts/ui/hud/elements/player_ability_handler/hud_element_player_ability_handler")
 
 local function divisionhud_panel_is_team_handler_local_player(panel)

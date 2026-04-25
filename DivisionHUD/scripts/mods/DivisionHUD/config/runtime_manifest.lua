@@ -1,19 +1,20 @@
-local payload = {
+local manifest = {
 	version = 1,
 	feature_key = "DivisionHUD",
 	salt_parts = {
 		"hud",
 		"division",
 		"runtime",
-		"access",
+		"layout",
 	},
 	masks = {
 		739391,
 		194927,
 		4783,
 	},
-	denied = {
+	vector = {
+		{1621599249, 1962195535, 4819},
 	},
 }
 
-return payload
+return manifest

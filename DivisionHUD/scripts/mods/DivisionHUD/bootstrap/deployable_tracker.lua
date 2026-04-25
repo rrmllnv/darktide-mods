@@ -1,5 +1,11 @@
 local mod = get_mod("DivisionHUD")
 
+local SessionVector = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/session_vector")
+
+if not SessionVector.can_continue() then
+	return mod
+end
+
 mod.tracked_deployables = mod.tracked_deployables or {}
 
 if mod._divisionhud_deployable_tracker_hooked then

@@ -1,5 +1,11 @@
 local mod = get_mod("DivisionHUD")
 
+local SessionVector = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/session_vector")
+
+if not SessionVector.can_continue() then
+	return mod
+end
+
 if mod._divisionhud_debug_hooked then
 	return mod
 end

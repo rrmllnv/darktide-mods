@@ -1,5 +1,11 @@
 local mod = get_mod("DivisionHUD")
 
+local SessionVector = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/session_vector")
+
+if not SessionVector.can_continue() then
+	return mod
+end
+
 local function alert_time_for_mission_strip()
 	local Hu = mod.hud_utils
 

@@ -1,5 +1,11 @@
 local mod = get_mod("DivisionHUD")
 
+local SessionVector = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/session_vector")
+
+if not SessionVector.can_continue() then
+	return mod
+end
+
 if type(mod.danger_zone_runtime) == "table" then
 	return mod.danger_zone_runtime
 end

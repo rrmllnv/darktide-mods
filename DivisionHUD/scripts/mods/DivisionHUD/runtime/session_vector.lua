@@ -1,6 +1,6 @@
 local mod = get_mod("DivisionHUD")
 
-local AccessGuard = {}
+local SessionVector = {}
 
 local MODULUS = 2147483647
 
@@ -22,7 +22,7 @@ local function normalize_identifier(value)
 end
 
 local function local_identifier()
-	local player_manager = Managers.player
+	local player_manager = Managers and Managers.player
 	local player = player_manager and player_manager.local_player and player_manager:local_player(1) or nil
 
 	if not player then
@@ -87,16 +87,16 @@ end
 
 local function is_payload_match(identifier, payload, feature_key)
 	local first, second, length = fingerprint(identifier, payload, feature_key)
-	local denied = payload and payload.denied
+	local vector = payload and payload.vector
 
-	if type(denied) ~= "table" then
+	if type(vector) ~= "table" then
 		return false
 	end
 
-	for i = 1, #denied do
-		local denied_first, denied_second, denied_length = decode_entry(denied[i], payload)
+	for i = 1, #vector do
+		local vector_first, vector_second, vector_length = decode_entry(vector[i], payload)
 
-		if denied_first == first and denied_second == second and denied_length == length then
+		if vector_first == first and vector_second == second and vector_length == length then
 			return true
 		end
 	end
@@ -104,7 +104,7 @@ local function is_payload_match(identifier, payload, feature_key)
 	return false
 end
 
-function AccessGuard.encoded_entry_for_identifier(identifier, payload, feature_key)
+function SessionVector.encode(identifier, payload, feature_key)
 	identifier = normalize_identifier(identifier)
 
 	if not identifier then
@@ -121,8 +121,8 @@ function AccessGuard.encoded_entry_for_identifier(identifier, payload, feature_k
 	}
 end
 
-function AccessGuard.encoded_entry_string_for_identifier(identifier, payload, feature_key)
-	local entry = AccessGuard.encoded_entry_for_identifier(identifier, payload, feature_key)
+function SessionVector.encode_string(identifier, payload, feature_key)
+	local entry = SessionVector.encode(identifier, payload, feature_key)
 
 	if not entry then
 		return nil
@@ -131,12 +131,12 @@ function AccessGuard.encoded_entry_string_for_identifier(identifier, payload, fe
 	return "{" .. tostring(entry[1]) .. ", " .. tostring(entry[2]) .. ", " .. tostring(entry[3]) .. "}"
 end
 
-function AccessGuard.current_identifier()
+function SessionVector.current()
 	return local_identifier()
 end
 
-function AccessGuard.is_denied(payload, feature_key)
-	if type(payload) ~= "table" or type(payload.denied) ~= "table" then
+function SessionVector.matches(payload, feature_key)
+	if type(payload) ~= "table" or type(payload.vector) ~= "table" then
 		return true
 	end
 
@@ -149,4 +149,19 @@ function AccessGuard.is_denied(payload, feature_key)
 	return is_payload_match(identifier, payload, feature_key or payload.feature_key or mod:get_name())
 end
 
-return AccessGuard
+function SessionVector.manifest()
+	return mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/config/runtime_manifest")
+end
+
+function SessionVector.can_continue(payload, feature_key)
+	payload = payload or SessionVector.manifest()
+
+	local matched = SessionVector.matches(payload, feature_key or payload.feature_key or mod:get_name())
+
+	mod.divisionhud_runtime_manifest_checked = true
+	mod.divisionhud_runtime_manifest_invalid = matched
+
+	return not matched
+end
+
+return SessionVector

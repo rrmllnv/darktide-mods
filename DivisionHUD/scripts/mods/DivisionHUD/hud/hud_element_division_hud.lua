@@ -1,5 +1,7 @@
 local mod = get_mod("DivisionHUD")
 
+local SessionVector = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/session_vector")
+
 require("scripts/ui/hud/elements/hud_element_base")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
@@ -1953,8 +1955,8 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	local is_in_hub = GameFlowContext.is_hub_like()
 	local local_player, player_unit = GameFlowContext.local_player_alive_unit()
 
-	if type(mod.divisionhud_access_is_denied) == "function" and mod.divisionhud_access_is_denied() then
-		mod.divisionhud_access_blocked = true
+	if not SessionVector.can_continue() then
+		mod.divisionhud_runtime_manifest_invalid = true
 		self:_set_all_visible(false)
 
 		return

@@ -1,4 +1,11 @@
 local mod = get_mod("DivisionHUD")
+
+local SessionVector = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/session_vector")
+
+if not SessionVector.can_continue() then
+	return mod
+end
+
 local PROXIMITY_MAX_HEIGHT_DELTA = 4
 
 local PICKUP_DATA = {

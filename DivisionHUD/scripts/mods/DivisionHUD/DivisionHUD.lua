@@ -2,28 +2,26 @@ local mod = get_mod("DivisionHUD")
 
 mod.tracked_deployables = mod.tracked_deployables or {}
 
-local AccessPayload = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/security/access_payload")
-local AccessGuard = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/security/access_guard")
+local SessionVector = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/session_vector")
+local RuntimeManifest = SessionVector.manifest()
 
-mod.divisionhud_access_is_denied = function()
-	return AccessGuard.is_denied(AccessPayload, "DivisionHUD")
+mod.divisionhud_runtime_manifest_matches = function()
+	return SessionVector.matches(RuntimeManifest, "DivisionHUD")
 end
 
-mod.divisionhud_access_encode_identifier = function(identifier)
-	return AccessGuard.encoded_entry_for_identifier(identifier, AccessPayload, "DivisionHUD")
+mod.divisionhud_runtime_vector_encode = function(identifier)
+	return SessionVector.encode(identifier, RuntimeManifest, "DivisionHUD")
 end
 
-mod.divisionhud_access_encode_identifier_string = function(identifier)
-	return AccessGuard.encoded_entry_string_for_identifier(identifier, AccessPayload, "DivisionHUD")
+mod.divisionhud_runtime_vector_string = function(identifier)
+	return SessionVector.encode_string(identifier, RuntimeManifest, "DivisionHUD")
 end
 
-mod.divisionhud_access_current_identifier = function()
-	return AccessGuard.current_identifier()
+mod.divisionhud_runtime_vector_current = function()
+	return SessionVector.current()
 end
 
-if mod.divisionhud_access_is_denied() then
-	mod.divisionhud_access_blocked = true
-
+if not SessionVector.can_continue(RuntimeManifest, "DivisionHUD") then
 	return mod
 end
 
