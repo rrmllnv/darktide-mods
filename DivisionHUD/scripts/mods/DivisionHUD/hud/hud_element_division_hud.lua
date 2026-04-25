@@ -1953,6 +1953,13 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	local is_in_hub = GameFlowContext.is_hub_like()
 	local local_player, player_unit = GameFlowContext.local_player_alive_unit()
 
+	if type(mod.divisionhud_access_is_denied) == "function" and mod.divisionhud_access_is_denied() then
+		mod.divisionhud_access_blocked = true
+		self:_set_all_visible(false)
+
+		return
+	end
+
 	if not is_in_hub and local_player and player_unit then
 		local s = mod._settings
 		local pos_x = (s and type(s.position_x) == "number" and s.position_x) or 0
