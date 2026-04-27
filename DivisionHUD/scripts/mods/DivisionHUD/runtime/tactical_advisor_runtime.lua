@@ -166,6 +166,58 @@ local function _health_fraction(player_unit)
 	return math.clamp(current_health_percent, 0, 1)
 end
 
+local function _wounds_status(player_unit)
+	local health_extension = player_unit and ScriptUnit.has_extension(player_unit, "health_system")
+
+	if not health_extension then
+		return math.huge, 0
+	end
+
+	local ok_remaining, remaining_wounds = pcall(function()
+		return health_extension:num_wounds()
+	end)
+
+	local ok_max, max_wounds = pcall(function()
+		return health_extension:max_wounds()
+	end)
+
+	if not ok_remaining or type(remaining_wounds) ~= "number" or remaining_wounds ~= remaining_wounds then
+		remaining_wounds = math.huge
+	end
+
+	if not ok_max or type(max_wounds) ~= "number" or max_wounds ~= max_wounds then
+		max_wounds = 0
+	end
+
+	return math.max(remaining_wounds, 0), math.max(max_wounds, 0)
+end
+
+local function _corruption_fraction(player_unit)
+	local health_extension = player_unit and ScriptUnit.has_extension(player_unit, "health_system")
+
+	if not health_extension then
+		return 0
+	end
+
+	local ok_permanent_damage, permanent_damage = pcall(function()
+		return health_extension:permanent_damage_taken()
+	end)
+
+	local ok_max_health, max_health = pcall(function()
+		return health_extension:max_health()
+	end)
+
+	if not ok_permanent_damage or type(permanent_damage) ~= "number" or permanent_damage ~= permanent_damage then
+		return 0
+	end
+
+	if not ok_max_health or type(max_health) ~= "number" or max_health ~= max_health or max_health <= 0 then
+		return 0
+	end
+
+	return math.clamp(permanent_damage / max_health, 0, 1)
+end
+
 local function _grenade_fraction(player_unit)
 	local ability_extension = player_unit and ScriptUnit.has_extension(player_unit, "ability_system")
 
@@ -193,6 +245,12 @@ local function _grenade_fraction(player_unit)
 end
 
 local function scan(player_unit)
+	if not _setting_enabled("tactical_advisor_enabled", true) then
+		return {
+			active = false,
+		}
+	end
+
 	if not player_unit or not Unit.alive(player_unit) then
 		return {
 			active = false,
@@ -211,29 +269,40 @@ local function scan(player_unit)
 	local inventory_component = _inventory_component(unit_data_extension)
 	local low_ammo_enabled = _setting_enabled("tactical_advisor_low_ammo_enabled", true)
 	local low_health_enabled = _setting_enabled("tactical_advisor_low_health_enabled", true)
+	local low_wounds_enabled = _setting_enabled("tactical_advisor_low_wounds_enabled", true)
+	local high_corruption_enabled = _setting_enabled("tactical_advisor_high_corruption_enabled", true)
 	local low_grenade_enabled = _setting_enabled("tactical_advisor_low_grenade_enabled", true)
 	local low_ammo_threshold_percent = math.clamp(_setting_number("tactical_advisor_low_ammo_threshold", 25), 0, 100)
 	local low_health_threshold_percent = math.clamp(_setting_number("tactical_advisor_low_health_threshold", 25), 0, 100)
+	local low_wounds_threshold = math.clamp(_setting_number("tactical_advisor_low_wounds_threshold", 1), 1, 5)
+	local high_corruption_threshold_percent = math.clamp(_setting_number("tactical_advisor_high_corruption_threshold", 25), 0, 100)
 	local low_grenade_threshold_percent = math.clamp(_setting_number("tactical_advisor_low_grenade_threshold", 35), 0, 100)
 	local low_ammo_threshold_fraction = low_ammo_threshold_percent / 100
 	local low_health_threshold_fraction = low_health_threshold_percent / 100
+	local high_corruption_threshold_fraction = high_corruption_threshold_percent / 100
 	local low_grenade_threshold_fraction = low_grenade_threshold_percent / 100
 	local ammo_fraction = _total_ammo_fraction(unit_data_extension, visual_loadout_extension)
 	local health_fraction = _health_fraction(player_unit)
+	local wounds_remaining, wounds_max = _wounds_status(player_unit)
+	local corruption_fraction = _corruption_fraction(player_unit)
 	local grenade_fraction = _grenade_fraction(player_unit)
 	local low_ammo_active = low_ammo_enabled and ammo_fraction < low_ammo_threshold_fraction
 	local low_health_active = low_health_enabled and health_fraction < low_health_threshold_fraction
+	local low_wounds_active = low_wounds_enabled and wounds_remaining < low_wounds_threshold
+	local high_corruption_active = high_corruption_enabled and corruption_fraction > high_corruption_threshold_fraction
 	local low_grenade_active = low_grenade_enabled and grenade_fraction < low_grenade_threshold_fraction
 	local has_inventory_ammo_crate = _has_inventory_ammo_crate(inventory_component, visual_loadout_extension)
 	local has_inventory_medical_crate = _has_inventory_medical_crate(inventory_component, visual_loadout_extension)
 	local has_inventory_health_stimm = _has_inventory_health_stimm(inventory_component, visual_loadout_extension)
 
 	return {
-		active = low_ammo_active or low_health_active or low_grenade_active,
+		active = low_ammo_active or low_health_active or low_wounds_active or high_corruption_active or low_grenade_active,
 		low_ammo = {
 			active = low_ammo_active,
 			fraction = ammo_fraction,
 			threshold = low_ammo_threshold_fraction,
+			recommend_use = has_inventory_ammo_crate,
+			recommend_pickup = true,
 			highlight_proximity = {
 				ammo_small = true,
 				ammo_large = true,
@@ -247,6 +316,43 @@ local function scan(player_unit)
 			active = low_health_active,
 			fraction = health_fraction,
 			threshold = low_health_threshold_fraction,
+			recommend_use = has_inventory_medical_crate or has_inventory_health_stimm,
+			recommend_pickup = true,
+			highlight_proximity = {
+				medical_station = true,
+				medical = true,
+				medical_deployed = true,
+				stimm_corruption = true,
+			},
+			highlight_slots = {
+				slot_stimm = has_inventory_health_stimm,
+				slot_pickup = has_inventory_medical_crate,
+			},
+		},
+		low_wounds = {
+			active = low_wounds_active,
+			remaining = wounds_remaining,
+			max = wounds_max,
+			threshold = low_wounds_threshold,
+			recommend_use = has_inventory_medical_crate or has_inventory_health_stimm,
+			recommend_pickup = true,
+			highlight_proximity = {
+				medical_station = true,
+				medical = true,
+				medical_deployed = true,
+				stimm_corruption = true,
+			},
+			highlight_slots = {
+				slot_stimm = has_inventory_health_stimm,
+				slot_pickup = has_inventory_medical_crate,
+			},
+		},
+		high_corruption = {
+			active = high_corruption_active,
+			fraction = corruption_fraction,
+			threshold = high_corruption_threshold_fraction,
+			recommend_use = has_inventory_medical_crate or has_inventory_health_stimm,
+			recommend_pickup = true,
 			highlight_proximity = {
 				medical_station = true,
 				medical = true,
@@ -262,6 +368,8 @@ local function scan(player_unit)
 			active = low_grenade_active,
 			fraction = grenade_fraction,
 			threshold = low_grenade_threshold_fraction,
+			recommend_use = false,
+			recommend_pickup = true,
 			highlight_proximity = {
 				grenade = true,
 			},

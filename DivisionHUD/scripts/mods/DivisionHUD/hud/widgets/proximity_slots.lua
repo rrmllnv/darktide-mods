@@ -4,6 +4,13 @@ local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 
 local M = {}
 local TACTICAL_ADVISOR_ALERT_RGB = { 200, 25, 25 }
+local TACTICAL_ADVISOR_BLOCK_KEYS = {
+	"low_ammo",
+	"low_health",
+	"low_grenade",
+	"low_wounds",
+	"high_corruption",
+}
 
 local function _copy_argb(dst, src)
 	if not dst or type(src) ~= "table" then
@@ -57,8 +64,16 @@ local function _tactical_advisor_alert_alpha(self, opacity, dt)
 
 	local wave = (math.sin(self._tactical_advisor_blink_t * math.pi * 2) + 1) * 0.5
 	local alpha = 80 + 120 * wave
+	local settings = mod._settings
+	local intensity_percent = type(settings) == "table" and settings.tactical_advisor_blink_intensity or 100
 
-	return math.floor(alpha * opacity + 0.5)
+	if type(intensity_percent) ~= "number" or intensity_percent ~= intensity_percent then
+		intensity_percent = 100
+	end
+
+	alpha = math.clamp(alpha * math.clamp(intensity_percent, 25, 200) / 100, 0, 255)
+
+	return math.floor(math.clamp(alpha * opacity, 0, 255) + 0.5)
 end
 
 local function _tactical_advisor_proximity_highlight_active(tactical_advisor_data, cat)
@@ -66,20 +81,17 @@ local function _tactical_advisor_proximity_highlight_active(tactical_advisor_dat
 		return false
 	end
 
-	local low_ammo = tactical_advisor_data.low_ammo
-	local low_health = tactical_advisor_data.low_health
-	local low_grenade = tactical_advisor_data.low_grenade
+	for i = 1, #TACTICAL_ADVISOR_BLOCK_KEYS do
+		local advisor_block = tactical_advisor_data[TACTICAL_ADVISOR_BLOCK_KEYS[i]]
 
-	if low_ammo and low_ammo.active == true and low_ammo.highlight_proximity and low_ammo.highlight_proximity[cat] == true then
-		return true
-	end
-
-	if low_health and low_health.active == true and low_health.highlight_proximity and low_health.highlight_proximity[cat] == true then
-		return true
-	end
-
-	if low_grenade and low_grenade.active == true and low_grenade.highlight_proximity and low_grenade.highlight_proximity[cat] == true then
-		return true
+		if
+			advisor_block
+			and advisor_block.active == true
+			and advisor_block.highlight_proximity
+			and advisor_block.highlight_proximity[cat] == true
+		then
+			return true
+		end
 	end
 
 	return false
