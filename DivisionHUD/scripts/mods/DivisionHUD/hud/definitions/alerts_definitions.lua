@@ -177,6 +177,43 @@ function M.build(bar_width, bar_label_w, sc)
 		strip_text = table.clone(ALERT_TEAM_STRIP_TEXT_RGBA),
 		duration_bar = table.clone(ALERT_TEAM_DURATION_RGBA),
 	}
+	local ALERT_TACTICAL_ADVISOR_UPPER_RGBA = {
+		230,
+		92,
+		62,
+		132,
+	}
+	local ALERT_TACTICAL_ADVISOR_EMITTER_RGBA = {
+		230,
+		120,
+		82,
+		180,
+	}
+	local ALERT_TACTICAL_ADVISOR_STRIP_RGBA = {
+		210,
+		70,
+		46,
+		118,
+	}
+	local ALERT_TACTICAL_ADVISOR_TEXT_RGBA = {
+		255,
+		238,
+		226,
+		255,
+	}
+	local ALERT_TACTICAL_ADVISOR_DURATION_RGBA = {
+		230,
+		150,
+		100,
+		220,
+	}
+	local ALERT_PALETTE_TACTICAL_ADVISOR = {
+		upper = table.clone(ALERT_TACTICAL_ADVISOR_UPPER_RGBA),
+		emitter = table.clone(ALERT_TACTICAL_ADVISOR_EMITTER_RGBA),
+		strip = table.clone(ALERT_TACTICAL_ADVISOR_STRIP_RGBA),
+		strip_text = table.clone(ALERT_TACTICAL_ADVISOR_TEXT_RGBA),
+		duration_bar = table.clone(ALERT_TACTICAL_ADVISOR_DURATION_RGBA),
+	}
 	local ALERTS_STACK_TOTAL_HEIGHT = ALERTS_MAX_SLOTS * (ALERTS_SLOT_HEIGHT + ALERTS_SLOT_GAP) - ALERTS_SLOT_GAP
 
 	local scenegraph_definition = {
@@ -353,6 +390,7 @@ function M.build(bar_width, bar_label_w, sc)
 		ALERT_PALETTE_BOSS = ALERT_PALETTE_BOSS,
 		ALERT_PALETTE_MISSION_OBJECTIVE = ALERT_PALETTE_MISSION_OBJECTIVE,
 		ALERT_PALETTE_TEAM = ALERT_PALETTE_TEAM,
+		ALERT_PALETTE_TACTICAL_ADVISOR = ALERT_PALETTE_TACTICAL_ADVISOR,
 	}
 end
 

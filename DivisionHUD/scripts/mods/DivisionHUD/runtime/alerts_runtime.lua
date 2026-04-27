@@ -811,6 +811,8 @@ mod.alerts_enqueue_strip_body = function(strip_label, body_text, game_t, alert_l
 		cat = "mission"
 	elseif alert_line_category == "team" then
 		cat = "team"
+	elseif alert_line_category == "tactical_advisor" then
+		cat = "tactical_advisor"
 	elseif alert_line_category == "debug" then
 		cat = "debug"
 	end

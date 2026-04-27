@@ -78,6 +78,7 @@ local ALERT_PALETTE_DEFAULT = Definitions.ALERT_PALETTE_DEFAULT
 local ALERT_PALETTE_BOSS = Definitions.ALERT_PALETTE_BOSS
 local ALERT_PALETTE_MISSION_OBJECTIVE = Definitions.ALERT_PALETTE_MISSION_OBJECTIVE
 local ALERT_PALETTE_TEAM = Definitions.ALERT_PALETTE_TEAM
+local ALERT_PALETTE_TACTICAL_ADVISOR = Definitions.ALERT_PALETTE_TACTICAL_ADVISOR
 local ALERTS_STRIP_HEIGHT = Definitions.ALERTS_STRIP_HEIGHT
 local ALERTS_SLOT_GAP = Definitions.ALERTS_SLOT_GAP
 local ALERTS_TOUGHNESS_GAP = Definitions.ALERTS_TOUGHNESS_GAP
@@ -180,6 +181,31 @@ local function read_mod_numeric_setting(key)
 	end
 
 	return 0
+end
+
+local function read_mod_bool_setting(key, fallback)
+	local settings = mod._settings
+	local v = settings and settings[key]
+
+	if v == false or v == 0 then
+		return false
+	end
+
+	if v == true or v == 1 then
+		return true
+	end
+
+	local default_value = DivisionHUDSettingsDefaults[key]
+
+	if default_value == false or default_value == 0 then
+		return false
+	end
+
+	if default_value == true or default_value == 1 then
+		return true
+	end
+
+	return fallback
 end
 
 local function wrapped_angle_delta(prev_rad, curr_rad)
@@ -357,6 +383,68 @@ local function tactical_advisor_slot_highlight_active(data, widget_name)
 	end
 
 	return false
+end
+
+local TACTICAL_ADVISOR_ALERT_CONFIG = {
+	{
+		block_key = "low_ammo",
+		setting_id = "tactical_advisor_low_ammo_alert_enabled",
+		find_message_key = "tactical_advisor_alert_low_ammo_find",
+		use_message_key = "tactical_advisor_alert_low_ammo_use",
+	},
+	{
+		block_key = "low_health",
+		setting_id = "tactical_advisor_low_health_alert_enabled",
+		find_message_key = "tactical_advisor_alert_low_health_find",
+		use_message_key = "tactical_advisor_alert_low_health_use",
+	},
+	{
+		block_key = "low_wounds",
+		setting_id = "tactical_advisor_low_wounds_alert_enabled",
+		find_message_key = "tactical_advisor_alert_low_wounds_find",
+		use_message_key = "tactical_advisor_alert_low_wounds_use",
+	},
+	{
+		block_key = "high_corruption",
+		setting_id = "tactical_advisor_high_corruption_alert_enabled",
+		find_message_key = "tactical_advisor_alert_high_corruption_find",
+		use_message_key = "tactical_advisor_alert_high_corruption_use",
+	},
+	{
+		block_key = "low_grenade",
+		setting_id = "tactical_advisor_low_grenade_alert_enabled",
+		find_message_key = "tactical_advisor_alert_low_grenade_find",
+	},
+}
+
+local function tactical_advisor_alert_gameplay_time()
+	if HudUtils and type(HudUtils.safe_time_for_alerts) == "function" then
+		local t = HudUtils.safe_time_for_alerts()
+
+		if type(t) == "number" and t == t then
+			return t
+		end
+	end
+
+	if HudUtils and type(HudUtils.safe_gameplay_time) == "function" then
+		local t = HudUtils.safe_gameplay_time()
+
+		if type(t) == "number" and t == t then
+			return t
+		end
+	end
+
+	return nil
+end
+
+local function localize_non_empty(key)
+	local text = mod:localize(key)
+
+	if type(text) == "string" and text ~= "" and not string.find(text, "^<unlocalized") then
+		return text
+	end
+
+	return nil
 end
 
 local function resolve_grenade_charge_fraction_from_player_unit(player_unit)
@@ -1791,6 +1879,8 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 				pal = ALERT_PALETTE_MISSION_OBJECTIVE
 			elseif cat == "team" and type(ALERT_PALETTE_TEAM) == "table" then
 				pal = ALERT_PALETTE_TEAM
+			elseif cat == "tactical_advisor" and type(ALERT_PALETTE_TACTICAL_ADVISOR) == "table" then
+				pal = ALERT_PALETTE_TACTICAL_ADVISOR
 			end
 
 			if type(pal) == "table" then
@@ -2276,6 +2366,7 @@ HudElementDivisionHUD._update_tactical_advisor_scan = function(self, player_unit
 	if not player_unit or not Unit.alive(player_unit) then
 		self._tactical_advisor_scan_timer = 0
 		self._tactical_advisor_data = {}
+		self._tactical_advisor_alert_state = {}
 
 		return
 	end
@@ -2294,6 +2385,61 @@ HudElementDivisionHUD._update_tactical_advisor_scan = function(self, player_unit
 		self._tactical_advisor_data = tactical_advisor_runtime.scan(player_unit)
 	else
 		self._tactical_advisor_data = {}
+	end
+
+	self:_update_tactical_advisor_alerts(self._tactical_advisor_data)
+end
+
+HudElementDivisionHUD._update_tactical_advisor_alerts = function(self, tactical_advisor_data)
+	self._tactical_advisor_alert_state = self._tactical_advisor_alert_state or {}
+
+	local alert_state = self._tactical_advisor_alert_state
+
+	if type(tactical_advisor_data) ~= "table" or tactical_advisor_data.active ~= true then
+		table.clear(alert_state)
+
+		return
+	end
+
+	if type(mod.alerts_enqueue_strip_body) ~= "function" then
+		return
+	end
+
+	local gt = tactical_advisor_alert_gameplay_time()
+
+	if type(gt) ~= "number" or gt ~= gt then
+		return
+	end
+
+	local strip_label = localize_non_empty("tactical_advisor_alert_strip") or "Tactical advisor"
+
+	for i = 1, #TACTICAL_ADVISOR_ALERT_CONFIG do
+		local config = TACTICAL_ADVISOR_ALERT_CONFIG[i]
+		local block_key = config.block_key
+		local block = tactical_advisor_data[block_key]
+		local active = block and block.active == true
+
+		if active and not alert_state[block_key] and read_mod_bool_setting(config.setting_id, true) then
+			local message_key = block.recommend_use == true and config.use_message_key or config.find_message_key
+
+			if not message_key then
+				message_key = config.find_message_key
+			end
+
+			local body_text = localize_non_empty(message_key)
+
+			if body_text then
+				mod.alerts_enqueue_strip_body(
+					strip_label,
+					body_text,
+					gt,
+					"tactical_advisor",
+					{ instance_id = "tactical_advisor:" .. block_key }
+				)
+			end
+		end
+
+		alert_state[block_key] = active == true
 	end
 end
 
