@@ -148,6 +148,18 @@ local function _has_inventory_health_stimm(inventory_component, visual_loadout_e
 	return _slot_matches_name_map(inventory_component, visual_loadout_extension, "slot_pocketable_small", HEALTH_STIMM_NAMES)
 end
 
+local function _recommended_medical_inventory_item(has_inventory_medical_crate, has_inventory_health_stimm)
+	if has_inventory_health_stimm then
+		return "slot_stimm", "health_stimm"
+	end
+
+	if has_inventory_medical_crate then
+		return "slot_pickup", "medical_crate"
+	end
+
+	return nil, nil
+end
+
 local function _health_fraction(player_unit)
 	local health_extension = player_unit and ScriptUnit.has_extension(player_unit, "health_system")
 
@@ -294,6 +306,10 @@ local function scan(player_unit)
 	local has_inventory_ammo_crate = _has_inventory_ammo_crate(inventory_component, visual_loadout_extension)
 	local has_inventory_medical_crate = _has_inventory_medical_crate(inventory_component, visual_loadout_extension)
 	local has_inventory_health_stimm = _has_inventory_health_stimm(inventory_component, visual_loadout_extension)
+	local recommended_medical_slot, recommended_medical_item_type = _recommended_medical_inventory_item(
+		has_inventory_medical_crate,
+		has_inventory_health_stimm
+	)
 
 	return {
 		active = low_ammo_active or low_health_active or low_wounds_active or high_corruption_active or low_grenade_active,
@@ -303,6 +319,8 @@ local function scan(player_unit)
 			threshold = low_ammo_threshold_fraction,
 			recommend_use = has_inventory_ammo_crate,
 			recommend_pickup = true,
+			recommended_slot = has_inventory_ammo_crate and "slot_pickup" or nil,
+			recommended_item_type = has_inventory_ammo_crate and "ammo_crate" or nil,
 			highlight_proximity = {
 				ammo_small = true,
 				ammo_large = true,
@@ -318,6 +336,8 @@ local function scan(player_unit)
 			threshold = low_health_threshold_fraction,
 			recommend_use = has_inventory_medical_crate or has_inventory_health_stimm,
 			recommend_pickup = true,
+			recommended_slot = recommended_medical_slot,
+			recommended_item_type = recommended_medical_item_type,
 			highlight_proximity = {
 				medical_station = true,
 				medical = true,
@@ -336,6 +356,8 @@ local function scan(player_unit)
 			threshold = low_wounds_threshold,
 			recommend_use = has_inventory_medical_crate or has_inventory_health_stimm,
 			recommend_pickup = true,
+			recommended_slot = recommended_medical_slot,
+			recommended_item_type = recommended_medical_item_type,
 			highlight_proximity = {
 				medical_station = true,
 				medical = true,
@@ -353,6 +375,8 @@ local function scan(player_unit)
 			threshold = high_corruption_threshold_fraction,
 			recommend_use = has_inventory_medical_crate or has_inventory_health_stimm,
 			recommend_pickup = true,
+			recommended_slot = recommended_medical_slot,
+			recommended_item_type = recommended_medical_item_type,
 			highlight_proximity = {
 				medical_station = true,
 				medical = true,

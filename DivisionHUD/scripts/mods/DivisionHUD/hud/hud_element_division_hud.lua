@@ -390,25 +390,57 @@ local TACTICAL_ADVISOR_ALERT_CONFIG = {
 		block_key = "low_ammo",
 		setting_id = "tactical_advisor_low_ammo_alert_enabled",
 		find_message_key = "tactical_advisor_alert_low_ammo_find",
-		use_message_key = "tactical_advisor_alert_low_ammo_use",
+		use_message_keys = {
+			ammo_crate = "tactical_advisor_alert_low_ammo_use_ammo_crate",
+		},
 	},
 	{
 		block_key = "low_health",
 		setting_id = "tactical_advisor_low_health_alert_enabled",
 		find_message_key = "tactical_advisor_alert_low_health_find",
-		use_message_key = "tactical_advisor_alert_low_health_use",
+		use_message_keys = {
+			health_stimm = "tactical_advisor_alert_low_health_use_health_stimm",
+			medical_crate = "tactical_advisor_alert_low_health_use_medical_crate",
+		},
+		nearby_message_priority = { "medical_station", "medical_deployed", "medical", "stimm_corruption" },
+		nearby_message_keys = {
+			medical_station = "tactical_advisor_alert_low_health_near_health_station",
+			medical_deployed = "tactical_advisor_alert_low_health_near_medical_crate",
+			medical = "tactical_advisor_alert_low_health_near_medical_pickup",
+			stimm_corruption = "tactical_advisor_alert_low_health_near_health_stimm",
+		},
 	},
 	{
 		block_key = "low_wounds",
 		setting_id = "tactical_advisor_low_wounds_alert_enabled",
 		find_message_key = "tactical_advisor_alert_low_wounds_find",
-		use_message_key = "tactical_advisor_alert_low_wounds_use",
+		use_message_keys = {
+			health_stimm = "tactical_advisor_alert_low_wounds_use_health_stimm",
+			medical_crate = "tactical_advisor_alert_low_wounds_use_medical_crate",
+		},
+		nearby_message_priority = { "medical_station", "medical_deployed", "medical", "stimm_corruption" },
+		nearby_message_keys = {
+			medical_station = "tactical_advisor_alert_low_wounds_near_health_station",
+			medical_deployed = "tactical_advisor_alert_low_wounds_near_medical_crate",
+			medical = "tactical_advisor_alert_low_wounds_near_medical_pickup",
+			stimm_corruption = "tactical_advisor_alert_low_wounds_near_health_stimm",
+		},
 	},
 	{
 		block_key = "high_corruption",
 		setting_id = "tactical_advisor_high_corruption_alert_enabled",
 		find_message_key = "tactical_advisor_alert_high_corruption_find",
-		use_message_key = "tactical_advisor_alert_high_corruption_use",
+		use_message_keys = {
+			health_stimm = "tactical_advisor_alert_high_corruption_use_health_stimm",
+			medical_crate = "tactical_advisor_alert_high_corruption_use_medical_crate",
+		},
+		nearby_message_priority = { "medical_station", "medical_deployed", "medical", "stimm_corruption" },
+		nearby_message_keys = {
+			medical_station = "tactical_advisor_alert_high_corruption_near_health_station",
+			medical_deployed = "tactical_advisor_alert_high_corruption_near_medical_crate",
+			medical = "tactical_advisor_alert_high_corruption_near_medical_pickup",
+			stimm_corruption = "tactical_advisor_alert_high_corruption_near_health_stimm",
+		},
 	},
 	{
 		block_key = "low_grenade",
@@ -416,6 +448,38 @@ local TACTICAL_ADVISOR_ALERT_CONFIG = {
 		find_message_key = "tactical_advisor_alert_low_grenade_find",
 	},
 }
+
+local function tactical_advisor_alert_message_key(config, block, proximity_data)
+	if type(config) ~= "table" or type(block) ~= "table" then
+		return nil
+	end
+
+	local recommended_item_type = block.recommended_item_type
+	local use_message_keys = config.use_message_keys
+
+	if type(recommended_item_type) == "string" and type(use_message_keys) == "table" then
+		local message_key = use_message_keys[recommended_item_type]
+
+		if message_key then
+			return message_key
+		end
+	end
+
+	local nearby_message_priority = config.nearby_message_priority
+	local nearby_message_keys = config.nearby_message_keys
+
+	if type(proximity_data) == "table" and type(nearby_message_priority) == "table" and type(nearby_message_keys) == "table" then
+		for i = 1, #nearby_message_priority do
+			local proximity_category = nearby_message_priority[i]
+
+			if proximity_data[proximity_category] ~= nil and nearby_message_keys[proximity_category] then
+				return nearby_message_keys[proximity_category]
+			end
+		end
+	end
+
+	return config.find_message_key
+end
 
 local function tactical_advisor_alert_gameplay_time()
 	if HudUtils and type(HudUtils.safe_time_for_alerts) == "function" then
@@ -2280,12 +2344,12 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	self:_update_expedition_salvage(local_player, widgets.expedition_salvage, opacity)
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
 	self:_update_auspex_slot(player_unit, widgets, opacity)
+	self:_update_proximity_scan(player_unit, dt)
 	self:_update_tactical_advisor_scan(player_unit, dt)
 	self:_update_right_slot_grid(player_unit, widgets, opacity)
 	self:_update_danger_zone_scan(player_unit, dt)
 	self:_update_danger_zone_widget(opacity, dt)
 	self:_update_buff_rows_position()
-	self:_update_proximity_scan(player_unit, dt)
 	self:_update_proximity_widgets(widgets, opacity, dt)
 
 	local s_buffs = mod._settings
@@ -2412,6 +2476,7 @@ HudElementDivisionHUD._update_tactical_advisor_alerts = function(self, tactical_
 	end
 
 	local strip_label = localize_non_empty("tactical_advisor_alert_strip") or "Tactical advisor"
+	local proximity_data = self._prox_data
 
 	for i = 1, #TACTICAL_ADVISOR_ALERT_CONFIG do
 		local config = TACTICAL_ADVISOR_ALERT_CONFIG[i]
@@ -2420,12 +2485,7 @@ HudElementDivisionHUD._update_tactical_advisor_alerts = function(self, tactical_
 		local active = block and block.active == true
 
 		if active and not alert_state[block_key] and read_mod_bool_setting(config.setting_id, true) then
-			local message_key = block.recommend_use == true and config.use_message_key or config.find_message_key
-
-			if not message_key then
-				message_key = config.find_message_key
-			end
-
+			local message_key = tactical_advisor_alert_message_key(config, block, proximity_data)
 			local body_text = localize_non_empty(message_key)
 
 			if body_text then
