@@ -13,6 +13,7 @@ local DEBUFF_STYLES = EnemyDebuffs.DEBUFF_STYLES or {}
 local DEBUFFS = EnemyDebuffs.DEBUFFS or {}
 local stat_buff_types = BuffSettings.stat_buff_types
 local attack_results = AttackSettings.attack_results
+local attack_types = AttackSettings.attack_types
 local armor_type_string_lookup = {
 	armored = "loc_weapon_stats_display_armored",
 	berserker = "loc_weapon_stats_display_berzerker",
@@ -298,6 +299,10 @@ local function _on_attack_result(_, damage_profile, attacked_unit, attacking_uni
 	end
 
 	if attack_result == attack_results.friendly_fire then
+		return
+	end
+
+	if attack_type == attack_types.buff then
 		return
 	end
 
