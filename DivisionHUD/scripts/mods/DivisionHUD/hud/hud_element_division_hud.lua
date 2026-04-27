@@ -60,6 +60,7 @@ local AutoSwitchHud = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/contex
 local DangerZoneRuntime = mod.danger_zone_runtime or mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/danger_zone_runtime")
 local EnemyTargetRuntime = mod.enemy_target_runtime or mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/enemy_target_runtime")
 local ProximityScan = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/proximity_runtime")
+local TacticalAdvisorRuntime = mod.tactical_advisor_runtime or mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/tactical_advisor_runtime")
 local HudUtils = mod.hud_utils or {}
 
 local HudElementDivisionHUD = class("HudElementDivisionHUD", "HudElementBase")
@@ -93,10 +94,12 @@ local GRENADE_ABILITY_TYPE = "grenade_ability"
 local DANGER_ZONE_SCAN_INTERVAL = 0.1
 local DANGER_ZONE_WARNING_MARGIN = 15
 local ENEMY_TARGET_SCAN_INTERVAL = 0.1
+local TACTICAL_ADVISOR_SCAN_INTERVAL = 0.1
 local PROX_SCAN_INTERVAL = 0.5
 local RIGHT_SLOT_ICON_FALLBACK = Definitions.RIGHT_SLOT_ICON_FALLBACK
 local DIVISION_BUFF_ROWS_BASE_Y = Definitions.DIVISION_BUFF_ROWS_BASE_Y or 0
 local DIVISION_BUFF_ROWS_HIDDEN_STAMINA_Y = Definitions.DIVISION_BUFF_ROWS_HIDDEN_STAMINA_Y or DIVISION_BUFF_ROWS_BASE_Y
+local TACTICAL_ADVISOR_ALERT_RGB = { 200, 25, 25 }
 local function get_hud_layout_scale()
 	local s = mod._settings
 
@@ -290,6 +293,53 @@ local function apply_tinted_icon_color_from_palette(c, palette_argb, hud_row_opa
 	c[2] = palette_argb[2] or 255
 	c[3] = palette_argb[3] or 255
 	c[4] = palette_argb[4] or 255
+end
+
+local function tactical_advisor_alert_alpha(opacity)
+	local gameplay_time = HudUtils.safe_gameplay_time and HudUtils.safe_gameplay_time() or 0
+	local wave = (math.sin(gameplay_time * math.pi * 2) + 1) * 0.5
+	local alpha = 80 + 120 * wave
+
+	return math.floor(alpha * opacity + 0.5)
+end
+
+local function apply_tactical_advisor_slot_background(widget, visible, opacity)
+	if not widget or not widget.content then
+		return
+	end
+
+	widget.content.tactical_advisor_alert_visible = visible == true
+
+	local style = widget.style and widget.style.tactical_advisor_alert_background
+	local color = style and style.color
+
+	if color then
+		color[1] = visible and tactical_advisor_alert_alpha(opacity) or 0
+		color[2] = TACTICAL_ADVISOR_ALERT_RGB[1]
+		color[3] = TACTICAL_ADVISOR_ALERT_RGB[2]
+		color[4] = TACTICAL_ADVISOR_ALERT_RGB[3]
+	end
+
+	widget.dirty = true
+end
+
+local function tactical_advisor_slot_highlight_active(data, widget_name)
+	if not data or type(widget_name) ~= "string" then
+		return false
+	end
+
+	local low_ammo = data.low_ammo
+	local low_health = data.low_health
+
+	if low_ammo and low_ammo.active == true and low_ammo.highlight_slots and low_ammo.highlight_slots[widget_name] == true then
+		return true
+	end
+
+	if low_health and low_health.active == true and low_health.highlight_slots and low_health.highlight_slots[widget_name] == true then
+		return true
+	end
+
+	return false
 end
 
 local function resolve_grenade_charge_fraction_from_player_unit(player_unit)
@@ -1035,6 +1085,7 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 
 			if widget then
 				widget.content.visible = false
+				apply_tactical_advisor_slot_background(widget, false, opacity)
 			end
 		end
 
@@ -1055,6 +1106,7 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 		if not widget or not entry then
 			if widget then
 				widget.content.visible = false
+				apply_tactical_advisor_slot_background(widget, false, opacity)
 			end
 		else
 			local slot_id = entry.slot_id
@@ -1202,6 +1254,12 @@ HudElementDivisionHUD._update_right_slot_grid = function(self, player_unit, widg
 				widget.style.text.text_color[1] = 255 * opacity
 			end
 			end
+
+			apply_tactical_advisor_slot_background(
+				widget,
+				tactical_advisor_slot_highlight_active(self._tactical_advisor_data, name),
+				opacity
+			)
 
 			widget.dirty = true
 		end
@@ -1811,6 +1869,8 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	self._danger_zone_data = {}
 	self._enemy_target_scan_timer = 0
 	self._enemy_target_data = {}
+	self._tactical_advisor_scan_timer = 0
+	self._tactical_advisor_data = {}
 	self._prox_scan_timer = 0
 	self._prox_data = {}
 	self._prox_anim = {}
@@ -2113,6 +2173,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	self:_update_expedition_salvage(local_player, widgets.expedition_salvage, opacity)
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
 	self:_update_auspex_slot(player_unit, widgets, opacity)
+	self:_update_tactical_advisor_scan(player_unit, dt)
 	self:_update_right_slot_grid(player_unit, widgets, opacity)
 	self:_update_danger_zone_scan(player_unit, dt)
 	self:_update_danger_zone_widget(opacity, dt)
@@ -2192,6 +2253,31 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 		is_valid_argb_255,
 		DIVISION_SLOT_COUNTER_TEXT_COLOR_DEFAULT
 	)
+end
+
+HudElementDivisionHUD._update_tactical_advisor_scan = function(self, player_unit, dt)
+	if not player_unit or not Unit.alive(player_unit) then
+		self._tactical_advisor_scan_timer = 0
+		self._tactical_advisor_data = {}
+
+		return
+	end
+
+	self._tactical_advisor_scan_timer = (self._tactical_advisor_scan_timer or 0) + dt
+
+	if self._tactical_advisor_scan_timer < TACTICAL_ADVISOR_SCAN_INTERVAL then
+		return
+	end
+
+	self._tactical_advisor_scan_timer = 0
+
+	local tactical_advisor_runtime = mod.tactical_advisor_runtime or TacticalAdvisorRuntime
+
+	if tactical_advisor_runtime and type(tactical_advisor_runtime.scan) == "function" then
+		self._tactical_advisor_data = tactical_advisor_runtime.scan(player_unit)
+	else
+		self._tactical_advisor_data = {}
+	end
 end
 
 HudElementDivisionHUD._update_ability_bar = function(self, player_unit, widget, opacity, dt)

@@ -538,6 +538,20 @@ local function create_right_slot_widget(scenegraph_id)
 
 	return UIWidget.create_definition({
 		{
+			pass_type = "rect",
+			style_id = "tactical_advisor_alert_background",
+			visibility_function = function(content)
+				return content.tactical_advisor_alert_visible == true
+			end,
+			style = {
+				horizontal_alignment = "center",
+				vertical_alignment = "center",
+				size = { RIGHT_BOTTOM_SLOT_WIDTH, RIGHT_BOTTOM_SLOT_HEIGHT },
+				color = { 0, 200, 0, 0 },
+				offset = { 0, 0, 0 },
+			},
+		},
+		{
 			pass_type = "texture",
 			style_id = "icon",
 			value = RIGHT_SLOT_ICON_FALLBACK,

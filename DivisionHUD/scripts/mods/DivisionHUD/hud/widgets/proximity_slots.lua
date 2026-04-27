@@ -3,6 +3,7 @@ local mod = get_mod("DivisionHUD")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 
 local M = {}
+local TACTICAL_ADVISOR_ALERT_RGB = { 200, 25, 25 }
 
 local function _copy_argb(dst, src)
 	if not dst or type(src) ~= "table" then
@@ -24,10 +25,64 @@ local function _reset_widget(widget)
 		widget.content.visible = false
 		widget.content.dist_text = ""
 		widget.content.count_text = ""
+		widget.content.tactical_advisor_alert_visible = false
 	end
 
 	widget.alpha_multiplier = 0
 	widget.dirty = true
+end
+
+local function _apply_tactical_advisor_alert_background(widget, visible, alpha)
+	if not widget or not widget.content then
+		return
+	end
+
+	widget.content.tactical_advisor_alert_visible = visible == true
+
+	local style = widget.style and widget.style.tactical_advisor_alert_background
+	local color = style and style.color
+
+	if color then
+		color[1] = visible and alpha or 0
+		color[2] = TACTICAL_ADVISOR_ALERT_RGB[1]
+		color[3] = TACTICAL_ADVISOR_ALERT_RGB[2]
+		color[4] = TACTICAL_ADVISOR_ALERT_RGB[3]
+	end
+
+	widget.dirty = true
+end
+
+local function _tactical_advisor_alert_alpha(self, opacity, dt)
+	self._tactical_advisor_blink_t = ((self._tactical_advisor_blink_t or 0) + dt) % 1
+
+	local wave = (math.sin(self._tactical_advisor_blink_t * math.pi * 2) + 1) * 0.5
+	local alpha = 80 + 120 * wave
+
+	return math.floor(alpha * opacity + 0.5)
+end
+
+local function _tactical_advisor_proximity_highlight_active(tactical_advisor_data, cat)
+	if not tactical_advisor_data or type(cat) ~= "string" then
+		return false
+	end
+
+	local low_ammo = tactical_advisor_data.low_ammo
+	local low_health = tactical_advisor_data.low_health
+	local low_grenade = tactical_advisor_data.low_grenade
+
+	if low_ammo and low_ammo.active == true and low_ammo.highlight_proximity and low_ammo.highlight_proximity[cat] == true then
+		return true
+	end
+
+	if low_health and low_health.active == true and low_health.highlight_proximity and low_health.highlight_proximity[cat] == true then
+		return true
+	end
+
+	if low_grenade and low_grenade.active == true and low_grenade.highlight_proximity and low_grenade.highlight_proximity[cat] == true then
+		return true
+	end
+
+	return false
 end
 
 local function _reset_icon_transform(widget)
@@ -190,6 +245,8 @@ function M.update(self, widgets, opacity, dt, proximity_scan, right_slot_icon_fa
 	local categories = proximity_scan and proximity_scan.CATEGORIES or {}
 	local enabled = type(settings) ~= "table" or (settings.proximity_enabled ~= false and settings.proximity_enabled ~= 0)
 	local show_stimm = type(settings) ~= "table" or (settings.proximity_show_stimm ~= false and settings.proximity_show_stimm ~= 0)
+	local tactical_advisor_data = self._tactical_advisor_data
+	local tactical_advisor_alert_alpha = _tactical_advisor_alert_alpha(self, opacity, dt)
 
 	_ensure_anim_state(self, categories)
 
@@ -273,6 +330,8 @@ function M.update(self, widgets, opacity, dt, proximity_scan, right_slot_icon_fa
 		local bg_widget = widget_name and widgets[widget_name .. "_bg"]
 
 		if not widget or not widget.content then
+			_apply_tactical_advisor_alert_background(bg_widget, false, 0)
+
 			goto continue_prox
 		end
 
@@ -355,6 +414,12 @@ function M.update(self, widgets, opacity, dt, proximity_scan, right_slot_icon_fa
 			bg_widget.alpha_multiplier = eff_alpha
 			bg_widget.dirty = true
 		end
+
+		_apply_tactical_advisor_alert_background(
+			bg_widget,
+			data ~= nil and _tactical_advisor_proximity_highlight_active(tactical_advisor_data, cat),
+			tactical_advisor_alert_alpha
+		)
 
 		widget.content.visible = true
 		widget.alpha_multiplier = eff_alpha

@@ -53,15 +53,32 @@ local PROX_CATEGORY_ICONS = {
 }
 
 local function create_prox_slot_bg_widget(scenegraph_id, slot_size, build_frame_fn, defaults_fn)
+	local passes = build_frame_fn(
+		slot_size,
+		slot_size,
+		0,
+		1,
+		2,
+		3
+	)
+
+	passes[#passes + 1] = {
+		pass_type = "rect",
+		style_id = "tactical_advisor_alert_background",
+		visibility_function = function(content)
+			return content.tactical_advisor_alert_visible == true
+		end,
+		style = {
+			horizontal_alignment = "center",
+			vertical_alignment = "center",
+			size = { slot_size, slot_size },
+			color = { 0, 200, 0, 0 },
+			offset = { 0, 0, 1 },
+		},
+	}
+
 	return UIWidget.create_definition(
-		build_frame_fn(
-			slot_size,
-			slot_size,
-			0,
-			1,
-			2,
-			3
-		),
+		passes,
 		scenegraph_id,
 		defaults_fn()
 	)
