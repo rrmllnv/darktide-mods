@@ -151,6 +151,38 @@ local COLOR_CORRUPTION = {
 	70,
 	180,
 }
+local COLOR_STIMM_BY_TEMPLATE = {
+	syringe_ability_boost_pocketable = {
+		255,
+		230,
+		192,
+		13,
+	},
+	syringe_broker_pocketable = {
+		255,
+		208,
+		69,
+		255,
+	},
+	syringe_corruption_pocketable = {
+		255,
+		38,
+		205,
+		26,
+	},
+	syringe_power_boost_pocketable = {
+		255,
+		205,
+		51,
+		26,
+	},
+	syringe_speed_boost_pocketable = {
+		255,
+		0,
+		127,
+		218,
+	},
+}
 
 local scenegraph_definition = {
 	screen = UIWorkspaceSettings.screen,
@@ -580,6 +612,13 @@ local function player_status_icon_color(icon_key)
 	return icon_key and colors and colors[icon_key] or COLOR_TEXT_DEFAULT
 end
 
+local function pocketable_small_icon_color(inventory_icons)
+	local template_id = inventory_icons and inventory_icons.pocketable_small_template_id
+	local color = template_id and COLOR_STIMM_BY_TEMPLATE[template_id]
+
+	return color or COLOR_TEXT_DEFAULT
+end
+
 local function apply_ability_state(style, ability_state)
 	local icon_style = style.ability_icon
 	local material_values = icon_style and icon_style.material_values
@@ -896,6 +935,8 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.inventory_value_text.text_color, inventory_value_color)
 	apply_color(style.grenade_icon.color, ammo_color_from_status(inventory_icons.grenade_status, true))
 	apply_color(style.ammo_icon.color, ammo_color_from_status(inventory_icons.ammo_status, inventory_icons.uses_ammo))
+	apply_color(style.pocketable_icon.color, COLOR_TEXT_DEFAULT)
+	apply_color(style.pocketable_small_icon.color, pocketable_small_icon_color(inventory_icons))
 
 	set_rect_width(style.coherency_border, show_coherency_border and COHERENCY_BORDER_WIDTH or 0)
 	style.toughness_fill.offset[2] = toughness_bar_y

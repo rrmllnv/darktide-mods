@@ -119,7 +119,7 @@ local function hud_icon_from_item(item)
 	return hud_icon_from_weapon_template(weapon_template)
 end
 
-hud_icon_from_master_item_name = function(item_name)
+local function master_item_from_name(item_name)
 	if type(item_name) ~= "string" or item_name == "" then
 		return nil
 	end
@@ -132,7 +132,23 @@ hud_icon_from_master_item_name = function(item_name)
 		return nil
 	end
 
-	return hud_icon_from_item(item)
+	return item
+end
+
+hud_icon_from_master_item_name = function(item_name)
+	return hud_icon_from_item(master_item_from_name(item_name))
+end
+
+local function weapon_template_id_from_slot(inventory_component, slot_name)
+	if not inventory_component then
+		return nil
+	end
+
+	local item_name = inventory_component[slot_name]
+	local item = master_item_from_name(item_name)
+	local weapon_template_id = item and item.weapon_template
+
+	return type(weapon_template_id) == "string" and weapon_template_id or nil
 end
 
 local function grenade_hud_icon_from_profile(player)
@@ -291,6 +307,7 @@ function M.icons(player, extensions, status)
 	local uses_ammo, ammo_status, ammo_visible = weapon_ammo_status(player, unit_data_extension, visual_loadout_extension)
 	local pocketable_icon = item_hud_icon_from_slot(inventory_component, visual_loadout_extension, POCKETABLE_SLOT_NAME)
 	local pocketable_small_icon = item_hud_icon_from_slot(inventory_component, visual_loadout_extension, POCKETABLE_SMALL_SLOT_NAME)
+	local pocketable_small_template_id = weapon_template_id_from_slot(inventory_component, POCKETABLE_SMALL_SLOT_NAME)
 
 	return {
 		ammo_icon = ammo_visible and AMMO_ICON or nil,
@@ -299,6 +316,7 @@ function M.icons(player, extensions, status)
 		grenade_status = grenade_ability_status,
 		pocketable_icon = pocketable_icon,
 		pocketable_small_icon = pocketable_small_icon,
+		pocketable_small_template_id = pocketable_small_template_id,
 		uses_ammo = uses_ammo,
 	}
 end
