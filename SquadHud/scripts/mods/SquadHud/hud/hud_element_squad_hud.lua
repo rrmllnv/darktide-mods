@@ -45,6 +45,14 @@ local AMMO_ICON_X = GRENADE_ICON_X + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
 local INVENTORY_ICON_X = AMMO_ICON_X + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
 local INVENTORY_SMALL_ICON_X = INVENTORY_ICON_X + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
 local BAR_WIDTH = INVENTORY_BLOCK_X - INVENTORY_ICON_GAP - BAR_LEFT
+local BAR_VALUE = {
+	font_size = 12,
+	height = TOUGHNESS_BAR_BOTTOM_Y - HEALTH_BAR_Y,
+	text_width = 90,
+	x = BAR_LEFT,
+	y = HEALTH_BAR_Y,
+}
+
 local ABILITY_ICON_Y = TOUGHNESS_BAR_BOTTOM_Y - ABILITY_ICON_SIZE
 local ABILITY_ICON_FRAME_Y = ABILITY_ICON_Y - ABILITY_ICON_FRAME_PADDING
 local ABILITY_ICON_FRAME_X = ABILITY_ICON_X - ABILITY_ICON_FRAME_PADDING
@@ -299,6 +307,7 @@ local function create_panel_definition(scenegraph_id)
 		inventory_texture_pass("pocketable_small_icon", "pocketable_small_icon", { INVENTORY_SMALL_ICON_X, INVENTORY_ICON_Y, 4 }),
 		rect_pass("toughness_fill", COLOR_TOUGHNESS, { BAR_LEFT, TOUGHNESS_BAR_Y, 4 }, { BAR_WIDTH, BAR_HEIGHT }),
 		rect_pass("revive_fill", COLOR_REVIVE, { BAR_LEFT, TOUGHNESS_BAR_Y, 5 }, { 0, BAR_HEIGHT }),
+		text_pass("bar_value_text", "bar_value_text", BAR_VALUE.font_size, { BAR_VALUE.x, BAR_VALUE.y, 8 }, { BAR_VALUE.text_width, BAR_VALUE.height }, COLOR_HEALTH, "left"),
 	}
 
 	for i = 1, 10 do
@@ -334,6 +343,20 @@ local function set_rect_width(style, width)
 	if style and style.size then
 		style.size[1] = math.max(0, width)
 	end
+end
+
+local BarValue = {}
+
+BarValue.rounded = function(value)
+	return math.ceil(math.max(0, value or 0))
+end
+
+BarValue.text = function(value)
+	return tostring(BarValue.rounded(value))
+end
+
+BarValue.colored_text = function(text, color)
+	return "{#color(" .. color[2] .. "," .. color[3] .. "," .. color[4] .. ")}" .. text .. "{#reset()}"
 end
 
 local function smoothstep(progress)
@@ -577,6 +600,33 @@ local function apply_name_marquee(self, widget, player_key, display_name, ui_ren
 	widget.dirty = true
 end
 
+BarValue.toughness_content = function(toughness_values, has_overshield)
+	local bonus = toughness_values and toughness_values.bonus or 0
+	local normal = toughness_values and toughness_values.normal or 0
+	local current = toughness_values and toughness_values.current or 0
+
+	if has_overshield and BarValue.rounded(bonus) > 0 then
+		return BarValue.colored_text(BarValue.text(normal), COLOR_TOUGHNESS) .. " + " .. BarValue.colored_text(BarValue.text(bonus), COLOR_TOUGHNESS_OVERSHIELD)
+	end
+
+	return BarValue.colored_text(BarValue.text(current), has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS)
+end
+
+BarValue.content = function(extensions, revive_state, revive_progress, has_overshield, is_down)
+	local health_value = PlayerDataRuntime.health_value(extensions)
+	local toughness_values = PlayerDataRuntime.toughness_values(extensions)
+
+	if revive_state and revive_state.in_progress then
+		return string.format("%d%%", math.floor((revive_progress or 0) * 100 + 0.5)), COLOR_REVIVE
+	end
+
+	local health_color = is_down and COLOR_HEALTH_CRITICAL or COLOR_HEALTH
+	local health_text = BarValue.colored_text(BarValue.text(health_value), health_color)
+	local toughness_text = BarValue.toughness_content(toughness_values, has_overshield)
+
+	return toughness_text .. " / " .. health_text, COLOR_TEXT_DEFAULT
+end
+
 local function apply_player_panel(self, widget, local_player, player, extensions, t, ui_renderer)
 	local content = widget.content
 	local style = widget.style
@@ -601,6 +651,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local player_key = PlayerDataRuntime.player_unique_id(player)
 	local revive_state = PlayerDataRuntime.revive_state(extensions)
 	local revive_progress = revive_progress_for_player(self, player_key, revive_state, t)
+	local bar_value, bar_value_color = BarValue.content(extensions, revive_state, revive_progress, has_overshield, is_down)
 	local rescue_timer_status = PlayerDataRuntime.rescue_timer_status(player, status)
 	local operational_status = StatusRuntime.resolve(player, extensions, status, health_fraction, revive_state, rescue_timer_status)
 	local display_name, is_showing_status = StatusRuntime.display_name(self._name_status_flash_by_player, player_key, base_name, operational_status, t)
@@ -624,6 +675,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	content.ammo_icon = inventory_icons.ammo_icon
 	content.pocketable_icon = inventory_icons.pocketable_icon
 	content.pocketable_small_icon = inventory_icons.pocketable_small_icon
+	content.bar_value_text = bar_value
 
 	apply_ability_state(style, ability_state)
 
@@ -648,6 +700,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.status_background.color, status_background_color)
 	apply_color(style.coherency_border.color, in_coherency and COLOR_COHERENCY_BORDER_IN or COLOR_COHERENCY_BORDER_OUT)
 	apply_color(style.toughness_fill.color, revive_state.in_progress and COLOR_TOUGHNESS or has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS)
+	apply_color(style.bar_value_text.text_color, bar_value_color)
 	apply_color(style.grenade_icon.color, ammo_color_from_status(inventory_icons.grenade_status, true))
 	apply_color(style.ammo_icon.color, ammo_color_from_status(inventory_icons.ammo_status, inventory_icons.uses_ammo))
 

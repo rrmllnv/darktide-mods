@@ -295,6 +295,44 @@ function M.health_data(extensions, status)
 	return math.clamp(health_fraction, 0, 1), math.clamp(health_max_fraction, 0, 1), math.max(1, math.min(10, max_wounds))
 end
 
+local function extension_number(extension, method_name)
+	if not extension or type(extension[method_name]) ~= "function" then
+		return nil
+	end
+
+	local ok, value = pcall(function()
+		return extension[method_name](extension)
+	end)
+
+	return ok and type(value) == "number" and value or nil
+end
+
+local function value_text(value)
+	if type(value) ~= "number" then
+		return ""
+	end
+
+	return tostring(math.ceil(math.max(0, value)))
+end
+
+function M.health_value_text(extensions)
+	return value_text(M.health_value(extensions))
+end
+
+function M.health_value(extensions)
+	local health_extension = extensions and extensions.health
+	local current_health = extension_number(health_extension, "current_health")
+
+	if current_health == nil then
+		local max_health = extension_number(health_extension, "max_health") or 0
+		local health_fraction = extension_number(health_extension, "current_health_percent") or 0
+
+		current_health = health_fraction * max_health
+	end
+
+	return current_health
+end
+
 function M.rescue_timer_status(player, status)
 	if status ~= "dead" then
 		return {
@@ -344,6 +382,45 @@ function M.toughness_fraction(extensions)
 	end
 
 	return math.clamp(toughness_extension:current_toughness_percent() or 0, 0, 1)
+end
+
+function M.toughness_value_text(extensions, has_overshield)
+	local values = M.toughness_values(extensions)
+
+	if has_overshield and values.bonus > 0 then
+		return value_text(values.normal)
+	end
+
+	return value_text(values.current)
+end
+
+function M.toughness_values(extensions)
+	local toughness_extension = extensions and extensions.toughness
+	local toughness_percentage = extension_number(toughness_extension, "current_toughness_percent") or 0
+	local toughness_percentage_visual = extension_number(toughness_extension, "current_toughness_percent_visual") or toughness_percentage
+	local max_toughness = extension_number(toughness_extension, "max_toughness") or 0
+	local max_toughness_visual = extension_number(toughness_extension, "max_toughness_visual") or max_toughness
+
+	if max_toughness <= 0 or max_toughness_visual <= 0 then
+		return {
+			bonus = 0,
+			current = 0,
+			normal = 0,
+		}
+	end
+
+	local current_toughness = math.max(0, toughness_percentage * max_toughness)
+	local current_toughness_visual = math.max(0, toughness_percentage * max_toughness_visual)
+	local display_toughness = math.max(0, toughness_percentage_visual * max_toughness_visual)
+	local overshield_amount = current_toughness_visual < max_toughness and math.max(current_toughness - max_toughness_visual, 0) or 0
+	local has_overshield = math.floor(overshield_amount) > 0
+	local normal_toughness = has_overshield and math.min(max_toughness_visual, current_toughness) or current_toughness
+
+	return {
+		bonus = overshield_amount,
+		current = has_overshield and current_toughness or display_toughness,
+		normal = normal_toughness,
+	}
 end
 
 function M.has_overshield(extensions)
