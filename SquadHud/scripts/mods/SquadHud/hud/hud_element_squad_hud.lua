@@ -32,6 +32,10 @@ local HEALTH_BAR_Y = 24
 local TOUGHNESS_BAR_Y = 31
 local BAR_HEIGHT = 6
 local TOUGHNESS_BAR_BOTTOM_Y = TOUGHNESS_BAR_Y + BAR_HEIGHT
+local BAR_ACTIVE_HEIGHT = 8
+local BAR_INACTIVE_HEIGHT = 4
+local BAR_GAP = 1
+local ACTIVE_BAR_VISIBLE_DURATION = 2
 local INVENTORY_ICON_SIZE = 16
 local INVENTORY_ICON_GAP = 4
 local PREVIOUS_INVENTORY_BLOCK_WIDTH = INVENTORY_ICON_SIZE * 2 + INVENTORY_ICON_GAP
@@ -48,11 +52,14 @@ local BAR_WIDTH = INVENTORY_BLOCK_X - INVENTORY_ICON_GAP - BAR_LEFT
 local BAR_VALUE = {
 	font_size = 12,
 	height = TOUGHNESS_BAR_BOTTOM_Y - HEALTH_BAR_Y,
+	shadow_offset = 1,
 	text_width = 90,
 	x = BAR_LEFT,
 	y = HEALTH_BAR_Y,
 }
 
+BAR_VALUE.shadow_x = BAR_VALUE.x + BAR_VALUE.shadow_offset
+BAR_VALUE.shadow_y = BAR_VALUE.y + BAR_VALUE.shadow_offset
 local ABILITY_ICON_Y = TOUGHNESS_BAR_BOTTOM_Y - ABILITY_ICON_SIZE
 local ABILITY_ICON_FRAME_Y = ABILITY_ICON_Y - ABILITY_ICON_FRAME_PADDING
 local ABILITY_ICON_FRAME_X = ABILITY_ICON_X - ABILITY_ICON_FRAME_PADDING
@@ -141,6 +148,12 @@ local COLOR_CORRUPTION = {
 	130,
 	70,
 	180,
+}
+local COLOR_BAR_VALUE_SHADOW = {
+	230,
+	0,
+	0,
+	0,
 }
 
 local scenegraph_definition = {
@@ -307,6 +320,7 @@ local function create_panel_definition(scenegraph_id)
 		inventory_texture_pass("pocketable_small_icon", "pocketable_small_icon", { INVENTORY_SMALL_ICON_X, INVENTORY_ICON_Y, 4 }),
 		rect_pass("toughness_fill", COLOR_TOUGHNESS, { BAR_LEFT, TOUGHNESS_BAR_Y, 4 }, { BAR_WIDTH, BAR_HEIGHT }),
 		rect_pass("revive_fill", COLOR_REVIVE, { BAR_LEFT, TOUGHNESS_BAR_Y, 5 }, { 0, BAR_HEIGHT }),
+		text_pass("bar_value_shadow_text", "bar_value_shadow_text", BAR_VALUE.font_size, { BAR_VALUE.shadow_x, BAR_VALUE.shadow_y, 7 }, { BAR_VALUE.text_width, BAR_VALUE.height }, COLOR_BAR_VALUE_SHADOW, "left", "proxima_nova_bold_no_render_flags"),
 		text_pass("bar_value_text", "bar_value_text", BAR_VALUE.font_size, { BAR_VALUE.x, BAR_VALUE.y, 8 }, { BAR_VALUE.text_width, BAR_VALUE.height }, COLOR_HEALTH, "left"),
 	}
 
@@ -345,7 +359,79 @@ local function set_rect_width(style, width)
 	end
 end
 
+local ActiveBar = {}
 local BarValue = {}
+
+ActiveBar.rounded_fraction = function(value)
+	return math.floor(math.clamp(value or 0, 0, 1) * 10000 + 0.5)
+end
+
+ActiveBar.mode = function(hud, player_key, health_fraction, toughness_fraction, bonus_value, has_overshield, revive_state, t)
+	if revive_state and revive_state.in_progress then
+		return "toughness"
+	end
+
+	if not player_key then
+		return "health"
+	end
+
+	local state_by_player = hud._active_bar_state_by_player
+
+	if not state_by_player then
+		return "health"
+	end
+
+	local state = state_by_player[player_key]
+
+	if not state then
+		state = {}
+		state_by_player[player_key] = state
+	end
+
+	local now = type(t) == "number" and t or 0
+	local health = ActiveBar.rounded_fraction(health_fraction)
+	local toughness = ActiveBar.rounded_fraction(toughness_fraction)
+	local bonus = BarValue.rounded(bonus_value)
+
+	if has_overshield and bonus > 0 then
+		state.initialized = true
+		state.health = health
+		state.toughness = toughness
+		state.bonus = bonus
+		state.mode = "toughness"
+		state.until_t = nil
+
+		return "toughness"
+	end
+
+	if state.initialized then
+		local health_decreased = health < state.health
+		local toughness_decreased = toughness < state.toughness
+		local bonus_started = bonus > (state.bonus or 0)
+
+		if toughness_decreased or bonus_started then
+			state.mode = "toughness"
+			state.until_t = now + ACTIVE_BAR_VISIBLE_DURATION
+		elseif health_decreased then
+			state.mode = "health"
+			state.until_t = now + ACTIVE_BAR_VISIBLE_DURATION
+		end
+	end
+
+	state.initialized = true
+	state.health = health
+	state.toughness = toughness
+	state.bonus = bonus
+
+	if state.mode and state.until_t and now <= state.until_t then
+		return state.mode
+	end
+
+	state.mode = nil
+	state.until_t = nil
+
+	return "health"
+end
 
 BarValue.rounded = function(value)
 	return math.ceil(math.max(0, value or 0))
@@ -493,7 +579,15 @@ local function apply_empty_panel(widget)
 	set_panel_visible(widget, false)
 end
 
-local function apply_health_segments(widget, health_fraction, health_max_fraction, max_wounds, is_down)
+ActiveBar.layout = function(mode)
+	if mode == "toughness" then
+		return HEALTH_BAR_Y, BAR_INACTIVE_HEIGHT, HEALTH_BAR_Y + BAR_INACTIVE_HEIGHT + BAR_GAP, BAR_ACTIVE_HEIGHT
+	end
+
+	return HEALTH_BAR_Y, BAR_ACTIVE_HEIGHT, HEALTH_BAR_Y + BAR_ACTIVE_HEIGHT + BAR_GAP, BAR_INACTIVE_HEIGHT
+end
+
+local function apply_health_segments(widget, health_fraction, health_max_fraction, max_wounds, is_down, health_y, health_height)
 	local style = widget.style
 	local segment_count = math.max(1, math.min(10, max_wounds))
 	local segment_width = (BAR_WIDTH - (segment_count - 1) * HEALTH_SEGMENT_GAP) / segment_count
@@ -512,9 +606,13 @@ local function apply_health_segments(widget, health_fraction, health_max_fractio
 			local x = BAR_LEFT + (i - 1) * (segment_width + HEALTH_SEGMENT_GAP)
 
 			health_style.offset[1] = x
+			health_style.offset[2] = health_y
 			health_style.size[1] = segment_health * segment_width
+			health_style.size[2] = health_height
 			corruption_style.offset[1] = x + segment_width - segment_corruption * segment_width
+			corruption_style.offset[2] = health_y
 			corruption_style.size[1] = segment_corruption * segment_width
+			corruption_style.size[2] = health_height
 
 			apply_color(health_style.color, is_down and COLOR_HEALTH_CRITICAL or COLOR_HEALTH)
 		else
@@ -606,25 +704,32 @@ BarValue.toughness_content = function(toughness_values, has_overshield)
 	local current = toughness_values and toughness_values.current or 0
 
 	if has_overshield and BarValue.rounded(bonus) > 0 then
-		return BarValue.colored_text(BarValue.text(normal), COLOR_TOUGHNESS) .. " + " .. BarValue.colored_text(BarValue.text(bonus), COLOR_TOUGHNESS_OVERSHIELD)
+		local plain_text = BarValue.text(normal) .. " + " .. BarValue.text(bonus)
+
+		return BarValue.colored_text(BarValue.text(normal), COLOR_TOUGHNESS) .. " + " .. BarValue.colored_text(BarValue.text(bonus), COLOR_TOUGHNESS_OVERSHIELD), plain_text
 	end
 
-	return BarValue.colored_text(BarValue.text(current), has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS)
+	local text = BarValue.text(current)
+
+	return BarValue.colored_text(text, has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS), text
 end
 
-BarValue.content = function(extensions, revive_state, revive_progress, has_overshield, is_down)
-	local health_value = PlayerDataRuntime.health_value(extensions)
-	local toughness_values = PlayerDataRuntime.toughness_values(extensions)
-
+BarValue.active_content = function(active_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
 	if revive_state and revive_state.in_progress then
-		return string.format("%d%%", math.floor((revive_progress or 0) * 100 + 0.5)), COLOR_REVIVE
+		local text = string.format("%d%%", math.floor((revive_progress or 0) * 100 + 0.5))
+
+		return text, COLOR_REVIVE, text
 	end
 
-	local health_color = is_down and COLOR_HEALTH_CRITICAL or COLOR_HEALTH
-	local health_text = BarValue.colored_text(BarValue.text(health_value), health_color)
-	local toughness_text = BarValue.toughness_content(toughness_values, has_overshield)
+	if active_mode == "toughness" then
+		local text, shadow_text = BarValue.toughness_content(PlayerDataRuntime.toughness_values(extensions), has_overshield)
 
-	return toughness_text .. " / " .. health_text, COLOR_TEXT_DEFAULT
+		return text, COLOR_TOUGHNESS, shadow_text
+	end
+
+	local text = BarValue.text(PlayerDataRuntime.health_value(extensions))
+
+	return text, is_down and COLOR_HEALTH_CRITICAL or COLOR_HEALTH, text
 end
 
 local function apply_player_panel(self, widget, local_player, player, extensions, t, ui_renderer)
@@ -651,7 +756,10 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local player_key = PlayerDataRuntime.player_unique_id(player)
 	local revive_state = PlayerDataRuntime.revive_state(extensions)
 	local revive_progress = revive_progress_for_player(self, player_key, revive_state, t)
-	local bar_value, bar_value_color = BarValue.content(extensions, revive_state, revive_progress, has_overshield, is_down)
+	local toughness_values = PlayerDataRuntime.toughness_values(extensions)
+	local active_bar_mode = ActiveBar.mode(self, player_key, health_fraction, tough_fraction, toughness_values.bonus, has_overshield, revive_state, t)
+	local health_bar_y, health_bar_height, toughness_bar_y, toughness_bar_height = ActiveBar.layout(active_bar_mode)
+	local bar_value, bar_value_color, bar_value_shadow = BarValue.active_content(active_bar_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
 	local rescue_timer_status = PlayerDataRuntime.rescue_timer_status(player, status)
 	local operational_status = StatusRuntime.resolve(player, extensions, status, health_fraction, revive_state, rescue_timer_status)
 	local display_name, is_showing_status = StatusRuntime.display_name(self._name_status_flash_by_player, player_key, base_name, operational_status, t)
@@ -675,6 +783,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	content.ammo_icon = inventory_icons.ammo_icon
 	content.pocketable_icon = inventory_icons.pocketable_icon
 	content.pocketable_small_icon = inventory_icons.pocketable_small_icon
+	content.bar_value_shadow_text = bar_value_shadow
 	content.bar_value_text = bar_value
 
 	apply_ability_state(style, ability_state)
@@ -705,9 +814,13 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.ammo_icon.color, ammo_color_from_status(inventory_icons.ammo_status, inventory_icons.uses_ammo))
 
 	set_rect_width(style.coherency_border, show_coherency_border and COHERENCY_BORDER_WIDTH or 0)
+	style.toughness_fill.offset[2] = toughness_bar_y
+	style.toughness_fill.size[2] = toughness_bar_height
+	style.revive_fill.offset[2] = toughness_bar_y
+	style.revive_fill.size[2] = toughness_bar_height
 	set_rect_width(style.toughness_fill, revive_state.in_progress and 0 or BAR_WIDTH * tough_fraction)
 	set_rect_width(style.revive_fill, BAR_WIDTH * revive_progress)
-	apply_health_segments(widget, health_fraction, health_max_fraction, max_wounds, is_down)
+	apply_health_segments(widget, health_fraction, health_max_fraction, max_wounds, is_down, health_bar_y, health_bar_height)
 	apply_name_marquee(self, widget, player_key, display_name, ui_renderer, t)
 	set_panel_visible(widget, true)
 end
@@ -719,6 +832,7 @@ HudElementSquadHud.init = function(self, parent, draw_layer, start_scale)
 	})
 
 	self._players = {}
+	self._active_bar_state_by_player = {}
 	self._name_marquee_by_player = {}
 	self._name_status_flash_by_player = {}
 	self._revive_progress_by_player = {}
