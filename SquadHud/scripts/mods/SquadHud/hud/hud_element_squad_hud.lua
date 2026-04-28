@@ -1,21 +1,19 @@
 local mod = get_mod("SquadHud")
 
 local HudElementBase = require("scripts/ui/hud/elements/hud_element_base")
-local PlayerCompositions = require("scripts/utilities/players/player_compositions")
-local PlayerUnitStatus = require("scripts/utilities/attack/player_unit_status")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
-local UISettings = require("scripts/settings/ui/ui_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIWorkspaceSettings = require("scripts/settings/ui/ui_workspace_settings")
 
+local AbilityRuntime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/ability_runtime")
+local InventoryRuntime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/inventory_runtime")
+local PlayerDataRuntime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/player_data_runtime")
+local StatusRuntime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/status_runtime")
+
 local MAX_PLAYERS = 4
-local PANEL_WIDTH = 282
 local PANEL_HEIGHT = 38
 local PANEL_GAP = 6
-local COMBAT_ABILITY_TYPE = "combat_ability"
-local POCKETABLE_SLOT_NAME = "slot_pocketable"
-local POCKETABLE_SMALL_SLOT_NAME = "slot_pocketable_small"
 local ABILITY_ICON_SIZE = 30
 local ABILITY_ICON_FRAME_SIZE = 48
 local ABILITY_ICON_FRAME_PADDING = math.floor((ABILITY_ICON_FRAME_SIZE - ABILITY_ICON_SIZE) * 0.5)
@@ -35,34 +33,90 @@ local BAR_HEIGHT = 6
 local TOUGHNESS_BAR_BOTTOM_Y = TOUGHNESS_BAR_Y + BAR_HEIGHT
 local INVENTORY_ICON_SIZE = 16
 local INVENTORY_ICON_GAP = 4
-local INVENTORY_BLOCK_WIDTH = INVENTORY_ICON_SIZE * 2 + INVENTORY_ICON_GAP
+local PREVIOUS_INVENTORY_BLOCK_WIDTH = INVENTORY_ICON_SIZE * 2 + INVENTORY_ICON_GAP
+local INVENTORY_BLOCK_WIDTH = INVENTORY_ICON_SIZE * 4 + INVENTORY_ICON_GAP * 3
+local NAME_EXTRA_WIDTH = 40
+local PANEL_WIDTH = 282 + INVENTORY_BLOCK_WIDTH - PREVIOUS_INVENTORY_BLOCK_WIDTH + NAME_EXTRA_WIDTH
+local INVENTORY_BLOCK_X = PANEL_WIDTH - INNER_PADDING - INVENTORY_BLOCK_WIDTH
 local INVENTORY_ICON_Y = TOUGHNESS_BAR_BOTTOM_Y - INVENTORY_ICON_SIZE
-local INVENTORY_SMALL_ICON_X = PANEL_WIDTH - INNER_PADDING - INVENTORY_ICON_SIZE
-local INVENTORY_ICON_X = INVENTORY_SMALL_ICON_X - INVENTORY_ICON_GAP - INVENTORY_ICON_SIZE
-local BAR_WIDTH = INVENTORY_ICON_X - INVENTORY_ICON_GAP - BAR_LEFT
+local GRENADE_ICON_X = INVENTORY_BLOCK_X
+local AMMO_ICON_X = GRENADE_ICON_X + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
+local INVENTORY_ICON_X = AMMO_ICON_X + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
+local INVENTORY_SMALL_ICON_X = INVENTORY_ICON_X + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
+local BAR_WIDTH = INVENTORY_BLOCK_X - INVENTORY_ICON_GAP - BAR_LEFT
 local ABILITY_ICON_Y = TOUGHNESS_BAR_BOTTOM_Y - ABILITY_ICON_SIZE
 local ABILITY_ICON_FRAME_Y = ABILITY_ICON_Y - ABILITY_ICON_FRAME_PADDING
 local ABILITY_ICON_FRAME_X = ABILITY_ICON_X - ABILITY_ICON_FRAME_PADDING
 local HEALTH_SEGMENT_GAP = 3
+local DEFAULT_REVIVE_DURATION = 3
 local ROOT_HEIGHT = PANEL_HEIGHT * MAX_PLAYERS + PANEL_GAP * (MAX_PLAYERS - 1)
-local STATUS_WIDTH = 64
-local STATUS_X = PANEL_WIDTH - INNER_PADDING - INVENTORY_BLOCK_WIDTH - INVENTORY_ICON_GAP - STATUS_WIDTH
-local NAME_WIDTH = STATUS_X - TEXT_COLUMN_X - INNER_PADDING
+local RELATION_STATUS_X = INVENTORY_BLOCK_X
+local RELATION_STATUS_Y = 0
+local RELATION_STATUS_WIDTH = INVENTORY_BLOCK_WIDTH
+local RELATION_STATUS_HEIGHT = 20
+local NAME_WIDTH = INVENTORY_BLOCK_X - INVENTORY_ICON_GAP - TEXT_COLUMN_X
+local STATUS_BACKGROUND_X = CLASS_ICON_X
+local STATUS_BACKGROUND_Y = 1
+local STATUS_BACKGROUND_WIDTH = INVENTORY_BLOCK_X - INVENTORY_ICON_GAP - STATUS_BACKGROUND_X
+local STATUS_BACKGROUND_HEIGHT = 20
+local COHERENCY_BORDER_WIDTH = 3
+local COHERENCY_BORDER_X = STATUS_BACKGROUND_X + STATUS_BACKGROUND_WIDTH - COHERENCY_BORDER_WIDTH
+local COHERENCY_BORDER_Y = STATUS_BACKGROUND_Y
+local COHERENCY_BORDER_HEIGHT = STATUS_BACKGROUND_HEIGHT
 
-local COLOR_FALLBACK_SLOT = {
-	180,
-	160,
-	160,
-	160,
-}
 local COLOR_TEXT_DEFAULT = UIHudSettings.color_tint_main_1
 local COLOR_TEXT_MUTED = UIHudSettings.color_tint_main_3
 local COLOR_TOUGHNESS = UIHudSettings.color_tint_6
 local COLOR_HEALTH = UIHudSettings.color_tint_main_1
 local COLOR_HEALTH_CRITICAL = UIHudSettings.color_tint_alert_2
+local COLOR_RESCUE_AVAILABLE = UIHudSettings.player_status_colors and UIHudSettings.player_status_colors.hogtied or UIHudSettings.color_tint_main_1
+local COLOR_REVIVE = {
+	255,
+	75,
+	220,
+	120,
+}
 local COLOR_ABILITY_ICON = UIHudSettings.color_tint_main_2
 local COLOR_ABILITY_FRAME = UIHudSettings.color_tint_main_2
 local COLOR_ABILITY_GLOW = UIHudSettings.color_tint_main_1
+local COLOR_ABILITY_READY_GLOW = UIHudSettings.color_tint_main_1
+local COLOR_ABILITY_COOLDOWN_ICON = UIHudSettings.color_tint_main_3
+local COLOR_ABILITY_COOLDOWN_FRAME = UIHudSettings.color_tint_main_3
+local COLOR_ABILITY_COOLDOWN_GLOW = {
+	0,
+	255,
+	255,
+	255,
+}
+local COLOR_STATUS_BACKGROUND_DEFAULT = {
+	38,
+	255,
+	255,
+	255,
+}
+local COLOR_STATUS_BACKGROUND_CRITICAL = {
+	90,
+	255,
+	40,
+	40,
+}
+local COLOR_COHERENCY_BORDER_IN = {
+	220,
+	75,
+	220,
+	120,
+}
+local COLOR_COHERENCY_BORDER_OUT = {
+	220,
+	255,
+	40,
+	40,
+}
+local COLOR_AMMO_NOT_IN_USE = UIHudSettings.color_tint_ammo_not_in_use
+local COLOR_AMMO_HIGH = UIHudSettings.color_tint_ammo_high
+local COLOR_AMMO_MEDIUM = UIHudSettings.color_tint_ammo_medium
+local COLOR_AMMO_LOW = UIHudSettings.color_tint_ammo_low
+local COLOR_AMMO_FULL = UIHudSettings.color_tint_ammo_full
 local COLOR_CORRUPTION = {
 	210,
 	130,
@@ -174,6 +228,11 @@ local function ability_texture_pass(style_id, material, offset, size, color, mat
 			offset = offset,
 			color = clone_color(color),
 		},
+		change_function = function(content, style)
+			if style.material_values then
+				style.material_values.progress = content.ability_progress or 1
+			end
+		end,
 		visibility_function = function(content)
 			return content.visible == true and content.ability_icon_visible == true
 		end,
@@ -208,6 +267,8 @@ end
 
 local function create_panel_definition(scenegraph_id)
 	local passes = {
+		rect_pass("status_background", COLOR_STATUS_BACKGROUND_DEFAULT, { STATUS_BACKGROUND_X, STATUS_BACKGROUND_Y, 2 }, { STATUS_BACKGROUND_WIDTH, STATUS_BACKGROUND_HEIGHT }),
+		rect_pass("coherency_border", COLOR_COHERENCY_BORDER_IN, { COHERENCY_BORDER_X, COHERENCY_BORDER_Y, 3 }, { 0, COHERENCY_BORDER_HEIGHT }),
 		ability_texture_pass("ability_icon", ABILITY_ICON_MATERIAL, { ABILITY_ICON_X, ABILITY_ICON_Y, 4 }, { ABILITY_ICON_SIZE, ABILITY_ICON_SIZE }, COLOR_ABILITY_ICON, {
 			progress = 1,
 			talent_icon = nil,
@@ -216,10 +277,13 @@ local function create_panel_definition(scenegraph_id)
 		ability_texture_pass("ability_glow", ABILITY_ICON_GLOW_MATERIAL, { ABILITY_ICON_FRAME_X, ABILITY_ICON_FRAME_Y, 6 }, { ABILITY_ICON_FRAME_SIZE, ABILITY_ICON_FRAME_SIZE }, COLOR_ABILITY_GLOW),
 		text_pass("class_icon", "class_icon", 22, { CLASS_ICON_X, 0, 4 }, { ICON_COLUMN_WIDTH, 22 }, COLOR_TEXT_DEFAULT, "center"),
 		text_pass("player_name", "player_name", 16, { TEXT_COLUMN_X, 0, 4 }, { NAME_WIDTH, 22 }, COLOR_TEXT_DEFAULT, "left"),
-		text_pass("player_status", "player_status", 15, { STATUS_X, 0, 4 }, { STATUS_WIDTH, 22 }, COLOR_TEXT_MUTED, "right"),
+		text_pass("relation_status", "relation_status", 15, { RELATION_STATUS_X, RELATION_STATUS_Y, 4 }, { RELATION_STATUS_WIDTH, RELATION_STATUS_HEIGHT }, COLOR_TEXT_DEFAULT, "center"),
+		inventory_texture_pass("grenade_icon", "grenade_icon", { GRENADE_ICON_X, INVENTORY_ICON_Y, 4 }),
+		inventory_texture_pass("ammo_icon", "ammo_icon", { AMMO_ICON_X, INVENTORY_ICON_Y, 4 }),
 		inventory_texture_pass("pocketable_icon", "pocketable_icon", { INVENTORY_ICON_X, INVENTORY_ICON_Y, 4 }),
 		inventory_texture_pass("pocketable_small_icon", "pocketable_small_icon", { INVENTORY_SMALL_ICON_X, INVENTORY_ICON_Y, 4 }),
 		rect_pass("toughness_fill", COLOR_TOUGHNESS, { BAR_LEFT, TOUGHNESS_BAR_Y, 4 }, { BAR_WIDTH, BAR_HEIGHT }),
+		rect_pass("revive_fill", COLOR_REVIVE, { BAR_LEFT, TOUGHNESS_BAR_Y, 5 }, { 0, BAR_HEIGHT }),
 	}
 
 	for i = 1, 10 do
@@ -244,302 +308,6 @@ local function setting_enabled()
 	return value == true or value == nil
 end
 
-local function gameplay_hud_composition_name()
-	local game_mode_manager = Managers.state and Managers.state.game_mode
-	local hud_settings = game_mode_manager and game_mode_manager.hud_settings and game_mode_manager:hud_settings()
-
-	return hud_settings and hud_settings.player_composition or nil
-end
-
-local function player_slot(player)
-	if type(player) == "table" and type(player.slot) == "function" then
-		local ok, slot = pcall(function()
-			return player:slot()
-		end)
-
-		if ok and type(slot) == "number" then
-			return slot
-		end
-	end
-
-	return 99
-end
-
-local function player_unique_id(player)
-	if type(player) == "table" and type(player.unique_id) == "function" then
-		local ok, unique_id = pcall(function()
-			return player:unique_id()
-		end)
-
-		if ok and unique_id ~= nil then
-			return tostring(unique_id)
-		end
-	end
-
-	return tostring(player)
-end
-
-local function sorted_squad_players(composition_name, output)
-	table.clear(output)
-
-	if type(composition_name) ~= "string" or composition_name == "" then
-		return output
-	end
-
-	local players = PlayerCompositions.players(composition_name, {})
-
-	for _, player in pairs(players) do
-		output[#output + 1] = player
-	end
-
-	table.sort(output, function(a, b)
-		local slot_a = player_slot(a)
-		local slot_b = player_slot(b)
-
-		if slot_a == slot_b then
-			return player_unique_id(a) < player_unique_id(b)
-		end
-
-		return slot_a < slot_b
-	end)
-
-	return output
-end
-
-local function player_name(player)
-	if type(player) == "table" and type(player.name) == "function" then
-		local ok, name = pcall(function()
-			return player:name()
-		end)
-
-		if ok and type(name) == "string" and name ~= "" then
-			return name
-		end
-	end
-
-	return mod:localize("squadhud_empty_name")
-end
-
-local function player_unit(player)
-	return type(player) == "table" and player.player_unit or nil
-end
-
-local function player_profile(player)
-	if type(player) == "table" and type(player.profile) == "function" then
-		local ok, profile = pcall(function()
-			return player:profile()
-		end)
-
-		if ok then
-			return profile
-		end
-	end
-
-	return nil
-end
-
-local function archetype_icon(player)
-	local profile = player_profile(player)
-	local archetype = profile and profile.archetype
-	local archetype_name = archetype and archetype.name
-	local icons = UISettings.archetype_font_icon
-	local icon = archetype_name and icons and icons[archetype_name]
-
-	if type(icon) == "string" and icon ~= "" then
-		return icon
-	end
-
-	local title = archetype and archetype.archetype_name and Localize(archetype.archetype_name) or ""
-
-	if type(title) == "string" and title ~= "" then
-		return string.sub(title, 1, 1)
-	end
-
-	return "?"
-end
-
-local function combat_ability_icon(player)
-	local unit = player_unit(player)
-
-	if not unit or not Unit.alive(unit) then
-		return nil
-	end
-
-	local ability_extension = ScriptUnit.has_extension(unit, "ability_system")
-
-	if not ability_extension or not ability_extension:ability_is_equipped(COMBAT_ABILITY_TYPE) then
-		return nil
-	end
-
-	local equipped_abilities = ability_extension:equipped_abilities()
-	local ability_settings = equipped_abilities and equipped_abilities[COMBAT_ABILITY_TYPE]
-	local icon = ability_settings and ability_settings.hud_icon
-
-	if type(icon) == "string" and icon ~= "" then
-		return icon
-	end
-
-	return nil
-end
-
-local function extensions_for_player(parent, player)
-	local unit = player_unit(player)
-
-	if not unit or not Unit.alive(unit) then
-		return nil
-	end
-
-	if parent and type(parent.get_all_player_extensions) == "function" then
-		local ok, extensions = pcall(function()
-			return parent:get_all_player_extensions(player, {})
-		end)
-
-		if ok and type(extensions) == "table" then
-			extensions.health = extensions.health or ScriptUnit.has_extension(unit, "health_system")
-			extensions.toughness = extensions.toughness or ScriptUnit.has_extension(unit, "toughness_system")
-			extensions.unit_data = extensions.unit_data or ScriptUnit.has_extension(unit, "unit_data_system")
-			extensions.visual_loadout = extensions.visual_loadout or ScriptUnit.has_extension(unit, "visual_loadout_system")
-
-			return extensions
-		end
-	end
-
-	return {
-		health = ScriptUnit.has_extension(unit, "health_system"),
-		toughness = ScriptUnit.has_extension(unit, "toughness_system"),
-		unit_data = ScriptUnit.has_extension(unit, "unit_data_system"),
-		visual_loadout = ScriptUnit.has_extension(unit, "visual_loadout_system"),
-	}
-end
-
-local function status_from_extensions(extensions)
-	local unit_data_extension = extensions and extensions.unit_data
-	local health_extension = extensions and extensions.health
-
-	if not health_extension or type(health_extension.is_alive) ~= "function" or not health_extension:is_alive() then
-		return "dead"
-	end
-
-	if not unit_data_extension or type(unit_data_extension.read_component) ~= "function" then
-		return "alive"
-	end
-
-	local character_state_component = unit_data_extension:read_component("character_state")
-	local disabled_character_state_component = unit_data_extension:read_component("disabled_character_state")
-
-	if character_state_component and PlayerUnitStatus.is_hogtied(character_state_component) then
-		return "dead"
-	end
-
-	if character_state_component and PlayerUnitStatus.is_knocked_down(character_state_component) then
-		return "down"
-	end
-
-	if disabled_character_state_component and disabled_character_state_component.is_disabled then
-		return "disabled"
-	end
-
-	local disabled = character_state_component and PlayerUnitStatus.is_disabled(character_state_component)
-
-	if disabled then
-		return "disabled"
-	end
-
-	return "alive"
-end
-
-local function player_distance_text(local_player, player, status)
-	if status == "dead" then
-		return mod:localize("squadhud_status_dead")
-	elseif status == "down" then
-		return mod:localize("squadhud_status_down")
-	elseif status == "disabled" then
-		return mod:localize("squadhud_status_disabled")
-	end
-
-	if local_player == player then
-		return mod:localize("squadhud_status_you")
-	end
-
-	local local_unit = player_unit(local_player)
-	local target_unit = player_unit(player)
-
-	if local_unit and target_unit and Unit.alive(local_unit) and Unit.alive(target_unit) then
-		local local_position = Unit.world_position(local_unit, 1)
-		local target_position = Unit.world_position(target_unit, 1)
-		local distance = Vector3.distance(local_position, target_position)
-
-		return string.format("%dm", math.floor(distance + 0.5))
-	end
-
-	return ""
-end
-
-local function health_data(extensions, status)
-	local health_extension = extensions and extensions.health
-
-	if not health_extension then
-		return 0, 0, 1
-	end
-
-	local max_health = health_extension:max_health() or 0
-	local health_fraction = health_extension:current_health_percent() or 0
-	local permanent_damage = health_extension:permanent_damage_taken() or 0
-	local health_max_fraction = max_health > 0 and 1 - permanent_damage / max_health or 0
-	local max_wounds = status == "down" and 1 or health_extension:max_wounds() or 1
-
-	return math.clamp(health_fraction, 0, 1), math.clamp(health_max_fraction, 0, 1), math.max(1, math.min(10, max_wounds))
-end
-
-local function toughness_fraction(extensions)
-	local toughness_extension = extensions and extensions.toughness
-
-	if not toughness_extension then
-		return 0
-	end
-
-	if type(toughness_extension.current_toughness_percent_visual) == "function" then
-		return math.clamp(toughness_extension:current_toughness_percent_visual() or 0, 0, 1)
-	end
-
-	return math.clamp(toughness_extension:current_toughness_percent() or 0, 0, 1)
-end
-
-local function item_hud_icon_from_slot(inventory_component, visual_loadout_extension, slot_name)
-	if not inventory_component or not visual_loadout_extension or type(visual_loadout_extension.weapon_template_from_slot) ~= "function" then
-		return nil
-	end
-
-	local item_name = inventory_component[slot_name]
-	local weapon_template = item_name and visual_loadout_extension:weapon_template_from_slot(slot_name)
-	local hud_icon = weapon_template and weapon_template.hud_icon_small
-
-	if type(hud_icon) == "string" and hud_icon ~= "" then
-		return hud_icon
-	end
-
-	return nil
-end
-
-local function inventory_icons(extensions, status)
-	if status == "dead" then
-		return nil, nil
-	end
-
-	local unit_data_extension = extensions and extensions.unit_data
-	local visual_loadout_extension = extensions and extensions.visual_loadout
-
-	if not unit_data_extension or not visual_loadout_extension or type(unit_data_extension.read_component) ~= "function" then
-		return nil, nil
-	end
-
-	local inventory_component = unit_data_extension:read_component("inventory")
-	local pocketable_icon = item_hud_icon_from_slot(inventory_component, visual_loadout_extension, POCKETABLE_SLOT_NAME)
-	local pocketable_small_icon = item_hud_icon_from_slot(inventory_component, visual_loadout_extension, POCKETABLE_SMALL_SLOT_NAME)
-
-	return pocketable_icon, pocketable_small_icon
-end
-
 local function apply_color(target, source)
 	target[1] = source[1]
 	target[2] = source[2]
@@ -551,6 +319,57 @@ local function set_rect_width(style, width)
 	if style and style.size then
 		style.size[1] = math.max(0, width)
 	end
+end
+
+local function apply_ability_state(style, ability_state)
+	local icon_style = style.ability_icon
+	local material_values = icon_style and icon_style.material_values
+
+	if material_values then
+		material_values.talent_icon = ability_state and ability_state.icon or nil
+	end
+
+	if ability_state and ability_state.state == "cooldown" then
+		apply_color(style.ability_icon.color, COLOR_ABILITY_COOLDOWN_ICON)
+		apply_color(style.ability_frame.color, COLOR_ABILITY_COOLDOWN_FRAME)
+		apply_color(style.ability_glow.color, COLOR_ABILITY_COOLDOWN_GLOW)
+	elseif ability_state and ability_state.state == "active" then
+		apply_color(style.ability_icon.color, COLOR_ABILITY_ICON)
+		apply_color(style.ability_frame.color, COLOR_ABILITY_FRAME)
+		apply_color(style.ability_glow.color, COLOR_ABILITY_GLOW)
+	else
+		apply_color(style.ability_icon.color, COLOR_ABILITY_ICON)
+		apply_color(style.ability_frame.color, COLOR_ABILITY_FRAME)
+		apply_color(style.ability_glow.color, COLOR_ABILITY_READY_GLOW)
+	end
+end
+
+local function ammo_color_from_status(status, uses_ammo)
+	if uses_ammo == false then
+		return COLOR_AMMO_NOT_IN_USE
+	elseif status and status <= 0 then
+		return COLOR_AMMO_HIGH
+	elseif status and status <= 1 then
+		return COLOR_AMMO_MEDIUM
+	elseif status and status <= 2 then
+		return COLOR_AMMO_LOW
+	else
+		return COLOR_AMMO_FULL
+	end
+end
+
+local function player_name_color(base_name_color, operational_status, is_showing_status)
+	if not is_showing_status then
+		return base_name_color
+	end
+
+	if operational_status and operational_status.id == "reviving" then
+		return COLOR_REVIVE
+	elseif operational_status and (operational_status.id == "rescue_available" or operational_status.id == "rescuing") then
+		return COLOR_RESCUE_AVAILABLE
+	end
+
+	return COLOR_HEALTH_CRITICAL
 end
 
 local function set_panel_visible(widget, visible)
@@ -593,37 +412,86 @@ local function apply_health_segments(widget, health_fraction, health_max_fractio
 	end
 end
 
-local function apply_player_panel(widget, local_player, player, extensions)
+local function revive_progress_for_player(self, player_key, revive_state, t)
+	if not revive_state or not revive_state.in_progress then
+		if self._revive_progress_by_player then
+			self._revive_progress_by_player[player_key] = nil
+		end
+
+		return 0
+	end
+
+	if revive_state.exact_progress then
+		if self._revive_progress_by_player then
+			self._revive_progress_by_player[player_key] = nil
+		end
+
+		return math.clamp(revive_state.progress or 0, 0, 1)
+	end
+
+	local now = type(t) == "number" and t or 0
+	local duration = revive_state.duration and revive_state.duration > 0 and revive_state.duration or DEFAULT_REVIVE_DURATION
+	local state_by_player = self._revive_progress_by_player
+
+	if not state_by_player then
+		return 0
+	end
+
+	local state = state_by_player[player_key]
+
+	if not state then
+		state = {
+			start_t = now,
+		}
+		state_by_player[player_key] = state
+	end
+
+	return math.clamp((now - state.start_t) / duration, 0, 1)
+end
+
+local function apply_player_panel(self, widget, local_player, player, extensions, t)
 	local content = widget.content
 	local style = widget.style
-	local status = status_from_extensions(extensions)
-	local slot = player_slot(player)
-	local slot_color = UISettings.player_slot_colors and UISettings.player_slot_colors[slot] or COLOR_FALLBACK_SLOT
-	local health_fraction, health_max_fraction, max_wounds = health_data(extensions, status)
-	local tough_fraction = toughness_fraction(extensions)
+	local status = PlayerDataRuntime.status_from_extensions(extensions)
+	local slot_color = PlayerDataRuntime.slot_color(player)
+	local health_fraction, health_max_fraction, max_wounds = PlayerDataRuntime.health_data(extensions, status)
+	local tough_fraction = PlayerDataRuntime.toughness_fraction(extensions)
 	local is_down = status == "down"
 	local is_bad_status = status == "dead" or status == "down" or status == "disabled"
-	local ability_icon = combat_ability_icon(player)
-	local ability_material_values = style.ability_icon and style.ability_icon.material_values
-	local pocketable_icon, pocketable_small_icon = inventory_icons(extensions, status)
+	local player_unit = PlayerDataRuntime.player_unit(player)
+	local ability_state = AbilityRuntime.combat_ability_state(player_unit)
+	local inventory_icons = InventoryRuntime.icons(player, extensions, status)
+	local base_name = PlayerDataRuntime.player_name(player)
+	local base_name_color = status == "dead" and COLOR_TEXT_DEFAULT or is_bad_status and COLOR_TEXT_MUTED or COLOR_TEXT_DEFAULT
+	local player_key = PlayerDataRuntime.player_unique_id(player)
+	local revive_state = PlayerDataRuntime.revive_state(extensions)
+	local revive_progress = revive_progress_for_player(self, player_key, revive_state, t)
+	local rescue_timer_status = PlayerDataRuntime.rescue_timer_status(player, status)
+	local operational_status = StatusRuntime.resolve(player, extensions, status, health_fraction, revive_state, rescue_timer_status)
+	local display_name, is_showing_status = StatusRuntime.display_name(self._name_status_flash_by_player, player_key, base_name, operational_status, t)
+	local display_name_color = player_name_color(base_name_color, operational_status, is_showing_status)
+	local relation_status = is_bad_status and "" or PlayerDataRuntime.player_distance_text(local_player, player, extensions)
+	local is_teammate = local_player ~= player
+	local in_coherency = is_teammate and PlayerDataRuntime.in_coherency_with_local_player(local_player, extensions)
+	local show_coherency_border = in_coherency or relation_status ~= ""
 
-	content.class_icon = archetype_icon(player)
-	content.player_name = player_name(player)
-	content.player_status = player_distance_text(local_player, player, status)
-	content.ability_icon_visible = ability_icon ~= nil
-	content.pocketable_icon = pocketable_icon
-	content.pocketable_small_icon = pocketable_small_icon
+	content.class_icon = PlayerDataRuntime.archetype_icon(player)
+	content.player_name = display_name
+	content.relation_status = relation_status
+	content.ability_icon_visible = ability_state ~= nil
+	content.ability_progress = ability_state and ability_state.progress or 1
+	content.grenade_icon = inventory_icons.grenade_icon
+	content.ammo_icon = inventory_icons.ammo_icon
+	content.pocketable_icon = inventory_icons.pocketable_icon
+	content.pocketable_small_icon = inventory_icons.pocketable_small_icon
 
-	if ability_material_values and ability_material_values.talent_icon ~= ability_icon then
-		ability_material_values.talent_icon = ability_icon
-		widget.dirty = true
-	end
+	apply_ability_state(style, ability_state)
 
 	if style.pocketable_small_icon then
 		local small_offset = style.pocketable_small_icon.offset
 		local default_offset = style.pocketable_small_icon.default_offset
 
-		if not pocketable_icon and pocketable_small_icon then
+		if not inventory_icons.pocketable_icon and inventory_icons.pocketable_small_icon then
 			small_offset[1] = INVENTORY_ICON_X
 			small_offset[2] = INVENTORY_ICON_Y
 			small_offset[3] = 4
@@ -634,11 +502,17 @@ local function apply_player_panel(widget, local_player, player, extensions)
 		end
 	end
 
-	apply_color(style.player_name.text_color, is_bad_status and COLOR_TEXT_MUTED or COLOR_TEXT_DEFAULT)
-	apply_color(style.player_status.text_color, is_bad_status and COLOR_HEALTH_CRITICAL or slot_color)
+	apply_color(style.player_name.text_color, display_name_color)
+	apply_color(style.relation_status.text_color, COLOR_TEXT_DEFAULT)
 	apply_color(style.class_icon.text_color, slot_color)
+	apply_color(style.status_background.color, operational_status and operational_status.is_critical and COLOR_STATUS_BACKGROUND_CRITICAL or COLOR_STATUS_BACKGROUND_DEFAULT)
+	apply_color(style.coherency_border.color, in_coherency and COLOR_COHERENCY_BORDER_IN or COLOR_COHERENCY_BORDER_OUT)
+	apply_color(style.grenade_icon.color, ammo_color_from_status(inventory_icons.grenade_status, true))
+	apply_color(style.ammo_icon.color, ammo_color_from_status(inventory_icons.ammo_status, inventory_icons.uses_ammo))
 
-	set_rect_width(style.toughness_fill, BAR_WIDTH * tough_fraction)
+	set_rect_width(style.coherency_border, show_coherency_border and COHERENCY_BORDER_WIDTH or 0)
+	set_rect_width(style.toughness_fill, revive_state.in_progress and 0 or BAR_WIDTH * tough_fraction)
+	set_rect_width(style.revive_fill, BAR_WIDTH * revive_progress)
 	apply_health_segments(widget, health_fraction, health_max_fraction, max_wounds, is_down)
 	set_panel_visible(widget, true)
 end
@@ -650,6 +524,8 @@ HudElementSquadHud.init = function(self, parent, draw_layer, start_scale)
 	})
 
 	self._players = {}
+	self._name_status_flash_by_player = {}
+	self._revive_progress_by_player = {}
 end
 
 HudElementSquadHud.update = function(self, dt, t, ui_renderer, render_settings, input_service)
@@ -665,16 +541,16 @@ HudElementSquadHud.update = function(self, dt, t, ui_renderer, render_settings, 
 		return
 	end
 
-	local composition_name = gameplay_hud_composition_name()
-	local players = sorted_squad_players(composition_name, self._players)
 	local local_player = self._parent and self._parent.player and self._parent:player() or Managers.player and Managers.player:local_player(1)
+	local composition_name = PlayerDataRuntime.gameplay_hud_composition_name()
+	local players = PlayerDataRuntime.sorted_squad_players(composition_name, self._players, local_player)
 
 	for i = 1, MAX_PLAYERS do
 		local widget = widgets_by_name["panel_" .. i]
 		local player = players[i]
 
 		if player then
-			apply_player_panel(widget, local_player, player, extensions_for_player(self._parent, player))
+			apply_player_panel(self, widget, local_player, player, PlayerDataRuntime.extensions_for_player(self._parent, player), t)
 		else
 			apply_empty_panel(widget)
 		end

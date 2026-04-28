@@ -19,21 +19,37 @@ return {
 		en = "Shows the custom four-slot squad panel.",
 		ru = "Показывать кастомную панель отряда на четыре слота.",
 	},
-	squadhud_status_you = {
-		en = "YOU",
-		ru = "ТЫ",
-	},
 	squadhud_status_down = {
-		en = "DOWN",
-		ru = "УПАЛ",
+		en = "UNCONSCIOUS",
+		ru = "БЕЗ СОЗНАНИЯ",
 	},
 	squadhud_status_dead = {
 		en = "DEAD",
 		ru = "МЁРТВ",
 	},
+	squadhud_status_rescue_available = {
+		en = "CAN BE RESCUED",
+		ru = "МОЖНО СПАСТИ",
+	},
+	squadhud_status_rescue_available_in = {
+		en = "CAN BE RESCUED IN",
+		ru = "МОЖНО СПАСТИ ЧЕРЕЗ",
+	},
 	squadhud_status_disabled = {
 		en = "DISABLED",
 		ru = "СХВАЧЕН",
+	},
+	squadhud_status_critical_health = {
+		en = "CRITICALLY WOUNDED",
+		ru = "ТЯЖЕЛО РАНЕН",
+	},
+	squadhud_status_reviving = {
+		en = "REVIVING",
+		ru = "РЕАНИМАЦИЯ",
+	},
+	squadhud_status_rescuing = {
+		en = "RESCUE",
+		ru = "СПАСЕНИЕ",
 	},
 	squadhud_empty_name = {
 		en = "EMPTY",
