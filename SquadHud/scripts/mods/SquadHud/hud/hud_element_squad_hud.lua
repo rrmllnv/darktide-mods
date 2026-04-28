@@ -77,6 +77,7 @@ local COHERENCY_BORDER_HEIGHT = STATUS_BACKGROUND_HEIGHT
 
 local COLOR_TEXT_DEFAULT = UIHudSettings.color_tint_main_1
 local COLOR_TOUGHNESS = UIHudSettings.color_tint_6
+local COLOR_TOUGHNESS_OVERSHIELD = UIHudSettings.color_tint_10
 local COLOR_HEALTH = UIHudSettings.color_tint_main_1
 local COLOR_HEALTH_CRITICAL = UIHudSettings.color_tint_alert_2
 local COLOR_RESCUE_AVAILABLE = UIHudSettings.player_status_colors and UIHudSettings.player_status_colors.hogtied or UIHudSettings.color_tint_main_1
@@ -583,6 +584,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local slot_color = PlayerDataRuntime.slot_color(player)
 	local health_fraction, health_max_fraction, max_wounds = PlayerDataRuntime.health_data(extensions, status)
 	local tough_fraction = PlayerDataRuntime.toughness_fraction(extensions)
+	local has_overshield = PlayerDataRuntime.has_overshield(extensions)
 	local is_down = status == "down"
 	local is_bad_status = status == "dead" or status == "down" or status == "disabled"
 	local player_unit = PlayerDataRuntime.player_unit(player)
@@ -645,6 +647,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.class_icon.text_color, slot_color)
 	apply_color(style.status_background.color, status_background_color)
 	apply_color(style.coherency_border.color, in_coherency and COLOR_COHERENCY_BORDER_IN or COLOR_COHERENCY_BORDER_OUT)
+	apply_color(style.toughness_fill.color, revive_state.in_progress and COLOR_TOUGHNESS or has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS)
 	apply_color(style.grenade_icon.color, ammo_color_from_status(inventory_icons.grenade_status, true))
 	apply_color(style.ammo_icon.color, ammo_color_from_status(inventory_icons.ammo_status, inventory_icons.uses_ammo))
 

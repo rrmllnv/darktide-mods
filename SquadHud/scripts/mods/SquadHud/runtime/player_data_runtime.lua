@@ -346,6 +346,32 @@ function M.toughness_fraction(extensions)
 	return math.clamp(toughness_extension:current_toughness_percent() or 0, 0, 1)
 end
 
+function M.has_overshield(extensions)
+	local toughness_extension = extensions and extensions.toughness
+
+	if not toughness_extension then
+		return false
+	end
+
+	if type(toughness_extension.current_toughness_percent) ~= "function" or type(toughness_extension.max_toughness) ~= "function" or type(toughness_extension.max_toughness_visual) ~= "function" then
+		return false
+	end
+
+	local toughness_percentage = toughness_extension:current_toughness_percent() or 0
+	local max_toughness = toughness_extension:max_toughness() or 0
+	local max_toughness_visual = toughness_extension:max_toughness_visual() or 0
+
+	if max_toughness <= 0 or max_toughness_visual <= 0 then
+		return false
+	end
+
+	local current_toughness = toughness_percentage * max_toughness
+	local current_toughness_visual = toughness_percentage * max_toughness_visual
+	local overshield_amount = current_toughness_visual < max_toughness and math.max(current_toughness - max_toughness_visual, 0) or 0
+
+	return math.floor(overshield_amount) > 0
+end
+
 local function safe_read_component(unit_data_extension, component_name)
 	if not unit_data_extension or type(unit_data_extension.read_component) ~= "function" then
 		return nil
