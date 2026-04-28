@@ -28,8 +28,11 @@ local BAR_LEFT = DefinitionSettings.bar_left
 local BAR_WIDTH = DefinitionSettings.bar_width
 local HEALTH_SEGMENT_GAP = DefinitionSettings.health_segment_gap
 local DEFAULT_REVIVE_DURATION = DefinitionSettings.default_revive_duration
+local NAME_X = DefinitionSettings.name_x
+local NAME_LEFT_WITHOUT_CLASS_ICON = DefinitionSettings.status_background_x
 local NAME_WIDTH = DefinitionSettings.name_width
-local NAME_FULL_WIDTH = DefinitionSettings.name_right_x - DefinitionSettings.name_x
+local NAME_RIGHT_X = DefinitionSettings.name_right_x
+local NAME_RIGHT_WITH_RELATION_STATUS = DefinitionSettings.relation_status_x - DefinitionSettings.relation_status_left_padding
 local NAME_MARQUEE_START_PAUSE = DefinitionSettings.name_marquee_start_pause
 local NAME_MARQUEE_MOVE_DURATION = DefinitionSettings.name_marquee_move_duration
 local NAME_MARQUEE_END_PAUSE = DefinitionSettings.name_marquee_end_pause
@@ -467,6 +470,13 @@ local function player_name_color(base_name_color, operational_status, is_showing
 	return COLOR_HEALTH_CRITICAL
 end
 
+local function player_name_layout(show_class_icon, show_teammate_distance)
+	local left_x = show_class_icon and NAME_X or NAME_LEFT_WITHOUT_CLASS_ICON
+	local right_x = show_teammate_distance and NAME_RIGHT_WITH_RELATION_STATUS or NAME_RIGHT_X
+
+	return left_x, math.max(0, right_x - left_x)
+end
+
 local function set_panel_visible(widget, visible)
 	widget.content.visible = visible
 	widget.dirty = true
@@ -805,7 +815,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local show_stimm_icon = boolean_setting("squadhud_show_stimm", true)
 	local show_teammate_distance = boolean_setting("squadhud_show_teammate_distance", true)
 	local relation_status = show_teammate_distance and (is_bad_status and "" or PlayerDataRuntime.player_distance_text(local_player, player, extensions)) or ""
-	local name_width = show_teammate_distance and NAME_WIDTH or NAME_FULL_WIDTH
+	local name_x, name_width = player_name_layout(show_class_icon, show_teammate_distance)
 
 	if show_teammate_distance and mod.squadhud_debug_relation_status then
 		relation_status = mod.squadhud_debug_relation_status(relation_status, is_local_player)
@@ -841,6 +851,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 		InventoryValue.clear(self, player_key, content, style)
 	end
 
+	style.player_name.offset[1] = name_x
 	style.player_name.size[1] = name_width
 	apply_color(style.player_name.text_color, display_name_color)
 	apply_color(style.relation_status.text_color, COLOR_TEXT_DEFAULT)
