@@ -24,8 +24,8 @@ return {
 		ru = "Custom HUD",
 	},
 	integration_custom_hud_description = {
-		en = "Allows Custom HUD to control the Squad HUD root position. When Custom HUD has saved Squad HUD nodes, the Offset X and Offset Y sliders are not applied.",
-		ru = "Позволяет Custom HUD управлять корневой позицией Squad HUD. Если Custom HUD сохранил узлы Squad HUD, смещения X и Y из настроек не применяются.",
+		en = "Allows Custom HUD to control Squad HUD scenegraph nodes. When Custom HUD has saved Squad HUD nodes, the Offset X and Offset Y sliders are not applied.",
+		ru = "Позволяет Custom HUD управлять scenegraph-узлами Squad HUD. Если Custom HUD сохранил узлы Squad HUD, смещения X и Y из настроек не применяются.",
 	},
 	squadhud_placement = {
 		en = string.rep("\194\160", 8) .. "Position, opacity & scale",

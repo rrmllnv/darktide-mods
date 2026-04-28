@@ -40,7 +40,7 @@ local NAME_MARQUEE_RETURN_DURATION = DefinitionSettings.name_marquee_return_dura
 local NAME_MARQUEE_TOTAL_DURATION = DefinitionSettings.name_marquee_total_duration
 local COHERENCY_BORDER_WIDTH = DefinitionSettings.coherency_border_width
 local DEFAULT_POSITION_X = 50
-local DEFAULT_POSITION_Y = 700
+local DEFAULT_POSITION_Y = 800
 local DEFAULT_OPACITY = 1
 local DEFAULT_HUD_LAYOUT_SCALE = 0.8
 local AMMO_CRATE_TEMPLATE_ID = "ammo_cache_pocketable"
@@ -77,7 +77,6 @@ local widget_definitions = Definitions.widget_definitions
 
 local HudElementSquadHud = class("HudElementSquadHud", "HudElementBase")
 local CUSTOM_HUD_MOD_NAME = "custom_hud"
-local CUSTOM_HUD_ROOT_NODE_NAME = "HudElementSquadHud|squadhud_root"
 local CUSTOM_HUD_NODE_PREFIX = "HudElementSquadHud|"
 
 local function setting_enabled()
@@ -109,9 +108,15 @@ local function boolean_setting(setting_id, fallback)
 end
 
 local function custom_hud_mod()
-	local custom_hud = get_mod(CUSTOM_HUD_MOD_NAME)
+	local get_mod_fn = rawget(_G, "get_mod")
 
-	if custom_hud and type(custom_hud) == "table" then
+	if type(get_mod_fn) ~= "function" then
+		return nil
+	end
+
+	local ok, custom_hud = pcall(get_mod_fn, CUSTOM_HUD_MOD_NAME)
+
+	if ok and custom_hud and type(custom_hud) == "table" then
 		return custom_hud
 	end
 
@@ -125,9 +130,11 @@ local function custom_hud_saved_node_settings()
 		return nil
 	end
 
-	local saved_node_settings = custom_hud:get("saved_node_settings")
+	local ok, saved_node_settings = pcall(function()
+		return custom_hud:get("saved_node_settings")
+	end)
 
-	if type(saved_node_settings) == "table" then
+	if ok and type(saved_node_settings) == "table" then
 		return saved_node_settings
 	end
 
@@ -148,30 +155,6 @@ local function custom_hud_has_squadhud_nodes()
 	end
 
 	return false
-end
-
-local function custom_hud_root_position()
-	local saved_node_settings = custom_hud_saved_node_settings()
-	local root_settings = saved_node_settings and saved_node_settings[CUSTOM_HUD_ROOT_NODE_NAME]
-
-	if type(root_settings) ~= "table" then
-		return nil
-	end
-
-	local x = root_settings.x
-	local y = root_settings.y
-
-	if type(x) ~= "number" or type(y) ~= "number" or x ~= x or y ~= y then
-		return nil
-	end
-
-	local z = root_settings.z
-
-	if type(z) ~= "number" or z ~= z then
-		z = 1
-	end
-
-	return x, y, z
 end
 
 local function apply_color(target, source)
@@ -558,20 +541,13 @@ end
 local function apply_layout_settings(self, widgets_by_name)
 	local custom_hud_enabled = boolean_setting("integration_custom_hud", false)
 	local custom_hud_has_nodes = custom_hud_enabled and custom_hud_has_squadhud_nodes()
-	local custom_hud_x, custom_hud_y, custom_hud_z
-
-	if custom_hud_enabled then
-		custom_hud_x, custom_hud_y, custom_hud_z = custom_hud_root_position()
-	end
-
-	local position_x = custom_hud_x or numeric_setting("position_x", DEFAULT_POSITION_X)
-	local position_y = custom_hud_y or numeric_setting("position_y", DEFAULT_POSITION_Y)
-	local position_z = custom_hud_z or 1
+	local position_x = numeric_setting("position_x", DEFAULT_POSITION_X)
+	local position_y = numeric_setting("position_y", DEFAULT_POSITION_Y)
+	local position_z = 1
 	local opacity = math.clamp(numeric_setting("opacity", DEFAULT_OPACITY), 0.1, 1)
 	local hud_scale = math.clamp(numeric_setting("hud_layout_scale", DEFAULT_HUD_LAYOUT_SCALE), 0.5, 2)
-	local use_current_position = custom_hud_enabled and custom_hud_has_nodes and not custom_hud_x
 
-	if not use_current_position and (self._squadhud_position_x ~= position_x or self._squadhud_position_y ~= position_y or self._squadhud_position_z ~= position_z) then
+	if not custom_hud_has_nodes and (self._squadhud_position_x ~= position_x or self._squadhud_position_y ~= position_y or self._squadhud_position_z ~= position_z) then
 		self:set_scenegraph_position("squadhud_root", position_x, position_y, position_z)
 		self._squadhud_position_x = position_x
 		self._squadhud_position_y = position_y
@@ -591,9 +567,10 @@ local function apply_layout_settings(self, widgets_by_name)
 		end
 
 		local panel_y = math.floor((i - 1) * (DefinitionSettings.panel_height + DefinitionSettings.panel_gap) * hud_scale + 0.5)
+		local panel_scenegraph_id = "squadhud_panel_" .. i
 
 		if self._squadhud_panel_y_by_index[i] ~= panel_y then
-			self:set_scenegraph_position("squadhud_panel_" .. i, 0, panel_y, 1)
+			self:set_scenegraph_position(panel_scenegraph_id, 0, panel_y, 1)
 			self._squadhud_panel_y_by_index[i] = panel_y
 		end
 	end
@@ -965,6 +942,7 @@ HudElementSquadHud.init = function(self, parent, draw_layer, start_scale)
 	})
 
 	self._players = {}
+	self._slot_players = {}
 	self._active_bar_state_by_player = {}
 	self._inventory_value_state_by_player = {}
 	self._overshield_spent_state_by_player = {}
@@ -990,7 +968,7 @@ HudElementSquadHud.update = function(self, dt, t, ui_renderer, render_settings, 
 
 	local local_player = self._parent and self._parent.player and self._parent:player() or Managers.player and Managers.player:local_player(1)
 	local composition_name = PlayerDataRuntime.gameplay_hud_composition_name()
-	local players = PlayerDataRuntime.sorted_squad_players(composition_name, self._players, local_player)
+	local players = PlayerDataRuntime.fixed_squad_slots(composition_name, self._slot_players, self._players, local_player, MAX_PLAYERS)
 
 	if mod.squadhud_debug_update then
 		mod.squadhud_debug_update()

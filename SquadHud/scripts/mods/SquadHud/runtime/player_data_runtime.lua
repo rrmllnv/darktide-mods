@@ -89,6 +89,54 @@ function M.sorted_squad_players(composition_name, output, local_player)
 	return output
 end
 
+function M.fixed_squad_slots(composition_name, output, scratch, local_player, max_players)
+	table.clear(output)
+
+	max_players = type(max_players) == "number" and math.max(1, math.floor(max_players)) or 4
+	scratch = M.sorted_squad_players(composition_name, scratch or {}, local_player)
+
+	local local_player_entry = nil
+	local teammate_count = 0
+
+	for i = 1, #scratch do
+		local player = scratch[i]
+
+		if is_same_player(player, local_player) then
+			local_player_entry = player
+		else
+			teammate_count = teammate_count + 1
+		end
+	end
+
+	if local_player_entry then
+		local visible_teammate_count = math.min(teammate_count, max_players - 1)
+		local slot_index = max_players - visible_teammate_count
+
+		for i = 1, #scratch do
+			local player = scratch[i]
+
+			if not is_same_player(player, local_player) and slot_index < max_players then
+				output[slot_index] = player
+				slot_index = slot_index + 1
+			end
+		end
+
+		output[max_players] = local_player_entry
+	else
+		local visible_player_count = math.min(#scratch, max_players)
+		local slot_index = max_players - visible_player_count + 1
+
+		for i = 1, #scratch do
+			if slot_index <= max_players then
+				output[slot_index] = scratch[i]
+				slot_index = slot_index + 1
+			end
+		end
+	end
+
+	return output
+end
+
 function M.gameplay_hud_composition_name()
 	local game_mode_manager = Managers.state and Managers.state.game_mode
 	local hud_settings = game_mode_manager and game_mode_manager.hud_settings and game_mode_manager:hud_settings()
