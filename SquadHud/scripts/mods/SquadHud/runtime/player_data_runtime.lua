@@ -94,6 +94,18 @@ function M.gameplay_hud_composition_name()
 	return hud_settings and hud_settings.player_composition or nil
 end
 
+function M.strip_format_directives(text)
+	if type(text) ~= "string" or text == "" then
+		return text
+	end
+
+	text = string.gsub(text, "{#color%([^}]*%)}", "")
+	text = string.gsub(text, "{#reset%(%)}", "")
+	text = string.gsub(text, "{#size%([^}]*%)}", "")
+
+	return text
+end
+
 function M.player_name(player)
 	if type(player) == "table" and type(player.name) == "function" then
 		local ok, name = pcall(function()
@@ -101,7 +113,7 @@ function M.player_name(player)
 		end)
 
 		if ok and type(name) == "string" and name ~= "" then
-			return name
+			return M.strip_format_directives(name)
 		end
 	end
 

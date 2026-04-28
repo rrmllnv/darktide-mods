@@ -76,7 +76,6 @@ local COHERENCY_BORDER_Y = STATUS_BACKGROUND_Y
 local COHERENCY_BORDER_HEIGHT = STATUS_BACKGROUND_HEIGHT
 
 local COLOR_TEXT_DEFAULT = UIHudSettings.color_tint_main_1
-local COLOR_TEXT_MUTED = UIHudSettings.color_tint_main_3
 local COLOR_TOUGHNESS = UIHudSettings.color_tint_6
 local COLOR_HEALTH = UIHudSettings.color_tint_main_1
 local COLOR_HEALTH_CRITICAL = UIHudSettings.color_tint_alert_2
@@ -596,7 +595,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 		base_name = mod.squadhud_debug_player_name(base_name, is_local_player)
 	end
 
-	local base_name_color = status == "dead" and COLOR_TEXT_DEFAULT or is_bad_status and COLOR_TEXT_MUTED or COLOR_TEXT_DEFAULT
+	local base_name_color = COLOR_TEXT_DEFAULT
 	local player_key = PlayerDataRuntime.player_unique_id(player)
 	local revive_state = PlayerDataRuntime.revive_state(extensions)
 	local revive_progress = revive_progress_for_player(self, player_key, revive_state, t)
