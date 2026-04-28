@@ -336,8 +336,9 @@ function M.player_distance_text(local_player, player, extensions)
 		local local_position = Unit.world_position(local_unit, 1)
 		local target_position = Unit.world_position(target_unit, 1)
 		local distance = Vector3.distance(local_position, target_position)
+		local rounded_distance = math.min(999, math.floor(distance + 0.5))
 
-		return string.format("%dm", math.floor(distance + 0.5))
+		return string.format("%dм", rounded_distance)
 	end
 
 	return ""
