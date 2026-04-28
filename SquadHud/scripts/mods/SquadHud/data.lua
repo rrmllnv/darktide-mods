@@ -4,6 +4,7 @@ mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/defaults")
 
 local LayoutMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/layout")
 local SquadHudMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/squad_hud")
+local StrikeTeamMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/strike_team")
 local SystemMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/system")
 
 return {
@@ -14,6 +15,7 @@ return {
 		widgets = {
 			LayoutMenu,
 			SquadHudMenu,
+			StrikeTeamMenu,
 			SystemMenu,
 		},
 	},

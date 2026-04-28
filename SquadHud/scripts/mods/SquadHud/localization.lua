@@ -115,6 +115,138 @@ return {
 		en = "Toughness numbers",
 		ru = "Цифры стойкости",
 	},
+	squadhud_strike_team_group = {
+		en = "\238\128\171 STRIKE TEAM",
+		ru = "\238\128\171 УДАРНАЯ ГРУППА",
+	},
+	squadhud_show_status_rescuing = {
+		en = "RESCUE",
+		ru = "СПАСЕНИЕ",
+	},
+	squadhud_show_status_rescuing_description = {
+		en = "Shows when a teammate is being rescued from a non-downed disabled state.",
+		ru = "Показывать, когда тимейта спасают из состояния, где нужна помощь, но это не реанимация.",
+	},
+	squadhud_show_status_reviving = {
+		en = "REVIVING",
+		ru = "РЕАНИМАЦИЯ",
+	},
+	squadhud_show_status_reviving_description = {
+		en = "Shows when a downed teammate is being revived.",
+		ru = "Показывать, когда тимейта поднимают из состояния без сознания.",
+	},
+	squadhud_show_status_rescue_available = {
+		en = "CAN BE RESCUED: N",
+		ru = "МОЖНО СПАСТИ: N",
+	},
+	squadhud_show_status_rescue_available_description = {
+		en = "Shows the rescue availability status for dead or hogtied teammates, including the countdown when the game provides one.",
+		ru = "Показывать статус спасения для погибшего или связанного тимейта, включая счетчик, если игра его отдает.",
+	},
+	squadhud_show_status_dead = {
+		en = "DEAD",
+		ru = "МЁРТВ",
+	},
+	squadhud_show_status_dead_description = {
+		en = "Shows when a teammate is dead and the game does not provide a rescue timer.",
+		ru = "Показывать, когда тимейт мертв и игра не отдает счетчик до спасения.",
+	},
+	squadhud_show_status_unconscious = {
+		en = "UNCONSCIOUS",
+		ru = "БЕЗ СОЗНАНИЯ",
+	},
+	squadhud_show_status_unconscious_description = {
+		en = "Shows when a teammate is knocked down and needs reviving.",
+		ru = "Показывать, когда тимейт без сознания и его нужно реанимировать.",
+	},
+	squadhud_show_status_disabled = {
+		en = "IMMOBILIZED",
+		ru = "ОБЕЗДВИЖЕН",
+	},
+	squadhud_show_status_disabled_description = {
+		en = "Shows the generic disabled fallback when the game does not expose a more specific disabled state.",
+		ru = "Показывать общий статус обездвиживания, когда игра не отдает более точное состояние.",
+	},
+	squadhud_show_status_pounced = {
+		en = "POUNCED BY HOUND",
+		ru = "ПОЙМАН ПСОМ",
+	},
+	squadhud_show_status_pounced_description = {
+		en = "Shows when a teammate is pinned by a hound.",
+		ru = "Показывать, когда тимейта поймала собака.",
+	},
+	squadhud_show_status_netted = {
+		en = "NETTED",
+		ru = "ПОЙМАН СЕТЬЮ",
+	},
+	squadhud_show_status_netted_description = {
+		en = "Shows when a teammate is trapped in a trapper net.",
+		ru = "Показывать, когда тимейт пойман сетью траппера.",
+	},
+	squadhud_show_status_warp_grabbed = {
+		en = "WARP GRABBED",
+		ru = "СХВАЧЕН ВАРПОМ",
+	},
+	squadhud_show_status_warp_grabbed_description = {
+		en = "Shows when a teammate is grabbed by a warp effect.",
+		ru = "Показывать, когда тимейта схватил варп-эффект.",
+	},
+	squadhud_show_status_vortex_grabbed = {
+		en = "IN VORTEX",
+		ru = "В ВИХРЕ",
+	},
+	squadhud_show_status_vortex_grabbed_description = {
+		en = "Shows when a teammate is caught in a vortex.",
+		ru = "Показывать, когда тимейт находится в вихре.",
+	},
+	squadhud_show_status_mutant_charged = {
+		en = "GRABBED BY MUTANT",
+		ru = "МУТАНТ СХВАТИЛ",
+	},
+	squadhud_show_status_mutant_charged_description = {
+		en = "Shows when a mutant has grabbed a teammate.",
+		ru = "Показывать, когда мутант схватил тимейта.",
+	},
+	squadhud_show_status_consumed = {
+		en = "CONSUMED",
+		ru = "ПОГЛОЩЁН",
+	},
+	squadhud_show_status_consumed_description = {
+		en = "Shows when a teammate is swallowed by a Beast of Nurgle.",
+		ru = "Показывать, когда тимейта поглотил зверь Нургла.",
+	},
+	squadhud_show_status_grabbed = {
+		en = "GRABBED",
+		ru = "СХВАЧЕН",
+	},
+	squadhud_show_status_grabbed_description = {
+		en = "Shows when a teammate is grabbed by an enemy disabled state.",
+		ru = "Показывать, когда тимейта схватил враг.",
+	},
+	squadhud_show_status_ledge_hanging = {
+		en = "LEDGE HANGING",
+		ru = "МОЖНО СПАСТИ",
+	},
+	squadhud_show_status_ledge_hanging_description = {
+		en = "Shows when a teammate is hanging from a ledge and can be rescued.",
+		ru = "Показывать, когда тимейт висит на уступе и его можно спасти.",
+	},
+	squadhud_show_status_critical_health = {
+		en = "CRITICALLY WOUNDED",
+		ru = "ТЯЖЕЛО РАНЕН",
+	},
+	squadhud_show_status_critical_health_description = {
+		en = "Shows when a teammate has critically low health.",
+		ru = "Показывать, когда у тимейта критически мало здоровья.",
+	},
+	squadhud_show_status_luggable = {
+		en = "CARRYING OBJECTIVE",
+		ru = "НЕСЁТ ГРУЗ",
+	},
+	squadhud_show_status_luggable_description = {
+		en = "Shows when a teammate is carrying a luggable objective item.",
+		ru = "Показывать, когда тимейт несет переносимый груз цели.",
+	},
 	debug = {
 		en = "Debug",
 		ru = "Debug",
@@ -156,8 +288,8 @@ return {
 		ru = "МОЖНО СПАСТИ:",
 	},
 	squadhud_status_disabled = {
-		en = "DISABLED",
-		ru = "СХВАЧЕН",
+		en = "IMMOBILIZED",
+		ru = "ОБЕЗДВИЖЕН",
 	},
 	squadhud_status_pounced = {
 		en = "POUNCED BY HOUND",

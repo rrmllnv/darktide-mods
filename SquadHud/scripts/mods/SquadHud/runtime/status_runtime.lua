@@ -16,9 +16,19 @@ local STATUS_TEXT_KEYS = {
 	warp_grabbed = "squadhud_status_warp_grabbed",
 }
 
+local function status_enabled(status_id)
+	local value = mod:get("squadhud_show_status_" .. status_id)
+
+	return value ~= false and value ~= 0
+end
+
 function M.resolve(player, extensions, status, health_fraction, revive_state, rescue_timer_status)
 	if revive_state and revive_state.in_progress then
 		if status ~= "down" then
+			if not status_enabled("rescuing") then
+				return nil
+			end
+
 			return {
 				alternate_with_name = false,
 				id = "rescuing",
@@ -26,6 +36,10 @@ function M.resolve(player, extensions, status, health_fraction, revive_state, re
 				priority = 400,
 				text_key = "squadhud_status_rescuing",
 			}
+		end
+
+		if not status_enabled("reviving") then
+			return nil
 		end
 
 		return {
@@ -50,6 +64,10 @@ function M.resolve(player, extensions, status, health_fraction, revive_state, re
 
 		local status_id = (show_timer or is_rescue_available) and "rescue_available" or "dead"
 
+		if not status_enabled(status_id) then
+			return nil
+		end
+
 		return {
 			alternate_with_name = true,
 			id = status_id,
@@ -60,6 +78,10 @@ function M.resolve(player, extensions, status, health_fraction, revive_state, re
 	end
 
 	if status == "hogtied" then
+		if not status_enabled("rescue_available") then
+			return nil
+		end
+
 		return {
 			alternate_with_name = true,
 			id = "rescue_available",
@@ -70,6 +92,10 @@ function M.resolve(player, extensions, status, health_fraction, revive_state, re
 	end
 
 	if status == "down" then
+		if not status_enabled("unconscious") then
+			return nil
+		end
+
 		return {
 			alternate_with_name = true,
 			id = "unconscious",
@@ -82,6 +108,10 @@ function M.resolve(player, extensions, status, health_fraction, revive_state, re
 	local status_text_key = STATUS_TEXT_KEYS[status]
 
 	if status_text_key then
+		if not status_enabled(status) then
+			return nil
+		end
+
 		return {
 			alternate_with_name = true,
 			id = status,
@@ -92,6 +122,10 @@ function M.resolve(player, extensions, status, health_fraction, revive_state, re
 	end
 
 	if player and extensions and health_fraction < CRITICAL_HEALTH_THRESHOLD then
+		if not status_enabled("critical_health") then
+			return nil
+		end
+
 		return {
 			alternate_with_name = true,
 			id = "critical_health",
@@ -102,6 +136,10 @@ function M.resolve(player, extensions, status, health_fraction, revive_state, re
 	end
 
 	if status == "luggable" then
+		if not status_enabled("luggable") then
+			return nil
+		end
+
 		return {
 			alternate_with_name = true,
 			id = "luggable",

@@ -16,6 +16,22 @@ local defaults = {
 	squadhud_show_stimm = true,
 	squadhud_show_teammate_distance = true,
 	squadhud_show_toughness_value = true,
+	squadhud_show_status_consumed = true,
+	squadhud_show_status_critical_health = true,
+	squadhud_show_status_dead = true,
+	squadhud_show_status_disabled = true,
+	squadhud_show_status_grabbed = true,
+	squadhud_show_status_ledge_hanging = true,
+	squadhud_show_status_luggable = true,
+	squadhud_show_status_mutant_charged = true,
+	squadhud_show_status_netted = true,
+	squadhud_show_status_pounced = true,
+	squadhud_show_status_rescue_available = true,
+	squadhud_show_status_rescuing = true,
+	squadhud_show_status_reviving = true,
+	squadhud_show_status_unconscious = true,
+	squadhud_show_status_vortex_grabbed = true,
+	squadhud_show_status_warp_grabbed = true,
 }
 
 return defaults
