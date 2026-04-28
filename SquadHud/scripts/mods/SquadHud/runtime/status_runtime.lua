@@ -40,17 +40,20 @@ function M.resolve(player, extensions, status, health_fraction, revive_state, re
 	if status == "dead" then
 		local time_left = rescue_timer_status and rescue_timer_status.time_left
 		local show_timer = time_left and time_left > 0
-		local text_key = show_timer and "squadhud_status_rescue_available_in" or "squadhud_status_rescue_available"
+		local is_rescue_available = rescue_timer_status and rescue_timer_status.available == true
+		local text_key = show_timer and "squadhud_status_rescue_available_in" or is_rescue_available and "squadhud_status_rescue_available" or "squadhud_status_dead"
 		local text = mod:localize(text_key)
 
 		if show_timer then
 			text = text .. " " .. tostring(math.round_with_precision(time_left))
 		end
 
+		local status_id = (show_timer or is_rescue_available) and "rescue_available" or "dead"
+
 		return {
 			alternate_with_name = true,
-			id = "rescue_available",
-			is_critical = false,
+			id = status_id,
+			is_critical = not show_timer and not is_rescue_available,
 			priority = 350,
 			text = text,
 		}

@@ -430,7 +430,7 @@ function M.rescue_timer_status(player, status)
 	end
 
 	return {
-		available = true,
+		available = false,
 		time_left = nil,
 	}
 end
