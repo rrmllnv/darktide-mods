@@ -38,7 +38,7 @@ local function key_pressed(key_name)
 end
 
 mod.squadhud_debug_apply_settings = function(setting_id)
-	if setting_id ~= "debug" then
+	if setting_id ~= "debug" and setting_id ~= "squadhud_reset_all_settings" then
 		return
 	end
 

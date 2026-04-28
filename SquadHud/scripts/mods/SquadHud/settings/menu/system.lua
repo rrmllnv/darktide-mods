@@ -28,5 +28,22 @@ return {
 			tooltip_text = "debug_description",
 			default_value = d("debug", false),
 		},
+		{
+			setting_id = "squadhud_reset_all_settings",
+			type = "dropdown",
+			default_value = 0,
+			title = "squadhud_reset_all_settings",
+			tooltip_text = "squadhud_reset_all_settings_description",
+			options = {
+				{
+					text = "",
+					value = 0,
+				},
+				{
+					text = "squadhud_reset_confirm",
+					value = 1,
+				},
+			},
+		},
 	},
 }

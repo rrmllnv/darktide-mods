@@ -3,6 +3,7 @@ local mod = get_mod("SquadHud")
 mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/defaults")
 
 local LayoutMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/layout")
+local SquadHudMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/squad_hud")
 local SystemMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/system")
 
 return {
@@ -12,6 +13,7 @@ return {
 	options = {
 		widgets = {
 			LayoutMenu,
+			SquadHudMenu,
 			SystemMenu,
 		},
 	},

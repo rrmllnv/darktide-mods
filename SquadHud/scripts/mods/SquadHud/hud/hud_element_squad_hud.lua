@@ -29,6 +29,7 @@ local BAR_WIDTH = DefinitionSettings.bar_width
 local HEALTH_SEGMENT_GAP = DefinitionSettings.health_segment_gap
 local DEFAULT_REVIVE_DURATION = DefinitionSettings.default_revive_duration
 local NAME_WIDTH = DefinitionSettings.name_width
+local NAME_FULL_WIDTH = DefinitionSettings.name_right_x - DefinitionSettings.name_x
 local NAME_MARQUEE_START_PAUSE = DefinitionSettings.name_marquee_start_pause
 local NAME_MARQUEE_MOVE_DURATION = DefinitionSettings.name_marquee_move_duration
 local NAME_MARQUEE_END_PAUSE = DefinitionSettings.name_marquee_end_pause
@@ -39,6 +40,8 @@ local DEFAULT_POSITION_X = 50
 local DEFAULT_POSITION_Y = 700
 local DEFAULT_OPACITY = 1
 local DEFAULT_HUD_LAYOUT_SCALE = 0.8
+local AMMO_CRATE_TEMPLATE_ID = "ammo_cache_pocketable"
+local MEDICAL_CRATE_TEMPLATE_ID = "medical_crate_pocketable"
 
 local COLOR_TEXT_DEFAULT = DefinitionSettings.color_text_default
 local COLOR_TOUGHNESS = DefinitionSettings.color_toughness
@@ -82,6 +85,18 @@ local function numeric_setting(setting_id, fallback)
 
 	if type(value) == "number" and value == value then
 		return value
+	end
+
+	return fallback
+end
+
+local function boolean_setting(setting_id, fallback)
+	local value = mod:get(setting_id)
+
+	if value == false or value == 0 then
+		return false
+	elseif value == true or value == 1 then
+		return true
 	end
 
 	return fallback
@@ -379,6 +394,28 @@ local function pocketable_small_icon_color(inventory_icons)
 	return color or COLOR_TEXT_DEFAULT
 end
 
+local function filtered_pocketable_icon(inventory_icons)
+	local template_id = inventory_icons and inventory_icons.pocketable_template_id
+
+	if template_id == MEDICAL_CRATE_TEMPLATE_ID and not boolean_setting("squadhud_show_medical_crate", true) then
+		return nil
+	elseif template_id == AMMO_CRATE_TEMPLATE_ID and not boolean_setting("squadhud_show_ammo_crate", true) then
+		return nil
+	end
+
+	return inventory_icons and inventory_icons.pocketable_icon or nil
+end
+
+local function inventory_value_visible(mode_key, revive_state)
+	if revive_state and revive_state.in_progress then
+		return true
+	elseif mode_key == "toughness" then
+		return boolean_setting("squadhud_show_toughness_value", true)
+	end
+
+	return boolean_setting("squadhud_show_health_value", true)
+end
+
 local function apply_ability_state(style, ability_state)
 	local icon_style = style.ability_icon
 	local material_values = icon_style and icon_style.material_values
@@ -552,9 +589,10 @@ local function revive_progress_for_player(self, player_key, revive_state, t)
 	return math.clamp((now - state.start_t) / duration, 0, 1)
 end
 
-local function apply_name_marquee(self, widget, player_key, display_name, ui_renderer, t)
+local function apply_name_marquee(self, widget, player_key, display_name, ui_renderer, t, name_width)
 	local content = widget.content
 	local name_style = widget.style.player_name
+	local max_width = name_width or NAME_WIDTH
 
 	content.player_name = display_name
 
@@ -566,7 +604,7 @@ local function apply_name_marquee(self, widget, player_key, display_name, ui_ren
 		return
 	end
 
-	if text_fits_width(ui_renderer, display_name, name_style, NAME_WIDTH) then
+	if text_fits_width(ui_renderer, display_name, name_style, max_width) then
 		self._name_marquee_by_player[player_key] = nil
 
 		return
@@ -575,11 +613,12 @@ local function apply_name_marquee(self, widget, player_key, display_name, ui_ren
 	local now = type(t) == "number" and t or 0
 	local state = self._name_marquee_by_player[player_key]
 
-	if not state or state.text ~= display_name then
+	if not state or state.text ~= display_name or state.width ~= max_width then
 		state = {
-			rightmost_start_index = rightmost_visible_start_index(ui_renderer, display_name, name_style, NAME_WIDTH),
+			rightmost_start_index = rightmost_visible_start_index(ui_renderer, display_name, name_style, max_width),
 			start_t = now,
 			text = display_name,
+			width = max_width,
 		}
 		self._name_marquee_by_player[player_key] = state
 	end
@@ -587,7 +626,7 @@ local function apply_name_marquee(self, widget, player_key, display_name, ui_ren
 	local fraction = name_marquee_fraction(math.max(0, now - state.start_t))
 	local start_index = 1 + math.floor((state.rightmost_start_index - 1) * fraction + 0.5)
 
-	content.player_name = visible_name_segment(ui_renderer, display_name, name_style, NAME_WIDTH, start_index)
+	content.player_name = visible_name_segment(ui_renderer, display_name, name_style, max_width, start_index)
 	widget.dirty = true
 end
 
@@ -704,6 +743,17 @@ InventoryValue.apply_transition = function(hud, player_key, content, style, text
 	return state.plain_text or plain_text
 end
 
+InventoryValue.clear = function(hud, player_key, content, style)
+	content.inventory_value_text = ""
+	content.inventory_value_out_text = ""
+	style.inventory_value_text.offset[1] = INVENTORY_VALUE.x
+	style.inventory_value_out_text.offset[1] = INVENTORY_VALUE.x + INVENTORY_VALUE.slide_offset
+
+	if player_key and hud._inventory_value_state_by_player then
+		hud._inventory_value_state_by_player[player_key] = nil
+	end
+end
+
 InventoryValue.apply_layout = function(style, inventory_icons, ui_renderer, plain_text)
 	style.inventory_value_text.size[1] = INVENTORY_VALUE.text_width
 	style.inventory_value_out_text.size[1] = INVENTORY_VALUE.text_width
@@ -747,10 +797,17 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local operational_status = StatusRuntime.resolve(player, extensions, status, health_fraction, revive_state, rescue_timer_status)
 	local display_name, is_showing_status = StatusRuntime.display_name(self._name_status_flash_by_player, player_key, base_name, operational_status, t)
 	local display_name_color = player_name_color(base_name_color, operational_status, is_showing_status)
-	local relation_status = is_bad_status and "" or PlayerDataRuntime.player_distance_text(local_player, player, extensions)
 	local class_status_icon, class_status_icon_key = player_status_icon(status)
+	local show_class_icon = boolean_setting("squadhud_show_class_icon", true)
+	local show_ability_icon = boolean_setting("squadhud_show_ability_icon", true)
+	local show_grenade_icon = boolean_setting("squadhud_show_grenade", true)
+	local show_ammo_icon = boolean_setting("squadhud_show_ammo", true)
+	local show_stimm_icon = boolean_setting("squadhud_show_stimm", true)
+	local show_teammate_distance = boolean_setting("squadhud_show_teammate_distance", true)
+	local relation_status = show_teammate_distance and (is_bad_status and "" or PlayerDataRuntime.player_distance_text(local_player, player, extensions)) or ""
+	local name_width = show_teammate_distance and NAME_WIDTH or NAME_FULL_WIDTH
 
-	if mod.squadhud_debug_relation_status then
+	if show_teammate_distance and mod.squadhud_debug_relation_status then
 		relation_status = mod.squadhud_debug_relation_status(relation_status, is_local_player)
 	end
 
@@ -758,21 +815,33 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local in_coherency = is_teammate and PlayerDataRuntime.in_coherency_with_local_player(local_player, extensions)
 	local show_coherency_border = in_coherency or relation_status ~= ""
 	local status_background_color = operational_status and operational_status.is_critical and COLOR_STATUS_BACKGROUND_CRITICAL or COLOR_STATUS_BACKGROUND_DEFAULT
+	local pocketable_icon = filtered_pocketable_icon(inventory_icons)
+	local pocketable_small_icon = show_stimm_icon and inventory_icons.pocketable_small_icon or nil
+	local visible_inventory_icons = {
+		pocketable_icon = pocketable_icon,
+		pocketable_small_icon = pocketable_small_icon,
+	}
 
-	content.class_icon = class_status_icon and "" or PlayerDataRuntime.archetype_icon(player)
-	content.class_status_icon = class_status_icon
+	content.class_icon = show_class_icon and (class_status_icon and "" or PlayerDataRuntime.archetype_icon(player)) or ""
+	content.class_status_icon = show_class_icon and class_status_icon or nil
 	content.relation_status = relation_status
-	content.ability_icon_visible = ability_state ~= nil
+	content.ability_icon_visible = show_ability_icon and ability_state ~= nil
 	content.ability_progress = ability_state and ability_state.progress or 1
-	content.grenade_icon = inventory_icons.grenade_icon
-	content.ammo_icon = inventory_icons.ammo_icon
-	content.pocketable_icon = inventory_icons.pocketable_icon
-	content.pocketable_small_icon = inventory_icons.pocketable_small_icon
+	content.grenade_icon = show_grenade_icon and inventory_icons.grenade_icon or nil
+	content.ammo_icon = show_ammo_icon and inventory_icons.ammo_icon or nil
+	content.pocketable_icon = pocketable_icon
+	content.pocketable_small_icon = pocketable_small_icon
 
 	apply_ability_state(style, ability_state)
-	InventoryValue.apply_layout(style, inventory_icons, ui_renderer, inventory_value_plain)
-	InventoryValue.apply_transition(self, player_key, content, style, inventory_value, inventory_value_color, inventory_value_plain, inventory_value_mode, t)
+	InventoryValue.apply_layout(style, visible_inventory_icons, ui_renderer, inventory_value_plain)
 
+	if inventory_value_visible(inventory_value_mode, revive_state) then
+		InventoryValue.apply_transition(self, player_key, content, style, inventory_value, inventory_value_color, inventory_value_plain, inventory_value_mode, t)
+	else
+		InventoryValue.clear(self, player_key, content, style)
+	end
+
+	style.player_name.size[1] = name_width
 	apply_color(style.player_name.text_color, display_name_color)
 	apply_color(style.relation_status.text_color, COLOR_TEXT_DEFAULT)
 	apply_color(style.class_icon.text_color, slot_color)
@@ -794,7 +863,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	OvershieldSpent.apply(self, player_key, content, style, has_overshield, tough_fraction, toughness_bar_y, toughness_bar_height, revive_state, t)
 	set_rect_width(style.revive_fill, BAR_WIDTH * revive_progress)
 	apply_health_segments(widget, health_fraction, health_max_fraction, max_wounds, is_down, health_bar_y, health_bar_height)
-	apply_name_marquee(self, widget, player_key, display_name, ui_renderer, t)
+	apply_name_marquee(self, widget, player_key, display_name, ui_renderer, t, name_width)
 	set_panel_visible(widget, true)
 end
 

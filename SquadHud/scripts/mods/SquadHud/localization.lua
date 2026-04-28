@@ -55,6 +55,66 @@ return {
 		en = "Shows the custom four-slot squad panel.",
 		ru = "Показывать кастомную панель отряда на четыре слота.",
 	},
+	squadhud_elements_group = {
+		en = "\238\128\178 SQUAD HUD",
+		ru = "\238\128\178 SQUAD HUD",
+	},
+	squadhud_show_class_icon = {
+		en = "Class icon",
+		ru = "Иконка класса",
+	},
+	squadhud_show_ability_icon = {
+		en = "Ability icon",
+		ru = "Иконка способности",
+	},
+	squadhud_coherency_group = {
+		en = string.rep("\194\160", 8) .. "Coherency",
+		ru = string.rep("\194\160", 8) .. "Сплоченность (когерентность)",
+	},
+	squadhud_show_teammate_distance = {
+		en = "Meters to teammate",
+		ru = "Метры до тимейта",
+	},
+	squadhud_show_teammate_distance_description = {
+		en = "When disabled, the nickname uses the full name block width and the marquee animation recalculates for the wider area.",
+		ru = "Если выключено, ник занимает всю ширину блока имени, а карусельная анимация пересчитывается под расширенную область.",
+	},
+	squadhud_inventory_group = {
+		en = string.rep("\194\160", 8) .. "Items",
+		ru = string.rep("\194\160", 8) .. "Предметы",
+	},
+	squadhud_show_grenade = {
+		en = "Grenades, blitz",
+		ru = "Гранаты, блитц",
+	},
+	squadhud_show_ammo = {
+		en = "Ammo",
+		ru = "Патроны",
+	},
+	squadhud_show_stimm = {
+		en = "Stimms",
+		ru = "Стимы",
+	},
+	squadhud_show_medical_crate = {
+		en = "Med crate",
+		ru = "Мед ящик",
+	},
+	squadhud_show_ammo_crate = {
+		en = "Ammo crate",
+		ru = "Ящик боеприпасов",
+	},
+	squadhud_health_toughness_group = {
+		en = string.rep("\194\160", 8) .. "Health and toughness",
+		ru = string.rep("\194\160", 8) .. "Здоровье и стойкость",
+	},
+	squadhud_show_health_value = {
+		en = "Health numbers",
+		ru = "Цифры здоровья",
+	},
+	squadhud_show_toughness_value = {
+		en = "Toughness numbers",
+		ru = "Цифры стойкости",
+	},
 	debug = {
 		en = "Debug",
 		ru = "Debug",
@@ -62,6 +122,22 @@ return {
 	debug_description = {
 		en = "Enables internal Squad HUD debug hotkeys. Numpad 1 toggles a long local player name for text animation and mask testing.",
 		ru = "Включает внутренние debug-горячие клавиши Squad HUD. Numpad 1 переключает длинный ник локального игрока для проверки анимации текста и маски.",
+	},
+	squadhud_reset_all_settings = {
+		en = "Reset settings",
+		ru = "Сбросить настройки",
+	},
+	squadhud_reset_all_settings_description = {
+		en = "Pick the confirm entry and apply. All Squad HUD options return to defaults.",
+		ru = "Выберите подтверждение и примените. Все параметры Squad HUD вернутся к значениям по умолчанию.",
+	},
+	squadhud_reset_confirm = {
+		en = "Yes, reset",
+		ru = "Да, сбросить",
+	},
+	squadhud_reset_done = {
+		en = "Squad HUD: settings restored to defaults.",
+		ru = "Squad HUD: настройки сброшены к значениям по умолчанию.",
 	},
 	squadhud_status_down = {
 		en = "UNCONSCIOUS",

@@ -306,6 +306,7 @@ function M.icons(player, extensions, status)
 	local grenade_ability_status, grenade_visible = grenade_status(player, ability_extension)
 	local uses_ammo, ammo_status, ammo_visible = weapon_ammo_status(player, unit_data_extension, visual_loadout_extension)
 	local pocketable_icon = item_hud_icon_from_slot(inventory_component, visual_loadout_extension, POCKETABLE_SLOT_NAME)
+	local pocketable_template_id = weapon_template_id_from_slot(inventory_component, POCKETABLE_SLOT_NAME)
 	local pocketable_small_icon = item_hud_icon_from_slot(inventory_component, visual_loadout_extension, POCKETABLE_SMALL_SLOT_NAME)
 	local pocketable_small_template_id = weapon_template_id_from_slot(inventory_component, POCKETABLE_SMALL_SLOT_NAME)
 
@@ -315,6 +316,7 @@ function M.icons(player, extensions, status)
 		grenade_icon = (grenade_visible or grenade_icon ~= nil) and grenade_icon or nil,
 		grenade_status = grenade_ability_status,
 		pocketable_icon = pocketable_icon,
+		pocketable_template_id = pocketable_template_id,
 		pocketable_small_icon = pocketable_small_icon,
 		pocketable_small_template_id = pocketable_small_template_id,
 		uses_ammo = uses_ammo,
