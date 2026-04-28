@@ -38,28 +38,27 @@ local BAR_GAP = 1
 local ACTIVE_BAR_VISIBLE_DURATION = 2
 local INVENTORY_ICON_SIZE = 16
 local INVENTORY_ICON_GAP = 4
+local INVENTORY_VALUE_MAX_WIDTH = 110
 local PREVIOUS_INVENTORY_BLOCK_WIDTH = INVENTORY_ICON_SIZE * 2 + INVENTORY_ICON_GAP
-local INVENTORY_BLOCK_WIDTH = INVENTORY_ICON_SIZE * 4 + INVENTORY_ICON_GAP * 3
+local INVENTORY_BLOCK_WIDTH = INVENTORY_VALUE_MAX_WIDTH + INVENTORY_ICON_GAP + INVENTORY_ICON_SIZE * 4 + INVENTORY_ICON_GAP * 3
 local NAME_EXTRA_WIDTH = 40
 local PANEL_WIDTH = 282 + INVENTORY_BLOCK_WIDTH - PREVIOUS_INVENTORY_BLOCK_WIDTH + NAME_EXTRA_WIDTH
 local INVENTORY_BLOCK_X = PANEL_WIDTH - INNER_PADDING - INVENTORY_BLOCK_WIDTH
 local INVENTORY_ICON_Y = TOUGHNESS_BAR_BOTTOM_Y - INVENTORY_ICON_SIZE
-local GRENADE_ICON_X = INVENTORY_BLOCK_X
+local GRENADE_ICON_X = INVENTORY_BLOCK_X + INVENTORY_VALUE_MAX_WIDTH + INVENTORY_ICON_GAP
 local AMMO_ICON_X = GRENADE_ICON_X + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
 local INVENTORY_ICON_X = AMMO_ICON_X + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
 local INVENTORY_SMALL_ICON_X = INVENTORY_ICON_X + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
 local BAR_WIDTH = INVENTORY_BLOCK_X - INVENTORY_ICON_GAP - BAR_LEFT
-local BAR_VALUE = {
-	font_size = 12,
-	height = TOUGHNESS_BAR_BOTTOM_Y - HEALTH_BAR_Y,
-	shadow_offset = 1,
-	text_width = 90,
-	x = BAR_LEFT,
-	y = HEALTH_BAR_Y,
+local INVENTORY_VALUE = {
+	font_size = 14,
+	height = INVENTORY_ICON_SIZE,
+	gap = INVENTORY_ICON_GAP,
+	text_width = INVENTORY_VALUE_MAX_WIDTH,
+	x = INVENTORY_BLOCK_X,
+	y = INVENTORY_ICON_Y,
 }
 
-BAR_VALUE.shadow_x = BAR_VALUE.x + BAR_VALUE.shadow_offset
-BAR_VALUE.shadow_y = BAR_VALUE.y + BAR_VALUE.shadow_offset
 local ABILITY_ICON_Y = TOUGHNESS_BAR_BOTTOM_Y - ABILITY_ICON_SIZE
 local ABILITY_ICON_FRAME_Y = ABILITY_ICON_Y - ABILITY_ICON_FRAME_PADDING
 local ABILITY_ICON_FRAME_X = ABILITY_ICON_X - ABILITY_ICON_FRAME_PADDING
@@ -149,12 +148,6 @@ local COLOR_CORRUPTION = {
 	70,
 	180,
 }
-local COLOR_BAR_VALUE_SHADOW = {
-	230,
-	0,
-	0,
-	0,
-}
 
 local scenegraph_definition = {
 	screen = UIWorkspaceSettings.screen,
@@ -229,11 +222,15 @@ local function rect_pass(style_id, color, offset, size)
 	}
 end
 
-local function text_pass(style_id, value_id, font_size, offset, size, color, horizontal_alignment, font_type)
+local function text_pass(style_id, value_id, font_size, offset, size, color, horizontal_alignment, font_type, drop_shadow)
 	local style = text_style(font_size, horizontal_alignment or "left", "center", color)
 
 	if font_type then
 		style.font_type = font_type
+	end
+
+	if drop_shadow ~= nil then
+		style.drop_shadow = drop_shadow
 	end
 
 	style.offset = offset
@@ -320,8 +317,7 @@ local function create_panel_definition(scenegraph_id)
 		inventory_texture_pass("pocketable_small_icon", "pocketable_small_icon", { INVENTORY_SMALL_ICON_X, INVENTORY_ICON_Y, 4 }),
 		rect_pass("toughness_fill", COLOR_TOUGHNESS, { BAR_LEFT, TOUGHNESS_BAR_Y, 4 }, { BAR_WIDTH, BAR_HEIGHT }),
 		rect_pass("revive_fill", COLOR_REVIVE, { BAR_LEFT, TOUGHNESS_BAR_Y, 5 }, { 0, BAR_HEIGHT }),
-		text_pass("bar_value_shadow_text", "bar_value_shadow_text", BAR_VALUE.font_size, { BAR_VALUE.shadow_x, BAR_VALUE.shadow_y, 7 }, { BAR_VALUE.text_width, BAR_VALUE.height }, COLOR_BAR_VALUE_SHADOW, "left", "proxima_nova_bold_no_render_flags"),
-		text_pass("bar_value_text", "bar_value_text", BAR_VALUE.font_size, { BAR_VALUE.x, BAR_VALUE.y, 8 }, { BAR_VALUE.text_width, BAR_VALUE.height }, COLOR_HEALTH, "left"),
+		text_pass("inventory_value_text", "inventory_value_text", INVENTORY_VALUE.font_size, { INVENTORY_VALUE.x, INVENTORY_VALUE.y, 8 }, { INVENTORY_VALUE.text_width, INVENTORY_VALUE.height }, COLOR_HEALTH, "left", nil, false),
 	}
 
 	for i = 1, 10 do
@@ -360,7 +356,7 @@ local function set_rect_width(style, width)
 end
 
 local ActiveBar = {}
-local BarValue = {}
+local InventoryValue = {}
 
 ActiveBar.rounded_fraction = function(value)
 	return math.floor(math.clamp(value or 0, 0, 1) * 10000 + 0.5)
@@ -391,7 +387,7 @@ ActiveBar.mode = function(hud, player_key, health_fraction, toughness_fraction, 
 	local now = type(t) == "number" and t or 0
 	local health = ActiveBar.rounded_fraction(health_fraction)
 	local toughness = ActiveBar.rounded_fraction(toughness_fraction)
-	local bonus = BarValue.rounded(bonus_value)
+	local bonus = InventoryValue.rounded(bonus_value)
 
 	if has_overshield and bonus > 0 then
 		state.initialized = true
@@ -433,15 +429,15 @@ ActiveBar.mode = function(hud, player_key, health_fraction, toughness_fraction, 
 	return "health"
 end
 
-BarValue.rounded = function(value)
+InventoryValue.rounded = function(value)
 	return math.ceil(math.max(0, value or 0))
 end
 
-BarValue.text = function(value)
-	return tostring(BarValue.rounded(value))
+InventoryValue.text = function(value)
+	return tostring(InventoryValue.rounded(value))
 end
 
-BarValue.colored_text = function(text, color)
+InventoryValue.colored_text = function(text, color)
 	return "{#color(" .. color[2] .. "," .. color[3] .. "," .. color[4] .. ")}" .. text .. "{#reset()}"
 end
 
@@ -698,23 +694,23 @@ local function apply_name_marquee(self, widget, player_key, display_name, ui_ren
 	widget.dirty = true
 end
 
-BarValue.toughness_content = function(toughness_values, has_overshield)
+InventoryValue.toughness_content = function(toughness_values, has_overshield)
 	local bonus = toughness_values and toughness_values.bonus or 0
 	local normal = toughness_values and toughness_values.normal or 0
 	local current = toughness_values and toughness_values.current or 0
 
-	if has_overshield and BarValue.rounded(bonus) > 0 then
-		local plain_text = BarValue.text(normal) .. " + " .. BarValue.text(bonus)
+	if has_overshield and InventoryValue.rounded(bonus) > 0 then
+		local plain_text = InventoryValue.text(normal) .. " + " .. InventoryValue.text(bonus)
 
-		return BarValue.colored_text(BarValue.text(normal), COLOR_TOUGHNESS) .. " + " .. BarValue.colored_text(BarValue.text(bonus), COLOR_TOUGHNESS_OVERSHIELD), plain_text
+		return InventoryValue.colored_text(InventoryValue.text(normal), COLOR_TOUGHNESS) .. " + " .. InventoryValue.colored_text(InventoryValue.text(bonus), COLOR_TOUGHNESS_OVERSHIELD), plain_text
 	end
 
-	local text = BarValue.text(current)
+	local text = InventoryValue.text(current)
 
-	return BarValue.colored_text(text, has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS), text
+	return InventoryValue.colored_text(text, has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS), text
 end
 
-BarValue.active_content = function(active_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
+InventoryValue.active_content = function(active_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
 	if revive_state and revive_state.in_progress then
 		local text = string.format("%d%%", math.floor((revive_progress or 0) * 100 + 0.5))
 
@@ -722,14 +718,45 @@ BarValue.active_content = function(active_mode, extensions, revive_state, revive
 	end
 
 	if active_mode == "toughness" then
-		local text, shadow_text = BarValue.toughness_content(PlayerDataRuntime.toughness_values(extensions), has_overshield)
+		local text, shadow_text = InventoryValue.toughness_content(PlayerDataRuntime.toughness_values(extensions), has_overshield)
 
 		return text, COLOR_TOUGHNESS, shadow_text
 	end
 
-	local text = BarValue.text(PlayerDataRuntime.health_value(extensions))
+	local text = InventoryValue.text(PlayerDataRuntime.health_value(extensions))
 
 	return text, is_down and COLOR_HEALTH_CRITICAL or COLOR_HEALTH, text
+end
+
+InventoryValue.width = function(ui_renderer, text, style)
+	if not ui_renderer or not style or text == nil or text == "" then
+		return 0
+	end
+
+	local width = TextUtilities.text_width(ui_renderer, text, style, nil, true) or 0
+
+	return math.min(INVENTORY_VALUE.text_width, math.ceil(width) + 2)
+end
+
+InventoryValue.apply_layout = function(style, inventory_icons, ui_renderer, plain_text)
+	local value_width = InventoryValue.width(ui_renderer, plain_text, style.inventory_value_text)
+	local icon_x = INVENTORY_VALUE.x + value_width + (value_width > 0 and INVENTORY_VALUE.gap or 0)
+	local grenade_x = icon_x
+	local ammo_x = grenade_x + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
+	local inventory_x = ammo_x + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
+	local inventory_small_x = inventory_x + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
+
+	style.inventory_value_text.offset[1] = INVENTORY_VALUE.x
+	style.inventory_value_text.size[1] = INVENTORY_VALUE.text_width
+
+	style.grenade_icon.offset[1] = grenade_x
+	style.ammo_icon.offset[1] = ammo_x
+	style.pocketable_icon.offset[1] = inventory_x
+	style.pocketable_small_icon.offset[1] = inventory_small_x
+
+	if inventory_icons and not inventory_icons.pocketable_icon and inventory_icons.pocketable_small_icon then
+		style.pocketable_small_icon.offset[1] = inventory_x
+	end
 end
 
 local function apply_player_panel(self, widget, local_player, player, extensions, t, ui_renderer)
@@ -759,7 +786,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local toughness_values = PlayerDataRuntime.toughness_values(extensions)
 	local active_bar_mode = ActiveBar.mode(self, player_key, health_fraction, tough_fraction, toughness_values.bonus, has_overshield, revive_state, t)
 	local health_bar_y, health_bar_height, toughness_bar_y, toughness_bar_height = ActiveBar.layout(active_bar_mode)
-	local bar_value, bar_value_color, bar_value_shadow = BarValue.active_content(active_bar_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
+	local inventory_value, inventory_value_color, inventory_value_plain = InventoryValue.active_content(active_bar_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
 	local rescue_timer_status = PlayerDataRuntime.rescue_timer_status(player, status)
 	local operational_status = StatusRuntime.resolve(player, extensions, status, health_fraction, revive_state, rescue_timer_status)
 	local display_name, is_showing_status = StatusRuntime.display_name(self._name_status_flash_by_player, player_key, base_name, operational_status, t)
@@ -783,25 +810,10 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	content.ammo_icon = inventory_icons.ammo_icon
 	content.pocketable_icon = inventory_icons.pocketable_icon
 	content.pocketable_small_icon = inventory_icons.pocketable_small_icon
-	content.bar_value_shadow_text = bar_value_shadow
-	content.bar_value_text = bar_value
+	content.inventory_value_text = inventory_value
 
 	apply_ability_state(style, ability_state)
-
-	if style.pocketable_small_icon then
-		local small_offset = style.pocketable_small_icon.offset
-		local default_offset = style.pocketable_small_icon.default_offset
-
-		if not inventory_icons.pocketable_icon and inventory_icons.pocketable_small_icon then
-			small_offset[1] = INVENTORY_ICON_X
-			small_offset[2] = INVENTORY_ICON_Y
-			small_offset[3] = 4
-		elseif default_offset then
-			small_offset[1] = default_offset[1]
-			small_offset[2] = default_offset[2]
-			small_offset[3] = default_offset[3]
-		end
-	end
+	InventoryValue.apply_layout(style, inventory_icons, ui_renderer, inventory_value_plain)
 
 	apply_color(style.player_name.text_color, display_name_color)
 	apply_color(style.relation_status.text_color, COLOR_TEXT_DEFAULT)
@@ -809,7 +821,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.status_background.color, status_background_color)
 	apply_color(style.coherency_border.color, in_coherency and COLOR_COHERENCY_BORDER_IN or COLOR_COHERENCY_BORDER_OUT)
 	apply_color(style.toughness_fill.color, revive_state.in_progress and COLOR_TOUGHNESS or has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS)
-	apply_color(style.bar_value_text.text_color, bar_value_color)
+	apply_color(style.inventory_value_text.text_color, inventory_value_color)
 	apply_color(style.grenade_icon.color, ammo_color_from_status(inventory_icons.grenade_status, true))
 	apply_color(style.ammo_icon.color, ammo_color_from_status(inventory_icons.ammo_status, inventory_icons.uses_ammo))
 
