@@ -10,75 +10,79 @@ local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIWorkspaceSettings = require("scripts/settings/ui/ui_workspace_settings")
 
 local MAX_PLAYERS = 4
-local PANEL_WIDTH = 250
-local PANEL_HEIGHT = 92
-local PANEL_GAP = 8
-local ICON_COLUMN_WIDTH = 62
+local PANEL_WIDTH = 282
+local PANEL_HEIGHT = 38
+local PANEL_GAP = 6
+local COMBAT_ABILITY_TYPE = "combat_ability"
+local POCKETABLE_SLOT_NAME = "slot_pocketable"
+local POCKETABLE_SMALL_SLOT_NAME = "slot_pocketable_small"
+local ABILITY_ICON_SIZE = 30
+local ABILITY_ICON_FRAME_SIZE = 48
+local ABILITY_ICON_FRAME_PADDING = math.floor((ABILITY_ICON_FRAME_SIZE - ABILITY_ICON_SIZE) * 0.5)
+local ABILITY_ICON_X = 0
+local ABILITY_BLOCK_WIDTH = 42
+local ABILITY_ICON_MATERIAL = "content/ui/materials/icons/talents/hud/combat_container"
+local ABILITY_ICON_FRAME_MATERIAL = "content/ui/materials/icons/talents/hud/combat_frame_inner"
+local ABILITY_ICON_GLOW_MATERIAL = "content/ui/materials/effects/hud/combat_talent_glow"
+local ICON_COLUMN_WIDTH = 28
 local INNER_PADDING = 8
-local TEXT_COLUMN_X = ICON_COLUMN_WIDTH + INNER_PADDING
-local BAR_LEFT = INNER_PADDING
-local BAR_WIDTH = PANEL_WIDTH - INNER_PADDING * 2
-local TOUGHNESS_BAR_Y = 64
-local HEALTH_BAR_Y = 75
+local CLASS_ICON_X = ABILITY_BLOCK_WIDTH + INNER_PADDING
+local TEXT_COLUMN_X = CLASS_ICON_X + ICON_COLUMN_WIDTH + 2
+local BAR_LEFT = CLASS_ICON_X
+local HEALTH_BAR_Y = 24
+local TOUGHNESS_BAR_Y = 31
 local BAR_HEIGHT = 6
+local TOUGHNESS_BAR_BOTTOM_Y = TOUGHNESS_BAR_Y + BAR_HEIGHT
+local INVENTORY_ICON_SIZE = 16
+local INVENTORY_ICON_GAP = 4
+local INVENTORY_BLOCK_WIDTH = INVENTORY_ICON_SIZE * 2 + INVENTORY_ICON_GAP
+local INVENTORY_ICON_Y = TOUGHNESS_BAR_BOTTOM_Y - INVENTORY_ICON_SIZE
+local INVENTORY_SMALL_ICON_X = PANEL_WIDTH - INNER_PADDING - INVENTORY_ICON_SIZE
+local INVENTORY_ICON_X = INVENTORY_SMALL_ICON_X - INVENTORY_ICON_GAP - INVENTORY_ICON_SIZE
+local BAR_WIDTH = INVENTORY_ICON_X - INVENTORY_ICON_GAP - BAR_LEFT
+local ABILITY_ICON_Y = TOUGHNESS_BAR_BOTTOM_Y - ABILITY_ICON_SIZE
+local ABILITY_ICON_FRAME_Y = ABILITY_ICON_Y - ABILITY_ICON_FRAME_PADDING
+local ABILITY_ICON_FRAME_X = ABILITY_ICON_X - ABILITY_ICON_FRAME_PADDING
 local HEALTH_SEGMENT_GAP = 3
-local ROOT_WIDTH = PANEL_WIDTH * MAX_PLAYERS + PANEL_GAP * (MAX_PLAYERS - 1)
+local ROOT_HEIGHT = PANEL_HEIGHT * MAX_PLAYERS + PANEL_GAP * (MAX_PLAYERS - 1)
+local STATUS_WIDTH = 64
+local STATUS_X = PANEL_WIDTH - INNER_PADDING - INVENTORY_BLOCK_WIDTH - INVENTORY_ICON_GAP - STATUS_WIDTH
+local NAME_WIDTH = STATUS_X - TEXT_COLUMN_X - INNER_PADDING
 
-local COLOR_BACKGROUND = {
-	190,
-	12,
-	13,
-	15,
-}
-local COLOR_BACKGROUND_EMPTY = {
-	115,
-	12,
-	13,
-	15,
-}
-local COLOR_BORDER_DEFAULT = {
+local COLOR_FALLBACK_SLOT = {
 	180,
 	160,
 	160,
 	160,
-}
-local COLOR_BORDER_EMPTY = {
-	85,
-	90,
-	90,
-	90,
 }
 local COLOR_TEXT_DEFAULT = UIHudSettings.color_tint_main_1
 local COLOR_TEXT_MUTED = UIHudSettings.color_tint_main_3
 local COLOR_TOUGHNESS = UIHudSettings.color_tint_6
 local COLOR_HEALTH = UIHudSettings.color_tint_main_1
 local COLOR_HEALTH_CRITICAL = UIHudSettings.color_tint_alert_2
+local COLOR_ABILITY_ICON = UIHudSettings.color_tint_main_2
+local COLOR_ABILITY_FRAME = UIHudSettings.color_tint_main_2
+local COLOR_ABILITY_GLOW = UIHudSettings.color_tint_main_1
 local COLOR_CORRUPTION = {
 	210,
 	130,
 	70,
 	180,
 }
-local COLOR_BAR_BACKGROUND = {
-	135,
-	25,
-	27,
-	31,
-}
 
 local scenegraph_definition = {
 	screen = UIWorkspaceSettings.screen,
 	squadhud_root = {
-		horizontal_alignment = "center",
+		horizontal_alignment = "left",
 		parent = "screen",
 		vertical_alignment = "top",
 		size = {
-			ROOT_WIDTH,
-			PANEL_HEIGHT,
+			PANEL_WIDTH,
+			ROOT_HEIGHT,
 		},
 		position = {
-			0,
-			10,
+			20,
+			130,
 			1,
 		},
 	},
@@ -94,8 +98,8 @@ for i = 1, MAX_PLAYERS do
 			PANEL_HEIGHT,
 		},
 		position = {
-			(i - 1) * (PANEL_WIDTH + PANEL_GAP),
 			0,
+			(i - 1) * (PANEL_HEIGHT + PANEL_GAP),
 			1,
 		},
 	}
@@ -157,19 +161,65 @@ local function text_pass(style_id, value_id, font_size, offset, size, color, hor
 	}
 end
 
+local function ability_texture_pass(style_id, material, offset, size, color, material_values)
+	return {
+		pass_type = "texture",
+		value = material,
+		style_id = style_id,
+		style = {
+			horizontal_alignment = "left",
+			vertical_alignment = "top",
+			material_values = material_values,
+			size = size,
+			offset = offset,
+			color = clone_color(color),
+		},
+		visibility_function = function(content)
+			return content.visible == true and content.ability_icon_visible == true
+		end,
+	}
+end
+
+local function inventory_texture_pass(style_id, value_id, offset)
+	return {
+		pass_type = "texture",
+		style_id = style_id,
+		value_id = value_id,
+		style = {
+			horizontal_alignment = "left",
+			vertical_alignment = "top",
+			size = {
+				INVENTORY_ICON_SIZE,
+				INVENTORY_ICON_SIZE,
+			},
+			default_offset = {
+				offset[1],
+				offset[2],
+				offset[3],
+			},
+			offset = offset,
+			color = clone_color(COLOR_TEXT_DEFAULT),
+		},
+		visibility_function = function(content)
+			return content.visible == true and content[value_id] ~= nil
+		end,
+	}
+end
+
 local function create_panel_definition(scenegraph_id)
 	local passes = {
-		rect_pass("background", COLOR_BACKGROUND, { 0, 0, 0 }, { PANEL_WIDTH, PANEL_HEIGHT }),
-		rect_pass("border_top", COLOR_BORDER_DEFAULT, { 0, 0, 2 }, { PANEL_WIDTH, 2 }),
-		rect_pass("border_bottom", COLOR_BORDER_DEFAULT, { 0, PANEL_HEIGHT - 2, 2 }, { PANEL_WIDTH, 2 }),
-		rect_pass("border_left", COLOR_BORDER_DEFAULT, { 0, 0, 2 }, { 2, PANEL_HEIGHT }),
-		rect_pass("border_right", COLOR_BORDER_DEFAULT, { PANEL_WIDTH - 2, 0, 2 }, { 2, PANEL_HEIGHT }),
-		text_pass("class_icon", "class_icon", 34, { INNER_PADDING, 9, 4 }, { ICON_COLUMN_WIDTH - INNER_PADDING, 42 }, COLOR_TEXT_DEFAULT, "center"),
-		text_pass("player_name", "player_name", 16, { TEXT_COLUMN_X, 10, 4 }, { PANEL_WIDTH - TEXT_COLUMN_X - INNER_PADDING, 22 }, COLOR_TEXT_DEFAULT, "left"),
-		text_pass("player_status", "player_status", 15, { TEXT_COLUMN_X, 34, 4 }, { PANEL_WIDTH - TEXT_COLUMN_X - INNER_PADDING, 22 }, COLOR_TEXT_MUTED, "left"),
-		rect_pass("toughness_background", COLOR_BAR_BACKGROUND, { BAR_LEFT, TOUGHNESS_BAR_Y, 3 }, { BAR_WIDTH, BAR_HEIGHT }),
+		ability_texture_pass("ability_icon", ABILITY_ICON_MATERIAL, { ABILITY_ICON_X, ABILITY_ICON_Y, 4 }, { ABILITY_ICON_SIZE, ABILITY_ICON_SIZE }, COLOR_ABILITY_ICON, {
+			progress = 1,
+			talent_icon = nil,
+		}),
+		ability_texture_pass("ability_frame", ABILITY_ICON_FRAME_MATERIAL, { ABILITY_ICON_FRAME_X, ABILITY_ICON_FRAME_Y, 5 }, { ABILITY_ICON_FRAME_SIZE, ABILITY_ICON_FRAME_SIZE }, COLOR_ABILITY_FRAME),
+		ability_texture_pass("ability_glow", ABILITY_ICON_GLOW_MATERIAL, { ABILITY_ICON_FRAME_X, ABILITY_ICON_FRAME_Y, 6 }, { ABILITY_ICON_FRAME_SIZE, ABILITY_ICON_FRAME_SIZE }, COLOR_ABILITY_GLOW),
+		text_pass("class_icon", "class_icon", 22, { CLASS_ICON_X, 0, 4 }, { ICON_COLUMN_WIDTH, 22 }, COLOR_TEXT_DEFAULT, "center"),
+		text_pass("player_name", "player_name", 16, { TEXT_COLUMN_X, 0, 4 }, { NAME_WIDTH, 22 }, COLOR_TEXT_DEFAULT, "left"),
+		text_pass("player_status", "player_status", 15, { STATUS_X, 0, 4 }, { STATUS_WIDTH, 22 }, COLOR_TEXT_MUTED, "right"),
+		inventory_texture_pass("pocketable_icon", "pocketable_icon", { INVENTORY_ICON_X, INVENTORY_ICON_Y, 4 }),
+		inventory_texture_pass("pocketable_small_icon", "pocketable_small_icon", { INVENTORY_SMALL_ICON_X, INVENTORY_ICON_Y, 4 }),
 		rect_pass("toughness_fill", COLOR_TOUGHNESS, { BAR_LEFT, TOUGHNESS_BAR_Y, 4 }, { BAR_WIDTH, BAR_HEIGHT }),
-		rect_pass("health_background", COLOR_BAR_BACKGROUND, { BAR_LEFT, HEALTH_BAR_Y, 3 }, { BAR_WIDTH, BAR_HEIGHT }),
 	}
 
 	for i = 1, 10 do
@@ -308,6 +358,30 @@ local function archetype_icon(player)
 	return "?"
 end
 
+local function combat_ability_icon(player)
+	local unit = player_unit(player)
+
+	if not unit or not Unit.alive(unit) then
+		return nil
+	end
+
+	local ability_extension = ScriptUnit.has_extension(unit, "ability_system")
+
+	if not ability_extension or not ability_extension:ability_is_equipped(COMBAT_ABILITY_TYPE) then
+		return nil
+	end
+
+	local equipped_abilities = ability_extension:equipped_abilities()
+	local ability_settings = equipped_abilities and equipped_abilities[COMBAT_ABILITY_TYPE]
+	local icon = ability_settings and ability_settings.hud_icon
+
+	if type(icon) == "string" and icon ~= "" then
+		return icon
+	end
+
+	return nil
+end
+
 local function extensions_for_player(parent, player)
 	local unit = player_unit(player)
 
@@ -321,6 +395,11 @@ local function extensions_for_player(parent, player)
 		end)
 
 		if ok and type(extensions) == "table" then
+			extensions.health = extensions.health or ScriptUnit.has_extension(unit, "health_system")
+			extensions.toughness = extensions.toughness or ScriptUnit.has_extension(unit, "toughness_system")
+			extensions.unit_data = extensions.unit_data or ScriptUnit.has_extension(unit, "unit_data_system")
+			extensions.visual_loadout = extensions.visual_loadout or ScriptUnit.has_extension(unit, "visual_loadout_system")
+
 			return extensions
 		end
 	end
@@ -329,6 +408,7 @@ local function extensions_for_player(parent, player)
 		health = ScriptUnit.has_extension(unit, "health_system"),
 		toughness = ScriptUnit.has_extension(unit, "toughness_system"),
 		unit_data = ScriptUnit.has_extension(unit, "unit_data_system"),
+		visual_loadout = ScriptUnit.has_extension(unit, "visual_loadout_system"),
 	}
 end
 
@@ -425,6 +505,41 @@ local function toughness_fraction(extensions)
 	return math.clamp(toughness_extension:current_toughness_percent() or 0, 0, 1)
 end
 
+local function item_hud_icon_from_slot(inventory_component, visual_loadout_extension, slot_name)
+	if not inventory_component or not visual_loadout_extension or type(visual_loadout_extension.weapon_template_from_slot) ~= "function" then
+		return nil
+	end
+
+	local item_name = inventory_component[slot_name]
+	local weapon_template = item_name and visual_loadout_extension:weapon_template_from_slot(slot_name)
+	local hud_icon = weapon_template and weapon_template.hud_icon_small
+
+	if type(hud_icon) == "string" and hud_icon ~= "" then
+		return hud_icon
+	end
+
+	return nil
+end
+
+local function inventory_icons(extensions, status)
+	if status == "dead" then
+		return nil, nil
+	end
+
+	local unit_data_extension = extensions and extensions.unit_data
+	local visual_loadout_extension = extensions and extensions.visual_loadout
+
+	if not unit_data_extension or not visual_loadout_extension or type(unit_data_extension.read_component) ~= "function" then
+		return nil, nil
+	end
+
+	local inventory_component = unit_data_extension:read_component("inventory")
+	local pocketable_icon = item_hud_icon_from_slot(inventory_component, visual_loadout_extension, POCKETABLE_SLOT_NAME)
+	local pocketable_small_icon = item_hud_icon_from_slot(inventory_component, visual_loadout_extension, POCKETABLE_SMALL_SLOT_NAME)
+
+	return pocketable_icon, pocketable_small_icon
+end
+
 local function apply_color(target, source)
 	target[1] = source[1]
 	target[2] = source[2]
@@ -444,30 +559,7 @@ local function set_panel_visible(widget, visible)
 end
 
 local function apply_empty_panel(widget)
-	local content = widget.content
-	local style = widget.style
-
-	content.class_icon = "-"
-	content.player_name = mod:localize("squadhud_empty_name")
-	content.player_status = ""
-
-	apply_color(style.background.color, COLOR_BACKGROUND_EMPTY)
-	apply_color(style.border_top.color, COLOR_BORDER_EMPTY)
-	apply_color(style.border_bottom.color, COLOR_BORDER_EMPTY)
-	apply_color(style.border_left.color, COLOR_BORDER_EMPTY)
-	apply_color(style.border_right.color, COLOR_BORDER_EMPTY)
-	apply_color(style.player_name.text_color, COLOR_TEXT_MUTED)
-	apply_color(style.player_status.text_color, COLOR_TEXT_MUTED)
-	apply_color(style.class_icon.text_color, COLOR_TEXT_MUTED)
-
-	set_rect_width(style.toughness_fill, 0)
-
-	for i = 1, 10 do
-		set_rect_width(style["health_fill_" .. i], 0)
-		set_rect_width(style["corruption_fill_" .. i], 0)
-	end
-
-	set_panel_visible(widget, true)
+	set_panel_visible(widget, false)
 end
 
 local function apply_health_segments(widget, health_fraction, health_max_fraction, max_wounds, is_down)
@@ -506,21 +598,42 @@ local function apply_player_panel(widget, local_player, player, extensions)
 	local style = widget.style
 	local status = status_from_extensions(extensions)
 	local slot = player_slot(player)
-	local slot_color = UISettings.player_slot_colors and UISettings.player_slot_colors[slot] or COLOR_BORDER_DEFAULT
+	local slot_color = UISettings.player_slot_colors and UISettings.player_slot_colors[slot] or COLOR_FALLBACK_SLOT
 	local health_fraction, health_max_fraction, max_wounds = health_data(extensions, status)
 	local tough_fraction = toughness_fraction(extensions)
 	local is_down = status == "down"
 	local is_bad_status = status == "dead" or status == "down" or status == "disabled"
+	local ability_icon = combat_ability_icon(player)
+	local ability_material_values = style.ability_icon and style.ability_icon.material_values
+	local pocketable_icon, pocketable_small_icon = inventory_icons(extensions, status)
 
 	content.class_icon = archetype_icon(player)
 	content.player_name = player_name(player)
 	content.player_status = player_distance_text(local_player, player, status)
+	content.ability_icon_visible = ability_icon ~= nil
+	content.pocketable_icon = pocketable_icon
+	content.pocketable_small_icon = pocketable_small_icon
 
-	apply_color(style.background.color, COLOR_BACKGROUND)
-	apply_color(style.border_top.color, slot_color)
-	apply_color(style.border_bottom.color, slot_color)
-	apply_color(style.border_left.color, slot_color)
-	apply_color(style.border_right.color, slot_color)
+	if ability_material_values and ability_material_values.talent_icon ~= ability_icon then
+		ability_material_values.talent_icon = ability_icon
+		widget.dirty = true
+	end
+
+	if style.pocketable_small_icon then
+		local small_offset = style.pocketable_small_icon.offset
+		local default_offset = style.pocketable_small_icon.default_offset
+
+		if not pocketable_icon and pocketable_small_icon then
+			small_offset[1] = INVENTORY_ICON_X
+			small_offset[2] = INVENTORY_ICON_Y
+			small_offset[3] = 4
+		elseif default_offset then
+			small_offset[1] = default_offset[1]
+			small_offset[2] = default_offset[2]
+			small_offset[3] = default_offset[3]
+		end
+	end
+
 	apply_color(style.player_name.text_color, is_bad_status and COLOR_TEXT_MUTED or COLOR_TEXT_DEFAULT)
 	apply_color(style.player_status.text_color, is_bad_status and COLOR_HEALTH_CRITICAL or slot_color)
 	apply_color(style.class_icon.text_color, slot_color)
