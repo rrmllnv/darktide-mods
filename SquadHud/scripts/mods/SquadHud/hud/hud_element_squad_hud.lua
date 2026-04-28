@@ -17,6 +17,8 @@ local BAR_ACTIVE_HEIGHT = DefinitionSettings.bar_active_height
 local BAR_INACTIVE_HEIGHT = DefinitionSettings.bar_inactive_height
 local BAR_GAP = DefinitionSettings.bar_gap
 local ACTIVE_BAR_VISIBLE_DURATION = DefinitionSettings.active_bar_visible_duration
+local OVERSHIELD_SPENT_DURATION = DefinitionSettings.overshield_spent_duration
+local OVERSHIELD_SPENT_HEIGHT_ADDITION = DefinitionSettings.overshield_spent_height_addition
 local INVENTORY_ICON_SIZE = DefinitionSettings.inventory_icon_size
 local INVENTORY_ICON_GAP = DefinitionSettings.inventory_icon_gap
 local INVENTORY_ICON_X = DefinitionSettings.inventory_icon_x
@@ -85,6 +87,7 @@ local function set_rect_width(style, width)
 end
 
 local ActiveBar = {}
+local OvershieldSpent = {}
 local InventoryValue = {}
 
 ActiveBar.rounded_fraction = function(value)
@@ -166,6 +169,86 @@ end
 
 InventoryValue.text = function(value)
 	return tostring(InventoryValue.rounded(value))
+end
+
+OvershieldSpent.apply = function(hud, player_key, content, style, has_overshield, toughness_fraction, toughness_bar_y, toughness_bar_height, revive_state, t)
+	local spent_style = style.toughness_overshield_spent
+
+	if not spent_style then
+		return
+	end
+
+	local size_addition = spent_style.size_addition
+	local now = type(t) == "number" and t or 0
+	local current_width = BAR_WIDTH * math.clamp(toughness_fraction or 0, 0, 1)
+	local state_by_player = hud._overshield_spent_state_by_player
+
+	if not player_key or not state_by_player then
+		content.toughness_overshield_spent_visible = false
+		spent_style.color[1] = 0
+		spent_style.size[1] = 0
+
+		if size_addition then
+			size_addition[2] = 0
+		end
+
+		return
+	end
+
+	local state = state_by_player[player_key]
+
+	if not state then
+		state = {}
+		state_by_player[player_key] = state
+	end
+
+	local revive_in_progress = revive_state and revive_state.in_progress
+
+	if state.has_overshield == true and not has_overshield and not revive_in_progress then
+		state.start_t = now
+		state.spent_width = math.max(state.width or 0, current_width)
+	end
+
+	state.has_overshield = has_overshield == true
+	state.width = current_width
+	spent_style.offset[2] = toughness_bar_y
+	spent_style.size[2] = toughness_bar_height
+
+	if state.start_t then
+		local progress = math.clamp((now - state.start_t) / OVERSHIELD_SPENT_DURATION, 0, 1)
+		local anim_progress = math.easeOutCubic(progress)
+
+		content.toughness_overshield_spent_visible = true
+		spent_style.size[1] = state.spent_width or current_width
+		spent_style.color[1] = 255 * (1 - anim_progress)
+		spent_style.color[2] = COLOR_TOUGHNESS_OVERSHIELD[2]
+		spent_style.color[3] = COLOR_TOUGHNESS_OVERSHIELD[3]
+		spent_style.color[4] = COLOR_TOUGHNESS_OVERSHIELD[4]
+
+		if size_addition then
+			size_addition[2] = anim_progress * OVERSHIELD_SPENT_HEIGHT_ADDITION
+		end
+
+		if progress >= 1 then
+			state.start_t = nil
+			state.spent_width = nil
+			content.toughness_overshield_spent_visible = false
+			spent_style.color[1] = 0
+			spent_style.size[1] = 0
+
+			if size_addition then
+				size_addition[2] = 0
+			end
+		end
+	else
+		content.toughness_overshield_spent_visible = false
+		spent_style.color[1] = 0
+		spent_style.size[1] = 0
+
+		if size_addition then
+			size_addition[2] = 0
+		end
+	end
 end
 
 InventoryValue.colored_text = function(text, color)
@@ -661,6 +744,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	style.revive_fill.offset[2] = toughness_bar_y
 	style.revive_fill.size[2] = toughness_bar_height
 	set_rect_width(style.toughness_fill, revive_state.in_progress and 0 or BAR_WIDTH * tough_fraction)
+	OvershieldSpent.apply(self, player_key, content, style, has_overshield, tough_fraction, toughness_bar_y, toughness_bar_height, revive_state, t)
 	set_rect_width(style.revive_fill, BAR_WIDTH * revive_progress)
 	apply_health_segments(widget, health_fraction, health_max_fraction, max_wounds, is_down, health_bar_y, health_bar_height)
 	apply_name_marquee(self, widget, player_key, display_name, ui_renderer, t)
@@ -676,6 +760,7 @@ HudElementSquadHud.init = function(self, parent, draw_layer, start_scale)
 	self._players = {}
 	self._active_bar_state_by_player = {}
 	self._inventory_value_state_by_player = {}
+	self._overshield_spent_state_by_player = {}
 	self._name_marquee_by_player = {}
 	self._name_status_flash_by_player = {}
 	self._revive_progress_by_player = {}

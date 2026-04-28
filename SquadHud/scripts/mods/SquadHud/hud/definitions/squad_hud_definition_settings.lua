@@ -32,6 +32,8 @@ S.bar_active_height = 8
 S.bar_inactive_height = 4
 S.bar_gap = 1
 S.active_bar_visible_duration = 5
+S.overshield_spent_duration = 0.3
+S.overshield_spent_height_addition = 16
 
 S.inventory_icon_size = 16
 S.inventory_icon_gap = 4
