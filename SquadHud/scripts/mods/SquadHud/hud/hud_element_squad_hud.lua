@@ -2,391 +2,66 @@ local mod = get_mod("SquadHud")
 
 local HudElementBase = require("scripts/ui/hud/elements/hud_element_base")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
-local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
-local UIWidget = require("scripts/managers/ui/ui_widget")
-local UIWorkspaceSettings = require("scripts/settings/ui/ui_workspace_settings")
 local TextUtilities = require("scripts/utilities/ui/text")
 
+local Definitions = mod:io_dofile("SquadHud/scripts/mods/SquadHud/hud/definitions/squad_hud_definitions")
+local DefinitionSettings = Definitions.settings
 local AbilityRuntime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/ability_runtime")
 local InventoryRuntime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/inventory_runtime")
 local PlayerDataRuntime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/player_data_runtime")
 local StatusRuntime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/status_runtime")
 
-local MAX_PLAYERS = 4
-local PANEL_HEIGHT = 38
-local PANEL_GAP = 6
-local ABILITY_ICON_SIZE = 30
-local ABILITY_ICON_FRAME_SIZE = 48
-local ABILITY_ICON_FRAME_PADDING = math.floor((ABILITY_ICON_FRAME_SIZE - ABILITY_ICON_SIZE) * 0.5)
-local ABILITY_ICON_X = 0
-local ABILITY_BLOCK_WIDTH = 42
-local ABILITY_ICON_MATERIAL = "content/ui/materials/icons/talents/hud/combat_container"
-local ABILITY_ICON_FRAME_MATERIAL = "content/ui/materials/icons/talents/hud/combat_frame_inner"
-local ABILITY_ICON_GLOW_MATERIAL = "content/ui/materials/effects/hud/combat_talent_glow"
-local ICON_COLUMN_WIDTH = 28
-local INNER_PADDING = 8
-local CLASS_ICON_X = ABILITY_BLOCK_WIDTH + INNER_PADDING
-local CLASS_STATUS_ICON_SIZE = 20
-local CLASS_STATUS_ICON_X = CLASS_ICON_X + math.floor((ICON_COLUMN_WIDTH - CLASS_STATUS_ICON_SIZE) * 0.5)
-local CLASS_STATUS_ICON_Y = 1
-local TEXT_COLUMN_X = CLASS_ICON_X + ICON_COLUMN_WIDTH + 2
-local BAR_LEFT = CLASS_ICON_X
-local HEALTH_BAR_Y = 24
-local TOUGHNESS_BAR_Y = 31
-local BAR_HEIGHT = 6
-local TOUGHNESS_BAR_BOTTOM_Y = TOUGHNESS_BAR_Y + BAR_HEIGHT
-local BAR_ACTIVE_HEIGHT = 8
-local BAR_INACTIVE_HEIGHT = 4
-local BAR_GAP = 1
-local ACTIVE_BAR_VISIBLE_DURATION = 5
-local INVENTORY_ICON_SIZE = 16
-local INVENTORY_ICON_GAP = 4
-local INVENTORY_VALUE_MAX_WIDTH = 110
-local PREVIOUS_INVENTORY_BLOCK_WIDTH = INVENTORY_ICON_SIZE * 2 + INVENTORY_ICON_GAP
-local INVENTORY_BLOCK_WIDTH = INVENTORY_VALUE_MAX_WIDTH + INVENTORY_ICON_GAP + INVENTORY_ICON_SIZE * 4 + INVENTORY_ICON_GAP * 3
-local NAME_EXTRA_WIDTH = 40
-local PANEL_WIDTH = 282 + INVENTORY_BLOCK_WIDTH - PREVIOUS_INVENTORY_BLOCK_WIDTH + NAME_EXTRA_WIDTH
-local INVENTORY_BLOCK_X = PANEL_WIDTH - INNER_PADDING - INVENTORY_BLOCK_WIDTH
-local INVENTORY_ICON_Y = TOUGHNESS_BAR_BOTTOM_Y - INVENTORY_ICON_SIZE
-local GRENADE_ICON_X = INVENTORY_BLOCK_X + INVENTORY_VALUE_MAX_WIDTH + INVENTORY_ICON_GAP
-local AMMO_ICON_X = GRENADE_ICON_X + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
-local INVENTORY_ICON_X = AMMO_ICON_X + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
-local INVENTORY_SMALL_ICON_X = INVENTORY_ICON_X + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
-local BAR_WIDTH = INVENTORY_BLOCK_X - INVENTORY_ICON_GAP - BAR_LEFT
-local INVENTORY_VALUE = {
-	font_size = 14,
-	height = INVENTORY_ICON_SIZE,
-	gap = INVENTORY_ICON_GAP,
-	text_width = INVENTORY_VALUE_MAX_WIDTH,
-	x = INVENTORY_BLOCK_X,
-	y = INVENTORY_ICON_Y,
-}
+local MAX_PLAYERS = DefinitionSettings.max_players
+local HEALTH_BAR_Y = DefinitionSettings.health_bar_y
+local BAR_ACTIVE_HEIGHT = DefinitionSettings.bar_active_height
+local BAR_INACTIVE_HEIGHT = DefinitionSettings.bar_inactive_height
+local BAR_GAP = DefinitionSettings.bar_gap
+local ACTIVE_BAR_VISIBLE_DURATION = DefinitionSettings.active_bar_visible_duration
+local INVENTORY_ICON_SIZE = DefinitionSettings.inventory_icon_size
+local INVENTORY_ICON_GAP = DefinitionSettings.inventory_icon_gap
+local INVENTORY_ICON_X = DefinitionSettings.inventory_icon_x
+local INVENTORY_ICON_Y = DefinitionSettings.inventory_icon_y
+local INVENTORY_VALUE = DefinitionSettings.inventory_value
+local BAR_LEFT = DefinitionSettings.bar_left
+local BAR_WIDTH = DefinitionSettings.bar_width
+local HEALTH_SEGMENT_GAP = DefinitionSettings.health_segment_gap
+local DEFAULT_REVIVE_DURATION = DefinitionSettings.default_revive_duration
+local NAME_WIDTH = DefinitionSettings.name_width
+local NAME_MARQUEE_START_PAUSE = DefinitionSettings.name_marquee_start_pause
+local NAME_MARQUEE_MOVE_DURATION = DefinitionSettings.name_marquee_move_duration
+local NAME_MARQUEE_END_PAUSE = DefinitionSettings.name_marquee_end_pause
+local NAME_MARQUEE_RETURN_DURATION = DefinitionSettings.name_marquee_return_duration
+local NAME_MARQUEE_TOTAL_DURATION = DefinitionSettings.name_marquee_total_duration
+local COHERENCY_BORDER_WIDTH = DefinitionSettings.coherency_border_width
 
-local ABILITY_ICON_Y = TOUGHNESS_BAR_BOTTOM_Y - ABILITY_ICON_SIZE
-local ABILITY_ICON_FRAME_Y = ABILITY_ICON_Y - ABILITY_ICON_FRAME_PADDING
-local ABILITY_ICON_FRAME_X = ABILITY_ICON_X - ABILITY_ICON_FRAME_PADDING
-local HEALTH_SEGMENT_GAP = 3
-local DEFAULT_REVIVE_DURATION = 3
-local ROOT_HEIGHT = PANEL_HEIGHT * MAX_PLAYERS + PANEL_GAP * (MAX_PLAYERS - 1)
-local NAME_X = TEXT_COLUMN_X
-local NAME_Y = 0
-local NAME_HEIGHT = 22
-local NAME_RIGHT_X = INVENTORY_BLOCK_X - INVENTORY_ICON_GAP
-local RELATION_STATUS_LEFT_PADDING = 6
-local RELATION_STATUS_Y = 0
-local RELATION_STATUS_X = NAME_RIGHT_X + RELATION_STATUS_LEFT_PADDING
-local RELATION_STATUS_WIDTH = PANEL_WIDTH - RELATION_STATUS_X
-local RELATION_STATUS_HEIGHT = 20
-local NAME_WIDTH = NAME_RIGHT_X - NAME_X
-local STATUS_BACKGROUND_X = CLASS_ICON_X
-local STATUS_BACKGROUND_Y = 1
-local STATUS_BACKGROUND_WIDTH = NAME_RIGHT_X - STATUS_BACKGROUND_X
-local STATUS_BACKGROUND_HEIGHT = 20
-local NAME_MARQUEE_START_PAUSE = 0.6
-local NAME_MARQUEE_MOVE_DURATION = 1.6
-local NAME_MARQUEE_END_PAUSE = 0.9
-local NAME_MARQUEE_RETURN_DURATION = 1.35
-local NAME_MARQUEE_TOTAL_DURATION = NAME_MARQUEE_START_PAUSE + NAME_MARQUEE_MOVE_DURATION + NAME_MARQUEE_END_PAUSE + NAME_MARQUEE_RETURN_DURATION
-local COHERENCY_BORDER_WIDTH = 3
-local COHERENCY_BORDER_X = STATUS_BACKGROUND_X + STATUS_BACKGROUND_WIDTH - COHERENCY_BORDER_WIDTH
-local COHERENCY_BORDER_Y = STATUS_BACKGROUND_Y
-local COHERENCY_BORDER_HEIGHT = STATUS_BACKGROUND_HEIGHT
+local COLOR_TEXT_DEFAULT = DefinitionSettings.color_text_default
+local COLOR_TOUGHNESS = DefinitionSettings.color_toughness
+local COLOR_TOUGHNESS_OVERSHIELD = DefinitionSettings.color_toughness_overshield
+local COLOR_HEALTH = DefinitionSettings.color_health
+local COLOR_HEALTH_CRITICAL = DefinitionSettings.color_health_critical
+local COLOR_RESCUE_AVAILABLE = DefinitionSettings.color_rescue_available
+local COLOR_REVIVE = DefinitionSettings.color_revive
+local COLOR_ABILITY_ICON = DefinitionSettings.color_ability_icon
+local COLOR_ABILITY_FRAME = DefinitionSettings.color_ability_frame
+local COLOR_ABILITY_GLOW = DefinitionSettings.color_ability_glow
+local COLOR_ABILITY_READY_GLOW = DefinitionSettings.color_ability_ready_glow
+local COLOR_ABILITY_COOLDOWN_ICON = DefinitionSettings.color_ability_cooldown_icon
+local COLOR_ABILITY_COOLDOWN_FRAME = DefinitionSettings.color_ability_cooldown_frame
+local COLOR_ABILITY_COOLDOWN_GLOW = DefinitionSettings.color_ability_cooldown_glow
+local COLOR_STATUS_BACKGROUND_DEFAULT = DefinitionSettings.color_status_background_default
+local COLOR_STATUS_BACKGROUND_CRITICAL = DefinitionSettings.color_status_background_critical
+local COLOR_COHERENCY_BORDER_IN = DefinitionSettings.color_coherency_border_in
+local COLOR_COHERENCY_BORDER_OUT = DefinitionSettings.color_coherency_border_out
+local COLOR_AMMO_NOT_IN_USE = DefinitionSettings.color_ammo_not_in_use
+local COLOR_AMMO_HIGH = DefinitionSettings.color_ammo_high
+local COLOR_AMMO_MEDIUM = DefinitionSettings.color_ammo_medium
+local COLOR_AMMO_LOW = DefinitionSettings.color_ammo_low
+local COLOR_AMMO_FULL = DefinitionSettings.color_ammo_full
+local COLOR_STIMM_BY_TEMPLATE = DefinitionSettings.color_stimm_by_template
 
-local COLOR_TEXT_DEFAULT = UIHudSettings.color_tint_main_1
-local COLOR_TOUGHNESS = UIHudSettings.color_tint_6
-local COLOR_TOUGHNESS_OVERSHIELD = UIHudSettings.color_tint_10
-local COLOR_HEALTH = UIHudSettings.color_tint_main_1
-local COLOR_HEALTH_CRITICAL = UIHudSettings.color_tint_alert_2
-local COLOR_RESCUE_AVAILABLE = UIHudSettings.player_status_colors and UIHudSettings.player_status_colors.hogtied or UIHudSettings.color_tint_main_1
-local COLOR_REVIVE = {
-	255,
-	75,
-	220,
-	120,
-}
-local COLOR_ABILITY_ICON = UIHudSettings.color_tint_main_2
-local COLOR_ABILITY_FRAME = UIHudSettings.color_tint_main_2
-local COLOR_ABILITY_GLOW = UIHudSettings.color_tint_main_1
-local COLOR_ABILITY_READY_GLOW = UIHudSettings.color_tint_main_1
-local COLOR_ABILITY_COOLDOWN_ICON = UIHudSettings.color_tint_main_3
-local COLOR_ABILITY_COOLDOWN_FRAME = UIHudSettings.color_tint_main_3
-local COLOR_ABILITY_COOLDOWN_GLOW = {
-	0,
-	255,
-	255,
-	255,
-}
-local COLOR_STATUS_BACKGROUND_DEFAULT = {
-	38,
-	255,
-	255,
-	255,
-}
-local COLOR_STATUS_BACKGROUND_CRITICAL = {
-	90,
-	255,
-	40,
-	40,
-}
-local COLOR_COHERENCY_BORDER_IN = {
-	220,
-	75,
-	220,
-	120,
-}
-local COLOR_COHERENCY_BORDER_OUT = {
-	220,
-	255,
-	40,
-	40,
-}
-local COLOR_AMMO_NOT_IN_USE = UIHudSettings.color_tint_ammo_not_in_use
-local COLOR_AMMO_HIGH = UIHudSettings.color_tint_ammo_high
-local COLOR_AMMO_MEDIUM = UIHudSettings.color_tint_ammo_medium
-local COLOR_AMMO_LOW = UIHudSettings.color_tint_ammo_low
-local COLOR_AMMO_FULL = UIHudSettings.color_tint_ammo_full
-local COLOR_CORRUPTION = {
-	210,
-	130,
-	70,
-	180,
-}
-local COLOR_STIMM_BY_TEMPLATE = {
-	syringe_ability_boost_pocketable = {
-		255,
-		230,
-		192,
-		13,
-	},
-	syringe_broker_pocketable = {
-		255,
-		208,
-		69,
-		255,
-	},
-	syringe_corruption_pocketable = {
-		255,
-		38,
-		205,
-		26,
-	},
-	syringe_power_boost_pocketable = {
-		255,
-		205,
-		51,
-		26,
-	},
-	syringe_speed_boost_pocketable = {
-		255,
-		0,
-		127,
-		218,
-	},
-}
+local scenegraph_definition = Definitions.scenegraph_definition
 
-local scenegraph_definition = {
-	screen = UIWorkspaceSettings.screen,
-	squadhud_root = {
-		horizontal_alignment = "left",
-		parent = "screen",
-		vertical_alignment = "top",
-		size = {
-			PANEL_WIDTH,
-			ROOT_HEIGHT,
-		},
-		position = {
-			20,
-			130,
-			1,
-		},
-	},
-}
-
-for i = 1, MAX_PLAYERS do
-	scenegraph_definition["squadhud_panel_" .. i] = {
-		horizontal_alignment = "left",
-		parent = "squadhud_root",
-		vertical_alignment = "top",
-		size = {
-			PANEL_WIDTH,
-			PANEL_HEIGHT,
-		},
-		position = {
-			0,
-			(i - 1) * (PANEL_HEIGHT + PANEL_GAP),
-			1,
-		},
-	}
-end
-
-local function clone_color(color, alpha)
-	local c = table.clone(color)
-
-	if type(alpha) == "number" then
-		c[1] = alpha
-	end
-
-	return c
-end
-
-local function text_style(font_size, horizontal_alignment, vertical_alignment, color)
-	local style = table.clone(UIFontSettings.hud_body)
-
-	style.font_size = font_size
-	style.font_type = "proxima_nova_bold"
-	style.drop_shadow = true
-	style.text_horizontal_alignment = horizontal_alignment or "left"
-	style.text_vertical_alignment = vertical_alignment or "center"
-	style.text_color = clone_color(color or COLOR_TEXT_DEFAULT)
-
-	return style
-end
-
-local function rect_pass(style_id, color, offset, size)
-	return {
-		pass_type = "rect",
-		style_id = style_id,
-		style = {
-			color = clone_color(color),
-			offset = offset,
-			size = size,
-		},
-		visibility_function = function(content)
-			return content.visible == true
-		end,
-	}
-end
-
-local function text_pass(style_id, value_id, font_size, offset, size, color, horizontal_alignment, font_type, drop_shadow)
-	local style = text_style(font_size, horizontal_alignment or "left", "center", color)
-
-	if font_type then
-		style.font_type = font_type
-	end
-
-	if drop_shadow ~= nil then
-		style.drop_shadow = drop_shadow
-	end
-
-	style.offset = offset
-	style.size = size
-
-	return {
-		pass_type = "text",
-		style_id = style_id,
-		value_id = value_id,
-		value = "",
-		style = style,
-		visibility_function = function(content)
-			return content.visible == true
-		end,
-	}
-end
-
-local function ability_texture_pass(style_id, material, offset, size, color, material_values)
-	return {
-		pass_type = "texture",
-		value = material,
-		style_id = style_id,
-		style = {
-			horizontal_alignment = "left",
-			vertical_alignment = "top",
-			material_values = material_values,
-			size = size,
-			offset = offset,
-			color = clone_color(color),
-		},
-		change_function = function(content, style)
-			if style.material_values then
-				style.material_values.progress = content.ability_progress or 1
-			end
-		end,
-		visibility_function = function(content)
-			return content.visible == true and content.ability_icon_visible == true
-		end,
-	}
-end
-
-local function inventory_texture_pass(style_id, value_id, offset)
-	return {
-		pass_type = "texture",
-		style_id = style_id,
-		value_id = value_id,
-		style = {
-			horizontal_alignment = "left",
-			vertical_alignment = "top",
-			size = {
-				INVENTORY_ICON_SIZE,
-				INVENTORY_ICON_SIZE,
-			},
-			default_offset = {
-				offset[1],
-				offset[2],
-				offset[3],
-			},
-			offset = offset,
-			color = clone_color(COLOR_TEXT_DEFAULT),
-		},
-		visibility_function = function(content)
-			return content.visible == true and content[value_id] ~= nil
-		end,
-	}
-end
-
-local function status_texture_pass(style_id, value_id, offset, size)
-	return {
-		pass_type = "texture",
-		style_id = style_id,
-		value_id = value_id,
-		style = {
-			horizontal_alignment = "left",
-			vertical_alignment = "top",
-			size = size,
-			offset = offset,
-			color = clone_color(COLOR_TEXT_DEFAULT),
-		},
-		visibility_function = function(content)
-			return content.visible == true and content[value_id] ~= nil
-		end,
-	}
-end
-
-local function create_panel_definition(scenegraph_id)
-	local passes = {
-		rect_pass("status_background", COLOR_STATUS_BACKGROUND_DEFAULT, { STATUS_BACKGROUND_X, STATUS_BACKGROUND_Y, 2 }, { STATUS_BACKGROUND_WIDTH, STATUS_BACKGROUND_HEIGHT }),
-		rect_pass("coherency_border", COLOR_COHERENCY_BORDER_IN, { COHERENCY_BORDER_X, COHERENCY_BORDER_Y, 3 }, { 0, COHERENCY_BORDER_HEIGHT }),
-		ability_texture_pass("ability_icon", ABILITY_ICON_MATERIAL, { ABILITY_ICON_X, ABILITY_ICON_Y, 4 }, { ABILITY_ICON_SIZE, ABILITY_ICON_SIZE }, COLOR_ABILITY_ICON, {
-			progress = 1,
-			talent_icon = nil,
-		}),
-		ability_texture_pass("ability_frame", ABILITY_ICON_FRAME_MATERIAL, { ABILITY_ICON_FRAME_X, ABILITY_ICON_FRAME_Y, 5 }, { ABILITY_ICON_FRAME_SIZE, ABILITY_ICON_FRAME_SIZE }, COLOR_ABILITY_FRAME),
-		ability_texture_pass("ability_glow", ABILITY_ICON_GLOW_MATERIAL, { ABILITY_ICON_FRAME_X, ABILITY_ICON_FRAME_Y, 6 }, { ABILITY_ICON_FRAME_SIZE, ABILITY_ICON_FRAME_SIZE }, COLOR_ABILITY_GLOW),
-		text_pass("class_icon", "class_icon", 22, { CLASS_ICON_X, 0, 4 }, { ICON_COLUMN_WIDTH, 22 }, COLOR_TEXT_DEFAULT, "center"),
-		status_texture_pass("class_status_icon", "class_status_icon", { CLASS_STATUS_ICON_X, CLASS_STATUS_ICON_Y, 5 }, { CLASS_STATUS_ICON_SIZE, CLASS_STATUS_ICON_SIZE }),
-		text_pass("player_name", "player_name", 16, { NAME_X, NAME_Y, 4 }, { NAME_WIDTH, NAME_HEIGHT }, COLOR_TEXT_DEFAULT, "left", "proxima_nova_bold_no_render_flags"),
-		text_pass("relation_status", "relation_status", 15, { RELATION_STATUS_X, RELATION_STATUS_Y, 7 }, { RELATION_STATUS_WIDTH, RELATION_STATUS_HEIGHT }, COLOR_TEXT_DEFAULT, "left"),
-		inventory_texture_pass("grenade_icon", "grenade_icon", { GRENADE_ICON_X, INVENTORY_ICON_Y, 4 }),
-		inventory_texture_pass("ammo_icon", "ammo_icon", { AMMO_ICON_X, INVENTORY_ICON_Y, 4 }),
-		inventory_texture_pass("pocketable_icon", "pocketable_icon", { INVENTORY_ICON_X, INVENTORY_ICON_Y, 4 }),
-		inventory_texture_pass("pocketable_small_icon", "pocketable_small_icon", { INVENTORY_SMALL_ICON_X, INVENTORY_ICON_Y, 4 }),
-		rect_pass("toughness_fill", COLOR_TOUGHNESS, { BAR_LEFT, TOUGHNESS_BAR_Y, 4 }, { BAR_WIDTH, BAR_HEIGHT }),
-		rect_pass("revive_fill", COLOR_REVIVE, { BAR_LEFT, TOUGHNESS_BAR_Y, 5 }, { 0, BAR_HEIGHT }),
-		text_pass("inventory_value_text", "inventory_value_text", INVENTORY_VALUE.font_size, { INVENTORY_VALUE.x, INVENTORY_VALUE.y, 8 }, { INVENTORY_VALUE.text_width, INVENTORY_VALUE.height }, COLOR_HEALTH, "left", nil, true),
-	}
-
-	for i = 1, 10 do
-		passes[#passes + 1] = rect_pass("health_fill_" .. i, COLOR_HEALTH, { BAR_LEFT, HEALTH_BAR_Y, 4 }, { 0, BAR_HEIGHT })
-		passes[#passes + 1] = rect_pass("corruption_fill_" .. i, COLOR_CORRUPTION, { BAR_LEFT, HEALTH_BAR_Y, 5 }, { 0, BAR_HEIGHT })
-	end
-
-	return UIWidget.create_definition(passes, scenegraph_id)
-end
-
-local widget_definitions = {}
-
-for i = 1, MAX_PLAYERS do
-	widget_definitions["panel_" .. i] = create_panel_definition("squadhud_panel_" .. i)
-end
+local widget_definitions = Definitions.widget_definitions
 
 local HudElementSquadHud = class("HudElementSquadHud", "HudElementBase")
 
