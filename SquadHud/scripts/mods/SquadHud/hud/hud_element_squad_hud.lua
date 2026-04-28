@@ -317,7 +317,7 @@ local function create_panel_definition(scenegraph_id)
 		inventory_texture_pass("pocketable_small_icon", "pocketable_small_icon", { INVENTORY_SMALL_ICON_X, INVENTORY_ICON_Y, 4 }),
 		rect_pass("toughness_fill", COLOR_TOUGHNESS, { BAR_LEFT, TOUGHNESS_BAR_Y, 4 }, { BAR_WIDTH, BAR_HEIGHT }),
 		rect_pass("revive_fill", COLOR_REVIVE, { BAR_LEFT, TOUGHNESS_BAR_Y, 5 }, { 0, BAR_HEIGHT }),
-		text_pass("inventory_value_text", "inventory_value_text", INVENTORY_VALUE.font_size, { INVENTORY_VALUE.x, INVENTORY_VALUE.y, 8 }, { INVENTORY_VALUE.text_width, INVENTORY_VALUE.height }, COLOR_HEALTH, "left", nil, false),
+		text_pass("inventory_value_text", "inventory_value_text", INVENTORY_VALUE.font_size, { INVENTORY_VALUE.x, INVENTORY_VALUE.y, 8 }, { INVENTORY_VALUE.text_width, INVENTORY_VALUE.height }, COLOR_HEALTH, "left", nil, true),
 	}
 
 	for i = 1, 10 do
@@ -404,11 +404,16 @@ ActiveBar.mode = function(hud, player_key, health_fraction, toughness_fraction, 
 		local health_changed = health ~= state.health
 		local toughness_changed = toughness ~= state.toughness
 		local bonus_changed = bonus ~= (state.bonus or 0)
+		local toughness_value_changed = toughness_changed or bonus_changed
+		local health_is_visible = state.mode == "health" and state.until_t and now <= state.until_t
 
 		if health_changed then
 			state.mode = "health"
 			state.until_t = now + ACTIVE_BAR_VISIBLE_DURATION
-		elseif toughness_changed or bonus_changed then
+			state.pending_mode = toughness_value_changed and "toughness" or state.pending_mode
+		elseif toughness_value_changed and health_is_visible then
+			state.pending_mode = "toughness"
+		elseif toughness_value_changed then
 			state.mode = "toughness"
 			state.until_t = now + ACTIVE_BAR_VISIBLE_DURATION
 		end
@@ -423,8 +428,17 @@ ActiveBar.mode = function(hud, player_key, health_fraction, toughness_fraction, 
 		return state.mode, true
 	end
 
+	if state.pending_mode == "toughness" then
+		state.mode = "toughness"
+		state.until_t = now + ACTIVE_BAR_VISIBLE_DURATION
+		state.pending_mode = nil
+
+		return "toughness", true
+	end
+
 	state.mode = nil
 	state.until_t = nil
+	state.pending_mode = nil
 
 	return "health", false
 end
