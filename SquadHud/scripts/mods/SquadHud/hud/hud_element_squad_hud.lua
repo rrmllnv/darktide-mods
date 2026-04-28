@@ -35,6 +35,10 @@ local NAME_MARQUEE_END_PAUSE = DefinitionSettings.name_marquee_end_pause
 local NAME_MARQUEE_RETURN_DURATION = DefinitionSettings.name_marquee_return_duration
 local NAME_MARQUEE_TOTAL_DURATION = DefinitionSettings.name_marquee_total_duration
 local COHERENCY_BORDER_WIDTH = DefinitionSettings.coherency_border_width
+local DEFAULT_POSITION_X = 50
+local DEFAULT_POSITION_Y = 700
+local DEFAULT_OPACITY = 1
+local DEFAULT_HUD_LAYOUT_SCALE = 0.8
 
 local COLOR_TEXT_DEFAULT = DefinitionSettings.color_text_default
 local COLOR_TOUGHNESS = DefinitionSettings.color_toughness
@@ -71,6 +75,16 @@ local function setting_enabled()
 	local value = mod:get("squadhud_enabled")
 
 	return value == true or value == nil
+end
+
+local function numeric_setting(setting_id, fallback)
+	local value = mod:get(setting_id)
+
+	if type(value) == "number" and value == value then
+		return value
+	end
+
+	return fallback
 end
 
 local function apply_color(target, source)
@@ -425,6 +439,39 @@ local function apply_empty_panel(widget)
 	set_panel_visible(widget, false)
 end
 
+local function apply_layout_settings(self, widgets_by_name)
+	local position_x = numeric_setting("position_x", DEFAULT_POSITION_X)
+	local position_y = numeric_setting("position_y", DEFAULT_POSITION_Y)
+	local opacity = math.clamp(numeric_setting("opacity", DEFAULT_OPACITY), 0.1, 1)
+	local hud_scale = math.clamp(numeric_setting("hud_layout_scale", DEFAULT_HUD_LAYOUT_SCALE), 0.5, 2)
+
+	if self._squadhud_position_x ~= position_x or self._squadhud_position_y ~= position_y then
+		self:set_scenegraph_position("squadhud_root", position_x, position_y, 1)
+		self._squadhud_position_x = position_x
+		self._squadhud_position_y = position_y
+	end
+
+	if not self._squadhud_panel_y_by_index then
+		self._squadhud_panel_y_by_index = {}
+	end
+
+	for i = 1, MAX_PLAYERS do
+		local widget = widgets_by_name["panel_" .. i]
+
+		if widget then
+			widget.alpha_multiplier = opacity
+			widget.scale = hud_scale
+		end
+
+		local panel_y = math.floor((i - 1) * (DefinitionSettings.panel_height + DefinitionSettings.panel_gap) * hud_scale + 0.5)
+
+		if self._squadhud_panel_y_by_index[i] ~= panel_y then
+			self:set_scenegraph_position("squadhud_panel_" .. i, 0, panel_y, 1)
+			self._squadhud_panel_y_by_index[i] = panel_y
+		end
+	end
+end
+
 ActiveBar.layout = function(mode)
 	if mode == "toughness" then
 		return HEALTH_BAR_Y, BAR_INACTIVE_HEIGHT, HEALTH_BAR_Y + BAR_INACTIVE_HEIGHT + BAR_GAP, BAR_ACTIVE_HEIGHT
@@ -770,6 +817,8 @@ HudElementSquadHud.update = function(self, dt, t, ui_renderer, render_settings, 
 	HudElementSquadHud.super.update(self, dt, t, ui_renderer, render_settings, input_service)
 
 	local widgets_by_name = self._widgets_by_name
+
+	apply_layout_settings(self, widgets_by_name)
 
 	if not setting_enabled() then
 		for i = 1, MAX_PLAYERS do
