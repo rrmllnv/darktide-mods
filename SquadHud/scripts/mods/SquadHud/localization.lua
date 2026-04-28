@@ -247,6 +247,18 @@ return {
 		en = "Shows when a teammate is carrying a luggable objective item.",
 		ru = "Показывать, когда тимейт несет переносимый груз цели.",
 	},
+	squadhud_vanilla_hud_group = {
+		en = "\238\128\161 VANILLA HUD",
+		ru = "\238\128\161 ВАНИЛЬНЫЙ HUD",
+	},
+	hide_vanilla_team_panel_local = {
+		en = "Hide local player panel",
+		ru = "Скрыть панель локального игрока",
+	},
+	hide_vanilla_team_panel_teammates = {
+		en = "Hide teammate panels",
+		ru = "Скрыть панели тимейтов",
+	},
 	debug = {
 		en = "Debug",
 		ru = "Debug",

@@ -1,5 +1,7 @@
 local defaults = {
 	debug = false,
+	hide_vanilla_team_panel_local = true,
+	hide_vanilla_team_panel_teammates = true,
 	hud_layout_scale = 0.8,
 	opacity = 1.0,
 	position_x = 50,
