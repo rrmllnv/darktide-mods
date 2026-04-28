@@ -481,18 +481,18 @@ InventoryValue.active_content = function(active_mode, extensions, revive_state, 
 	if revive_state and revive_state.in_progress then
 		local text = string.format("%d%%", math.floor((revive_progress or 0) * 100 + 0.5))
 
-		return text, COLOR_REVIVE, text
+		return text, COLOR_REVIVE, text, "revive"
 	end
 
 	if active_mode == "toughness" then
 		local text, shadow_text = InventoryValue.toughness_content(PlayerDataRuntime.toughness_values(extensions), has_overshield)
 
-		return text, COLOR_TOUGHNESS, shadow_text
+		return text, COLOR_TOUGHNESS, shadow_text, "toughness"
 	end
 
 	local text = InventoryValue.text(PlayerDataRuntime.health_value(extensions))
 
-	return text, is_down and COLOR_HEALTH_CRITICAL or COLOR_HEALTH, text
+	return text, is_down and COLOR_HEALTH_CRITICAL or COLOR_HEALTH, text, "health"
 end
 
 InventoryValue.width = function(ui_renderer, text, style)
@@ -505,9 +505,78 @@ InventoryValue.width = function(ui_renderer, text, style)
 	return math.min(INVENTORY_VALUE.text_width, math.ceil(width) + 2)
 end
 
-InventoryValue.apply_layout = function(style, inventory_icons, ui_renderer, plain_text)
-	style.inventory_value_text.offset[1] = INVENTORY_VALUE.x
+InventoryValue.apply_transition = function(hud, player_key, content, style, text, color, plain_text, mode_key, t)
+	local base_x = INVENTORY_VALUE.x
+	local slide_offset = INVENTORY_VALUE.slide_offset
+	local duration = INVENTORY_VALUE.slide_duration
+
 	style.inventory_value_text.size[1] = INVENTORY_VALUE.text_width
+	style.inventory_value_out_text.size[1] = INVENTORY_VALUE.text_width
+
+	if not player_key or not hud._inventory_value_state_by_player then
+		content.inventory_value_text = text
+		content.inventory_value_out_text = ""
+		style.inventory_value_text.offset[1] = base_x
+		style.inventory_value_out_text.offset[1] = base_x + slide_offset
+		apply_color(style.inventory_value_text.text_color, color)
+		apply_color(style.inventory_value_out_text.text_color, color)
+
+		return plain_text
+	end
+
+	local now = type(t) == "number" and t or 0
+	local state = hud._inventory_value_state_by_player[player_key]
+
+	if not state then
+		state = {
+			color = color,
+			mode_key = mode_key,
+			plain_text = plain_text,
+			text = text,
+		}
+		hud._inventory_value_state_by_player[player_key] = state
+	end
+
+	if state.mode_key ~= mode_key then
+		state.out_color = state.color or color
+		state.out_text = state.text or ""
+		state.start_t = now
+		state.mode_key = mode_key
+		state.text = text
+		state.color = color
+		state.plain_text = plain_text
+	else
+		state.text = text
+		state.color = color
+		state.plain_text = plain_text
+	end
+
+	local progress = state.start_t and math.clamp((now - state.start_t) / duration, 0, 1) or 1
+	local eased_progress = smoothstep(progress)
+	local incoming_x = base_x + slide_offset * (1 - eased_progress)
+	local outgoing_x = base_x + slide_offset * eased_progress
+
+	content.inventory_value_text = state.text
+	content.inventory_value_out_text = progress < 1 and state.out_text or ""
+	style.inventory_value_text.offset[1] = incoming_x
+	style.inventory_value_out_text.offset[1] = outgoing_x
+	apply_color(style.inventory_value_text.text_color, state.color or color)
+	apply_color(style.inventory_value_out_text.text_color, state.out_color or color)
+
+	if progress >= 1 then
+		state.start_t = nil
+		state.out_text = nil
+		state.out_color = nil
+		style.inventory_value_text.offset[1] = base_x
+		style.inventory_value_out_text.offset[1] = base_x + slide_offset
+	end
+
+	return state.plain_text or plain_text
+end
+
+InventoryValue.apply_layout = function(style, inventory_icons, ui_renderer, plain_text)
+	style.inventory_value_text.size[1] = INVENTORY_VALUE.text_width
+	style.inventory_value_out_text.size[1] = INVENTORY_VALUE.text_width
 
 	if inventory_icons and not inventory_icons.pocketable_icon and inventory_icons.pocketable_small_icon then
 		style.pocketable_small_icon.offset[1] = INVENTORY_ICON_X
@@ -543,7 +612,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local toughness_values = PlayerDataRuntime.toughness_values(extensions)
 	local active_bar_mode = ActiveBar.mode(self, player_key, health_fraction, tough_fraction, toughness_values.bonus, has_overshield, revive_state, t)
 	local health_bar_y, health_bar_height, toughness_bar_y, toughness_bar_height = ActiveBar.layout(active_bar_mode)
-	local inventory_value, inventory_value_color, inventory_value_plain = InventoryValue.active_content(active_bar_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
+	local inventory_value, inventory_value_color, inventory_value_plain, inventory_value_mode = InventoryValue.active_content(active_bar_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
 	local rescue_timer_status = PlayerDataRuntime.rescue_timer_status(player, status)
 	local operational_status = StatusRuntime.resolve(player, extensions, status, health_fraction, revive_state, rescue_timer_status)
 	local display_name, is_showing_status = StatusRuntime.display_name(self._name_status_flash_by_player, player_key, base_name, operational_status, t)
@@ -569,10 +638,10 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	content.ammo_icon = inventory_icons.ammo_icon
 	content.pocketable_icon = inventory_icons.pocketable_icon
 	content.pocketable_small_icon = inventory_icons.pocketable_small_icon
-	content.inventory_value_text = inventory_value
 
 	apply_ability_state(style, ability_state)
 	InventoryValue.apply_layout(style, inventory_icons, ui_renderer, inventory_value_plain)
+	InventoryValue.apply_transition(self, player_key, content, style, inventory_value, inventory_value_color, inventory_value_plain, inventory_value_mode, t)
 
 	apply_color(style.player_name.text_color, display_name_color)
 	apply_color(style.relation_status.text_color, COLOR_TEXT_DEFAULT)
@@ -581,7 +650,6 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.status_background.color, status_background_color)
 	apply_color(style.coherency_border.color, in_coherency and COLOR_COHERENCY_BORDER_IN or COLOR_COHERENCY_BORDER_OUT)
 	apply_color(style.toughness_fill.color, revive_state.in_progress and COLOR_TOUGHNESS or has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS)
-	apply_color(style.inventory_value_text.text_color, inventory_value_color)
 	apply_color(style.grenade_icon.color, ammo_color_from_status(inventory_icons.grenade_status, true))
 	apply_color(style.ammo_icon.color, ammo_color_from_status(inventory_icons.ammo_status, inventory_icons.uses_ammo))
 	apply_color(style.pocketable_icon.color, COLOR_TEXT_DEFAULT)
@@ -607,6 +675,7 @@ HudElementSquadHud.init = function(self, parent, draw_layer, start_scale)
 
 	self._players = {}
 	self._active_bar_state_by_player = {}
+	self._inventory_value_state_by_player = {}
 	self._name_marquee_by_player = {}
 	self._name_status_flash_by_player = {}
 	self._revive_progress_by_player = {}
