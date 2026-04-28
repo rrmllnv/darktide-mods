@@ -5,6 +5,7 @@ local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")
 local UIWorkspaceSettings = require("scripts/settings/ui/ui_workspace_settings")
+local TextUtilities = require("scripts/utilities/ui/text")
 
 local AbilityRuntime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/ability_runtime")
 local InventoryRuntime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/inventory_runtime")
@@ -50,15 +51,25 @@ local ABILITY_ICON_FRAME_X = ABILITY_ICON_X - ABILITY_ICON_FRAME_PADDING
 local HEALTH_SEGMENT_GAP = 3
 local DEFAULT_REVIVE_DURATION = 3
 local ROOT_HEIGHT = PANEL_HEIGHT * MAX_PLAYERS + PANEL_GAP * (MAX_PLAYERS - 1)
-local RELATION_STATUS_X = INVENTORY_BLOCK_X
+local NAME_X = TEXT_COLUMN_X
+local NAME_Y = 0
+local NAME_HEIGHT = 22
+local NAME_RIGHT_X = INVENTORY_BLOCK_X - INVENTORY_ICON_GAP
+local RELATION_STATUS_LEFT_PADDING = 6
 local RELATION_STATUS_Y = 0
-local RELATION_STATUS_WIDTH = INVENTORY_BLOCK_WIDTH
+local RELATION_STATUS_X = NAME_RIGHT_X + RELATION_STATUS_LEFT_PADDING
+local RELATION_STATUS_WIDTH = PANEL_WIDTH - RELATION_STATUS_X
 local RELATION_STATUS_HEIGHT = 20
-local NAME_WIDTH = INVENTORY_BLOCK_X - INVENTORY_ICON_GAP - TEXT_COLUMN_X
+local NAME_WIDTH = NAME_RIGHT_X - NAME_X
 local STATUS_BACKGROUND_X = CLASS_ICON_X
 local STATUS_BACKGROUND_Y = 1
-local STATUS_BACKGROUND_WIDTH = INVENTORY_BLOCK_X - INVENTORY_ICON_GAP - STATUS_BACKGROUND_X
+local STATUS_BACKGROUND_WIDTH = NAME_RIGHT_X - STATUS_BACKGROUND_X
 local STATUS_BACKGROUND_HEIGHT = 20
+local NAME_MARQUEE_START_PAUSE = 0.6
+local NAME_MARQUEE_MOVE_DURATION = 1.6
+local NAME_MARQUEE_END_PAUSE = 0.9
+local NAME_MARQUEE_RETURN_DURATION = 1.35
+local NAME_MARQUEE_TOTAL_DURATION = NAME_MARQUEE_START_PAUSE + NAME_MARQUEE_MOVE_DURATION + NAME_MARQUEE_END_PAUSE + NAME_MARQUEE_RETURN_DURATION
 local COHERENCY_BORDER_WIDTH = 3
 local COHERENCY_BORDER_X = STATUS_BACKGROUND_X + STATUS_BACKGROUND_WIDTH - COHERENCY_BORDER_WIDTH
 local COHERENCY_BORDER_Y = STATUS_BACKGROUND_Y
@@ -197,8 +208,12 @@ local function rect_pass(style_id, color, offset, size)
 	}
 end
 
-local function text_pass(style_id, value_id, font_size, offset, size, color, horizontal_alignment)
+local function text_pass(style_id, value_id, font_size, offset, size, color, horizontal_alignment, font_type)
 	local style = text_style(font_size, horizontal_alignment or "left", "center", color)
+
+	if font_type then
+		style.font_type = font_type
+	end
 
 	style.offset = offset
 	style.size = size
@@ -276,8 +291,8 @@ local function create_panel_definition(scenegraph_id)
 		ability_texture_pass("ability_frame", ABILITY_ICON_FRAME_MATERIAL, { ABILITY_ICON_FRAME_X, ABILITY_ICON_FRAME_Y, 5 }, { ABILITY_ICON_FRAME_SIZE, ABILITY_ICON_FRAME_SIZE }, COLOR_ABILITY_FRAME),
 		ability_texture_pass("ability_glow", ABILITY_ICON_GLOW_MATERIAL, { ABILITY_ICON_FRAME_X, ABILITY_ICON_FRAME_Y, 6 }, { ABILITY_ICON_FRAME_SIZE, ABILITY_ICON_FRAME_SIZE }, COLOR_ABILITY_GLOW),
 		text_pass("class_icon", "class_icon", 22, { CLASS_ICON_X, 0, 4 }, { ICON_COLUMN_WIDTH, 22 }, COLOR_TEXT_DEFAULT, "center"),
-		text_pass("player_name", "player_name", 16, { TEXT_COLUMN_X, 0, 4 }, { NAME_WIDTH, 22 }, COLOR_TEXT_DEFAULT, "left"),
-		text_pass("relation_status", "relation_status", 15, { RELATION_STATUS_X, RELATION_STATUS_Y, 4 }, { RELATION_STATUS_WIDTH, RELATION_STATUS_HEIGHT }, COLOR_TEXT_DEFAULT, "center"),
+		text_pass("player_name", "player_name", 16, { NAME_X, NAME_Y, 4 }, { NAME_WIDTH, NAME_HEIGHT }, COLOR_TEXT_DEFAULT, "left", "proxima_nova_bold_no_render_flags"),
+		text_pass("relation_status", "relation_status", 15, { RELATION_STATUS_X, RELATION_STATUS_Y, 7 }, { RELATION_STATUS_WIDTH, RELATION_STATUS_HEIGHT }, COLOR_TEXT_DEFAULT, "left"),
 		inventory_texture_pass("grenade_icon", "grenade_icon", { GRENADE_ICON_X, INVENTORY_ICON_Y, 4 }),
 		inventory_texture_pass("ammo_icon", "ammo_icon", { AMMO_ICON_X, INVENTORY_ICON_Y, 4 }),
 		inventory_texture_pass("pocketable_icon", "pocketable_icon", { INVENTORY_ICON_X, INVENTORY_ICON_Y, 4 }),
@@ -319,6 +334,80 @@ local function set_rect_width(style, width)
 	if style and style.size then
 		style.size[1] = math.max(0, width)
 	end
+end
+
+local function smoothstep(progress)
+	progress = math.clamp(progress, 0, 1)
+
+	return progress * progress * (3 - 2 * progress)
+end
+
+local function name_marquee_fraction(elapsed)
+	local cycle_t = elapsed % NAME_MARQUEE_TOTAL_DURATION
+
+	if cycle_t < NAME_MARQUEE_START_PAUSE then
+		return 0
+	end
+
+	cycle_t = cycle_t - NAME_MARQUEE_START_PAUSE
+
+	if cycle_t < NAME_MARQUEE_MOVE_DURATION then
+		return smoothstep(cycle_t / NAME_MARQUEE_MOVE_DURATION)
+	end
+
+	cycle_t = cycle_t - NAME_MARQUEE_MOVE_DURATION
+
+	if cycle_t < NAME_MARQUEE_END_PAUSE then
+		return 1
+	end
+
+	cycle_t = cycle_t - NAME_MARQUEE_END_PAUSE
+
+	return 1 - smoothstep(cycle_t / NAME_MARQUEE_RETURN_DURATION)
+end
+
+local function text_fits_width(ui_renderer, text, style, max_width)
+	local width = TextUtilities.text_width(ui_renderer, text, style, nil, true) or 0
+
+	return width <= max_width
+end
+
+local function rightmost_visible_start_index(ui_renderer, text, style, max_width)
+	local text_length = Utf8.string_length(text)
+	local start_index = text_length
+
+	while start_index > 1 do
+		local segment = Utf8.sub_string(text, start_index - 1)
+
+		if not text_fits_width(ui_renderer, segment, style, max_width) then
+			break
+		end
+
+		start_index = start_index - 1
+	end
+
+	return start_index
+end
+
+local function visible_name_segment(ui_renderer, text, style, max_width, start_index)
+	local text_length = Utf8.string_length(text)
+	local low = start_index
+	local high = text_length
+	local best_end_index = start_index
+
+	while low <= high do
+		local middle = math.floor((low + high) * 0.5)
+		local segment = Utf8.sub_string(text, start_index, middle)
+
+		if text_fits_width(ui_renderer, segment, style, max_width) then
+			best_end_index = middle
+			low = middle + 1
+		else
+			high = middle - 1
+		end
+	end
+
+	return Utf8.sub_string(text, start_index, best_end_index)
 end
 
 local function apply_ability_state(style, ability_state)
@@ -449,7 +538,46 @@ local function revive_progress_for_player(self, player_key, revive_state, t)
 	return math.clamp((now - state.start_t) / duration, 0, 1)
 end
 
-local function apply_player_panel(self, widget, local_player, player, extensions, t)
+local function apply_name_marquee(self, widget, player_key, display_name, ui_renderer, t)
+	local content = widget.content
+	local name_style = widget.style.player_name
+
+	content.player_name = display_name
+
+	if not player_key or not ui_renderer or display_name == "" then
+		if player_key then
+			self._name_marquee_by_player[player_key] = nil
+		end
+
+		return
+	end
+
+	if text_fits_width(ui_renderer, display_name, name_style, NAME_WIDTH) then
+		self._name_marquee_by_player[player_key] = nil
+
+		return
+	end
+
+	local now = type(t) == "number" and t or 0
+	local state = self._name_marquee_by_player[player_key]
+
+	if not state or state.text ~= display_name then
+		state = {
+			rightmost_start_index = rightmost_visible_start_index(ui_renderer, display_name, name_style, NAME_WIDTH),
+			start_t = now,
+			text = display_name,
+		}
+		self._name_marquee_by_player[player_key] = state
+	end
+
+	local fraction = name_marquee_fraction(math.max(0, now - state.start_t))
+	local start_index = 1 + math.floor((state.rightmost_start_index - 1) * fraction + 0.5)
+
+	content.player_name = visible_name_segment(ui_renderer, display_name, name_style, NAME_WIDTH, start_index)
+	widget.dirty = true
+end
+
+local function apply_player_panel(self, widget, local_player, player, extensions, t, ui_renderer)
 	local content = widget.content
 	local style = widget.style
 	local status = PlayerDataRuntime.status_from_extensions(extensions)
@@ -461,7 +589,13 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local player_unit = PlayerDataRuntime.player_unit(player)
 	local ability_state = AbilityRuntime.combat_ability_state(player_unit)
 	local inventory_icons = InventoryRuntime.icons(player, extensions, status)
+	local is_local_player = local_player == player
 	local base_name = PlayerDataRuntime.player_name(player)
+
+	if mod.squadhud_debug_player_name then
+		base_name = mod.squadhud_debug_player_name(base_name, is_local_player)
+	end
+
 	local base_name_color = status == "dead" and COLOR_TEXT_DEFAULT or is_bad_status and COLOR_TEXT_MUTED or COLOR_TEXT_DEFAULT
 	local player_key = PlayerDataRuntime.player_unique_id(player)
 	local revive_state = PlayerDataRuntime.revive_state(extensions)
@@ -471,12 +605,17 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local display_name, is_showing_status = StatusRuntime.display_name(self._name_status_flash_by_player, player_key, base_name, operational_status, t)
 	local display_name_color = player_name_color(base_name_color, operational_status, is_showing_status)
 	local relation_status = is_bad_status and "" or PlayerDataRuntime.player_distance_text(local_player, player, extensions)
-	local is_teammate = local_player ~= player
+
+	if mod.squadhud_debug_relation_status then
+		relation_status = mod.squadhud_debug_relation_status(relation_status, is_local_player)
+	end
+
+	local is_teammate = not is_local_player
 	local in_coherency = is_teammate and PlayerDataRuntime.in_coherency_with_local_player(local_player, extensions)
 	local show_coherency_border = in_coherency or relation_status ~= ""
+	local status_background_color = operational_status and operational_status.is_critical and COLOR_STATUS_BACKGROUND_CRITICAL or COLOR_STATUS_BACKGROUND_DEFAULT
 
 	content.class_icon = PlayerDataRuntime.archetype_icon(player)
-	content.player_name = display_name
 	content.relation_status = relation_status
 	content.ability_icon_visible = ability_state ~= nil
 	content.ability_progress = ability_state and ability_state.progress or 1
@@ -505,7 +644,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.player_name.text_color, display_name_color)
 	apply_color(style.relation_status.text_color, COLOR_TEXT_DEFAULT)
 	apply_color(style.class_icon.text_color, slot_color)
-	apply_color(style.status_background.color, operational_status and operational_status.is_critical and COLOR_STATUS_BACKGROUND_CRITICAL or COLOR_STATUS_BACKGROUND_DEFAULT)
+	apply_color(style.status_background.color, status_background_color)
 	apply_color(style.coherency_border.color, in_coherency and COLOR_COHERENCY_BORDER_IN or COLOR_COHERENCY_BORDER_OUT)
 	apply_color(style.grenade_icon.color, ammo_color_from_status(inventory_icons.grenade_status, true))
 	apply_color(style.ammo_icon.color, ammo_color_from_status(inventory_icons.ammo_status, inventory_icons.uses_ammo))
@@ -514,6 +653,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	set_rect_width(style.toughness_fill, revive_state.in_progress and 0 or BAR_WIDTH * tough_fraction)
 	set_rect_width(style.revive_fill, BAR_WIDTH * revive_progress)
 	apply_health_segments(widget, health_fraction, health_max_fraction, max_wounds, is_down)
+	apply_name_marquee(self, widget, player_key, display_name, ui_renderer, t)
 	set_panel_visible(widget, true)
 end
 
@@ -524,6 +664,7 @@ HudElementSquadHud.init = function(self, parent, draw_layer, start_scale)
 	})
 
 	self._players = {}
+	self._name_marquee_by_player = {}
 	self._name_status_flash_by_player = {}
 	self._revive_progress_by_player = {}
 end
@@ -545,12 +686,16 @@ HudElementSquadHud.update = function(self, dt, t, ui_renderer, render_settings, 
 	local composition_name = PlayerDataRuntime.gameplay_hud_composition_name()
 	local players = PlayerDataRuntime.sorted_squad_players(composition_name, self._players, local_player)
 
+	if mod.squadhud_debug_update then
+		mod.squadhud_debug_update()
+	end
+
 	for i = 1, MAX_PLAYERS do
 		local widget = widgets_by_name["panel_" .. i]
 		local player = players[i]
 
 		if player then
-			apply_player_panel(self, widget, local_player, player, PlayerDataRuntime.extensions_for_player(self._parent, player), t)
+			apply_player_panel(self, widget, local_player, player, PlayerDataRuntime.extensions_for_player(self._parent, player), t, ui_renderer)
 		else
 			apply_empty_panel(widget)
 		end

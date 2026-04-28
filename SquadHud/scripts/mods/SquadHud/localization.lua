@@ -11,6 +11,10 @@ return {
 		en = "\238\128\178 SQUAD HUD",
 		ru = "\238\128\178 SQUAD HUD",
 	},
+	squadhud_system_group = {
+		en = "\238\128\169 SYSTEM SETTINGS",
+		ru = "\238\128\169 СИСТЕМНЫЕ НАСТРОЙКИ",
+	},
 	squadhud_enabled = {
 		en = "Enable Squad HUD",
 		ru = "Включить Squad HUD",
@@ -18,6 +22,14 @@ return {
 	squadhud_enabled_description = {
 		en = "Shows the custom four-slot squad panel.",
 		ru = "Показывать кастомную панель отряда на четыре слота.",
+	},
+	debug = {
+		en = "Debug",
+		ru = "Debug",
+	},
+	debug_description = {
+		en = "Enables internal Squad HUD debug hotkeys. Numpad 1 toggles a long local player name for text animation and mask testing.",
+		ru = "Включает внутренние debug-горячие клавиши Squad HUD. Numpad 1 переключает длинный ник локального игрока для проверки анимации текста и маски.",
 	},
 	squadhud_status_down = {
 		en = "UNCONSCIOUS",
