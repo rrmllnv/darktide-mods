@@ -26,6 +26,9 @@ local ABILITY_ICON_GLOW_MATERIAL = "content/ui/materials/effects/hud/combat_tale
 local ICON_COLUMN_WIDTH = 28
 local INNER_PADDING = 8
 local CLASS_ICON_X = ABILITY_BLOCK_WIDTH + INNER_PADDING
+local CLASS_STATUS_ICON_SIZE = 20
+local CLASS_STATUS_ICON_X = CLASS_ICON_X + math.floor((ICON_COLUMN_WIDTH - CLASS_STATUS_ICON_SIZE) * 0.5)
+local CLASS_STATUS_ICON_Y = 1
 local TEXT_COLUMN_X = CLASS_ICON_X + ICON_COLUMN_WIDTH + 2
 local BAR_LEFT = CLASS_ICON_X
 local HEALTH_BAR_Y = 24
@@ -298,6 +301,24 @@ local function inventory_texture_pass(style_id, value_id, offset)
 	}
 end
 
+local function status_texture_pass(style_id, value_id, offset, size)
+	return {
+		pass_type = "texture",
+		style_id = style_id,
+		value_id = value_id,
+		style = {
+			horizontal_alignment = "left",
+			vertical_alignment = "top",
+			size = size,
+			offset = offset,
+			color = clone_color(COLOR_TEXT_DEFAULT),
+		},
+		visibility_function = function(content)
+			return content.visible == true and content[value_id] ~= nil
+		end,
+	}
+end
+
 local function create_panel_definition(scenegraph_id)
 	local passes = {
 		rect_pass("status_background", COLOR_STATUS_BACKGROUND_DEFAULT, { STATUS_BACKGROUND_X, STATUS_BACKGROUND_Y, 2 }, { STATUS_BACKGROUND_WIDTH, STATUS_BACKGROUND_HEIGHT }),
@@ -309,6 +330,7 @@ local function create_panel_definition(scenegraph_id)
 		ability_texture_pass("ability_frame", ABILITY_ICON_FRAME_MATERIAL, { ABILITY_ICON_FRAME_X, ABILITY_ICON_FRAME_Y, 5 }, { ABILITY_ICON_FRAME_SIZE, ABILITY_ICON_FRAME_SIZE }, COLOR_ABILITY_FRAME),
 		ability_texture_pass("ability_glow", ABILITY_ICON_GLOW_MATERIAL, { ABILITY_ICON_FRAME_X, ABILITY_ICON_FRAME_Y, 6 }, { ABILITY_ICON_FRAME_SIZE, ABILITY_ICON_FRAME_SIZE }, COLOR_ABILITY_GLOW),
 		text_pass("class_icon", "class_icon", 22, { CLASS_ICON_X, 0, 4 }, { ICON_COLUMN_WIDTH, 22 }, COLOR_TEXT_DEFAULT, "center"),
+		status_texture_pass("class_status_icon", "class_status_icon", { CLASS_STATUS_ICON_X, CLASS_STATUS_ICON_Y, 5 }, { CLASS_STATUS_ICON_SIZE, CLASS_STATUS_ICON_SIZE }),
 		text_pass("player_name", "player_name", 16, { NAME_X, NAME_Y, 4 }, { NAME_WIDTH, NAME_HEIGHT }, COLOR_TEXT_DEFAULT, "left", "proxima_nova_bold_no_render_flags"),
 		text_pass("relation_status", "relation_status", 15, { RELATION_STATUS_X, RELATION_STATUS_Y, 7 }, { RELATION_STATUS_WIDTH, RELATION_STATUS_HEIGHT }, COLOR_TEXT_DEFAULT, "left"),
 		inventory_texture_pass("grenade_icon", "grenade_icon", { GRENADE_ICON_X, INVENTORY_ICON_Y, 4 }),
@@ -527,6 +549,35 @@ local function visible_name_segment(ui_renderer, text, style, max_width, start_i
 	end
 
 	return Utf8.sub_string(text, start_index, best_end_index)
+end
+
+local function player_status_icon_key(status)
+	if status == "down" then
+		return "knocked_down"
+	end
+
+	if status == "disabled" then
+		return "grabbed"
+	end
+
+	if status ~= "alive" then
+		return status
+	end
+
+	return nil
+end
+
+local function player_status_icon(status)
+	local icon_key = player_status_icon_key(status)
+	local icons = UIHudSettings.player_status_icons
+
+	return icon_key and icons and icons[icon_key] or nil, icon_key
+end
+
+local function player_status_icon_color(icon_key)
+	local colors = UIHudSettings.player_status_colors
+
+	return icon_key and colors and colors[icon_key] or COLOR_TEXT_DEFAULT
 end
 
 local function apply_ability_state(style, ability_state)
@@ -786,7 +837,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local tough_fraction = PlayerDataRuntime.toughness_fraction(extensions)
 	local has_overshield = PlayerDataRuntime.has_overshield(extensions)
 	local is_down = status == "down"
-	local is_bad_status = status == "dead" or status == "down" or status == "disabled"
+	local is_bad_status = status ~= "alive" and status ~= "luggable"
 	local player_unit = PlayerDataRuntime.player_unit(player)
 	local ability_state = AbilityRuntime.combat_ability_state(player_unit)
 	local inventory_icons = InventoryRuntime.icons(player, extensions, status)
@@ -810,6 +861,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local display_name, is_showing_status = StatusRuntime.display_name(self._name_status_flash_by_player, player_key, base_name, operational_status, t)
 	local display_name_color = player_name_color(base_name_color, operational_status, is_showing_status)
 	local relation_status = is_bad_status and "" or PlayerDataRuntime.player_distance_text(local_player, player, extensions)
+	local class_status_icon, class_status_icon_key = player_status_icon(status)
 
 	if mod.squadhud_debug_relation_status then
 		relation_status = mod.squadhud_debug_relation_status(relation_status, is_local_player)
@@ -820,7 +872,8 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local show_coherency_border = in_coherency or relation_status ~= ""
 	local status_background_color = operational_status and operational_status.is_critical and COLOR_STATUS_BACKGROUND_CRITICAL or COLOR_STATUS_BACKGROUND_DEFAULT
 
-	content.class_icon = PlayerDataRuntime.archetype_icon(player)
+	content.class_icon = class_status_icon and "" or PlayerDataRuntime.archetype_icon(player)
+	content.class_status_icon = class_status_icon
 	content.relation_status = relation_status
 	content.ability_icon_visible = ability_state ~= nil
 	content.ability_progress = ability_state and ability_state.progress or 1
@@ -836,6 +889,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.player_name.text_color, display_name_color)
 	apply_color(style.relation_status.text_color, COLOR_TEXT_DEFAULT)
 	apply_color(style.class_icon.text_color, slot_color)
+	apply_color(style.class_status_icon.color, player_status_icon_color(class_status_icon_key))
 	apply_color(style.status_background.color, status_background_color)
 	apply_color(style.coherency_border.color, in_coherency and COLOR_COHERENCY_BORDER_IN or COLOR_COHERENCY_BORDER_OUT)
 	apply_color(style.toughness_fill.color, revive_state.in_progress and COLOR_TOUGHNESS or has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS)

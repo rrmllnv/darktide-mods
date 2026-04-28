@@ -272,7 +272,7 @@ local function weapon_ammo_status(player, unit_data_extension, visual_loadout_ex
 end
 
 function M.icons(player, extensions, status)
-	if status == "dead" then
+	if status == "dead" or status == "hogtied" then
 		return {
 			ammo_icon = nil,
 			grenade_icon = nil,

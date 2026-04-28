@@ -44,12 +44,48 @@ return {
 		ru = "МОЖНО СПАСТИ",
 	},
 	squadhud_status_rescue_available_in = {
-		en = "CAN BE RESCUED IN",
-		ru = "МОЖНО СПАСТИ ЧЕРЕЗ",
+		en = "CAN BE RESCUED:",
+		ru = "МОЖНО СПАСТИ:",
 	},
 	squadhud_status_disabled = {
 		en = "DISABLED",
 		ru = "СХВАЧЕН",
+	},
+	squadhud_status_pounced = {
+		en = "POUNCED BY HOUND",
+		ru = "ПОЙМАН ПСОМ",
+	},
+	squadhud_status_netted = {
+		en = "NETTED",
+		ru = "ПОЙМАН СЕТЬЮ",
+	},
+	squadhud_status_warp_grabbed = {
+		en = "WARP GRABBED",
+		ru = "СХВАЧЕН ВАРПОМ",
+	},
+	squadhud_status_vortex_grabbed = {
+		en = "IN VORTEX",
+		ru = "В ВИХРЕ",
+	},
+	squadhud_status_mutant_charged = {
+		en = "GRABBED BY MUTANT",
+		ru = "МУТАНТ СХВАТИЛ",
+	},
+	squadhud_status_consumed = {
+		en = "CONSUMED",
+		ru = "ПОГЛОЩЁН",
+	},
+	squadhud_status_grabbed = {
+		en = "GRABBED",
+		ru = "СХВАЧЕН",
+	},
+	squadhud_status_ledge_hanging = {
+		en = "CAN BE RESCUED",
+		ru = "МОЖНО СПАСТИ",
+	},
+	squadhud_status_luggable = {
+		en = "CARRYING OBJECTIVE",
+		ru = "НЕСЁТ ГРУЗ",
 	},
 	squadhud_status_critical_health = {
 		en = "CRITICALLY WOUNDED",

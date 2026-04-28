@@ -2,6 +2,7 @@ local mod = get_mod("SquadHud")
 
 local PlayerCompositions = require("scripts/utilities/players/player_compositions")
 local PlayerUnitStatus = require("scripts/utilities/attack/player_unit_status")
+local PlayerUnitVisualLoadout = require("scripts/extension_systems/visual_loadout/utilities/player_unit_visual_loadout")
 local UISettings = require("scripts/settings/ui/ui_settings")
 
 local M = {}
@@ -12,6 +13,7 @@ local COLOR_FALLBACK_SLOT = {
 	160,
 	160,
 }
+local LUGGABLE_SLOT_NAME = "slot_luggable"
 
 function M.player_slot(player)
 	if type(player) == "table" and type(player.slot) == "function" then
@@ -200,6 +202,32 @@ function M.extensions_for_player(parent, player)
 	}
 end
 
+local function read_component(unit_data_extension, component_name)
+	if not unit_data_extension or type(unit_data_extension.read_component) ~= "function" then
+		return nil
+	end
+
+	local ok, component = pcall(function()
+		return unit_data_extension:read_component(component_name)
+	end)
+
+	return ok and component or nil
+end
+
+local function is_luggable_wielded(unit_data_extension, visual_loadout_extension)
+	local inventory_component = read_component(unit_data_extension, "inventory")
+
+	if not inventory_component or not visual_loadout_extension then
+		return false
+	end
+
+	local ok, slot_equipped = pcall(function()
+		return PlayerUnitVisualLoadout.slot_equipped(inventory_component, visual_loadout_extension, LUGGABLE_SLOT_NAME)
+	end)
+
+	return ok and slot_equipped and inventory_component.wielded_slot == LUGGABLE_SLOT_NAME
+end
+
 function M.status_from_extensions(extensions)
 	local unit_data_extension = extensions and extensions.unit_data
 	local health_extension = extensions and extensions.health
@@ -212,18 +240,50 @@ function M.status_from_extensions(extensions)
 		return "alive"
 	end
 
-	local character_state_component = unit_data_extension:read_component("character_state")
-	local disabled_character_state_component = unit_data_extension:read_component("disabled_character_state")
+	local character_state_component = read_component(unit_data_extension, "character_state")
+	local disabled_character_state_component = read_component(unit_data_extension, "disabled_character_state")
 
 	if character_state_component and PlayerUnitStatus.is_hogtied(character_state_component) then
-		return "dead"
+		return "hogtied"
 	end
 
 	if character_state_component and PlayerUnitStatus.is_knocked_down(character_state_component) then
 		return "down"
 	end
 
+	if character_state_component and PlayerUnitStatus.is_ledge_hanging(character_state_component) then
+		return "ledge_hanging"
+	end
+
 	if disabled_character_state_component and disabled_character_state_component.is_disabled then
+		if PlayerUnitStatus.is_pounced(disabled_character_state_component) then
+			return "pounced"
+		end
+
+		if PlayerUnitStatus.is_netted(disabled_character_state_component) then
+			return "netted"
+		end
+
+		if PlayerUnitStatus.is_warp_grabbed(disabled_character_state_component) then
+			return "warp_grabbed"
+		end
+
+		if PlayerUnitStatus.is_vortex_grabbed(disabled_character_state_component) then
+			return "vortex_grabbed"
+		end
+
+		if PlayerUnitStatus.is_mutant_charged(disabled_character_state_component) then
+			return "mutant_charged"
+		end
+
+		if PlayerUnitStatus.is_consumed(disabled_character_state_component) then
+			return "consumed"
+		end
+
+		if PlayerUnitStatus.is_grabbed(disabled_character_state_component) then
+			return "grabbed"
+		end
+
 		return "disabled"
 	end
 
@@ -231,6 +291,10 @@ function M.status_from_extensions(extensions)
 
 	if disabled then
 		return "disabled"
+	end
+
+	if is_luggable_wielded(unit_data_extension, extensions.visual_loadout) then
+		return "luggable"
 	end
 
 	return "alive"

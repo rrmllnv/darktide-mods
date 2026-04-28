@@ -4,6 +4,17 @@ local M = {}
 
 local FLASH_INTERVAL = 1
 local CRITICAL_HEALTH_THRESHOLD = 0.1
+local STATUS_TEXT_KEYS = {
+	consumed = "squadhud_status_consumed",
+	disabled = "squadhud_status_disabled",
+	grabbed = "squadhud_status_grabbed",
+	ledge_hanging = "squadhud_status_ledge_hanging",
+	mutant_charged = "squadhud_status_mutant_charged",
+	netted = "squadhud_status_netted",
+	pounced = "squadhud_status_pounced",
+	vortex_grabbed = "squadhud_status_vortex_grabbed",
+	warp_grabbed = "squadhud_status_warp_grabbed",
+}
 
 function M.resolve(player, extensions, status, health_fraction, revive_state, rescue_timer_status)
 	if revive_state and revive_state.in_progress then
@@ -45,6 +56,16 @@ function M.resolve(player, extensions, status, health_fraction, revive_state, re
 		}
 	end
 
+	if status == "hogtied" then
+		return {
+			alternate_with_name = true,
+			id = "rescue_available",
+			is_critical = false,
+			priority = 350,
+			text_key = "squadhud_status_rescue_available",
+		}
+	end
+
 	if status == "down" then
 		return {
 			alternate_with_name = true,
@@ -55,8 +76,16 @@ function M.resolve(player, extensions, status, health_fraction, revive_state, re
 		}
 	end
 
-	if status == "disabled" then
-		return nil
+	local status_text_key = STATUS_TEXT_KEYS[status]
+
+	if status_text_key then
+		return {
+			alternate_with_name = true,
+			id = status,
+			is_critical = true,
+			priority = 300,
+			text_key = status_text_key,
+		}
 	end
 
 	if player and extensions and health_fraction < CRITICAL_HEALTH_THRESHOLD then
@@ -66,6 +95,16 @@ function M.resolve(player, extensions, status, health_fraction, revive_state, re
 			is_critical = true,
 			priority = 100,
 			text_key = "squadhud_status_critical_health",
+		}
+	end
+
+	if status == "luggable" then
+		return {
+			alternate_with_name = true,
+			id = "luggable",
+			is_critical = false,
+			priority = 50,
+			text_key = "squadhud_status_luggable",
 		}
 	end
 
