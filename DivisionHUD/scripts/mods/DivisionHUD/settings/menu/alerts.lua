@@ -60,6 +60,21 @@ return {
 			title = "alerts_show_duration_bar",
 			default_value = d("alerts_show_duration_bar", true),
 		},
+		{
+			setting_id = "alerts_group_threats",
+			type = "group",
+			title = "alerts_group_threats",
+			tooltip_text = "alerts_group_threats_description",
+			sub_widgets = {
+				{
+					setting_id = "threat_advisor_show_monsters",
+					type = "checkbox",
+					title = "threat_advisor_show_monsters",
+					tooltip_text = "threat_advisor_show_monsters_description",
+					default_value = d("threat_advisor_show_monsters", true),
+				},
+			},
+		},
 		(function()
 			local boss_sub = {
 				setting_id = "alerts_group_bosses",

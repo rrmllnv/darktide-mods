@@ -1,5 +1,8 @@
 local mod = get_mod("DivisionHUD")
 
+local Text = require("scripts/utilities/ui/text")
+local UISettings = require("scripts/settings/ui/ui_settings")
+
 local function alerts_gameplay_time()
 	local Hu = mod.hud_utils
 
@@ -394,6 +397,132 @@ local function alerts_boss_approach_message(display_name)
 	return text
 end
 
+local function alerts_target_message(base_text, display_name, target_display_name)
+	if type(base_text) ~= "string" or base_text == "" then
+		return ""
+	end
+
+	if type(target_display_name) ~= "string" or target_display_name == "" then
+		return base_text
+	end
+
+	if type(display_name) ~= "string" or display_name == "" then
+		return base_text
+	end
+
+	local text = mod:localize("alerts_message_spawn_target", display_name, target_display_name)
+
+	if type(text) ~= "string" or text == "" or string.find(text, "^<unlocalized") then
+		return string.format("Spotted %s, pursuing %s", display_name, target_display_name)
+	end
+
+	return text
+end
+
+local function alerts_resolve_game_session()
+	local game_session_manager = Managers.state and Managers.state.game_session
+
+	if not game_session_manager or type(game_session_manager.game_session) ~= "function" then
+		return nil
+	end
+
+	local ok, game_session = pcall(function()
+		return game_session_manager:game_session()
+	end)
+
+	if ok then
+		return game_session
+	end
+
+	return nil
+end
+
+local function alerts_resolve_target_unit(unit)
+	if not unit or not Unit.alive(unit) then
+		return nil
+	end
+
+	local game_session = alerts_resolve_game_session()
+	local unit_spawner = Managers.state and Managers.state.unit_spawner
+
+	if not game_session or not unit_spawner then
+		return nil
+	end
+
+	local ok_game_object_id, game_object_id = pcall(function()
+		return unit_spawner:game_object_id(unit)
+	end)
+
+	if not ok_game_object_id or not game_object_id then
+		return nil
+	end
+
+	local ok_has_target_unit_id, has_target_unit_id = pcall(function()
+		return GameSession.has_game_object_field(game_session, game_object_id, "target_unit_id")
+	end)
+
+	if not ok_has_target_unit_id or has_target_unit_id ~= true then
+		return nil
+	end
+
+	local ok_target_unit_id, target_unit_id = pcall(function()
+		return GameSession.game_object_field(game_session, game_object_id, "target_unit_id")
+	end)
+
+	if
+		not ok_target_unit_id
+		or not target_unit_id
+		or target_unit_id == NetworkConstants.invalid_game_object_id
+	then
+		return nil
+	end
+
+	local ok_target_unit, target_unit = pcall(function()
+		return unit_spawner:unit(target_unit_id)
+	end)
+
+	if ok_target_unit and target_unit and Unit.alive(target_unit) then
+		return target_unit
+	end
+
+	return nil
+end
+
+local function alerts_player_for_unit(unit)
+	local player_unit_spawn_manager = Managers.state and Managers.state.player_unit_spawn
+
+	return player_unit_spawn_manager and player_unit_spawn_manager:owner(unit) or nil
+end
+
+local function alerts_colored_player_name(player)
+	if type(player) ~= "table" then
+		return ""
+	end
+
+	local raw = type(player.name) == "function" and player:name() or ""
+
+	if type(raw) ~= "string" or raw == "" then
+		return ""
+	end
+
+	local slot = type(player.slot) == "function" and player:slot() or nil
+	local colors = UISettings.player_slot_colors
+	local col = slot and colors and colors[slot]
+
+	if col then
+		return Text.apply_color_to_text(raw, col)
+	end
+
+	return raw
+end
+
+local function alerts_target_display_name(unit)
+	local target_unit = alerts_resolve_target_unit(unit)
+	local target_player = alerts_player_for_unit(target_unit)
+
+	return alerts_colored_player_name(target_player)
+end
+
 local function alerts_specialist_raw_stripped(raw_breed_name)
 	if type(raw_breed_name) ~= "string" or raw_breed_name == "" then
 		return ""
@@ -497,7 +626,7 @@ local function alerts_specialist_approach_message(display_name)
 	return text
 end
 
-local function alerts_spawn_line_text(category, display_name, count)
+local function alerts_spawn_line_text(category, display_name, count, target_display_name)
 	if type(display_name) ~= "string" or display_name == "" then
 		return ""
 	end
@@ -509,11 +638,15 @@ local function alerts_spawn_line_text(category, display_name, count)
 	count = math.floor(count + 0.5)
 
 	if count <= 1 then
+		local base_text
+
 		if category == "boss" then
-			return alerts_boss_approach_message(display_name)
+			base_text = alerts_boss_approach_message(display_name)
+		else
+			base_text = alerts_specialist_approach_message(display_name)
 		end
 
-		return alerts_specialist_approach_message(display_name)
+		return alerts_target_message(base_text, display_name, target_display_name)
 	end
 
 	local loc = mod:localize("alerts_message_spawn_grouped", display_name, count)
@@ -550,6 +683,10 @@ local function alerts_try_merge_spawn_group(group_key, category, display_name, g
 			e.expire_t = game_t + duration
 			e.duration_sec = duration
 			e.alert_line_category = category
+			e.alert_instance_id = "spawn:" .. group_key
+			e.spawn_source_unit = nil
+			e.spawn_display_name = nil
+			e.spawn_target_resolved = true
 
 			return true
 		end
@@ -566,12 +703,68 @@ local function alerts_try_merge_spawn_group(group_key, category, display_name, g
 			e.text = alerts_spawn_line_text(category, display_name, next_count)
 			e.duration = duration
 			e.alert_line_category = category
+			e.alert_instance_id = "spawn:" .. group_key
+			e.spawn_source_unit = nil
+			e.spawn_display_name = nil
+			e.spawn_target_resolved = true
 
 			return true
 		end
 	end
 
 	return false
+end
+
+local function alerts_try_refresh_spawn_target_line(e)
+	if type(e) ~= "table" or e.spawn_target_resolved == true then
+		return
+	end
+
+	local sc = type(e.spawn_count) == "number" and e.spawn_count or 1
+
+	if sc > 1 then
+		e.spawn_source_unit = nil
+		e.spawn_display_name = nil
+		e.spawn_target_resolved = true
+
+		return
+	end
+
+	local unit = e.spawn_source_unit
+
+	if not unit or not Unit.alive(unit) then
+		return
+	end
+
+	local target_display_name = alerts_target_display_name(unit)
+
+	if type(target_display_name) ~= "string" or target_display_name == "" then
+		return
+	end
+
+	local category = e.alert_line_category
+	local display_name = e.spawn_display_name
+
+	if category ~= "boss" and category ~= "specialist" then
+		return
+	end
+
+	if type(display_name) ~= "string" or display_name == "" then
+		return
+	end
+
+	e.text = alerts_spawn_line_text(category, display_name, 1, target_display_name)
+	e.spawn_target_resolved = true
+end
+
+local function alerts_refresh_spawn_target_lines()
+	for i = 1, #state.active do
+		alerts_try_refresh_spawn_target_line(state.active[i])
+	end
+
+	for i = 1, #state.pending do
+		alerts_try_refresh_spawn_target_line(state.pending[i])
+	end
 end
 
 local function alerts_promote_from_pending(game_t)
@@ -598,6 +791,9 @@ local function alerts_promote_from_pending(game_t)
 				mission_merge_first_t = p.mission_merge_first_t,
 				mission_merge_count = p.mission_merge_count,
 				mission_merge_base_body = p.mission_merge_base_body,
+				spawn_source_unit = p.spawn_source_unit,
+				spawn_display_name = p.spawn_display_name,
+				spawn_target_resolved = p.spawn_target_resolved,
 			}
 		end
 	end
@@ -673,8 +869,10 @@ mod.alerts_sync = function(game_t)
 
 	alerts_prune_expired(game_t)
 	alerts_promote_from_pending(game_t)
+	alerts_refresh_spawn_target_lines()
 	alerts_prune_expired(game_t)
 	alerts_promote_from_pending(game_t)
+	alerts_refresh_spawn_target_lines()
 end
 
 mod.alerts_get_lines = function()
@@ -718,7 +916,7 @@ mod.alerts_enqueue = function(text, game_t)
 	end
 end
 
-mod.alerts_enqueue_spawn_grouped = function(group_key, category, display_name, game_t)
+mod.alerts_enqueue_spawn_grouped = function(group_key, category, display_name, game_t, target_display_name, source_unit)
 	if not alerts_globally_enabled() then
 		return
 	end
@@ -749,11 +947,14 @@ mod.alerts_enqueue_spawn_grouped = function(group_key, category, display_name, g
 		return
 	end
 
-	local line_text = alerts_spawn_line_text(category, display_name, 1)
+	local line_text = alerts_spawn_line_text(category, display_name, 1, target_display_name)
 
 	if line_text == "" then
 		return
 	end
+
+	local target_resolved = type(target_display_name) == "string" and target_display_name ~= ""
+	local spawn_source_unit = target_resolved and nil or source_unit
 
 	local entry = {
 		text = line_text,
@@ -761,6 +962,10 @@ mod.alerts_enqueue_spawn_grouped = function(group_key, category, display_name, g
 		group_key = group_key,
 		spawn_count = 1,
 		alert_line_category = category,
+		alert_instance_id = "spawn:" .. group_key,
+		spawn_source_unit = spawn_source_unit,
+		spawn_display_name = display_name,
+		spawn_target_resolved = target_resolved,
 	}
 
 	if #state.active < max_vis then
@@ -771,6 +976,10 @@ mod.alerts_enqueue_spawn_grouped = function(group_key, category, display_name, g
 			group_key = group_key,
 			spawn_count = 1,
 			alert_line_category = category,
+			alert_instance_id = entry.alert_instance_id,
+			spawn_source_unit = entry.spawn_source_unit,
+			spawn_display_name = entry.spawn_display_name,
+			spawn_target_resolved = entry.spawn_target_resolved,
 		}
 	else
 		state.pending[#state.pending + 1] = entry
@@ -813,6 +1022,8 @@ mod.alerts_enqueue_strip_body = function(strip_label, body_text, game_t, alert_l
 		cat = "team"
 	elseif alert_line_category == "tactical_advisor" then
 		cat = "tactical_advisor"
+	elseif alert_line_category == "threat_advisor" then
+		cat = "threat_advisor"
 	elseif alert_line_category == "debug" then
 		cat = "debug"
 	end
@@ -896,7 +1107,7 @@ local function alerts_try_enqueue_boss_approach_from_spawn(unit, raw_breed_name,
 		return
 	end
 
-	mod.alerts_enqueue_spawn_grouped("boss:" .. clean_breed_name, "boss", display_name, game_t)
+	mod.alerts_enqueue_spawn_grouped("boss:" .. clean_breed_name, "boss", display_name, game_t, alerts_target_display_name(unit), unit)
 end
 
 local function alerts_try_enqueue_specialist_approach_from_spawn(unit, raw_breed_name, game_t)
@@ -951,7 +1162,7 @@ local function alerts_try_enqueue_specialist_approach_from_spawn(unit, raw_breed
 		return
 	end
 
-	mod.alerts_enqueue_spawn_grouped(spawn_key, "specialist", display_name, game_t)
+	mod.alerts_enqueue_spawn_grouped(spawn_key, "specialist", display_name, game_t, alerts_target_display_name(unit), unit)
 end
 
 local function alerts_on_unit_spawn_for_alert_categories(raw_breed_name, unit, game_t)

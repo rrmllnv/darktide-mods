@@ -11,6 +11,7 @@ mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/mission_objective_ru
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/team_alerts_runtime")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/proximity_runtime")
 mod.tactical_advisor_runtime = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/tactical_advisor_runtime")
+mod.threat_advisor_runtime = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/threat_advisor_runtime")
 mod.danger_zone_runtime = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/danger_zone_runtime")
 mod.enemy_target_runtime = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/enemy_target_runtime")
 

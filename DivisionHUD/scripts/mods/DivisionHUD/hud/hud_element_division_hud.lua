@@ -61,6 +61,7 @@ local DangerZoneRuntime = mod.danger_zone_runtime or mod:io_dofile("DivisionHUD/
 local EnemyTargetRuntime = mod.enemy_target_runtime or mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/enemy_target_runtime")
 local ProximityScan = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/proximity_runtime")
 local TacticalAdvisorRuntime = mod.tactical_advisor_runtime or mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/tactical_advisor_runtime")
+local ThreatAdvisorRuntime = mod.threat_advisor_runtime or mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/threat_advisor_runtime")
 local HudUtils = mod.hud_utils or {}
 
 local HudElementDivisionHUD = class("HudElementDivisionHUD", "HudElementBase")
@@ -79,6 +80,7 @@ local ALERT_PALETTE_BOSS = Definitions.ALERT_PALETTE_BOSS
 local ALERT_PALETTE_MISSION_OBJECTIVE = Definitions.ALERT_PALETTE_MISSION_OBJECTIVE
 local ALERT_PALETTE_TEAM = Definitions.ALERT_PALETTE_TEAM
 local ALERT_PALETTE_TACTICAL_ADVISOR = Definitions.ALERT_PALETTE_TACTICAL_ADVISOR
+local ALERT_PALETTE_THREAT_ADVISOR = Definitions.ALERT_PALETTE_THREAT_ADVISOR
 local ALERTS_STRIP_HEIGHT = Definitions.ALERTS_STRIP_HEIGHT
 local ALERTS_SLOT_GAP = Definitions.ALERTS_SLOT_GAP
 local ALERTS_TOUGHNESS_GAP = Definitions.ALERTS_TOUGHNESS_GAP
@@ -96,6 +98,7 @@ local DANGER_ZONE_SCAN_INTERVAL = 0.1
 local DANGER_ZONE_WARNING_MARGIN = 15
 local ENEMY_TARGET_SCAN_INTERVAL = 0.1
 local TACTICAL_ADVISOR_SCAN_INTERVAL = 0.1
+local THREAT_ADVISOR_SCAN_INTERVAL = 0.25
 local PROX_SCAN_INTERVAL = 0.5
 local RIGHT_SLOT_ICON_FALLBACK = Definitions.RIGHT_SLOT_ICON_FALLBACK
 local DIVISION_BUFF_ROWS_BASE_Y = Definitions.DIVISION_BUFF_ROWS_BASE_Y or 0
@@ -446,6 +449,13 @@ local TACTICAL_ADVISOR_ALERT_CONFIG = {
 		block_key = "low_grenade",
 		setting_id = "tactical_advisor_low_grenade_alert_enabled",
 		find_message_key = "tactical_advisor_alert_low_grenade_find",
+	},
+}
+
+local THREAT_ADVISOR_ALERT_MESSAGE_KEYS = {
+	monster = {
+		local_target = "alerts_message_threat_target_you",
+		teammate_target = "alerts_message_threat_target_teammate",
 	},
 }
 
@@ -1197,6 +1207,79 @@ HudElementDivisionHUD._update_enemy_target_widget = function(self, widgets, opac
 	EnemyTargetWidget.update(self, widgets.enemy_target, opacity, dt)
 end
 
+HudElementDivisionHUD._update_threat_advisor_scan = function(self, player_unit, dt)
+	if not player_unit or not Unit.alive(player_unit) then
+		self._threat_advisor_scan_timer = 0
+		self._threat_advisor_data = {}
+
+		return
+	end
+
+	self._threat_advisor_scan_timer = (self._threat_advisor_scan_timer or 0) + dt
+
+	if self._threat_advisor_scan_timer < THREAT_ADVISOR_SCAN_INTERVAL then
+		return
+	end
+
+	self._threat_advisor_scan_timer = 0
+
+	local threat_advisor_runtime = mod.threat_advisor_runtime or ThreatAdvisorRuntime
+
+	if threat_advisor_runtime and type(threat_advisor_runtime.scan) == "function" then
+		self._threat_advisor_data = threat_advisor_runtime.scan(player_unit)
+	else
+		self._threat_advisor_data = {}
+	end
+
+	self:_update_threat_advisor_alerts(self._threat_advisor_data)
+end
+
+HudElementDivisionHUD._update_threat_advisor_alerts = function(self, threat_advisor_data)
+	if type(threat_advisor_data) ~= "table" or type(threat_advisor_data.events) ~= "table" then
+		return
+	end
+
+	if type(mod.alerts_enqueue_strip_body) ~= "function" then
+		return
+	end
+
+	local gt = tactical_advisor_alert_gameplay_time()
+
+	if type(gt) ~= "number" or gt ~= gt then
+		return
+	end
+
+	local strip_label = localize_non_empty("alerts_threat_strip") or "Attention threat"
+
+	for i = 1, #threat_advisor_data.events do
+		local event = threat_advisor_data.events[i]
+		local threat_type = event and event.threat_type
+		local config = threat_type and THREAT_ADVISOR_ALERT_MESSAGE_KEYS[threat_type]
+		local message_key = event and event.target_is_local == true and config and config.local_target or config and config.teammate_target
+		local enemy_name = event and event.enemy_name or ""
+		local target_player_name = event and event.target_player_name or ""
+		local body_text = nil
+
+		if message_key then
+			if event.target_is_local == true then
+				body_text = mod:localize(message_key, enemy_name)
+			else
+				body_text = mod:localize(message_key, enemy_name, target_player_name)
+			end
+		end
+
+		if type(body_text) == "string" and body_text ~= "" and not string.find(body_text, "^<unlocalized") then
+			mod.alerts_enqueue_strip_body(
+				strip_label,
+				body_text,
+				gt,
+				"threat_advisor",
+				{ instance_id = "threat_advisor:" .. tostring(event.enemy_unit) .. ":" .. tostring(event.target_unit) }
+			)
+		end
+	end
+end
+
 HudElementDivisionHUD._update_auspex_slot = function(self, player_unit, widgets, opacity)
 	local widget = widgets.slot_auspex
 
@@ -1504,13 +1587,14 @@ local function _div_alert_line_key(line)
 		return nil
 	end
 
-	local base_key = tostring(line.alert_line_category or "") .. "\x1f" .. tostring(line.strip_label or "") .. "\x1f" .. t
+	local category = tostring(line.alert_line_category or "")
+	local strip_label = tostring(line.strip_label or "")
 
-	if line.alert_line_category == "debug" and line.alert_instance_id ~= nil then
-		return base_key .. "\x1f" .. tostring(line.alert_instance_id)
+	if line.alert_instance_id ~= nil then
+		return category .. "\x1f" .. strip_label .. "\x1f" .. tostring(line.alert_instance_id)
 	end
 
-	return base_key
+	return category .. "\x1f" .. strip_label .. "\x1f" .. t
 end
 
 local function _div_alert_init(self)
@@ -1945,6 +2029,8 @@ HudElementDivisionHUD._update_alert_slots = function(self, widgets, opacity, ui_
 				pal = ALERT_PALETTE_TEAM
 			elseif cat == "tactical_advisor" and type(ALERT_PALETTE_TACTICAL_ADVISOR) == "table" then
 				pal = ALERT_PALETTE_TACTICAL_ADVISOR
+			elseif cat == "threat_advisor" and type(ALERT_PALETTE_THREAT_ADVISOR) == "table" then
+				pal = ALERT_PALETTE_THREAT_ADVISOR
 			end
 
 			if type(pal) == "table" then
@@ -2040,6 +2126,8 @@ HudElementDivisionHUD.init = function(self, parent, draw_layer, start_scale)
 	self._danger_zone_data = {}
 	self._enemy_target_scan_timer = 0
 	self._enemy_target_data = {}
+	self._threat_advisor_scan_timer = 0
+	self._threat_advisor_data = {}
 	self._tactical_advisor_scan_timer = 0
 	self._tactical_advisor_data = {}
 	self._prox_scan_timer = 0
@@ -2341,6 +2429,7 @@ HudElementDivisionHUD.update = function(self, dt, t, ui_renderer, render_setting
 	self:_update_ability_bar(player_unit, widgets.ability_bar, opacity, dt)
 	self:_update_enemy_target_scan(player_unit, dt)
 	self:_update_enemy_target_widget(widgets, opacity, dt)
+	self:_update_threat_advisor_scan(player_unit, dt)
 	self:_update_expedition_salvage(local_player, widgets.expedition_salvage, opacity)
 	self:_update_ammo_big(player_unit, widgets.ammo_big, opacity)
 	self:_update_auspex_slot(player_unit, widgets, opacity)

@@ -87,6 +87,7 @@ local defaults = {
 	enemy_target_show_boss = true,
 	enemy_target_show_elite = true,
 	enemy_target_show_special = true,
+	threat_advisor_show_monsters = true,
 	buff_rows_enabled = true,
 	main_strip_background_fill = 0,
 	proximity_strip_background_fill = 1,
