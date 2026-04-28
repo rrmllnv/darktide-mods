@@ -93,17 +93,17 @@ end
 
 ActiveBar.mode = function(hud, player_key, health_fraction, toughness_fraction, bonus_value, has_overshield, revive_state, t)
 	if revive_state and revive_state.in_progress then
-		return "toughness", true
+		return "toughness"
 	end
 
 	if not player_key then
-		return "health", false
+		return "health"
 	end
 
 	local state_by_player = hud._active_bar_state_by_player
 
 	if not state_by_player then
-		return "health", false
+		return "health"
 	end
 
 	local state = state_by_player[player_key]
@@ -126,7 +126,7 @@ ActiveBar.mode = function(hud, player_key, health_fraction, toughness_fraction, 
 		state.mode = "toughness"
 		state.until_t = nil
 
-		return "toughness", true
+		return "toughness"
 	end
 
 	if state.initialized then
@@ -134,15 +134,12 @@ ActiveBar.mode = function(hud, player_key, health_fraction, toughness_fraction, 
 		local toughness_changed = toughness ~= state.toughness
 		local bonus_changed = bonus ~= (state.bonus or 0)
 		local toughness_value_changed = toughness_changed or bonus_changed
-		local health_is_visible = state.mode == "health" and state.until_t and now <= state.until_t
+		local health_is_locked = state.mode == "health" and state.until_t and now <= state.until_t
 
 		if health_changed then
 			state.mode = "health"
 			state.until_t = now + ACTIVE_BAR_VISIBLE_DURATION
-			state.pending_mode = toughness_value_changed and "toughness" or state.pending_mode
-		elseif toughness_value_changed and health_is_visible then
-			state.pending_mode = "toughness"
-		elseif toughness_value_changed then
+		elseif toughness_value_changed and not health_is_locked then
 			state.mode = "toughness"
 			state.until_t = now + ACTIVE_BAR_VISIBLE_DURATION
 		end
@@ -154,22 +151,13 @@ ActiveBar.mode = function(hud, player_key, health_fraction, toughness_fraction, 
 	state.bonus = bonus
 
 	if state.mode and state.until_t and now <= state.until_t then
-		return state.mode, true
-	end
-
-	if state.pending_mode == "toughness" then
-		state.mode = "toughness"
-		state.until_t = now + ACTIVE_BAR_VISIBLE_DURATION
-		state.pending_mode = nil
-
-		return "toughness", true
+		return state.mode
 	end
 
 	state.mode = nil
 	state.until_t = nil
-	state.pending_mode = nil
 
-	return "health", false
+	return "health"
 end
 
 InventoryValue.rounded = function(value)
@@ -489,11 +477,7 @@ InventoryValue.toughness_content = function(toughness_values, has_overshield)
 	return InventoryValue.colored_text(text, has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS), text
 end
 
-InventoryValue.active_content = function(active_mode, show_value, extensions, revive_state, revive_progress, has_overshield, is_down)
-	if not show_value then
-		return "", COLOR_HEALTH, ""
-	end
-
+InventoryValue.active_content = function(active_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
 	if revive_state and revive_state.in_progress then
 		local text = string.format("%d%%", math.floor((revive_progress or 0) * 100 + 0.5))
 
@@ -522,23 +506,13 @@ InventoryValue.width = function(ui_renderer, text, style)
 end
 
 InventoryValue.apply_layout = function(style, inventory_icons, ui_renderer, plain_text)
-	local value_width = InventoryValue.width(ui_renderer, plain_text, style.inventory_value_text)
-	local icon_x = INVENTORY_VALUE.x + value_width + (value_width > 0 and INVENTORY_VALUE.gap or 0)
-	local grenade_x = icon_x
-	local ammo_x = grenade_x + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
-	local inventory_x = ammo_x + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
-	local inventory_small_x = inventory_x + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
-
 	style.inventory_value_text.offset[1] = INVENTORY_VALUE.x
 	style.inventory_value_text.size[1] = INVENTORY_VALUE.text_width
 
-	style.grenade_icon.offset[1] = grenade_x
-	style.ammo_icon.offset[1] = ammo_x
-	style.pocketable_icon.offset[1] = inventory_x
-	style.pocketable_small_icon.offset[1] = inventory_small_x
-
 	if inventory_icons and not inventory_icons.pocketable_icon and inventory_icons.pocketable_small_icon then
-		style.pocketable_small_icon.offset[1] = inventory_x
+		style.pocketable_small_icon.offset[1] = INVENTORY_ICON_X
+	elseif style.pocketable_small_icon.default_offset then
+		style.pocketable_small_icon.offset[1] = style.pocketable_small_icon.default_offset[1]
 	end
 end
 
@@ -567,9 +541,9 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local revive_state = PlayerDataRuntime.revive_state(extensions)
 	local revive_progress = revive_progress_for_player(self, player_key, revive_state, t)
 	local toughness_values = PlayerDataRuntime.toughness_values(extensions)
-	local active_bar_mode, show_inventory_value = ActiveBar.mode(self, player_key, health_fraction, tough_fraction, toughness_values.bonus, has_overshield, revive_state, t)
+	local active_bar_mode = ActiveBar.mode(self, player_key, health_fraction, tough_fraction, toughness_values.bonus, has_overshield, revive_state, t)
 	local health_bar_y, health_bar_height, toughness_bar_y, toughness_bar_height = ActiveBar.layout(active_bar_mode)
-	local inventory_value, inventory_value_color, inventory_value_plain = InventoryValue.active_content(active_bar_mode, show_inventory_value, extensions, revive_state, revive_progress, has_overshield, is_down)
+	local inventory_value, inventory_value_color, inventory_value_plain = InventoryValue.active_content(active_bar_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
 	local rescue_timer_status = PlayerDataRuntime.rescue_timer_status(player, status)
 	local operational_status = StatusRuntime.resolve(player, extensions, status, health_fraction, revive_state, rescue_timer_status)
 	local display_name, is_showing_status = StatusRuntime.display_name(self._name_status_flash_by_player, player_key, base_name, operational_status, t)

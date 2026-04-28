@@ -41,8 +41,9 @@ S.inventory_block_width = S.inventory_value_max_width + S.inventory_icon_gap + S
 S.name_extra_width = 40
 S.panel_width = 282 + S.inventory_block_width - S.previous_inventory_block_width + S.name_extra_width
 S.inventory_block_x = S.panel_width - S.inner_padding - S.inventory_block_width
-S.inventory_icon_y = S.toughness_bar_bottom_y - S.inventory_icon_size
-S.grenade_icon_x = S.inventory_block_x + S.inventory_value_max_width + S.inventory_icon_gap
+S.inventory_icon_y = 2
+S.inventory_value_y = S.toughness_bar_bottom_y - S.inventory_icon_size
+S.grenade_icon_x = S.inventory_block_x
 S.ammo_icon_x = S.grenade_icon_x + S.inventory_icon_size + S.inventory_icon_gap
 S.inventory_icon_x = S.ammo_icon_x + S.inventory_icon_size + S.inventory_icon_gap
 S.inventory_small_icon_x = S.inventory_icon_x + S.inventory_icon_size + S.inventory_icon_gap
@@ -53,7 +54,7 @@ S.inventory_value = {
 	gap = S.inventory_icon_gap,
 	text_width = S.inventory_value_max_width,
 	x = S.inventory_block_x,
-	y = S.inventory_icon_y,
+	y = S.inventory_value_y,
 }
 
 S.ability_icon_y = S.toughness_bar_bottom_y - S.ability_icon_size
