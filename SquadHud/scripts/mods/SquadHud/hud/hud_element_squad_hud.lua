@@ -35,7 +35,7 @@ local TOUGHNESS_BAR_BOTTOM_Y = TOUGHNESS_BAR_Y + BAR_HEIGHT
 local BAR_ACTIVE_HEIGHT = 8
 local BAR_INACTIVE_HEIGHT = 4
 local BAR_GAP = 1
-local ACTIVE_BAR_VISIBLE_DURATION = 2
+local ACTIVE_BAR_VISIBLE_DURATION = 5
 local INVENTORY_ICON_SIZE = 16
 local INVENTORY_ICON_GAP = 4
 local INVENTORY_VALUE_MAX_WIDTH = 110
@@ -364,17 +364,17 @@ end
 
 ActiveBar.mode = function(hud, player_key, health_fraction, toughness_fraction, bonus_value, has_overshield, revive_state, t)
 	if revive_state and revive_state.in_progress then
-		return "toughness"
+		return "toughness", true
 	end
 
 	if not player_key then
-		return "health"
+		return "health", false
 	end
 
 	local state_by_player = hud._active_bar_state_by_player
 
 	if not state_by_player then
-		return "health"
+		return "health", false
 	end
 
 	local state = state_by_player[player_key]
@@ -397,19 +397,19 @@ ActiveBar.mode = function(hud, player_key, health_fraction, toughness_fraction, 
 		state.mode = "toughness"
 		state.until_t = nil
 
-		return "toughness"
+		return "toughness", true
 	end
 
 	if state.initialized then
-		local health_decreased = health < state.health
-		local toughness_decreased = toughness < state.toughness
-		local bonus_started = bonus > (state.bonus or 0)
+		local health_changed = health ~= state.health
+		local toughness_changed = toughness ~= state.toughness
+		local bonus_changed = bonus ~= (state.bonus or 0)
 
-		if toughness_decreased or bonus_started then
-			state.mode = "toughness"
-			state.until_t = now + ACTIVE_BAR_VISIBLE_DURATION
-		elseif health_decreased then
+		if health_changed then
 			state.mode = "health"
+			state.until_t = now + ACTIVE_BAR_VISIBLE_DURATION
+		elseif toughness_changed or bonus_changed then
+			state.mode = "toughness"
 			state.until_t = now + ACTIVE_BAR_VISIBLE_DURATION
 		end
 	end
@@ -420,13 +420,13 @@ ActiveBar.mode = function(hud, player_key, health_fraction, toughness_fraction, 
 	state.bonus = bonus
 
 	if state.mode and state.until_t and now <= state.until_t then
-		return state.mode
+		return state.mode, true
 	end
 
 	state.mode = nil
 	state.until_t = nil
 
-	return "health"
+	return "health", false
 end
 
 InventoryValue.rounded = function(value)
@@ -710,7 +710,11 @@ InventoryValue.toughness_content = function(toughness_values, has_overshield)
 	return InventoryValue.colored_text(text, has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS), text
 end
 
-InventoryValue.active_content = function(active_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
+InventoryValue.active_content = function(active_mode, show_value, extensions, revive_state, revive_progress, has_overshield, is_down)
+	if not show_value then
+		return "", COLOR_HEALTH, ""
+	end
+
 	if revive_state and revive_state.in_progress then
 		local text = string.format("%d%%", math.floor((revive_progress or 0) * 100 + 0.5))
 
@@ -784,9 +788,9 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local revive_state = PlayerDataRuntime.revive_state(extensions)
 	local revive_progress = revive_progress_for_player(self, player_key, revive_state, t)
 	local toughness_values = PlayerDataRuntime.toughness_values(extensions)
-	local active_bar_mode = ActiveBar.mode(self, player_key, health_fraction, tough_fraction, toughness_values.bonus, has_overshield, revive_state, t)
+	local active_bar_mode, show_inventory_value = ActiveBar.mode(self, player_key, health_fraction, tough_fraction, toughness_values.bonus, has_overshield, revive_state, t)
 	local health_bar_y, health_bar_height, toughness_bar_y, toughness_bar_height = ActiveBar.layout(active_bar_mode)
-	local inventory_value, inventory_value_color, inventory_value_plain = InventoryValue.active_content(active_bar_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
+	local inventory_value, inventory_value_color, inventory_value_plain = InventoryValue.active_content(active_bar_mode, show_inventory_value, extensions, revive_state, revive_progress, has_overshield, is_down)
 	local rescue_timer_status = PlayerDataRuntime.rescue_timer_status(player, status)
 	local operational_status = StatusRuntime.resolve(player, extensions, status, health_fraction, revive_state, rescue_timer_status)
 	local display_name, is_showing_status = StatusRuntime.display_name(self._name_status_flash_by_player, player_key, base_name, operational_status, t)
