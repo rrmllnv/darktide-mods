@@ -15,6 +15,18 @@ return {
 		en = "\238\128\169 SYSTEM SETTINGS",
 		ru = "\238\128\169 СИСТЕМНЫЕ НАСТРОЙКИ",
 	},
+	squadhud_integrations_group = {
+		en = "\238\128\172 INTEGRATIONS",
+		ru = "\238\128\172 ИНТЕГРАЦИИ",
+	},
+	integration_custom_hud = {
+		en = "Custom HUD",
+		ru = "Custom HUD",
+	},
+	integration_custom_hud_description = {
+		en = "Allows Custom HUD to control the Squad HUD root position. When Custom HUD has saved Squad HUD nodes, the Offset X and Offset Y sliders are not applied.",
+		ru = "Позволяет Custom HUD управлять корневой позицией Squad HUD. Если Custom HUD сохранил узлы Squad HUD, смещения X и Y из настроек не применяются.",
+	},
 	squadhud_placement = {
 		en = string.rep("\194\160", 8) .. "Position, opacity & scale",
 		ru = string.rep("\194\160", 8) .. "Позиция, прозрачность и масштаб",

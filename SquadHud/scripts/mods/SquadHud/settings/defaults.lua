@@ -3,6 +3,7 @@ local defaults = {
 	hide_vanilla_team_panel_local = true,
 	hide_vanilla_team_panel_teammates = true,
 	hud_layout_scale = 0.8,
+	integration_custom_hud = false,
 	opacity = 1.0,
 	position_x = 50,
 	position_y = 700,

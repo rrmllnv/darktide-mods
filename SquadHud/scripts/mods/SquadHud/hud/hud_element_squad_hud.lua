@@ -76,6 +76,9 @@ local scenegraph_definition = Definitions.scenegraph_definition
 local widget_definitions = Definitions.widget_definitions
 
 local HudElementSquadHud = class("HudElementSquadHud", "HudElementBase")
+local CUSTOM_HUD_MOD_NAME = "custom_hud"
+local CUSTOM_HUD_ROOT_NODE_NAME = "HudElementSquadHud|squadhud_root"
+local CUSTOM_HUD_NODE_PREFIX = "HudElementSquadHud|"
 
 local function setting_enabled()
 	local value = mod:get("squadhud_enabled")
@@ -103,6 +106,72 @@ local function boolean_setting(setting_id, fallback)
 	end
 
 	return fallback
+end
+
+local function custom_hud_mod()
+	local custom_hud = get_mod(CUSTOM_HUD_MOD_NAME)
+
+	if custom_hud and type(custom_hud) == "table" then
+		return custom_hud
+	end
+
+	return nil
+end
+
+local function custom_hud_saved_node_settings()
+	local custom_hud = custom_hud_mod()
+
+	if not custom_hud or type(custom_hud.get) ~= "function" then
+		return nil
+	end
+
+	local saved_node_settings = custom_hud:get("saved_node_settings")
+
+	if type(saved_node_settings) == "table" then
+		return saved_node_settings
+	end
+
+	return nil
+end
+
+local function custom_hud_has_squadhud_nodes()
+	local saved_node_settings = custom_hud_saved_node_settings()
+
+	if not saved_node_settings then
+		return false
+	end
+
+	for node_name in pairs(saved_node_settings) do
+		if type(node_name) == "string" and string.sub(node_name, 1, #CUSTOM_HUD_NODE_PREFIX) == CUSTOM_HUD_NODE_PREFIX then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function custom_hud_root_position()
+	local saved_node_settings = custom_hud_saved_node_settings()
+	local root_settings = saved_node_settings and saved_node_settings[CUSTOM_HUD_ROOT_NODE_NAME]
+
+	if type(root_settings) ~= "table" then
+		return nil
+	end
+
+	local x = root_settings.x
+	local y = root_settings.y
+
+	if type(x) ~= "number" or type(y) ~= "number" or x ~= x or y ~= y then
+		return nil
+	end
+
+	local z = root_settings.z
+
+	if type(z) ~= "number" or z ~= z then
+		z = 1
+	end
+
+	return x, y, z
 end
 
 local function apply_color(target, source)
@@ -487,15 +556,26 @@ local function apply_empty_panel(widget)
 end
 
 local function apply_layout_settings(self, widgets_by_name)
-	local position_x = numeric_setting("position_x", DEFAULT_POSITION_X)
-	local position_y = numeric_setting("position_y", DEFAULT_POSITION_Y)
+	local custom_hud_enabled = boolean_setting("integration_custom_hud", false)
+	local custom_hud_has_nodes = custom_hud_enabled and custom_hud_has_squadhud_nodes()
+	local custom_hud_x, custom_hud_y, custom_hud_z
+
+	if custom_hud_enabled then
+		custom_hud_x, custom_hud_y, custom_hud_z = custom_hud_root_position()
+	end
+
+	local position_x = custom_hud_x or numeric_setting("position_x", DEFAULT_POSITION_X)
+	local position_y = custom_hud_y or numeric_setting("position_y", DEFAULT_POSITION_Y)
+	local position_z = custom_hud_z or 1
 	local opacity = math.clamp(numeric_setting("opacity", DEFAULT_OPACITY), 0.1, 1)
 	local hud_scale = math.clamp(numeric_setting("hud_layout_scale", DEFAULT_HUD_LAYOUT_SCALE), 0.5, 2)
+	local use_current_position = custom_hud_enabled and custom_hud_has_nodes and not custom_hud_x
 
-	if self._squadhud_position_x ~= position_x or self._squadhud_position_y ~= position_y then
-		self:set_scenegraph_position("squadhud_root", position_x, position_y, 1)
+	if not use_current_position and (self._squadhud_position_x ~= position_x or self._squadhud_position_y ~= position_y or self._squadhud_position_z ~= position_z) then
+		self:set_scenegraph_position("squadhud_root", position_x, position_y, position_z)
 		self._squadhud_position_x = position_x
 		self._squadhud_position_y = position_y
+		self._squadhud_position_z = position_z
 	end
 
 	if not self._squadhud_panel_y_by_index then

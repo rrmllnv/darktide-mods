@@ -6,6 +6,7 @@ local LayoutMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/l
 local SquadHudMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/squad_hud")
 local StrikeTeamMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/strike_team")
 local VanillaHudMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/vanilla_hud")
+local IntegrationsMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/integrations")
 local SystemMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/system")
 
 return {
@@ -18,6 +19,7 @@ return {
 			SquadHudMenu,
 			StrikeTeamMenu,
 			VanillaHudMenu,
+			IntegrationsMenu,
 			SystemMenu,
 		},
 	},
