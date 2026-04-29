@@ -50,7 +50,7 @@ return {
 					type = "numeric",
 					title = "position_y",
 					tooltip_text = "position_y_description",
-					default_value = d("position_y", 800),
+					default_value = d("position_y", 780),
 					range = POSITION_RANGE_Y,
 					decimals_number = 0,
 				},
