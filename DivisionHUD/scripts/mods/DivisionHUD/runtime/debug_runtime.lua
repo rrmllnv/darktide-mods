@@ -40,6 +40,8 @@ local debug_state = {
 	alert_instance_seq = 0,
 	enemy_target_override = nil,
 	expedition_salvage_override = nil,
+	toughness_hit_indicator_next_armor_break = false,
+	toughness_hit_indicator_request = nil,
 }
 
 local DEBUG_FAKE_BUFF_TEMPLATE = {
@@ -94,6 +96,8 @@ local function clear_debug_state()
 	debug_state.invulnerability_expire_t = nil
 	debug_state.enemy_target_override = nil
 	debug_state.expedition_salvage_override = nil
+	debug_state.toughness_hit_indicator_next_armor_break = false
+	debug_state.toughness_hit_indicator_request = nil
 end
 
 local DEBUG_BREED_TYPES = { "elite", "special", "monster", "captain" }
@@ -290,6 +294,13 @@ mod.divisionhud_debug_update = function()
 			debug_state.expedition_salvage_override = math.random(1, 99999)
 		end
 	end
+
+	if key_pressed("numpad 5") then
+		debug_state.toughness_hit_indicator_request = {
+			armor_break = debug_state.toughness_hit_indicator_next_armor_break == true,
+		}
+		debug_state.toughness_hit_indicator_next_armor_break = debug_state.toughness_hit_indicator_next_armor_break ~= true
+	end
 end
 
 mod.divisionhud_debug_get_extra_buffs = function()
@@ -353,6 +364,20 @@ mod.divisionhud_debug_get_toughness_override = function()
 		base_toughness_value = DEBUG_TOUGHNESS_BASE_VALUE,
 		bonus_toughness_value = DEBUG_TOUGHNESS_BONUS_VALUE,
 	}
+end
+
+mod.divisionhud_debug_consume_toughness_hit_indicator_request = function()
+	if not debug_enabled() then
+		debug_state.toughness_hit_indicator_request = nil
+
+		return nil
+	end
+
+	local request = debug_state.toughness_hit_indicator_request
+
+	debug_state.toughness_hit_indicator_request = nil
+
+	return request
 end
 
 return mod

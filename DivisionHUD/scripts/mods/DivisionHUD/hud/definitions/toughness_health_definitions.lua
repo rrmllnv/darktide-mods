@@ -16,6 +16,18 @@ local STAMINA_BAR_COLOR = HudElementStaminaSettings.STAMINA_BAR_COLOR
 local HEALTH_BAR_FILL_COLOR = UIHudSettings.color_tint_1
 local TOUGHNESS_BAR_FILL_COLOR = UIHudSettings.color_tint_6
 local WOUNDS_BAR_FILL_COLOR = UIHudSettings.color_tint_8
+local TOUGHNESS_HIT_INDICATOR_COLOR = {
+	0,
+	75,
+	220,
+	255,
+}
+local TOUGHNESS_ARMOR_BREAK_INDICATOR_COLOR = {
+	0,
+	255,
+	255,
+	255,
+}
 
 local function build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap, toughness_extra_label_w, health_extra_label_w)
 	local extended_toughness_label_width = bar_label_w + toughness_extra_label_w
@@ -133,6 +145,7 @@ local function build(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap, sc)
 		bar_w,
 		health_bar_h,
 	}
+	local toughness_hit_indicator_padding = sc(3)
 
 	return {
 		scenegraph_definition = build_scenegraph(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap, toughness_extra_label_w, health_extra_label_w),
@@ -263,6 +276,52 @@ local function build(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap, sc)
 							TOUGHNESS_BAR_FILL_COLOR[2],
 							TOUGHNESS_BAR_FILL_COLOR[3],
 							TOUGHNESS_BAR_FILL_COLOR[4],
+						},
+					},
+				},
+				{
+					pass_type = "rect",
+					style_id = "hit_indicator",
+					style = {
+						horizontal_alignment = "left",
+						vertical_alignment = "bottom",
+						offset = {
+							-toughness_hit_indicator_padding,
+							-toughness_hit_indicator_padding,
+							7,
+						},
+						size = {
+							bar_w + toughness_hit_indicator_padding * 2,
+							bar_h + toughness_hit_indicator_padding * 2,
+						},
+						color = {
+							0,
+							TOUGHNESS_HIT_INDICATOR_COLOR[2],
+							TOUGHNESS_HIT_INDICATOR_COLOR[3],
+							TOUGHNESS_HIT_INDICATOR_COLOR[4],
+						},
+					},
+				},
+				{
+					pass_type = "rect",
+					style_id = "armor_break_indicator",
+					style = {
+						horizontal_alignment = "left",
+						vertical_alignment = "bottom",
+						offset = {
+							-toughness_hit_indicator_padding,
+							-toughness_hit_indicator_padding,
+							8,
+						},
+						size = {
+							bar_w + toughness_hit_indicator_padding * 2,
+							bar_h + toughness_hit_indicator_padding * 2,
+						},
+						color = {
+							0,
+							TOUGHNESS_ARMOR_BREAK_INDICATOR_COLOR[2],
+							TOUGHNESS_ARMOR_BREAK_INDICATOR_COLOR[3],
+							TOUGHNESS_ARMOR_BREAK_INDICATOR_COLOR[4],
 						},
 					},
 				},

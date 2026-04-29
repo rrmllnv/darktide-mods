@@ -13,6 +13,21 @@ local STAMINA_NODGES_COLOR = HudElementStaminaSettings.STAMINA_NODGES_COLOR
 
 local DEFAULT_TOUGHNESS_BAR_FILL_COLOR = UIHudSettings.color_tint_6
 local OVERSHIELDED_TOUGHNESS_BAR_FILL_COLOR = UIHudSettings.color_tint_10
+local TOUGHNESS_HIT_INDICATOR_DURATION = 0.34
+local TOUGHNESS_HIT_INDICATOR_ALPHA_MAX = 150
+local TOUGHNESS_ARMOR_BREAK_INDICATOR_ALPHA_MAX = 45
+local TOUGHNESS_HIT_INDICATOR_COLOR = {
+	0,
+	75,
+	220,
+	255,
+}
+local TOUGHNESS_ARMOR_BREAK_INDICATOR_COLOR = {
+	0,
+	255,
+	255,
+	255,
+}
 
 local M = {}
 
@@ -204,6 +219,120 @@ local function reset_toughness_overshield_visual_state(self, widgets)
 	apply_toughness_bar_fill_color(tw, DEFAULT_TOUGHNESS_BAR_FILL_COLOR)
 end
 
+local function apply_toughness_hit_indicator_style(self, pass_style, color, alpha, extra_size)
+	if not pass_style or not pass_style.color then
+		return
+	end
+
+	local extra = extra_size or 0
+	local base_offset = self._vdth_toughness_hit_indicator_base_offset
+	local base_size = self._vdth_toughness_hit_indicator_base_size
+	local c = pass_style.color
+
+	c[1] = alpha
+	c[2] = color[2]
+	c[3] = color[3]
+	c[4] = color[4]
+
+	if base_offset and pass_style.offset then
+		pass_style.offset[1] = base_offset[1] - extra * 0.5
+		pass_style.offset[2] = base_offset[2] - extra * 0.5
+	end
+
+	if base_size and pass_style.size then
+		pass_style.size[1] = base_size[1] + extra
+		pass_style.size[2] = base_size[2] + extra
+	end
+end
+
+local function clear_toughness_hit_indicator(self, widgets)
+	self._vdth_toughness_hit_indicator_start_t = nil
+	self._vdth_toughness_hit_indicator_armor_break = false
+
+	local widget = widgets and widgets.toughness
+
+	if not widget then
+		return
+	end
+
+	local style = widget.style
+
+	if style then
+		apply_toughness_hit_indicator_style(self, style.hit_indicator, TOUGHNESS_HIT_INDICATOR_COLOR, 0, 0)
+		apply_toughness_hit_indicator_style(self, style.armor_break_indicator, TOUGHNESS_ARMOR_BREAK_INDICATOR_COLOR, 0, 0)
+	end
+
+	widget.dirty = true
+end
+
+local function update_toughness_hit_indicator(self, widgets, toughness_fraction, disabled, knocked_down, t, debug_request)
+	local widget = widgets and widgets.toughness
+
+	if not widget or not widget.style then
+		return
+	end
+
+	local now = type(t) == "number" and t or 0
+	local current_toughness = math.clamp(toughness_fraction or 0, 0, 1)
+
+	if disabled or knocked_down then
+		self._vdth_toughness_hit_indicator_toughness = current_toughness
+		clear_toughness_hit_indicator(self, widgets)
+
+		return
+	end
+
+	if type(debug_request) == "table" then
+		self._vdth_toughness_hit_indicator_start_t = now
+		self._vdth_toughness_hit_indicator_armor_break = debug_request.armor_break == true
+		self._vdth_toughness_hit_indicator_toughness = current_toughness
+	end
+
+	local previous_toughness = self._vdth_toughness_hit_indicator_toughness
+
+	if previous_toughness == nil then
+		self._vdth_toughness_hit_indicator_toughness = current_toughness
+		clear_toughness_hit_indicator(self, widgets)
+
+		return
+	end
+
+	if current_toughness < previous_toughness then
+		self._vdth_toughness_hit_indicator_start_t = now
+		self._vdth_toughness_hit_indicator_armor_break = current_toughness <= 0
+	end
+
+	self._vdth_toughness_hit_indicator_toughness = current_toughness
+
+	local start_t = self._vdth_toughness_hit_indicator_start_t
+
+	if not start_t then
+		clear_toughness_hit_indicator(self, widgets)
+
+		return
+	end
+
+	local progress = math.clamp((now - start_t) / TOUGHNESS_HIT_INDICATOR_DURATION, 0, 1)
+
+	if progress >= 1 then
+		clear_toughness_hit_indicator(self, widgets)
+
+		return
+	end
+
+	local pulse_progress = math.easeInCubic(math.ease_pulse(progress))
+	local armor_break = self._vdth_toughness_hit_indicator_armor_break == true
+	local hit_alpha = TOUGHNESS_HIT_INDICATOR_ALPHA_MAX * pulse_progress
+	local armor_break_alpha = armor_break and TOUGHNESS_ARMOR_BREAK_INDICATOR_ALPHA_MAX * pulse_progress or 0
+	local armor_break_extra_size = armor_break and self._vdth_toughness_hit_indicator_armor_break_extra_size * math.easeOutCubic(progress) or 0
+	local style = widget.style
+
+	apply_toughness_hit_indicator_style(self, style.hit_indicator, TOUGHNESS_HIT_INDICATOR_COLOR, hit_alpha, armor_break_extra_size)
+	apply_toughness_hit_indicator_style(self, style.armor_break_indicator, TOUGHNESS_ARMOR_BREAK_INDICATOR_COLOR, armor_break_alpha, armor_break_extra_size)
+
+	widget.dirty = true
+end
+
 M.init = function(self, definitions)
 	self._vdth_bar_width = definitions.BAR_WIDTH
 	self._vdth_health_bar_logic = HudHealthBarLogic:new(HudElementPlayerHealthSettings)
@@ -211,6 +340,10 @@ M.init = function(self, definitions)
 	self._vdth_disabled = nil
 	self._vdth_knocked_down = nil
 	self._vdth_has_toughness_overshield = false
+	self._vdth_toughness_hit_indicator_toughness = nil
+	self._vdth_toughness_hit_indicator_start_t = nil
+	self._vdth_toughness_hit_indicator_armor_break = false
+	self._vdth_toughness_hit_indicator_armor_break_extra_size = math.max(1, math.floor(10 * (definitions.HUD_LAYOUT_SCALE or 1) + 0.5))
 
 	self._vdth_num_stamina_chunks = 0
 	self._vdth_stamina_chunk_width = 0
@@ -227,6 +360,20 @@ M.init = function(self, definitions)
 
 	self._vdth_health_stamina_nodge_widget = self:_create_widget("health_stamina_nodge", definitions.health_stamina_nodges_definition)
 	self._vdth_toughness_stamina_nodge_widget = self:_create_widget("toughness_stamina_nodge", definitions.toughness_stamina_nodges_definition)
+
+	local toughness_hit_indicator_widget = self._widgets_by_name and self._widgets_by_name.toughness
+	local toughness_hit_indicator_style = toughness_hit_indicator_widget and toughness_hit_indicator_widget.style and toughness_hit_indicator_widget.style.hit_indicator
+
+	if toughness_hit_indicator_style then
+		self._vdth_toughness_hit_indicator_base_offset = {
+			toughness_hit_indicator_style.offset[1],
+			toughness_hit_indicator_style.offset[2],
+		}
+		self._vdth_toughness_hit_indicator_base_size = {
+			toughness_hit_indicator_style.size[1],
+			toughness_hit_indicator_style.size[2],
+		}
+	end
 end
 
 M.destroy = function(self, ui_renderer)
@@ -603,6 +750,7 @@ M.update = function(self, dt, t, player_unit, opacity)
 
 	if not show_toughness then
 		reset_toughness_overshield_visual_state(self, widgets)
+		clear_toughness_hit_indicator(self, widgets)
 		M._set_toughness_row_visible(self, widgets, false)
 
 		if label_t and label_t.content then
@@ -614,6 +762,7 @@ M.update = function(self, dt, t, player_unit, opacity)
 
 		if not toughness_extension then
 			reset_toughness_overshield_visual_state(self, widgets)
+			clear_toughness_hit_indicator(self, widgets)
 			M._set_toughness_row_visible(self, widgets, false)
 
 			if label_t and label_t.content then
@@ -625,6 +774,7 @@ M.update = function(self, dt, t, player_unit, opacity)
 
 			if toughness_percentage == nil then
 				reset_toughness_overshield_visual_state(self, widgets)
+				clear_toughness_hit_indicator(self, widgets)
 				M._set_toughness_row_visible(self, widgets, false)
 
 				if label_t and label_t.content then
@@ -638,6 +788,7 @@ M.update = function(self, dt, t, player_unit, opacity)
 				local timed_gold_bar_fill = timed_gold_toughness_bar_fill_fraction(buff_extension)
 				local debug_timed_gold_bar_fill = mod.divisionhud_debug_get_timed_gold_bar_progress and mod.divisionhud_debug_get_timed_gold_bar_progress() or nil
 				local debug_toughness_override = mod.divisionhud_debug_get_toughness_override and mod.divisionhud_debug_get_toughness_override() or nil
+				local debug_toughness_hit_indicator_request = mod.divisionhud_debug_consume_toughness_hit_indicator_request and mod.divisionhud_debug_consume_toughness_hit_indicator_request() or nil
 
 				if type(debug_timed_gold_bar_fill) == "number" and debug_timed_gold_bar_fill == debug_timed_gold_bar_fill and debug_timed_gold_bar_fill > 0 and debug_timed_gold_bar_fill <= 1 then
 					if timed_gold_bar_fill == nil or debug_timed_gold_bar_fill > timed_gold_bar_fill then
@@ -651,7 +802,9 @@ M.update = function(self, dt, t, player_unit, opacity)
 				local current_toughness_visual = toughness_percentage * max_toughness_visual
 				local overshield_amount = current_toughness_visual < max_toughness and math.max(current_toughness - max_toughness_visual, 0) or 0
 				local has_overshield = math.floor(overshield_amount) > 0
-				local toughness_percentage_bar = toughness_extension.current_toughness_percent_visual and toughness_extension:current_toughness_percent_visual() or 0
+				local toughness_percentage_bar = toughness_extension.current_toughness_percent_visual and toughness_extension:current_toughness_percent_visual() or toughness_percentage
+
+				toughness_percentage_bar = math.clamp(toughness_percentage_bar or toughness_percentage, 0, 1)
 
 				if not has_overshield and type(debug_toughness_override) == "table" then
 					local debug_base_toughness_value = debug_toughness_override.base_toughness_value
@@ -677,6 +830,7 @@ M.update = function(self, dt, t, player_unit, opacity)
 				local bar_progress = use_timed_gold_fill and timed_gold_bar_fill or toughness_percentage
 
 				apply_toughness_bar_fill_color(toughness_w, fill_target)
+				update_toughness_hit_indicator(self, widgets, toughness_percentage_bar, disabled, knocked_down, t, debug_toughness_hit_indicator_request)
 
 				local bar_logic = self._vdth_toughness_bar_logic
 
