@@ -19,6 +19,9 @@ local BAR_GAP = DefinitionSettings.bar_gap
 local ACTIVE_BAR_VISIBLE_DURATION = DefinitionSettings.active_bar_visible_duration
 local OVERSHIELD_SPENT_DURATION = DefinitionSettings.overshield_spent_duration
 local OVERSHIELD_SPENT_HEIGHT_ADDITION = DefinitionSettings.overshield_spent_height_addition
+local TOUGHNESS_HIT_INDICATOR_DURATION = DefinitionSettings.toughness_hit_indicator_duration
+local TOUGHNESS_HIT_INDICATOR_PADDING = DefinitionSettings.toughness_hit_indicator_padding
+local TOUGHNESS_HIT_INDICATOR_ARMOR_BREAK_EXTRA_SIZE = DefinitionSettings.toughness_hit_indicator_armor_break_extra_size
 local INVENTORY_ICON_SIZE = DefinitionSettings.inventory_icon_size
 local INVENTORY_ICON_GAP = DefinitionSettings.inventory_icon_gap
 local INVENTORY_ICON_X = DefinitionSettings.inventory_icon_x
@@ -63,6 +66,8 @@ local COLOR_ABILITY_COOLDOWN_FRAME = DefinitionSettings.color_ability_cooldown_f
 local COLOR_ABILITY_COOLDOWN_GLOW = DefinitionSettings.color_ability_cooldown_glow
 local COLOR_STATUS_BACKGROUND_DEFAULT = DefinitionSettings.color_status_background_default
 local COLOR_STATUS_BACKGROUND_CRITICAL = DefinitionSettings.color_status_background_critical
+local COLOR_TOUGHNESS_HIT_INDICATOR = DefinitionSettings.color_toughness_hit_indicator
+local COLOR_TOUGHNESS_ARMOR_BREAK_INDICATOR = DefinitionSettings.color_toughness_armor_break_indicator
 local COLOR_COHERENCY_BORDER_IN = DefinitionSettings.color_coherency_border_in
 local COLOR_COHERENCY_BORDER_OUT = DefinitionSettings.color_coherency_border_out
 local COLOR_AMMO_NOT_IN_USE = DefinitionSettings.color_ammo_not_in_use
@@ -168,6 +173,7 @@ end
 
 local ActiveBar = {}
 local OvershieldSpent = {}
+local ToughnessHitIndicator = {}
 local InventoryValue = {}
 
 ActiveBar.rounded_fraction = function(value)
@@ -329,6 +335,103 @@ OvershieldSpent.apply = function(hud, player_key, content, style, has_overshield
 			size_addition[2] = 0
 		end
 	end
+end
+
+local function apply_toughness_hit_rect(rect_style, color, alpha, extra_size)
+	if not rect_style then
+		return
+	end
+
+	local padding = TOUGHNESS_HIT_INDICATOR_PADDING
+	local extra = extra_size or 0
+
+	apply_color(rect_style.color, color)
+	rect_style.color[1] = alpha
+	rect_style.offset[1] = DefinitionSettings.status_background_x - padding - extra * 0.5
+	rect_style.offset[2] = DefinitionSettings.status_background_y - padding - extra * 0.5
+	rect_style.size[1] = DefinitionSettings.status_background_width + padding * 2 + extra
+	rect_style.size[2] = DefinitionSettings.status_background_height + padding * 2 + extra
+end
+
+local function clear_toughness_hit_indicator(content, style)
+	content.toughness_hit_indicator_visible = false
+	content.toughness_armor_break_indicator_visible = false
+
+	apply_toughness_hit_rect(style.toughness_hit_indicator, COLOR_TOUGHNESS_HIT_INDICATOR, 0, 0)
+	apply_toughness_hit_rect(style.toughness_armor_break_indicator, COLOR_TOUGHNESS_ARMOR_BREAK_INDICATOR, 0, 0)
+end
+
+ToughnessHitIndicator.apply = function(hud, player_key, content, style, status, toughness_fraction, t)
+	local hit_style = style.toughness_hit_indicator
+	local armor_break_style = style.toughness_armor_break_indicator
+
+	if not hit_style or not armor_break_style then
+		return
+	end
+
+	local now = type(t) == "number" and t or 0
+	local current_toughness = math.clamp(toughness_fraction or 0, 0, 1)
+	local state_by_player = hud._toughness_hit_indicator_state_by_player
+
+	if not player_key or not state_by_player then
+		clear_toughness_hit_indicator(content, style)
+
+		return
+	end
+
+	local state = state_by_player[player_key]
+
+	if not state then
+		state = {
+			toughness = current_toughness,
+		}
+		state_by_player[player_key] = state
+	end
+
+	local should_clear = status == "dead" or status == "hogtied" or status == "down"
+
+	if should_clear then
+		state.start_t = nil
+		state.armor_break = false
+		state.toughness = current_toughness
+		clear_toughness_hit_indicator(content, style)
+
+		return
+	end
+
+	if state.toughness and current_toughness < state.toughness then
+		state.start_t = now
+		state.armor_break = current_toughness <= 0
+	end
+
+	state.toughness = current_toughness
+
+	if not state.start_t then
+		clear_toughness_hit_indicator(content, style)
+
+		return
+	end
+
+	local progress = math.clamp((now - state.start_t) / TOUGHNESS_HIT_INDICATOR_DURATION, 0, 1)
+
+	if progress >= 1 then
+		state.start_t = nil
+		state.armor_break = false
+		clear_toughness_hit_indicator(content, style)
+
+		return
+	end
+
+	local pulse_progress = math.easeInCubic(math.ease_pulse(progress))
+	local hit_alpha = 150 * pulse_progress
+	local armor_break_alpha = state.armor_break and 45 * pulse_progress or 0
+	local armor_break_extra_size = state.armor_break and TOUGHNESS_HIT_INDICATOR_ARMOR_BREAK_EXTRA_SIZE * math.easeOutCubic(progress) or 0
+
+	content.toughness_hit_indicator_visible = true
+	content.toughness_armor_break_indicator_visible = state.armor_break == true
+
+	apply_toughness_hit_rect(hit_style, COLOR_TOUGHNESS_HIT_INDICATOR, hit_alpha, armor_break_extra_size)
+	apply_toughness_hit_rect(armor_break_style, COLOR_TOUGHNESS_ARMOR_BREAK_INDICATOR, armor_break_alpha, armor_break_extra_size)
 end
 
 InventoryValue.colored_text = function(text, color)
@@ -817,17 +920,35 @@ InventoryValue.clear = function(hud, player_key, content, style)
 	end
 end
 
-InventoryValue.apply_layout = function(style, inventory_icons, ui_renderer, plain_text)
+InventoryValue.apply_layout = function(style, visible_inventory_icons, ui_renderer, plain_text)
 	style.inventory_value_text.size[1] = INVENTORY_VALUE.text_width
 	style.inventory_value_out_text.size[1] = INVENTORY_VALUE.text_width
 	style.salvage_text.size[1] = DefinitionSettings.salvage_text_width
 
-	if inventory_icons and not inventory_icons.pocketable_icon and inventory_icons.pocketable_small_icon then
-		style.pocketable_small_icon.offset[1] = INVENTORY_ICON_X
-		style.salvage_text.offset[1] = INVENTORY_ICON_X + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
-	elseif style.pocketable_small_icon.default_offset then
-		style.pocketable_small_icon.offset[1] = style.pocketable_small_icon.default_offset[1]
-		style.salvage_text.offset[1] = DefinitionSettings.salvage_text_x
+	local x = DefinitionSettings.grenade_icon_x
+
+	if visible_inventory_icons and visible_inventory_icons.grenade_icon then
+		style.grenade_icon.offset[1] = x
+		x = x + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
+	end
+
+	if visible_inventory_icons and visible_inventory_icons.ammo_icon then
+		style.ammo_icon.offset[1] = x
+		x = x + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
+	end
+
+	if visible_inventory_icons and visible_inventory_icons.pocketable_icon then
+		style.pocketable_icon.offset[1] = x
+		x = x + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
+	end
+
+	if visible_inventory_icons and visible_inventory_icons.pocketable_small_icon then
+		style.pocketable_small_icon.offset[1] = x
+		x = x + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
+	end
+
+	if visible_inventory_icons and visible_inventory_icons.salvage_text ~= "" then
+		style.salvage_text.offset[1] = x
 	end
 end
 
@@ -884,9 +1005,15 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local status_background_color = operational_status and operational_status.is_critical and COLOR_STATUS_BACKGROUND_CRITICAL or COLOR_STATUS_BACKGROUND_DEFAULT
 	local pocketable_icon = filtered_pocketable_icon(inventory_icons)
 	local pocketable_small_icon = show_stimm_icon and inventory_icons.pocketable_small_icon or nil
+	local grenade_icon = show_grenade_icon and inventory_icons.grenade_icon or nil
+	local ammo_icon = show_ammo_icon and inventory_icons.ammo_icon or nil
+	local salvage_text = inventory_icons.salvage_text or ""
 	local visible_inventory_icons = {
+		grenade_icon = grenade_icon,
+		ammo_icon = ammo_icon,
 		pocketable_icon = pocketable_icon,
 		pocketable_small_icon = pocketable_small_icon,
+		salvage_text = salvage_text,
 	}
 
 	content.class_icon = show_class_icon and (class_status_icon and "" or PlayerDataRuntime.archetype_icon(player)) or ""
@@ -894,11 +1021,11 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	content.relation_status = relation_status
 	content.ability_icon_visible = show_ability_icon and ability_state ~= nil
 	content.ability_progress = ability_state and ability_state.progress or 1
-	content.grenade_icon = show_grenade_icon and inventory_icons.grenade_icon or nil
-	content.ammo_icon = show_ammo_icon and inventory_icons.ammo_icon or nil
+	content.grenade_icon = grenade_icon
+	content.ammo_icon = ammo_icon
 	content.pocketable_icon = pocketable_icon
 	content.pocketable_small_icon = pocketable_small_icon
-	content.salvage_text = inventory_icons.salvage_text or ""
+	content.salvage_text = salvage_text
 
 	apply_ability_state(style, ability_state)
 	InventoryValue.apply_layout(style, visible_inventory_icons, ui_renderer, inventory_value_plain)
@@ -925,6 +1052,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.salvage_text.text_color, COLOR_TEXT_DEFAULT)
 
 	set_rect_width(style.coherency_border, show_coherency_border and COHERENCY_BORDER_WIDTH or 0)
+	ToughnessHitIndicator.apply(self, player_key, content, style, status, tough_fraction, t)
 	style.toughness_fill.offset[2] = toughness_bar_y
 	style.toughness_fill.size[2] = toughness_bar_height
 	style.revive_fill.offset[2] = toughness_bar_y
@@ -948,6 +1076,7 @@ HudElementSquadHud.init = function(self, parent, draw_layer, start_scale)
 	self._active_bar_state_by_player = {}
 	self._inventory_value_state_by_player = {}
 	self._overshield_spent_state_by_player = {}
+	self._toughness_hit_indicator_state_by_player = {}
 	self._name_marquee_by_player = {}
 	self._name_status_flash_by_player = {}
 	self._revive_progress_by_player = {}

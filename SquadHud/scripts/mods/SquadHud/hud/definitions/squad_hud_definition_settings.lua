@@ -36,6 +36,9 @@ S.bar_gap = 1
 S.active_bar_visible_duration = 5
 S.overshield_spent_duration = 0.3
 S.overshield_spent_height_addition = 16
+S.toughness_hit_indicator_duration = 0.34
+S.toughness_hit_indicator_padding = 3
+S.toughness_hit_indicator_armor_break_extra_size = 10
 
 S.inventory_icon_size = 16
 S.inventory_icon_gap = 4
@@ -145,6 +148,18 @@ S.color_status_background_critical = {
 	255,
 	40,
 	40,
+}
+S.color_toughness_hit_indicator = {
+	0,
+	75,
+	220,
+	255,
+}
+S.color_toughness_armor_break_indicator = {
+	0,
+	255,
+	255,
+	255,
 }
 S.color_coherency_border_in = {
 	220,
