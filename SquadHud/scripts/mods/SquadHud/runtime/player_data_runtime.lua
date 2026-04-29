@@ -14,6 +14,20 @@ local COLOR_FALLBACK_SLOT = {
 	160,
 	160,
 }
+local PLATFORM_ICONS = {
+	steam = "\238\129\171",
+	xbox = "\238\129\172",
+	psn = "\238\129\177",
+	ps5 = "\238\129\177",
+	unknown = "\238\129\175",
+}
+local PLATFORM_LABELS = {
+	steam = "Steam",
+	xbox = "Xbox",
+	psn = "PlayStation",
+	ps5 = "PlayStation",
+	unknown = "Unknown",
+}
 local LUGGABLE_SLOT_NAME = "slot_luggable"
 
 function M.player_slot(player)
@@ -256,7 +270,9 @@ local player_profile
 local runtime_state = mod:persistent_table("player_data_runtime")
 local true_level_cache = mod:persistent_table("player_total_level_cache")
 local true_level_queue = mod:persistent_table("player_total_level_queue")
+local account_info_cache = mod:persistent_table("player_account_info_cache")
 local presence_promises = {}
+local account_presence_promises = {}
 local true_level_promises = {}
 local xp_settings = mod:persistent_table("player_total_level_xp_settings")
 
@@ -460,6 +476,144 @@ local function player_account_id(player)
 	end
 
 	return nil
+end
+
+local function strip_platform_icons(text)
+	if type(text) ~= "string" or text == "" then
+		return text
+	end
+
+	for _, icon in pairs(PLATFORM_ICONS) do
+		text = string.gsub(text, icon .. "%s*", "")
+	end
+
+	return text
+end
+
+local function account_name_is_unknown(account_name)
+	if type(account_name) ~= "string" or account_name == "" then
+		return true
+	end
+
+	local stripped = strip_platform_icons(account_name)
+
+	return stripped == "N/A" or stripped == "[unknown]" or stripped == ""
+end
+
+local function fetch_account_presence(account_id)
+	if not account_id or account_presence_promises[account_id] or not Managers.presence or type(Managers.presence.get_presence) ~= "function" then
+		return
+	end
+
+	local ok, promise = pcall(function()
+		local _, presence_promise = Managers.presence:get_presence(account_id)
+
+		return presence_promise
+	end)
+
+	if not ok or not promise or type(promise.next) ~= "function" then
+		return
+	end
+
+	account_presence_promises[account_id] = promise
+
+	promise:next(function()
+		account_presence_promises[account_id] = nil
+	end):catch(function()
+		account_presence_promises[account_id] = nil
+	end)
+end
+
+local function player_info_for_account(account_id)
+	local social_service = Managers.data_service and Managers.data_service.social
+
+	if not account_id or not social_service or type(social_service.get_player_info_by_account_id) ~= "function" then
+		return nil
+	end
+
+	local ok, player_info = pcall(function()
+		return social_service:get_player_info_by_account_id(account_id)
+	end)
+
+	if ok and player_info then
+		return player_info
+	end
+
+	return nil
+end
+
+local function player_info_value(player_info, method_name)
+	if not player_info or type(player_info[method_name]) ~= "function" then
+		return nil
+	end
+
+	local ok, value = pcall(function()
+		return player_info[method_name](player_info)
+	end)
+
+	if ok and type(value) == "string" and value ~= "" then
+		return value
+	end
+
+	return nil
+end
+
+function M.player_account_info(player)
+	local account_id = player_account_id(player)
+
+	if not account_id then
+		return nil
+	end
+
+	local cache_key = tostring(account_id)
+	local cached = account_info_cache[cache_key]
+
+	if type(cached) == "table" and type(cached.account_name) == "string" and cached.account_name ~= "" then
+		return cached
+	end
+
+	local player_info = player_info_for_account(account_id)
+
+	if not player_info then
+		fetch_account_presence(account_id)
+
+		return nil
+	end
+
+	local account_name = player_info_value(player_info, "user_display_name")
+
+	if account_name_is_unknown(account_name) then
+		return nil
+	end
+
+	local platform = player_info_value(player_info, "platform") or "unknown"
+
+	if not PLATFORM_ICONS[platform] then
+		platform = "unknown"
+	end
+
+	local account_info = {
+		account_name = strip_platform_icons(account_name),
+		platform = platform,
+		platform_icon = PLATFORM_ICONS[platform] or PLATFORM_ICONS.unknown,
+		platform_label = PLATFORM_LABELS[platform] or PLATFORM_LABELS.unknown,
+	}
+
+	account_info_cache[cache_key] = account_info
+
+	return account_info
+end
+
+function M.player_account_name(player)
+	local account_info = M.player_account_info(player)
+
+	return account_info and account_info.account_name or nil
+end
+
+function M.player_account_platform_icon(player)
+	local account_info = M.player_account_info(player)
+
+	return account_info and account_info.platform_icon or PLATFORM_ICONS.unknown
 end
 
 local function player_character_id(player, profile)

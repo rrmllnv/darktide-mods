@@ -11,6 +11,34 @@ return {
 		en = "\238\128\140 DISPLAY",
 		ru = "\238\128\140 ОТОБРАЖЕНИЕ",
 	},
+	squadhud_social_group = {
+		en = "\238\128\171 SOCIAL",
+		ru = "\238\128\171 СОЦИАЛЬНОЕ",
+	},
+	squadhud_show_account_names_keybind = {
+		en = "Show account names",
+		ru = "Показывать имена аккаунтов",
+	},
+	squadhud_show_account_names_keybind_description = {
+		en = "Shows account names and platform icons according to the selected key mode.",
+		ru = "Показывает имена аккаунтов и иконки платформ по выбранному режиму клавиши.",
+	},
+	squadhud_account_names_keybind_mode = {
+		en = "Account name key mode",
+		ru = "Режим клавиши имён аккаунтов",
+	},
+	squadhud_account_names_keybind_mode_description = {
+		en = "Toggle switches account names on/off. Hold shows them only while the key is held.",
+		ru = "Toggle переключает имена аккаунтов вкл/выкл. Hold показывает их только пока клавиша удерживается.",
+	},
+	squadhud_account_names_keybind_mode_toggle = {
+		en = "Toggle",
+		ru = "Toggle",
+	},
+	squadhud_account_names_keybind_mode_hold = {
+		en = "Hold",
+		ru = "Hold",
+	},
 	squadhud_system_group = {
 		en = "\238\128\169 SYSTEM SETTINGS",
 		ru = "\238\128\169 СИСТЕМНЫЕ НАСТРОЙКИ",
