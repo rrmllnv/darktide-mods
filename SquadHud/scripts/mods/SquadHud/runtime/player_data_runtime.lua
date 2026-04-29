@@ -323,14 +323,6 @@ function M.status_from_extensions(extensions)
 		return "hogtied"
 	end
 
-	if character_state_component and PlayerUnitStatus.is_knocked_down(character_state_component) then
-		return "down"
-	end
-
-	if character_state_component and PlayerUnitStatus.is_ledge_hanging(character_state_component) then
-		return "ledge_hanging"
-	end
-
 	if disabled_character_state_component and disabled_character_state_component.is_disabled then
 		if PlayerUnitStatus.is_pounced(disabled_character_state_component) then
 			return "pounced"
@@ -359,13 +351,19 @@ function M.status_from_extensions(extensions)
 		if PlayerUnitStatus.is_grabbed(disabled_character_state_component) then
 			return "grabbed"
 		end
+	end
 
-		return "disabled"
+	if character_state_component and PlayerUnitStatus.is_knocked_down(character_state_component) then
+		return "down"
+	end
+
+	if character_state_component and PlayerUnitStatus.is_ledge_hanging(character_state_component) then
+		return "ledge_hanging"
 	end
 
 	local disabled = character_state_component and PlayerUnitStatus.is_disabled(character_state_component)
 
-	if disabled then
+	if disabled or disabled_character_state_component and disabled_character_state_component.is_disabled then
 		return "disabled"
 	end
 
