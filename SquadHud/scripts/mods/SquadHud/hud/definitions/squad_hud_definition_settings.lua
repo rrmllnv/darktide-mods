@@ -42,6 +42,14 @@ S.toughness_hit_indicator_armor_break_extra_size = 10
 
 S.inventory_icon_size = 16
 S.inventory_icon_gap = 4
+S.ammo_percent = {
+	font_size = 15,
+	gap = 2,
+	height = 18,
+	slide_duration = 0.24,
+	text_width = 42,
+	visible_duration = 5,
+}
 S.inventory_value_max_width = 110
 S.previous_inventory_block_width = S.inventory_icon_size * 2 + S.inventory_icon_gap
 S.salvage_text_width = 72

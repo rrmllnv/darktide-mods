@@ -26,6 +26,7 @@ local INVENTORY_ICON_SIZE = DefinitionSettings.inventory_icon_size
 local INVENTORY_ICON_GAP = DefinitionSettings.inventory_icon_gap
 local INVENTORY_ICON_X = DefinitionSettings.inventory_icon_x
 local INVENTORY_ICON_Y = DefinitionSettings.inventory_icon_y
+local AMMO_PERCENT = DefinitionSettings.ammo_percent
 local INVENTORY_VALUE = DefinitionSettings.inventory_value
 local BAR_LEFT = DefinitionSettings.bar_left
 local BAR_WIDTH = DefinitionSettings.bar_width
@@ -124,6 +125,26 @@ local function squad_panel_display_mode()
 	return "all"
 end
 
+local function ammo_percent_mode()
+	local value = mod:get("squadhud_ammo_percent_mode")
+
+	if value == "never" or value == "always" then
+		return value
+	end
+
+	return "changed"
+end
+
+local function ammo_value_format()
+	local value = mod:get("squadhud_ammo_value_format")
+
+	if value == "count" then
+		return value
+	end
+
+	return "percent"
+end
+
 local function custom_hud_mod()
 	local get_mod_fn = rawget(_G, "get_mod")
 
@@ -184,6 +205,7 @@ end
 local ActiveBar = {}
 local OvershieldSpent = {}
 local ToughnessHitIndicator = {}
+local AmmoPercent = {}
 local InventoryValue = {}
 
 ActiveBar.rounded_fraction = function(value)
@@ -452,6 +474,128 @@ local function smoothstep(progress)
 	progress = math.clamp(progress, 0, 1)
 
 	return progress * progress * (3 - 2 * progress)
+end
+
+AmmoPercent.text = function(inventory_icons, format)
+	if format == "count" then
+		return tostring(math.max(0, math.floor((inventory_icons.ammo_count_current or 0) + 0.5)))
+	end
+
+	return string.format("%d%%", math.clamp(math.floor((inventory_icons.ammo_percent or 0) + 0.5), 0, 100))
+end
+
+AmmoPercent.text_width = function(ui_renderer, text, style)
+	if not ui_renderer or not style or text == nil or text == "" then
+		return 0
+	end
+
+	local width = TextUtilities.text_width(ui_renderer, text, style, nil, true) or 0
+
+	return math.min(AMMO_PERCENT.text_width, math.ceil(width) + 2)
+end
+
+AmmoPercent.transition_fraction = function(state, now)
+	if not state.transition_start_t then
+		return state.target_visible and 1 or 0
+	end
+
+	local progress = math.clamp((now - state.transition_start_t) / AMMO_PERCENT.slide_duration, 0, 1)
+	local eased_progress = smoothstep(progress)
+	local fraction = (state.from_fraction or 0) + ((state.to_fraction or 0) - (state.from_fraction or 0)) * eased_progress
+
+	if progress >= 1 then
+		state.transition_start_t = nil
+		state.from_fraction = nil
+		state.to_fraction = nil
+		fraction = state.target_visible and 1 or 0
+	end
+
+	return fraction
+end
+
+AmmoPercent.clear = function(hud, player_key, content, style)
+	content.ammo_percent_text = ""
+
+	if style.ammo_percent_text then
+		style.ammo_percent_text.offset[1] = DefinitionSettings.ammo_icon_x
+		style.ammo_percent_text.text_color[1] = 0
+	end
+
+	if player_key and hud._ammo_percent_state_by_player then
+		hud._ammo_percent_state_by_player[player_key] = nil
+	end
+
+	return {
+		fraction = 0,
+		width = 0,
+	}
+end
+
+AmmoPercent.apply = function(hud, player_key, content, style, inventory_icons, color, ui_renderer, t)
+	local mode = ammo_percent_mode()
+	local format = ammo_value_format()
+	local has_ammo_value = inventory_icons and inventory_icons.ammo_icon ~= nil and inventory_icons.uses_ammo == true and ((format == "count" and type(inventory_icons.ammo_count_current) == "number") or (format ~= "count" and type(inventory_icons.ammo_percent) == "number"))
+
+	if mode == "never" or not has_ammo_value or not player_key or not hud._ammo_percent_state_by_player then
+		return AmmoPercent.clear(hud, player_key, content, style)
+	end
+
+	local now = type(t) == "number" and t or 0
+	local text = AmmoPercent.text(inventory_icons, format)
+	local ammo_current = format == "count" and inventory_icons.ammo_count_current or inventory_icons.ammo_current
+	local ammo_max = format == "count" and inventory_icons.ammo_count_max or inventory_icons.ammo_max
+	local ammo_key = tostring(ammo_current or "") .. "/" .. tostring(ammo_max or "")
+	local text_style = style.ammo_percent_text
+	local text_width = AmmoPercent.text_width(ui_renderer, text, text_style)
+	local state = hud._ammo_percent_state_by_player[player_key]
+
+	if not state then
+		state = {
+			ammo_key = ammo_key,
+			current_fraction = 0,
+			format = format,
+			target_visible = false,
+			text = text,
+			width = text_width,
+		}
+		hud._ammo_percent_state_by_player[player_key] = state
+	elseif mode == "changed" and (state.ammo_key ~= ammo_key or state.format ~= format) then
+		state.visible_until_t = now + AMMO_PERCENT.visible_duration
+	end
+
+	state.ammo_key = ammo_key
+	state.format = format
+	state.text = text
+	state.width = text_width
+
+	local target_visible = mode == "always" or (mode == "changed" and state.visible_until_t ~= nil and now <= state.visible_until_t)
+
+	if state.target_visible ~= target_visible then
+		state.from_fraction = state.current_fraction or (state.target_visible and 1 or 0)
+		state.to_fraction = target_visible and 1 or 0
+		state.transition_start_t = now
+		state.target_visible = target_visible
+	end
+
+	local fraction = AmmoPercent.transition_fraction(state, now)
+
+	state.current_fraction = fraction
+
+	if fraction > 0 or target_visible then
+		content.ammo_percent_text = text
+	else
+		content.ammo_percent_text = ""
+	end
+
+	if text_style then
+		apply_color(text_style.text_color, color)
+		text_style.text_color[1] = math.floor((color[1] or 255) * fraction + 0.5)
+	end
+
+	return {
+		fraction = fraction,
+		width = text_width,
+	}
 end
 
 local function name_marquee_fraction(elapsed)
@@ -972,7 +1116,7 @@ InventoryValue.clear = function(hud, player_key, content, style)
 	end
 end
 
-InventoryValue.apply_layout = function(style, visible_inventory_icons, ui_renderer, plain_text)
+InventoryValue.apply_layout = function(style, visible_inventory_icons, ui_renderer, plain_text, ammo_percent_layout)
 	style.inventory_value_text.size[1] = INVENTORY_VALUE.text_width
 	style.inventory_value_out_text.size[1] = INVENTORY_VALUE.text_width
 	style.salvage_text.size[1] = DefinitionSettings.salvage_text_width
@@ -985,8 +1129,19 @@ InventoryValue.apply_layout = function(style, visible_inventory_icons, ui_render
 	end
 
 	if visible_inventory_icons and visible_inventory_icons.ammo_icon then
+		local ammo_icon_x = x
+		local ammo_percent_fraction = ammo_percent_layout and ammo_percent_layout.fraction or 0
+		local ammo_percent_width = ammo_percent_layout and ammo_percent_layout.width or 0
+
 		style.ammo_icon.offset[1] = x
 		x = x + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
+
+		style.ammo_percent_text.offset[1] = ammo_icon_x + (x - ammo_icon_x) * ammo_percent_fraction
+		style.ammo_percent_text.size[1] = AMMO_PERCENT.text_width
+		x = x + (ammo_percent_width + INVENTORY_ICON_GAP) * ammo_percent_fraction
+	else
+		style.ammo_percent_text.offset[1] = x
+		style.ammo_percent_text.size[1] = AMMO_PERCENT.text_width
 	end
 
 	if visible_inventory_icons and visible_inventory_icons.pocketable_icon then
@@ -1061,13 +1216,20 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local pocketable_small_icon = show_stimm_icon and inventory_icons.pocketable_small_icon or nil
 	local grenade_icon = show_grenade_icon and inventory_icons.grenade_icon or nil
 	local ammo_icon = show_ammo_icon and inventory_icons.ammo_icon or nil
+	local ammo_icon_color = ammo_color_from_status(inventory_icons.ammo_status, inventory_icons.uses_ammo)
 	local salvage_text = inventory_icons.salvage_text or ""
 	local visible_inventory_icons = {
 		grenade_icon = grenade_icon,
 		ammo_icon = ammo_icon,
+		ammo_count_current = inventory_icons.ammo_count_current,
+		ammo_count_max = inventory_icons.ammo_count_max,
+		ammo_current = inventory_icons.ammo_current,
+		ammo_max = inventory_icons.ammo_max,
+		ammo_percent = inventory_icons.ammo_percent,
 		pocketable_icon = pocketable_icon,
 		pocketable_small_icon = pocketable_small_icon,
 		salvage_text = salvage_text,
+		uses_ammo = inventory_icons.uses_ammo,
 	}
 
 	content.class_icon = show_class_icon and (show_account_names and PlayerDataRuntime.player_account_platform_icon(player) or class_status_icon and "" or PlayerDataRuntime.archetype_icon(player)) or ""
@@ -1082,7 +1244,10 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	content.salvage_text = salvage_text
 
 	apply_ability_state(style, ability_state)
-	InventoryValue.apply_layout(style, visible_inventory_icons, ui_renderer, inventory_value_plain)
+
+	local ammo_percent_layout = AmmoPercent.apply(self, player_key, content, style, visible_inventory_icons, ammo_icon_color, ui_renderer, t)
+
+	InventoryValue.apply_layout(style, visible_inventory_icons, ui_renderer, inventory_value_plain, ammo_percent_layout)
 
 	if not hide_vitals and inventory_value_visible(inventory_value_mode, revive_state) then
 		InventoryValue.apply_transition(self, player_key, content, style, inventory_value, inventory_value_color, inventory_value_plain, inventory_value_mode, t)
@@ -1100,7 +1265,9 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.coherency_border.color, in_coherency and COLOR_COHERENCY_BORDER_IN or COLOR_COHERENCY_BORDER_OUT)
 	apply_color(style.toughness_fill.color, revive_state.in_progress and COLOR_TOUGHNESS or has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS)
 	apply_color(style.grenade_icon.color, ammo_color_from_status(inventory_icons.grenade_status, true))
-	apply_color(style.ammo_icon.color, ammo_color_from_status(inventory_icons.ammo_status, inventory_icons.uses_ammo))
+	apply_color(style.ammo_icon.color, ammo_icon_color)
+	apply_color(style.ammo_percent_text.text_color, ammo_icon_color)
+	style.ammo_percent_text.text_color[1] = math.floor((ammo_icon_color[1] or 255) * (ammo_percent_layout.fraction or 0) + 0.5)
 	apply_color(style.pocketable_icon.color, COLOR_TEXT_DEFAULT)
 	apply_color(style.pocketable_small_icon.color, pocketable_small_icon_color(inventory_icons))
 	apply_color(style.salvage_text.text_color, COLOR_TEXT_DEFAULT)
@@ -1134,6 +1301,7 @@ HudElementSquadHud.init = function(self, parent, draw_layer, start_scale)
 	self._players = {}
 	self._slot_players = {}
 	self._active_bar_state_by_player = {}
+	self._ammo_percent_state_by_player = {}
 	self._inventory_value_state_by_player = {}
 	self._overshield_spent_state_by_player = {}
 	self._toughness_hit_indicator_state_by_player = {}

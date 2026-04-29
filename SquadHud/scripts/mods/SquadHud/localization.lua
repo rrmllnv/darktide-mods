@@ -159,6 +159,42 @@ return {
 		en = "Show ammo icon",
 		ru = "Показать иконку патронов",
 	},
+	squadhud_ammo_value_format = {
+		en = "Ammo value format",
+		ru = "Формат значения патронов",
+	},
+	squadhud_ammo_value_format_description = {
+		en = "Select whether the ammo value is shown as a percentage or as the total ammo count.",
+		ru = "Выберите, как показывать значение патронов: в процентах или общим количеством.",
+	},
+	squadhud_ammo_value_format_percent = {
+		en = "Percentage",
+		ru = "Проценты",
+	},
+	squadhud_ammo_value_format_count = {
+		en = "Ammo count",
+		ru = "Количество патронов",
+	},
+	squadhud_ammo_percent_mode = {
+		en = "When to show ammo value",
+		ru = "Когда показывать значение патронов",
+	},
+	squadhud_ammo_percent_mode_description = {
+		en = "Controls when the ammo value text is shown next to the ammo icon.",
+		ru = "Определяет, когда рядом с иконкой патронов показывать текст со значением патронов.",
+	},
+	squadhud_ammo_percent_mode_never = {
+		en = "Never",
+		ru = "Никогда",
+	},
+	squadhud_ammo_percent_mode_always = {
+		en = "Always",
+		ru = "Всегда",
+	},
+	squadhud_ammo_percent_mode_changed = {
+		en = "When changed",
+		ru = "Когда они изменяются",
+	},
 	squadhud_show_stimm = {
 		en = "Show stimm icon",
 		ru = "Показать иконку стима",

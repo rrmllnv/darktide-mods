@@ -3,6 +3,7 @@ local M = {}
 function M.append_passes(passes, settings, templates)
 	passes[#passes + 1] = templates.inventory_texture_pass(settings, "grenade_icon", "grenade_icon", { settings.grenade_icon_x, settings.inventory_icon_y, 4 })
 	passes[#passes + 1] = templates.inventory_texture_pass(settings, "ammo_icon", "ammo_icon", { settings.ammo_icon_x, settings.inventory_icon_y, 4 })
+	passes[#passes + 1] = templates.text_pass(settings, "ammo_percent_text", "ammo_percent_text", settings.ammo_percent.font_size, { settings.ammo_icon_x, settings.inventory_icon_y - 1, 3 }, { settings.ammo_percent.text_width, settings.ammo_percent.height }, settings.color_text_default, "left", nil, true)
 	passes[#passes + 1] = templates.inventory_texture_pass(settings, "pocketable_icon", "pocketable_icon", { settings.inventory_icon_x, settings.inventory_icon_y, 4 })
 	passes[#passes + 1] = templates.inventory_texture_pass(settings, "pocketable_small_icon", "pocketable_small_icon", { settings.inventory_small_icon_x, settings.inventory_icon_y, 4 })
 	passes[#passes + 1] = templates.text_pass(settings, "salvage_text", "salvage_text", settings.salvage_font_size, { settings.salvage_text_x, settings.salvage_text_y, 4 }, { settings.salvage_text_width, settings.salvage_text_height }, settings.color_text_default, "left", nil, true)

@@ -11,6 +11,7 @@ local POCKETABLE_SLOT_NAME = "slot_pocketable"
 local POCKETABLE_SMALL_SLOT_NAME = "slot_pocketable_small"
 local GRENADE_ABILITY_SLOT_NAME = "slot_grenade_ability"
 local GRENADE_ABILITY_ID = "grenade_ability"
+local RANGED_SLOT_NAME = "slot_secondary"
 local AMMO_ICON = "content/ui/materials/hud/icons/party_ammo"
 local MAX_STATUS = 3
 
@@ -235,15 +236,15 @@ end
 
 local function weapon_ammo_status(player, unit_data_extension, visual_loadout_extension)
 	if not is_human_controlled(player) then
-		return true, MAX_STATUS, true
+		return true, MAX_STATUS, true, nil, nil, nil, nil, nil
 	end
 
 	if not unit_data_extension or not visual_loadout_extension then
-		return false, MAX_STATUS, false
+		return false, MAX_STATUS, false, nil, nil, nil, nil, nil
 	end
 
-	local total_current_ammo = 0
-	local total_max_ammo = 0
+	local ranged_current_ammo
+	local ranged_max_ammo
 	local uses_ammo = false
 
 	for i = 1, #WEAPON_SLOTS do
@@ -271,22 +272,29 @@ local function weapon_ammo_status(player, unit_data_extension, visual_loadout_ex
 				local max_reserve = inventory_component.max_ammunition_reserve or 0
 				local current_clip = Ammo.current_ammo_in_clips(inventory_component) or 0
 				local current_reserve = inventory_component.current_ammunition_reserve or 0
+				local free_transfer = inventory_component.free_ammunition_transfer == true
+				local current_clip_for_total = free_transfer and 0 or current_clip
+				local max_clip_for_total = free_transfer and 0 or max_clip
 
-				total_current_ammo = total_current_ammo + current_clip + current_reserve
-				total_max_ammo = total_max_ammo + max_clip + max_reserve
+				if slot_name == RANGED_SLOT_NAME then
+					ranged_current_ammo = current_clip_for_total + current_reserve
+					ranged_max_ammo = max_clip_for_total + max_reserve
+				end
 			end
 		end
 	end
 
 	local ammo_status = MAX_STATUS
+	local ammo_fraction
 
-	if total_max_ammo > 0 then
-		local weapon_ammo_fraction = total_current_ammo / total_max_ammo
+	if ranged_max_ammo and ranged_max_ammo > 0 then
+		local weapon_ammo_fraction = math.clamp((ranged_current_ammo or 0) / ranged_max_ammo, 0, 1)
 
 		ammo_status = math.ceil(weapon_ammo_fraction / (1 / MAX_STATUS))
+		ammo_fraction = weapon_ammo_fraction
 	end
 
-	return uses_ammo, ammo_status, true
+	return uses_ammo, ammo_status, true, ammo_fraction, ranged_current_ammo, ranged_max_ammo, ranged_current_ammo, ranged_max_ammo
 end
 
 local function expedition_salvage_text(player)
@@ -347,7 +355,7 @@ function M.icons(player, extensions, status)
 	local inventory_component = safe_read_component(unit_data_extension, "inventory")
 	local grenade_icon = grenade_hud_icon(player, inventory_component, visual_loadout_extension, ability_extension)
 	local grenade_ability_status, grenade_visible = grenade_status(player, ability_extension)
-	local uses_ammo, ammo_status, ammo_visible = weapon_ammo_status(player, unit_data_extension, visual_loadout_extension)
+	local uses_ammo, ammo_status, ammo_visible, ammo_fraction, ammo_current, ammo_max, ammo_count_current, ammo_count_max = weapon_ammo_status(player, unit_data_extension, visual_loadout_extension)
 	local pocketable_icon = item_hud_icon_from_slot(inventory_component, visual_loadout_extension, POCKETABLE_SLOT_NAME)
 	local pocketable_template_id = weapon_template_id_from_slot(inventory_component, POCKETABLE_SLOT_NAME)
 	local pocketable_small_icon = item_hud_icon_from_slot(inventory_component, visual_loadout_extension, POCKETABLE_SMALL_SLOT_NAME)
@@ -356,6 +364,12 @@ function M.icons(player, extensions, status)
 
 	return {
 		ammo_icon = ammo_visible and AMMO_ICON or nil,
+		ammo_count_current = ammo_count_current,
+		ammo_count_max = ammo_count_max,
+		ammo_current = ammo_current,
+		ammo_fraction = ammo_fraction,
+		ammo_max = ammo_max,
+		ammo_percent = ammo_fraction and math.floor(ammo_fraction * 100 + 0.5) or nil,
 		ammo_status = ammo_status,
 		grenade_icon = (grenade_visible or grenade_icon ~= nil) and grenade_icon or nil,
 		grenade_status = grenade_ability_status,
