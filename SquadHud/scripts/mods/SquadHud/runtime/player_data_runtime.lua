@@ -43,6 +43,20 @@ function M.player_unique_id(player)
 	return tostring(player)
 end
 
+local function player_raw_unique_id(player)
+	if type(player) == "table" and type(player.unique_id) == "function" then
+		local ok, unique_id = pcall(function()
+			return player:unique_id()
+		end)
+
+		if ok and unique_id ~= nil then
+			return unique_id
+		end
+	end
+
+	return player
+end
+
 local function is_same_player(left, right)
 	if left == right then
 		return true
@@ -446,6 +460,38 @@ function M.health_value(extensions)
 	return current_health
 end
 
+local function player_ready_time_to_spawn(game_mode_manager, player)
+	if game_mode_manager and type(game_mode_manager.player_time_until_spawn) == "function" then
+		local ok, ready_time = pcall(function()
+			return game_mode_manager:player_time_until_spawn(player)
+		end)
+
+		if ok and type(ready_time) == "number" and ready_time > 0 then
+			return ready_time
+		end
+	end
+
+	local game_mode = game_mode_manager and game_mode_manager._game_mode
+	local players_respawn_time = game_mode and game_mode._players_respawn_time
+
+	if type(players_respawn_time) ~= "table" then
+		return nil
+	end
+
+	local unique_id = player_raw_unique_id(player)
+	local ready_time = players_respawn_time[unique_id]
+
+	if ready_time == nil and unique_id ~= nil then
+		ready_time = players_respawn_time[tostring(unique_id)]
+	end
+
+	if type(ready_time) == "number" and ready_time > 0 then
+		return ready_time
+	end
+
+	return nil
+end
+
 function M.rescue_timer_status(player, status)
 	if status ~= "dead" then
 		return {
@@ -458,15 +504,7 @@ function M.rescue_timer_status(player, status)
 	local time_manager = Managers.time
 	local has_gameplay_timer = time_manager and type(time_manager.has_timer) == "function" and time_manager:has_timer("gameplay")
 	local current_time = has_gameplay_timer and time_manager:time("gameplay") or nil
-	local ready_time_to_spawn
-
-	if game_mode_manager and type(game_mode_manager.player_time_until_spawn) == "function" then
-		local ok, time_until_spawn = pcall(function()
-			return game_mode_manager:player_time_until_spawn(player)
-		end)
-
-		ready_time_to_spawn = ok and time_until_spawn or nil
-	end
+	local ready_time_to_spawn = player_ready_time_to_spawn(game_mode_manager, player)
 
 	if ready_time_to_spawn and current_time then
 		local time_left = math.max(0, ready_time_to_spawn - current_time)

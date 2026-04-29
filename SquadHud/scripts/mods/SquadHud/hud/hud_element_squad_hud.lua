@@ -871,10 +871,11 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local show_ammo_icon = boolean_setting("squadhud_show_ammo", true)
 	local show_stimm_icon = boolean_setting("squadhud_show_stimm", true)
 	local show_teammate_distance = boolean_setting("squadhud_show_teammate_distance", true)
-	local relation_status = show_teammate_distance and (is_bad_status and "" or PlayerDataRuntime.player_distance_text(local_player, player, extensions)) or ""
-	local name_x, name_width = player_name_layout(show_class_icon, show_teammate_distance)
+	local show_relation_status = show_teammate_distance and not is_bad_status and not is_showing_status
+	local relation_status = show_relation_status and PlayerDataRuntime.player_distance_text(local_player, player, extensions) or ""
+	local name_x, name_width = player_name_layout(show_class_icon, show_relation_status)
 
-	if show_teammate_distance and mod.squadhud_debug_relation_status then
+	if show_relation_status and mod.squadhud_debug_relation_status then
 		relation_status = mod.squadhud_debug_relation_status(relation_status, is_local_player)
 	end
 

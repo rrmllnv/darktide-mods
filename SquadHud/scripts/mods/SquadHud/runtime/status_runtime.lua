@@ -22,6 +22,14 @@ local function status_enabled(status_id)
 	return value ~= false and value ~= 0
 end
 
+local function timer_text(time_left)
+	if type(time_left) ~= "number" or time_left ~= time_left or time_left <= 0 then
+		return nil
+	end
+
+	return tostring(math.max(1, math.ceil(time_left)))
+end
+
 function M.resolve(player, extensions, status, health_fraction, revive_state, rescue_timer_status)
 	if revive_state and revive_state.in_progress then
 		if status ~= "down" then
@@ -53,13 +61,14 @@ function M.resolve(player, extensions, status, health_fraction, revive_state, re
 
 	if status == "dead" then
 		local time_left = rescue_timer_status and rescue_timer_status.time_left
-		local show_timer = time_left and time_left > 0
+		local time_left_text = timer_text(time_left)
+		local show_timer = time_left_text ~= nil
 		local is_rescue_available = rescue_timer_status and rescue_timer_status.available == true
 		local text_key = show_timer and "squadhud_status_rescue_available_in" or is_rescue_available and "squadhud_status_rescue_available" or "squadhud_status_dead"
 		local text = mod:localize(text_key)
 
 		if show_timer then
-			text = text .. " " .. tostring(math.round_with_precision(time_left))
+			text = text .. " " .. time_left_text
 		end
 
 		local status_id = (show_timer or is_rescue_available) and "rescue_available" or "dead"

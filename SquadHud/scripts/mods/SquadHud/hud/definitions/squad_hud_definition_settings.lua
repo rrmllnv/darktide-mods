@@ -4,7 +4,7 @@ local S = {}
 
 S.max_players = 4
 S.panel_height = 38
-S.panel_gap = 15
+S.panel_gap = 20
 
 S.ability_icon_size = 30
 S.ability_icon_frame_size = 48
