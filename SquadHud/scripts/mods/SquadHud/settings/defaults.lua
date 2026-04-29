@@ -18,6 +18,7 @@ local defaults = {
 	squadhud_show_medical_crate = true,
 	squadhud_show_stimm = true,
 	squadhud_show_teammate_distance = true,
+	squadhud_show_teammate_level = true,
 	squadhud_show_toughness_value = true,
 	squadhud_show_status_consumed = true,
 	squadhud_show_status_critical_health = true,

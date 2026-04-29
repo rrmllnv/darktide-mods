@@ -198,11 +198,156 @@ function M.player_name(player)
 	return mod:localize("squadhud_empty_name")
 end
 
+local player_profile
+
+local true_level_cache = {}
+local true_level_promises = {}
+local xp_settings = {}
+
+local function fallback_profile_level(profile)
+	if type(profile.current_level) == "number" then
+		return math.floor(profile.current_level)
+	end
+
+	return nil
+end
+
+local function total_level_from_progression(progression)
+	local level_array = xp_settings.level_array
+	local total_xp = xp_settings.total_xp
+	local max_level = xp_settings.max_level
+
+	if type(progression) ~= "table" or type(level_array) ~= "table" or type(total_xp) ~= "number" or type(max_level) ~= "number" then
+		return nil
+	end
+
+	local current_level = progression.currentLevel
+	local current_xp = progression.currentXp
+
+	if type(current_level) ~= "number" or type(current_xp) ~= "number" then
+		return nil
+	end
+
+	if current_level < max_level then
+		return math.floor(current_level)
+	end
+
+	local previous_level_total_xp = level_array[max_level - 1]
+	local max_level_total_xp = level_array[max_level]
+
+	if type(previous_level_total_xp) ~= "number" or type(max_level_total_xp) ~= "number" then
+		return math.floor(current_level)
+	end
+
+	local xp_per_level = max_level_total_xp - previous_level_total_xp
+
+	if xp_per_level <= 0 then
+		return math.floor(current_level)
+	end
+
+	local xp_over_max_level = math.max(0, current_xp - total_xp)
+	local additional_level = math.floor(xp_over_max_level / xp_per_level)
+
+	return math.floor(current_level + additional_level)
+end
+
+local function fetch_xp_settings()
+	if xp_settings.promise or xp_settings.level_array then
+		return
+	end
+
+	local backend_interface = Managers.backend and Managers.backend.interfaces
+	local progression_interface = backend_interface and backend_interface.progression
+
+	if not progression_interface or type(progression_interface.get_xp_table) ~= "function" then
+		return
+	end
+
+	local ok, promise = pcall(function()
+		return progression_interface:get_xp_table("character")
+	end)
+
+	if not ok or not promise or type(promise.next) ~= "function" then
+		return
+	end
+
+	xp_settings.promise = promise
+
+	promise:next(function(xp_per_level_array)
+		local max_level = type(xp_per_level_array) == "table" and #xp_per_level_array or 0
+
+		if max_level > 1 then
+			xp_settings.level_array = xp_per_level_array
+			xp_settings.total_xp = xp_per_level_array[max_level]
+			xp_settings.max_level = max_level
+		end
+
+		xp_settings.promise = nil
+	end):catch(function()
+		xp_settings.promise = nil
+	end)
+end
+
+local function fetch_player_total_level(character_id)
+	if not character_id or true_level_promises[character_id] or true_level_cache[character_id] then
+		return
+	end
+
+	if not xp_settings.level_array then
+		fetch_xp_settings()
+
+		return
+	end
+
+	local backend_interface = Managers.backend and Managers.backend.interfaces
+	local progression_interface = backend_interface and backend_interface.progression
+
+	if not progression_interface or type(progression_interface.get_progression) ~= "function" then
+		return
+	end
+
+	local ok, promise = pcall(function()
+		return progression_interface:get_progression("character", character_id)
+	end)
+
+	if not ok or not promise or type(promise.next) ~= "function" then
+		return
+	end
+
+	true_level_promises[character_id] = promise
+
+	promise:next(function(progression)
+		true_level_cache[character_id] = total_level_from_progression(progression)
+		true_level_promises[character_id] = nil
+	end):catch(function()
+		true_level_promises[character_id] = nil
+	end)
+end
+
+function M.player_total_level(player)
+	local profile = player_profile(player)
+
+	if not profile then
+		return nil
+	end
+
+	local character_id = profile.character_id
+	local cached_total_level = character_id and true_level_cache[character_id]
+
+	if type(cached_total_level) == "number" then
+		return cached_total_level
+	end
+
+	fetch_player_total_level(character_id)
+
+	return fallback_profile_level(profile)
+end
+
 function M.player_unit(player)
 	return type(player) == "table" and player.player_unit or nil
 end
 
-local function player_profile(player)
+function player_profile(player)
 	if type(player) == "table" and type(player.profile) == "function" then
 		local ok, profile = pcall(function()
 			return player:profile()

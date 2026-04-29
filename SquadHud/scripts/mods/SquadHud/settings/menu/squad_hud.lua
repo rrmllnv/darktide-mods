@@ -34,6 +34,13 @@ return {
 			default_value = d("squadhud_show_ability_icon", true),
 		},
 		{
+			setting_id = "squadhud_show_teammate_level",
+			type = "checkbox",
+			title = "squadhud_show_teammate_level",
+			tooltip_text = "squadhud_show_teammate_level_description",
+			default_value = d("squadhud_show_teammate_level", true),
+		},
+		{
 			setting_id = "squadhud_coherency_group",
 			type = "group",
 			title = "squadhud_coherency_group",

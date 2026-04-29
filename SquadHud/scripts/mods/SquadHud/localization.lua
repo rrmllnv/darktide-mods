@@ -79,6 +79,14 @@ return {
 		en = "Ability icon",
 		ru = "Иконка способности",
 	},
+	squadhud_show_teammate_level = {
+		en = "Teammate total level",
+		ru = "Общий уровень тимейта",
+	},
+	squadhud_show_teammate_level_description = {
+		en = "Shows the teammate total level next to the nickname. Uses True Level data when available, otherwise falls back to the character level exposed by the game profile.",
+		ru = "Показывает общий уровень тимейта рядом с ником. Использует данные True Level, если они доступны, иначе берет уровень персонажа из игрового профиля.",
+	},
 	squadhud_coherency_group = {
 		en = string.rep("\194\160", 8) .. "Coherency",
 		ru = string.rep("\194\160", 8) .. "Сплоченность (когерентность)",

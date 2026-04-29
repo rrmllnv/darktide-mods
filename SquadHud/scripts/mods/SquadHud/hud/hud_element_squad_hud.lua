@@ -570,6 +570,26 @@ local function inventory_value_visible(mode_key, revive_state)
 	return boolean_setting("squadhud_show_health_value", true)
 end
 
+local function hide_vitals_for_status(status)
+	return status == "dead" or status == "hogtied"
+end
+
+local function player_display_name(player, is_teammate)
+	local name = PlayerDataRuntime.player_name(player)
+
+	if not is_teammate or not boolean_setting("squadhud_show_teammate_level", true) then
+		return name
+	end
+
+	local total_level = PlayerDataRuntime.player_total_level(player)
+
+	if not total_level then
+		return name
+	end
+
+	return string.format("%s - %d", name, total_level)
+end
+
 local function apply_ability_state(style, ability_state)
 	local icon_style = style.ability_icon
 	local material_values = icon_style and icon_style.material_values
@@ -713,6 +733,23 @@ local function apply_health_segments(widget, health_fraction, health_max_fractio
 			apply_color(health_style.color, is_down and COLOR_HEALTH_CRITICAL or COLOR_HEALTH)
 		else
 			health_style.size[1] = 0
+			corruption_style.size[1] = 0
+		end
+	end
+end
+
+local function clear_health_segments(widget)
+	local style = widget.style
+
+	for i = 1, 10 do
+		local health_style = style["health_fill_" .. i]
+		local corruption_style = style["corruption_fill_" .. i]
+
+		if health_style then
+			health_style.size[1] = 0
+		end
+
+		if corruption_style then
 			corruption_style.size[1] = 0
 		end
 	end
@@ -961,12 +998,14 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local tough_fraction = PlayerDataRuntime.toughness_fraction(extensions)
 	local has_overshield = PlayerDataRuntime.has_overshield(extensions)
 	local is_down = status == "down"
+	local hide_vitals = hide_vitals_for_status(status)
 	local is_bad_status = status ~= "alive" and status ~= "luggable"
 	local player_unit = PlayerDataRuntime.player_unit(player)
 	local ability_state = AbilityRuntime.combat_ability_state(player_unit)
 	local inventory_icons = InventoryRuntime.icons(player, extensions, status)
 	local is_local_player = local_player == player
-	local base_name = PlayerDataRuntime.player_name(player)
+	local is_teammate = not is_local_player
+	local base_name = player_display_name(player, is_teammate)
 
 	if mod.squadhud_debug_player_name then
 		base_name = mod.squadhud_debug_player_name(base_name, is_local_player)
@@ -999,7 +1038,6 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 		relation_status = mod.squadhud_debug_relation_status(relation_status, is_local_player)
 	end
 
-	local is_teammate = not is_local_player
 	local in_coherency = is_teammate and PlayerDataRuntime.in_coherency_with_local_player(local_player, extensions)
 	local show_coherency_border = in_coherency or relation_status ~= ""
 	local status_background_color = operational_status and operational_status.is_critical and COLOR_STATUS_BACKGROUND_CRITICAL or COLOR_STATUS_BACKGROUND_DEFAULT
@@ -1030,7 +1068,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_ability_state(style, ability_state)
 	InventoryValue.apply_layout(style, visible_inventory_icons, ui_renderer, inventory_value_plain)
 
-	if inventory_value_visible(inventory_value_mode, revive_state) then
+	if not hide_vitals and inventory_value_visible(inventory_value_mode, revive_state) then
 		InventoryValue.apply_transition(self, player_key, content, style, inventory_value, inventory_value_color, inventory_value_plain, inventory_value_mode, t)
 	else
 		InventoryValue.clear(self, player_key, content, style)
@@ -1060,7 +1098,13 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	set_rect_width(style.toughness_fill, revive_state.in_progress and 0 or BAR_WIDTH * tough_fraction)
 	OvershieldSpent.apply(self, player_key, content, style, has_overshield, tough_fraction, toughness_bar_y, toughness_bar_height, revive_state, t)
 	set_rect_width(style.revive_fill, BAR_WIDTH * revive_progress)
-	apply_health_segments(widget, health_fraction, health_max_fraction, max_wounds, is_down, health_bar_y, health_bar_height)
+
+	if hide_vitals then
+		clear_health_segments(widget)
+	else
+		apply_health_segments(widget, health_fraction, health_max_fraction, max_wounds, is_down, health_bar_y, health_bar_height)
+	end
+
 	apply_name_marquee(self, widget, player_key, display_name, ui_renderer, t, name_width)
 	set_panel_visible(widget, true)
 end
