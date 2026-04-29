@@ -120,16 +120,16 @@ return {
 		ru = "\238\128\178 SQUAD HUD",
 	},
 	squadhud_show_class_icon = {
-		en = "Class icon",
-		ru = "Иконка класса",
+		en = "Show class icon",
+		ru = "Показать иконку класса",
 	},
 	squadhud_show_ability_icon = {
-		en = "Ability icon",
-		ru = "Иконка способности",
+		en = "Show ability icon",
+		ru = "Показать иконку способности",
 	},
 	squadhud_show_teammate_level = {
-		en = "Player total level",
-		ru = "Общий уровень игроков",
+		en = "Show player total level",
+		ru = "Показать общий уровень игроков",
 	},
 	squadhud_show_teammate_level_description = {
 		en = "Shows the total level next to the nickname. The total level is calculated from the character progression data exposed by the game backend.",
@@ -140,8 +140,8 @@ return {
 		ru = string.rep("\194\160", 8) .. "Сплоченность (когерентность)",
 	},
 	squadhud_show_teammate_distance = {
-		en = "Meters to teammate",
-		ru = "Метры до тимейта",
+		en = "Show meters to teammate",
+		ru = "Показать метры до тимейта",
 	},
 	squadhud_show_teammate_distance_description = {
 		en = "When disabled, the nickname uses the full name block width and the marquee animation recalculates for the wider area.",
@@ -152,36 +152,36 @@ return {
 		ru = string.rep("\194\160", 8) .. "Предметы",
 	},
 	squadhud_show_grenade = {
-		en = "Grenades, blitz",
-		ru = "Гранаты, блитц",
+		en = "Show grenade/blitz icon",
+		ru = "Показать иконку гранаты/блитца",
 	},
 	squadhud_show_ammo = {
-		en = "Ammo",
-		ru = "Патроны",
+		en = "Show ammo icon",
+		ru = "Показать иконку патронов",
 	},
 	squadhud_show_stimm = {
-		en = "Stimms",
-		ru = "Стимы",
+		en = "Show stimm icon",
+		ru = "Показать иконку стима",
 	},
 	squadhud_show_medical_crate = {
-		en = "Med crate",
-		ru = "Мед ящик",
+		en = "Show med crate icon",
+		ru = "Показать иконку медицинского ящика",
 	},
 	squadhud_show_ammo_crate = {
-		en = "Ammo crate",
-		ru = "Ящик боеприпасов",
+		en = "Show ammo crate icon",
+		ru = "Показать иконку ящика боеприпасов",
 	},
 	squadhud_health_toughness_group = {
 		en = string.rep("\194\160", 8) .. "Health and toughness",
 		ru = string.rep("\194\160", 8) .. "Здоровье и стойкость",
 	},
 	squadhud_show_health_value = {
-		en = "Health numbers",
-		ru = "Цифры здоровья",
+		en = "Show health numbers",
+		ru = "Показать цифры здоровья",
 	},
 	squadhud_show_toughness_value = {
-		en = "Toughness numbers",
-		ru = "Цифры стойкости",
+		en = "Show toughness numbers",
+		ru = "Показать цифры стойкости",
 	},
 	squadhud_strike_team_group = {
 		en = "\238\128\171 STRIKE TEAM",
