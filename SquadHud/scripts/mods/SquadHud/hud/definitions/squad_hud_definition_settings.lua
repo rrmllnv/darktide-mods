@@ -20,9 +20,9 @@ S.inner_padding = 8
 S.class_icon_x = S.ability_block_width + S.inner_padding
 S.class_icon_font_size = 24
 S.class_icon_height = 24
-S.class_status_icon_size = 20
+S.class_status_icon_size = 36
 S.class_status_icon_x = S.class_icon_x + math.floor((S.icon_column_width - S.class_status_icon_size) * 0.5)
-S.class_status_icon_y = 1
+S.class_status_icon_y = -6
 S.text_column_x = S.class_icon_x + S.icon_column_width + 2
 
 S.bar_left = S.class_icon_x
