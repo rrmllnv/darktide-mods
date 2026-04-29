@@ -19,6 +19,7 @@ local defaults = {
 	squadhud_show_ammo_crate = true,
 	squadhud_show_class_icon = true,
 	squadhud_show_grenade = true,
+	squadhud_grenade_value_mode = "changed",
 	squadhud_show_health_value = true,
 	squadhud_show_medical_crate = true,
 	squadhud_show_stimm = true,

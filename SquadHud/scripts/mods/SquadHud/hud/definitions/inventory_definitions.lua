@@ -2,6 +2,7 @@ local M = {}
 
 function M.append_passes(passes, settings, templates)
 	passes[#passes + 1] = templates.inventory_texture_pass(settings, "grenade_icon", "grenade_icon", { settings.grenade_icon_x, settings.inventory_icon_y, 4 })
+	passes[#passes + 1] = templates.text_pass(settings, "grenade_value_text", "grenade_value_text", settings.grenade_value.font_size, { settings.grenade_icon_x, settings.inventory_icon_y - 1, 3 }, { settings.grenade_value.text_width, settings.grenade_value.height }, settings.color_text_default, "left", nil, true)
 	passes[#passes + 1] = templates.inventory_texture_pass(settings, "ammo_icon", "ammo_icon", { settings.ammo_icon_x, settings.inventory_icon_y, 4 })
 	passes[#passes + 1] = templates.text_pass(settings, "ammo_percent_text", "ammo_percent_text", settings.ammo_percent.font_size, { settings.ammo_icon_x, settings.inventory_icon_y - 1, 3 }, { settings.ammo_percent.text_width, settings.ammo_percent.height }, settings.color_text_default, "left", nil, true)
 	passes[#passes + 1] = templates.inventory_texture_pass(settings, "pocketable_icon", "pocketable_icon", { settings.inventory_icon_x, settings.inventory_icon_y, 4 })

@@ -64,6 +64,29 @@ return {
 					type = "checkbox",
 					title = "squadhud_show_grenade",
 					default_value = d("squadhud_show_grenade", true),
+					sub_widgets = {
+						{
+							setting_id = "squadhud_grenade_value_mode",
+							type = "dropdown",
+							title = "squadhud_grenade_value_mode",
+							tooltip_text = "squadhud_grenade_value_mode_description",
+							default_value = d("squadhud_grenade_value_mode", "changed"),
+							options = {
+								{
+									text = "squadhud_grenade_value_mode_never",
+									value = "never",
+								},
+								{
+									text = "squadhud_grenade_value_mode_always",
+									value = "always",
+								},
+								{
+									text = "squadhud_grenade_value_mode_changed",
+									value = "changed",
+								},
+							},
+						},
+					},
 				},
 				{
 					setting_id = "squadhud_show_ammo",
@@ -71,23 +94,6 @@ return {
 					title = "squadhud_show_ammo",
 					default_value = d("squadhud_show_ammo", true),
 					sub_widgets = {
-						{
-							setting_id = "squadhud_ammo_value_format",
-							type = "dropdown",
-							title = "squadhud_ammo_value_format",
-							tooltip_text = "squadhud_ammo_value_format_description",
-							default_value = d("squadhud_ammo_value_format", "percent"),
-							options = {
-								{
-									text = "squadhud_ammo_value_format_percent",
-									value = "percent",
-								},
-								{
-									text = "squadhud_ammo_value_format_count",
-									value = "count",
-								},
-							},
-						},
 						{
 							setting_id = "squadhud_ammo_percent_mode",
 							type = "dropdown",
@@ -106,6 +112,23 @@ return {
 								{
 									text = "squadhud_ammo_percent_mode_changed",
 									value = "changed",
+								},
+							},
+						},
+						{
+							setting_id = "squadhud_ammo_value_format",
+							type = "dropdown",
+							title = "squadhud_ammo_value_format",
+							tooltip_text = "squadhud_ammo_value_format_description",
+							default_value = d("squadhud_ammo_value_format", "percent"),
+							options = {
+								{
+									text = "squadhud_ammo_value_format_percent",
+									value = "percent",
+								},
+								{
+									text = "squadhud_ammo_value_format_count",
+									value = "count",
 								},
 							},
 						},

@@ -155,6 +155,26 @@ return {
 		en = "Show grenade/blitz icon",
 		ru = "Показать иконку гранаты/блитца",
 	},
+	squadhud_grenade_value_mode = {
+		en = "When to show grenade/blitz value",
+		ru = "Когда показывать значение гранаты/блитца",
+	},
+	squadhud_grenade_value_mode_description = {
+		en = "Controls when the grenade/blitz value text is shown next to the grenade/blitz icon.",
+		ru = "Определяет, когда рядом с иконкой гранаты/блитца показывать текст со значением гранаты/блитца.",
+	},
+	squadhud_grenade_value_mode_never = {
+		en = "Never",
+		ru = "Никогда",
+	},
+	squadhud_grenade_value_mode_always = {
+		en = "Always",
+		ru = "Всегда",
+	},
+	squadhud_grenade_value_mode_changed = {
+		en = "When changed",
+		ru = "Когда они изменяются",
+	},
 	squadhud_show_ammo = {
 		en = "Show ammo icon",
 		ru = "Показать иконку патронов",

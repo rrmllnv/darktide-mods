@@ -50,6 +50,13 @@ S.ammo_percent = {
 	text_width = 42,
 	visible_duration = 5,
 }
+S.grenade_value = {
+	font_size = 15,
+	height = 18,
+	slide_duration = 0.24,
+	text_width = 24,
+	visible_duration = 5,
+}
 S.inventory_value_max_width = 110
 S.previous_inventory_block_width = S.inventory_icon_size * 2 + S.inventory_icon_gap
 S.salvage_text_width = 72

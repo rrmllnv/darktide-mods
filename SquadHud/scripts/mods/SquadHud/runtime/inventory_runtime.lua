@@ -199,21 +199,21 @@ end
 
 local function grenade_status(player, ability_extension)
 	if not is_human_controlled(player) then
-		return MAX_STATUS, true
+		return MAX_STATUS, true, nil, nil
 	end
 
 	local abilities = equipped_abilities(ability_extension)
 	local ability = abilities and abilities[GRENADE_ABILITY_ID]
 
 	if not ability then
-		return MAX_STATUS, false
+		return MAX_STATUS, false, nil, nil
 	end
 
 	local ok_max, max_ability_charges = safe_call(ability_extension, "max_ability_charges", GRENADE_ABILITY_ID)
 	local ok_remaining, remaining_ability_charges = safe_call(ability_extension, "remaining_ability_charges", GRENADE_ABILITY_ID)
 
 	if not ok_max or not ok_remaining or type(max_ability_charges) ~= "number" or type(remaining_ability_charges) ~= "number" then
-		return MAX_STATUS, true
+		return MAX_STATUS, true, nil, nil
 	end
 
 	if max_ability_charges > 0 then
@@ -226,12 +226,12 @@ local function grenade_status(player, ability_extension)
 			ability_charges_status = 2
 		end
 
-		return ability_charges_status, true
+		return ability_charges_status, true, remaining_ability_charges, max_ability_charges
 	elseif max_ability_charges == 0 then
-		return MAX_STATUS, true
+		return MAX_STATUS, true, nil, nil
 	end
 
-	return 0, true
+	return 0, true, remaining_ability_charges, max_ability_charges
 end
 
 local function weapon_ammo_status(player, unit_data_extension, visual_loadout_extension)
@@ -354,7 +354,7 @@ function M.icons(player, extensions, status)
 
 	local inventory_component = safe_read_component(unit_data_extension, "inventory")
 	local grenade_icon = grenade_hud_icon(player, inventory_component, visual_loadout_extension, ability_extension)
-	local grenade_ability_status, grenade_visible = grenade_status(player, ability_extension)
+	local grenade_ability_status, grenade_visible, grenade_current, grenade_max = grenade_status(player, ability_extension)
 	local uses_ammo, ammo_status, ammo_visible, ammo_fraction, ammo_current, ammo_max, ammo_count_current, ammo_count_max = weapon_ammo_status(player, unit_data_extension, visual_loadout_extension)
 	local pocketable_icon = item_hud_icon_from_slot(inventory_component, visual_loadout_extension, POCKETABLE_SLOT_NAME)
 	local pocketable_template_id = weapon_template_id_from_slot(inventory_component, POCKETABLE_SLOT_NAME)
@@ -372,6 +372,8 @@ function M.icons(player, extensions, status)
 		ammo_percent = ammo_fraction and math.floor(ammo_fraction * 100 + 0.5) or nil,
 		ammo_status = ammo_status,
 		grenade_icon = (grenade_visible or grenade_icon ~= nil) and grenade_icon or nil,
+		grenade_current = grenade_current,
+		grenade_max = grenade_max,
 		grenade_status = grenade_ability_status,
 		pocketable_icon = pocketable_icon,
 		pocketable_template_id = pocketable_template_id,
