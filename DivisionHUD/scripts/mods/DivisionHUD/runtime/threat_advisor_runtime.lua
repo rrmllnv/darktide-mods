@@ -2,6 +2,7 @@ local mod = get_mod("DivisionHUD")
 
 local Text = require("scripts/utilities/ui/text")
 local UISettings = require("scripts/settings/ui/ui_settings")
+local HudElementCombatFeed = require("scripts/ui/hud/elements/combat_feed/hud_element_combat_feed")
 
 local previous_target_by_enemy = {}
 
@@ -142,9 +143,32 @@ local function _player_for_unit(unit)
 	return player_unit_spawn_manager and player_unit_spawn_manager:owner(unit) or nil
 end
 
-local function _player_display_name(player)
+local function _player_slot_color(player, unit)
+	if unit and Unit.alive(unit) then
+		local owner = _player_for_unit(unit)
+
+		if type(owner) == "table" then
+			player = owner
+		end
+	end
+
+	local slot = type(player) == "table" and type(player.slot) == "function" and player:slot() or nil
+	local colors = UISettings.player_slot_colors
+
+	return slot and colors and colors[slot] or nil
+end
+
+local function _player_display_name(player, unit)
 	if type(player) ~= "table" then
 		return ""
+	end
+
+	if unit and Unit.alive(unit) then
+		local from_feed = HudElementCombatFeed._get_unit_presentation_name(HudElementCombatFeed, unit)
+
+		if type(from_feed) == "string" and from_feed ~= "" then
+			return from_feed
+		end
 	end
 
 	local name = type(player.name) == "function" and player:name() or ""
@@ -153,9 +177,7 @@ local function _player_display_name(player)
 		return ""
 	end
 
-	local slot = type(player.slot) == "function" and player:slot() or nil
-	local colors = UISettings.player_slot_colors
-	local col = slot and colors and colors[slot]
+	local col = _player_slot_color(player, unit)
 
 	if col then
 		return Text.apply_color_to_text(name, col)
@@ -164,22 +186,54 @@ local function _player_display_name(player)
 	return name
 end
 
-local function _local_target_display_name(local_player)
+local function _local_target_display_name(local_player, target_unit)
 	local text = mod:localize("alerts_threat_target_you_label")
 
 	if type(text) ~= "string" or text == "" or string.find(text, "^<unlocalized") then
 		text = "you"
 	end
 
-	local slot = type(local_player) == "table" and type(local_player.slot) == "function" and local_player:slot() or nil
-	local colors = UISettings.player_slot_colors
-	local col = slot and colors and colors[slot]
+	local col = _player_slot_color(local_player, target_unit)
 
 	if col then
 		return Text.apply_color_to_text(text, col)
 	end
 
 	return text
+end
+
+local function _player_identity_value(player, method_name)
+	if type(player) ~= "table" or type(player[method_name]) ~= "function" then
+		return nil
+	end
+
+	local ok, value = pcall(function()
+		return player[method_name](player)
+	end)
+
+	return ok and value or nil
+end
+
+local function _is_same_player(left, right)
+	if left == right then
+		return true
+	end
+
+	if type(left) ~= "table" or type(right) ~= "table" then
+		return false
+	end
+
+	local left_account_id = _player_identity_value(left, "account_id")
+	local right_account_id = _player_identity_value(right, "account_id")
+
+	if left_account_id ~= nil and right_account_id ~= nil then
+		return left_account_id == right_account_id
+	end
+
+	local left_unique_id = _player_identity_value(left, "unique_id")
+	local right_unique_id = _player_identity_value(right, "unique_id")
+
+	return left_unique_id ~= nil and right_unique_id ~= nil and left_unique_id == right_unique_id
 end
 
 local function _target_from_perception_extension(perception_extension)
@@ -312,8 +366,8 @@ local function scan(player_unit)
 						local previous_target = previous_target_by_enemy[enemy_unit]
 
 						if previous_target ~= nil and previous_target ~= target_unit then
-							local target_is_local = local_player ~= nil and target_player == local_player
-							local target_player_name = target_is_local and _local_target_display_name(local_player) or _player_display_name(target_player)
+							local target_is_local = local_player ~= nil and _is_same_player(target_player, local_player)
+							local target_player_name = target_is_local and _local_target_display_name(target_player, target_unit) or _player_display_name(target_player, target_unit)
 
 							events[#events + 1] = {
 								enemy_unit = enemy_unit,
