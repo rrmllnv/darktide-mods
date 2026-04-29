@@ -820,11 +820,14 @@ end
 InventoryValue.apply_layout = function(style, inventory_icons, ui_renderer, plain_text)
 	style.inventory_value_text.size[1] = INVENTORY_VALUE.text_width
 	style.inventory_value_out_text.size[1] = INVENTORY_VALUE.text_width
+	style.salvage_text.size[1] = DefinitionSettings.salvage_text_width
 
 	if inventory_icons and not inventory_icons.pocketable_icon and inventory_icons.pocketable_small_icon then
 		style.pocketable_small_icon.offset[1] = INVENTORY_ICON_X
+		style.salvage_text.offset[1] = INVENTORY_ICON_X + INVENTORY_ICON_SIZE + INVENTORY_ICON_GAP
 	elseif style.pocketable_small_icon.default_offset then
 		style.pocketable_small_icon.offset[1] = style.pocketable_small_icon.default_offset[1]
+		style.salvage_text.offset[1] = DefinitionSettings.salvage_text_x
 	end
 end
 
@@ -895,6 +898,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	content.ammo_icon = show_ammo_icon and inventory_icons.ammo_icon or nil
 	content.pocketable_icon = pocketable_icon
 	content.pocketable_small_icon = pocketable_small_icon
+	content.salvage_text = inventory_icons.salvage_text or ""
 
 	apply_ability_state(style, ability_state)
 	InventoryValue.apply_layout(style, visible_inventory_icons, ui_renderer, inventory_value_plain)
@@ -918,6 +922,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.ammo_icon.color, ammo_color_from_status(inventory_icons.ammo_status, inventory_icons.uses_ammo))
 	apply_color(style.pocketable_icon.color, COLOR_TEXT_DEFAULT)
 	apply_color(style.pocketable_small_icon.color, pocketable_small_icon_color(inventory_icons))
+	apply_color(style.salvage_text.text_color, COLOR_TEXT_DEFAULT)
 
 	set_rect_width(style.coherency_border, show_coherency_border and COHERENCY_BORDER_WIDTH or 0)
 	style.toughness_fill.offset[2] = toughness_bar_y

@@ -1,6 +1,8 @@
 local AbilityTemplates = require("scripts/settings/ability/ability_templates/ability_templates")
 local Ammo = require("scripts/utilities/ammo")
 local MasterItems = require("scripts/backend/master_items")
+local Text = require("scripts/utilities/ui/text")
+local WalletSettings = require("scripts/settings/wallet_settings")
 local WeaponTemplate = require("scripts/utilities/weapon/weapon_template")
 
 local M = {}
@@ -287,6 +289,46 @@ local function weapon_ammo_status(player, unit_data_extension, visual_loadout_ex
 	return uses_ammo, ammo_status, true
 end
 
+local function expedition_salvage_text(player)
+	local game_mode_manager = Managers.state and Managers.state.game_mode
+	local game_mode = game_mode_manager and game_mode_manager:game_mode()
+	local game_mode_name = game_mode_manager and game_mode_manager:game_mode_name()
+
+	if game_mode_name ~= "expedition" or not game_mode or type(game_mode.expedition_currency) ~= "function" then
+		return nil
+	end
+
+	if not is_human_controlled(player) then
+		return nil
+	end
+
+	local peer_id = type(player) == "table" and type(player.peer_id) == "function" and player:peer_id() or nil
+
+	if not peer_id then
+		return nil
+	end
+
+	local ok, amount = pcall(function()
+		return game_mode:expedition_currency(peer_id)
+	end)
+
+	if not ok then
+		return nil
+	end
+
+	amount = tonumber(amount) or 0
+
+	local salvage_settings = WalletSettings.expedition_salvage
+	local string_symbol = salvage_settings and salvage_settings.string_symbol or ""
+	local amount_text = Text.format_currency(math.floor(amount + 0.5))
+
+	if string_symbol == "" then
+		return amount_text
+	end
+
+	return string.format("%s %s", string_symbol, amount_text)
+end
+
 function M.icons(player, extensions, status)
 	if status == "dead" or status == "hogtied" then
 		return {
@@ -294,6 +336,7 @@ function M.icons(player, extensions, status)
 			grenade_icon = nil,
 			pocketable_icon = nil,
 			pocketable_small_icon = nil,
+			salvage_text = nil,
 		}
 	end
 
@@ -309,6 +352,7 @@ function M.icons(player, extensions, status)
 	local pocketable_template_id = weapon_template_id_from_slot(inventory_component, POCKETABLE_SLOT_NAME)
 	local pocketable_small_icon = item_hud_icon_from_slot(inventory_component, visual_loadout_extension, POCKETABLE_SMALL_SLOT_NAME)
 	local pocketable_small_template_id = weapon_template_id_from_slot(inventory_component, POCKETABLE_SMALL_SLOT_NAME)
+	local salvage_text = expedition_salvage_text(player)
 
 	return {
 		ammo_icon = ammo_visible and AMMO_ICON or nil,
@@ -319,6 +363,7 @@ function M.icons(player, extensions, status)
 		pocketable_template_id = pocketable_template_id,
 		pocketable_small_icon = pocketable_small_icon,
 		pocketable_small_template_id = pocketable_small_template_id,
+		salvage_text = salvage_text,
 		uses_ammo = uses_ammo,
 	}
 end
