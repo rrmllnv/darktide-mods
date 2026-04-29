@@ -47,6 +47,7 @@ local AMMO_CRATE_TEMPLATE_ID = "ammo_cache_pocketable"
 local MEDICAL_CRATE_TEMPLATE_ID = "medical_crate_pocketable"
 
 local COLOR_TEXT_DEFAULT = DefinitionSettings.color_text_default
+local COLOR_PLAYER_NAME_INACTIVE = DefinitionSettings.color_player_name_inactive
 local COLOR_TOUGHNESS = DefinitionSettings.color_toughness
 local COLOR_TOUGHNESS_OVERSHIELD = DefinitionSettings.color_toughness_overshield
 local COLOR_HEALTH = DefinitionSettings.color_health
@@ -852,7 +853,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 		base_name = mod.squadhud_debug_player_name(base_name, is_local_player)
 	end
 
-	local base_name_color = COLOR_TEXT_DEFAULT
+	local base_name_color = (PlayerDataRuntime.is_bot(player) or status == "dead" or status == "hogtied") and COLOR_PLAYER_NAME_INACTIVE or COLOR_TEXT_DEFAULT
 	local player_key = PlayerDataRuntime.player_unique_id(player)
 	local revive_state = PlayerDataRuntime.revive_state(extensions)
 	local revive_progress = revive_progress_for_player(self, player_key, revive_state, t)

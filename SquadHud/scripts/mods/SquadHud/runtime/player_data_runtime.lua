@@ -43,6 +43,20 @@ function M.player_unique_id(player)
 	return tostring(player)
 end
 
+function M.is_bot(player)
+	if type(player) == "table" and type(player.is_human_controlled) == "function" then
+		local ok, is_human_controlled = pcall(function()
+			return player:is_human_controlled()
+		end)
+
+		if ok then
+			return is_human_controlled ~= true
+		end
+	end
+
+	return false
+end
+
 local function player_raw_unique_id(player)
 	if type(player) == "table" and type(player.unique_id) == "function" then
 		local ok, unique_id = pcall(function()
