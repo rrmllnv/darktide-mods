@@ -79,6 +79,7 @@ local widget_definitions = Definitions.widget_definitions
 local HudElementSquadHud = class("HudElementSquadHud", "HudElementBase")
 local CUSTOM_HUD_MOD_NAME = "custom_hud"
 local CUSTOM_HUD_NODE_PREFIX = "HudElementSquadHud|"
+local CUSTOM_HUD_ROOT_NODE_NAME = CUSTOM_HUD_NODE_PREFIX .. "squadhud_root"
 
 local function setting_enabled()
 	local value = mod:get("squadhud_enabled")
@@ -142,20 +143,14 @@ local function custom_hud_saved_node_settings()
 	return nil
 end
 
-local function custom_hud_has_squadhud_nodes()
+local function custom_hud_has_squadhud_root_node()
 	local saved_node_settings = custom_hud_saved_node_settings()
 
 	if not saved_node_settings then
 		return false
 	end
 
-	for node_name in pairs(saved_node_settings) do
-		if type(node_name) == "string" and string.sub(node_name, 1, #CUSTOM_HUD_NODE_PREFIX) == CUSTOM_HUD_NODE_PREFIX then
-			return true
-		end
-	end
-
-	return false
+	return type(saved_node_settings[CUSTOM_HUD_ROOT_NODE_NAME]) == "table"
 end
 
 local function apply_color(target, source)
@@ -541,14 +536,14 @@ end
 
 local function apply_layout_settings(self, widgets_by_name)
 	local custom_hud_enabled = boolean_setting("integration_custom_hud", false)
-	local custom_hud_has_nodes = custom_hud_enabled and custom_hud_has_squadhud_nodes()
+	local custom_hud_has_root_node = custom_hud_enabled and custom_hud_has_squadhud_root_node()
 	local position_x = numeric_setting("position_x", DEFAULT_POSITION_X)
 	local position_y = numeric_setting("position_y", DEFAULT_POSITION_Y)
 	local position_z = 1
 	local opacity = math.clamp(numeric_setting("opacity", DEFAULT_OPACITY), 0.1, 1)
 	local hud_scale = math.clamp(numeric_setting("hud_layout_scale", DEFAULT_HUD_LAYOUT_SCALE), 0.5, 2)
 
-	if not custom_hud_has_nodes and (self._squadhud_position_x ~= position_x or self._squadhud_position_y ~= position_y or self._squadhud_position_z ~= position_z) then
+	if not custom_hud_has_root_node and (self._squadhud_position_x ~= position_x or self._squadhud_position_y ~= position_y or self._squadhud_position_z ~= position_z) then
 		self:set_scenegraph_position("squadhud_root", position_x, position_y, position_z)
 		self._squadhud_position_x = position_x
 		self._squadhud_position_y = position_y
