@@ -114,6 +114,16 @@ local function boolean_setting(setting_id, fallback)
 	return fallback
 end
 
+local function squad_panel_display_mode()
+	local value = mod:get("squadhud_panel_display_mode")
+
+	if value == "local" or value == "teammates" then
+		return value
+	end
+
+	return "all"
+end
+
 local function custom_hud_mod()
 	local get_mod_fn = rawget(_G, "get_mod")
 
@@ -574,10 +584,10 @@ local function hide_vitals_for_status(status)
 	return status == "dead" or status == "hogtied"
 end
 
-local function player_display_name(player, is_teammate)
+local function player_display_name(player)
 	local name = PlayerDataRuntime.player_name(player)
 
-	if not is_teammate or not boolean_setting("squadhud_show_teammate_level", true) then
+	if not boolean_setting("squadhud_show_teammate_level", true) then
 		return name
 	end
 
@@ -1005,7 +1015,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local inventory_icons = InventoryRuntime.icons(player, extensions, status)
 	local is_local_player = local_player == player
 	local is_teammate = not is_local_player
-	local base_name = player_display_name(player, is_teammate)
+	local base_name = player_display_name(player)
 
 	if mod.squadhud_debug_player_name then
 		base_name = mod.squadhud_debug_player_name(base_name, is_local_player)
@@ -1143,7 +1153,8 @@ HudElementSquadHud.update = function(self, dt, t, ui_renderer, render_settings, 
 
 	local local_player = self._parent and self._parent.player and self._parent:player() or Managers.player and Managers.player:local_player(1)
 	local composition_name = PlayerDataRuntime.gameplay_hud_composition_name()
-	local players = PlayerDataRuntime.fixed_squad_slots(composition_name, self._slot_players, self._players, local_player, MAX_PLAYERS)
+	local display_mode = squad_panel_display_mode()
+	local players = PlayerDataRuntime.filtered_squad_slots(composition_name, self._slot_players, self._players, local_player, MAX_PLAYERS, display_mode)
 
 	if mod.squadhud_debug_update then
 		mod.squadhud_debug_update()

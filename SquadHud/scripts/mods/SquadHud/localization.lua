@@ -67,6 +67,26 @@ return {
 		en = "Shows the custom four-slot squad panel.",
 		ru = "Показывать кастомную панель отряда на четыре слота.",
 	},
+	squadhud_panel_display_mode = {
+		en = "Visible panels",
+		ru = "Отображаемые панели",
+	},
+	squadhud_panel_display_mode_description = {
+		en = "Controls which Squad HUD panels are shown. Teammates-only mode packs teammate panels into the lower slots so the layout keeps the same visual anchor.",
+		ru = "Определяет, какие панели Squad HUD показывать. В режиме только тимейтов панели сдвигаются в нижние слоты, чтобы сохранить визуальную привязку.",
+	},
+	squadhud_panel_display_mode_all = {
+		en = "Full squad",
+		ru = "Весь сквад",
+	},
+	squadhud_panel_display_mode_local = {
+		en = "Only me",
+		ru = "Только я",
+	},
+	squadhud_panel_display_mode_teammates = {
+		en = "Only teammates",
+		ru = "Только тимейты",
+	},
 	squadhud_elements_group = {
 		en = "\238\128\178 SQUAD HUD",
 		ru = "\238\128\178 SQUAD HUD",
@@ -80,12 +100,12 @@ return {
 		ru = "Иконка способности",
 	},
 	squadhud_show_teammate_level = {
-		en = "Teammate total level",
-		ru = "Общий уровень тимейта",
+		en = "Player total level",
+		ru = "Общий уровень игроков",
 	},
 	squadhud_show_teammate_level_description = {
-		en = "Shows the teammate total level next to the nickname. Uses True Level data when available, otherwise falls back to the character level exposed by the game profile.",
-		ru = "Показывает общий уровень тимейта рядом с ником. Использует данные True Level, если они доступны, иначе берет уровень персонажа из игрового профиля.",
+		en = "Shows the total level next to the nickname. The total level is calculated from the character progression data exposed by the game backend.",
+		ru = "Показывает общий уровень рядом с ником. Общий уровень считается из данных прогресса персонажа, которые отдает игровой backend.",
 	},
 	squadhud_coherency_group = {
 		en = string.rep("\194\160", 8) .. "Coherency",

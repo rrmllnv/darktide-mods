@@ -3,6 +3,7 @@ local mod = get_mod("SquadHud")
 local PlayerCompositions = require("scripts/utilities/players/player_compositions")
 local PlayerUnitStatus = require("scripts/utilities/attack/player_unit_status")
 local PlayerUnitVisualLoadout = require("scripts/extension_systems/visual_loadout/utilities/player_unit_visual_loadout")
+local ProfileUtils = require("scripts/utilities/profile_utils")
 local UISettings = require("scripts/settings/ui/ui_settings")
 
 local M = {}
@@ -165,6 +166,58 @@ function M.fixed_squad_slots(composition_name, output, scratch, local_player, ma
 	return output
 end
 
+function M.filtered_squad_slots(composition_name, output, scratch, local_player, max_players, display_mode)
+	table.clear(output)
+
+	max_players = type(max_players) == "number" and math.max(1, math.floor(max_players)) or 4
+
+	if display_mode == "all" or display_mode == nil then
+		return M.fixed_squad_slots(composition_name, output, scratch, local_player, max_players)
+	end
+
+	scratch = M.sorted_squad_players(composition_name, scratch or {}, local_player)
+
+	if display_mode == "local" then
+		for i = 1, #scratch do
+			local player = scratch[i]
+
+			if is_same_player(player, local_player) then
+				output[max_players] = player
+
+				break
+			end
+		end
+
+		return output
+	end
+
+	if display_mode == "teammates" then
+		local teammate_count = 0
+
+		for i = 1, #scratch do
+			if not is_same_player(scratch[i], local_player) then
+				teammate_count = teammate_count + 1
+			end
+		end
+
+		local visible_teammate_count = math.min(teammate_count, max_players)
+		local slot_index = max_players - visible_teammate_count + 1
+
+		for i = 1, #scratch do
+			local player = scratch[i]
+
+			if not is_same_player(player, local_player) and slot_index <= max_players then
+				output[slot_index] = player
+				slot_index = slot_index + 1
+			end
+		end
+
+		return output
+	end
+
+	return M.fixed_squad_slots(composition_name, output, scratch, local_player, max_players)
+end
+
 function M.gameplay_hud_composition_name()
 	local game_mode_manager = Managers.state and Managers.state.game_mode
 	local hud_settings = game_mode_manager and game_mode_manager.hud_settings and game_mode_manager:hud_settings()
@@ -200,17 +253,12 @@ end
 
 local player_profile
 
-local true_level_cache = {}
+local runtime_state = mod:persistent_table("player_data_runtime")
+local true_level_cache = mod:persistent_table("player_total_level_cache")
+local true_level_queue = mod:persistent_table("player_total_level_queue")
+local presence_promises = {}
 local true_level_promises = {}
-local xp_settings = {}
-
-local function fallback_profile_level(profile)
-	if type(profile.current_level) == "number" then
-		return math.floor(profile.current_level)
-	end
-
-	return nil
-end
+local xp_settings = mod:persistent_table("player_total_level_xp_settings")
 
 local function total_level_from_progression(progression)
 	local level_array = xp_settings.level_array
@@ -251,6 +299,18 @@ local function total_level_from_progression(progression)
 	return math.floor(current_level + additional_level)
 end
 
+local function cache_total_level(character_id, progression)
+	if not character_id or type(progression) ~= "table" then
+		return
+	end
+
+	local total_level = total_level_from_progression(progression)
+
+	if type(total_level) == "number" then
+		true_level_cache[character_id] = total_level
+	end
+end
+
 local function fetch_xp_settings()
 	if xp_settings.promise or xp_settings.level_array then
 		return
@@ -280,12 +340,32 @@ local function fetch_xp_settings()
 			xp_settings.level_array = xp_per_level_array
 			xp_settings.total_xp = xp_per_level_array[max_level]
 			xp_settings.max_level = max_level
+
+			for character_id, progression in pairs(true_level_queue) do
+				cache_total_level(character_id, progression)
+				true_level_queue[character_id] = nil
+			end
 		end
 
 		xp_settings.promise = nil
 	end):catch(function()
 		xp_settings.promise = nil
 	end)
+end
+
+local function queue_or_cache_total_level(character_id, progression)
+	if not character_id or type(progression) ~= "table" then
+		return
+	end
+
+	if not xp_settings.level_array then
+		true_level_queue[character_id] = progression
+		fetch_xp_settings()
+
+		return
+	end
+
+	cache_total_level(character_id, progression)
 end
 
 local function fetch_player_total_level(character_id)
@@ -317,11 +397,83 @@ local function fetch_player_total_level(character_id)
 	true_level_promises[character_id] = promise
 
 	promise:next(function(progression)
-		true_level_cache[character_id] = total_level_from_progression(progression)
+		cache_total_level(character_id, progression)
 		true_level_promises[character_id] = nil
 	end):catch(function()
 		true_level_promises[character_id] = nil
 	end)
+end
+
+local function cache_total_level_from_presence_entry(presence_entry)
+	local immaterium_entry = presence_entry and presence_entry._immaterium_entry
+	local key_values = immaterium_entry and immaterium_entry.key_values
+	local character_profile = key_values and key_values.character_profile
+	local character_id = key_values and key_values.character_id and key_values.character_id.value
+
+	if not character_profile or not character_profile.value or character_profile.value == "" or not character_id or true_level_cache[character_id] then
+		return
+	end
+
+	local ok, backend_profile_data = pcall(function()
+		return ProfileUtils.process_backend_body(cjson.decode(character_profile.value))
+	end)
+
+	if ok and backend_profile_data and backend_profile_data.progression then
+		queue_or_cache_total_level(character_id, backend_profile_data.progression)
+	end
+end
+
+local function fetch_presence_total_level(account_id)
+	if not account_id or presence_promises[account_id] or not Managers.presence or type(Managers.presence.get_presence) ~= "function" then
+		return
+	end
+
+	local ok, promise = pcall(function()
+		local _, presence_promise = Managers.presence:get_presence(account_id)
+
+		return presence_promise
+	end)
+
+	if not ok or not promise or type(promise.next) ~= "function" then
+		return
+	end
+
+	presence_promises[account_id] = promise
+
+	promise:next(function(presence_entry)
+		cache_total_level_from_presence_entry(presence_entry)
+		presence_promises[account_id] = nil
+	end):catch(function()
+		presence_promises[account_id] = nil
+	end)
+end
+
+local function player_account_id(player)
+	if type(player) == "table" and type(player.account_id) == "function" then
+		local ok, account_id = pcall(function()
+			return player:account_id()
+		end)
+
+		if ok and account_id ~= nil then
+			return account_id
+		end
+	end
+
+	return nil
+end
+
+local function player_character_id(player, profile)
+	if type(player) == "table" and type(player.character_id) == "function" then
+		local ok, character_id = pcall(function()
+			return player:character_id()
+		end)
+
+		if ok and character_id ~= nil then
+			return character_id
+		end
+	end
+
+	return profile and profile.character_id or nil
 end
 
 function M.player_total_level(player)
@@ -331,16 +483,17 @@ function M.player_total_level(player)
 		return nil
 	end
 
-	local character_id = profile.character_id
+	local character_id = player_character_id(player, profile)
 	local cached_total_level = character_id and true_level_cache[character_id]
 
 	if type(cached_total_level) == "number" then
 		return cached_total_level
 	end
 
+	fetch_presence_total_level(player_account_id(player))
 	fetch_player_total_level(character_id)
 
-	return fallback_profile_level(profile)
+	return nil
 end
 
 function M.player_unit(player)
@@ -359,6 +512,16 @@ function player_profile(player)
 	end
 
 	return nil
+end
+
+if not runtime_state.presence_entry_hooked and CLASS and CLASS.PresenceEntryImmaterium and type(mod.hook_safe) == "function" then
+	runtime_state.presence_entry_hooked = true
+
+	mod:hook_safe(CLASS.PresenceEntryImmaterium, "update_with", function(self, new_entry)
+		cache_total_level_from_presence_entry({
+			_immaterium_entry = new_entry,
+		})
+	end)
 end
 
 function M.archetype_icon(player)

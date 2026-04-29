@@ -32,6 +32,27 @@ return {
 			default_value = d("squadhud_enabled", true),
 		},
 		{
+			setting_id = "squadhud_panel_display_mode",
+			type = "dropdown",
+			title = "squadhud_panel_display_mode",
+			tooltip_text = "squadhud_panel_display_mode_description",
+			default_value = d("squadhud_panel_display_mode", "all"),
+			options = {
+				{
+					text = "squadhud_panel_display_mode_all",
+					value = "all",
+				},
+				{
+					text = "squadhud_panel_display_mode_local",
+					value = "local",
+				},
+				{
+					text = "squadhud_panel_display_mode_teammates",
+					value = "teammates",
+				},
+			},
+		},
+		{
 			setting_id = "squadhud_placement",
 			type = "group",
 			title = "squadhud_placement",

@@ -8,6 +8,7 @@ local defaults = {
 	position_x = 50,
 	position_y = 780,
 	squadhud_enabled = true,
+	squadhud_panel_display_mode = "all",
 	squadhud_reset_all_settings = 0,
 	squadhud_show_ability_icon = true,
 	squadhud_show_ammo = true,
