@@ -454,7 +454,6 @@ local TACTICAL_ADVISOR_ALERT_CONFIG = {
 
 local THREAT_ADVISOR_ALERT_MESSAGE_KEYS = {
 	monster = {
-		local_target = "alerts_message_threat_target_you",
 		teammate_target = "alerts_message_threat_target_teammate",
 	},
 }
@@ -1255,15 +1254,13 @@ HudElementDivisionHUD._update_threat_advisor_alerts = function(self, threat_advi
 		local event = threat_advisor_data.events[i]
 		local threat_type = event and event.threat_type
 		local config = threat_type and THREAT_ADVISOR_ALERT_MESSAGE_KEYS[threat_type]
-		local message_key = event and event.target_is_local == true and config and config.local_target or config and config.teammate_target
+		local message_key = config and config.teammate_target
 		local enemy_name = event and event.enemy_name or ""
 		local target_player_name = event and event.target_player_name or ""
 		local body_text = nil
 
 		if message_key then
-			if event.target_is_local == true then
-				body_text = mod:localize(message_key, enemy_name)
-			else
+			if type(target_player_name) == "string" and target_player_name ~= "" then
 				body_text = mod:localize(message_key, enemy_name, target_player_name)
 			end
 		end

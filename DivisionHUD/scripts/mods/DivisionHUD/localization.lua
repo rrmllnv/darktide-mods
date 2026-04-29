@@ -972,6 +972,13 @@ return {
 		fr = "%s vous prend pour cible",
 		["zh-cn"] = "%s 已将目标切换为你",
 	},
+	alerts_threat_target_you_label = {
+		en = "you",
+		ru = "тебя",
+		de = "dich",
+		fr = "vous",
+		["zh-cn"] = "你",
+	},
 	alerts_message_threat_target_teammate = {
 		en = "%s switched target to %s",
 		ru = "%s сменил цель на %s",

@@ -164,6 +164,24 @@ local function _player_display_name(player)
 	return name
 end
 
+local function _local_target_display_name(local_player)
+	local text = mod:localize("alerts_threat_target_you_label")
+
+	if type(text) ~= "string" or text == "" or string.find(text, "^<unlocalized") then
+		text = "you"
+	end
+
+	local slot = type(local_player) == "table" and type(local_player.slot) == "function" and local_player:slot() or nil
+	local colors = UISettings.player_slot_colors
+	local col = slot and colors and colors[slot]
+
+	if col then
+		return Text.apply_color_to_text(text, col)
+	end
+
+	return text
+end
+
 local function _target_from_perception_extension(perception_extension)
 	local perception_component = perception_extension and perception_extension._perception_component
 	local target_unit = perception_component and perception_component.target_unit
@@ -295,6 +313,7 @@ local function scan(player_unit)
 
 						if previous_target ~= nil and previous_target ~= target_unit then
 							local target_is_local = local_player ~= nil and target_player == local_player
+							local target_player_name = target_is_local and _local_target_display_name(local_player) or _player_display_name(target_player)
 
 							events[#events + 1] = {
 								enemy_unit = enemy_unit,
@@ -302,7 +321,7 @@ local function scan(player_unit)
 								threat_type = threat_type,
 								enemy_name = _display_name_for_breed(breed),
 								target_is_local = target_is_local,
-								target_player_name = _player_display_name(target_player),
+								target_player_name = target_player_name,
 							}
 						end
 
