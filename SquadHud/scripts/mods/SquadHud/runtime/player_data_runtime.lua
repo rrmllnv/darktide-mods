@@ -267,7 +267,6 @@ end
 
 local player_profile
 
-local runtime_state = mod:persistent_table("player_data_runtime")
 local true_level_cache = mod:persistent_table("player_total_level_cache")
 local true_level_queue = mod:persistent_table("player_total_level_queue")
 local account_info_cache = mod:persistent_table("player_account_info_cache")
@@ -276,7 +275,7 @@ local account_presence_promises = {}
 local true_level_promises = {}
 local xp_settings = mod:persistent_table("player_total_level_xp_settings")
 
-local function total_level_from_progression(progression)
+local function true_levels_from_progression(progression)
 	local level_array = xp_settings.level_array
 	local total_xp = xp_settings.total_xp
 	local max_level = xp_settings.max_level
@@ -287,32 +286,40 @@ local function total_level_from_progression(progression)
 
 	local current_level = progression.currentLevel
 	local current_xp = progression.currentXp
+	local current_xp_in_level = progression.currentXpInLevel
+	local needed_xp_for_next = progression.neededXpForNextLevel
 
 	if type(current_level) ~= "number" or type(current_xp) ~= "number" then
 		return nil
 	end
 
+	local true_levels = {
+		current_xp = current_xp,
+		current_level = current_level,
+	}
+
 	if current_level < max_level then
-		return math.floor(current_level)
+		true_levels.xp_per_level = level_array[current_level + 1] - level_array[current_level]
+		true_levels.remaining_xp = current_xp_in_level
+		true_levels.needed_xp = needed_xp_for_next
+
+		return true_levels
 	end
 
-	local previous_level_total_xp = level_array[max_level - 1]
-	local max_level_total_xp = level_array[max_level]
-
-	if type(previous_level_total_xp) ~= "number" or type(max_level_total_xp) ~= "number" then
-		return math.floor(current_level)
-	end
-
-	local xp_per_level = max_level_total_xp - previous_level_total_xp
-
-	if xp_per_level <= 0 then
-		return math.floor(current_level)
-	end
-
-	local xp_over_max_level = math.max(0, current_xp - total_xp)
+	local xp_per_level = level_array[max_level] - level_array[max_level - 1]
+	local xp_over_max_level = current_xp - total_xp
+	local remaining_xp = xp_over_max_level % xp_per_level
 	local additional_level = math.floor(xp_over_max_level / xp_per_level)
+	local true_level = current_level + additional_level
 
-	return math.floor(current_level + additional_level)
+	true_levels.xp_per_level = xp_per_level
+	true_levels.remaining_xp = remaining_xp
+	true_levels.needed_xp = xp_per_level - remaining_xp
+	true_levels.additional_level = additional_level
+	true_levels.true_level = true_level
+	true_levels.prestige = math.floor(current_xp / total_xp)
+
+	return true_levels
 end
 
 local function cache_total_level(character_id, progression)
@@ -320,11 +327,27 @@ local function cache_total_level(character_id, progression)
 		return
 	end
 
-	local total_level = total_level_from_progression(progression)
+	local true_levels = true_levels_from_progression(progression)
 
-	if type(total_level) == "number" then
-		true_level_cache[character_id] = total_level
+	if type(true_levels) == "table" then
+		true_level_cache[character_id] = true_levels
 	end
+end
+
+local function cached_true_levels(character_id)
+	local true_levels = character_id and true_level_cache[character_id]
+
+	if true_levels == nil then
+		return nil
+	end
+
+	if type(true_levels) == "table" then
+		return true_levels
+	end
+
+	true_level_cache[character_id] = nil
+
+	return nil
 end
 
 local function fetch_xp_settings()
@@ -385,7 +408,7 @@ local function queue_or_cache_total_level(character_id, progression)
 end
 
 local function fetch_player_total_level(character_id)
-	if not character_id or true_level_promises[character_id] or true_level_cache[character_id] then
+	if not character_id or true_level_promises[character_id] or cached_true_levels(character_id) then
 		return
 	end
 
@@ -426,7 +449,7 @@ local function cache_total_level_from_presence_entry(presence_entry)
 	local character_profile = key_values and key_values.character_profile
 	local character_id = key_values and key_values.character_id and key_values.character_id.value
 
-	if not character_profile or not character_profile.value or character_profile.value == "" or not character_id or true_level_cache[character_id] then
+	if not character_profile or not character_profile.value or character_profile.value == "" or not character_id or cached_true_levels(character_id) then
 		return
 	end
 
@@ -638,10 +661,10 @@ function M.player_total_level(player)
 	end
 
 	local character_id = player_character_id(player, profile)
-	local cached_total_level = character_id and true_level_cache[character_id]
+	local true_levels = cached_true_levels(character_id)
 
-	if type(cached_total_level) == "number" then
-		return cached_total_level
+	if type(true_levels) == "table" then
+		return true_levels.true_level or true_levels.current_level
 	end
 
 	fetch_presence_total_level(player_account_id(player))
@@ -668,8 +691,8 @@ function player_profile(player)
 	return nil
 end
 
-if not runtime_state.presence_entry_hooked and CLASS and CLASS.PresenceEntryImmaterium and type(mod.hook_safe) == "function" then
-	runtime_state.presence_entry_hooked = true
+if not mod._squadhud_player_data_presence_entry_hooked and CLASS and CLASS.PresenceEntryImmaterium and type(mod.hook_safe) == "function" then
+	mod._squadhud_player_data_presence_entry_hooked = true
 
 	mod:hook_safe(CLASS.PresenceEntryImmaterium, "update_with", function(self, new_entry)
 		cache_total_level_from_presence_entry({
