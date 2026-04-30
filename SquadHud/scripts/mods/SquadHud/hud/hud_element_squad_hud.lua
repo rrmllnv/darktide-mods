@@ -1586,17 +1586,20 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local show_teammate_distance = boolean_setting("squadhud_show_teammate_distance", true)
 	local level_text = expanded_view_level_text(player, expanded_view)
 	local show_level_status = level_text ~= "" and not is_showing_status
-	local show_distance_status = not expanded_view and show_teammate_distance and not is_bad_status and not is_showing_status
-	local show_relation_status = show_level_status or show_distance_status
-	local relation_status = show_level_status and level_text or show_distance_status and PlayerDataRuntime.player_distance_text(local_player, player, extensions) or ""
-	local name_x, name_width = player_name_layout(show_class_icon, show_relation_status)
+	local distance_status_allowed = not expanded_view and show_teammate_distance and not is_bad_status and not is_showing_status
+	local distance_status = distance_status_allowed and PlayerDataRuntime.player_distance_text(local_player, player, extensions) or ""
 
-	if show_distance_status and mod.squadhud_debug_relation_status then
-		relation_status = mod.squadhud_debug_relation_status(relation_status, is_local_player)
+	if distance_status_allowed and mod.squadhud_debug_relation_status then
+		distance_status = mod.squadhud_debug_relation_status(distance_status, is_local_player)
 	end
 
+	local show_distance_status = distance_status ~= ""
+	local show_relation_status = show_level_status or show_distance_status
+	local relation_status = show_level_status and level_text or show_distance_status and distance_status or ""
+	local name_x, name_width = player_name_layout(show_class_icon, show_relation_status)
+
 	local in_coherency = is_teammate and PlayerDataRuntime.in_coherency_with_local_player(local_player, extensions)
-	local show_coherency_border = in_coherency or show_distance_status and relation_status ~= ""
+	local show_coherency_border = in_coherency or show_distance_status
 	local status_background_color = operational_status and operational_status.is_critical and COLOR_STATUS_BACKGROUND_CRITICAL or COLOR_STATUS_BACKGROUND_DEFAULT
 	local pocketable_icon = show_inventory_blocks and filtered_pocketable_icon(inventory_icons) or nil
 	local pocketable_small_icon = show_inventory_blocks and show_stimm_icon and inventory_icons.pocketable_small_icon or nil
