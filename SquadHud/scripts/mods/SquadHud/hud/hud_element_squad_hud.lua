@@ -1564,6 +1564,10 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local show_extra_blocks = mode == "full" or revealed
 	local base_name = player_display_name(player, expanded_view)
 
+	if mod.squadhud_debug_modder_tools_player_name then
+		base_name = mod.squadhud_debug_modder_tools_player_name(base_name, player)
+	end
+
 	if mod.squadhud_debug_player_name then
 		base_name = mod.squadhud_debug_player_name(base_name, is_local_player)
 	end

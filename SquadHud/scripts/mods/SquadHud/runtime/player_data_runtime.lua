@@ -501,6 +501,8 @@ local function player_account_id(player)
 	return nil
 end
 
+M.player_account_id = player_account_id
+
 local function strip_platform_icons(text)
 	if type(text) ~= "string" or text == "" then
 		return text

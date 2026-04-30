@@ -408,8 +408,8 @@ return {
 		ru = "Debug",
 	},
 	debug_description = {
-		en = "Enables internal Squad HUD debug hotkeys. Numpad 1 toggles a long local player name for text animation and mask testing.",
-		ru = "Включает внутренние debug-горячие клавиши Squad HUD. Numpad 1 переключает длинный ник локального игрока для проверки анимации текста и маски.",
+		en = "Enables internal Squad HUD debug hotkeys. Numpad 1 toggles a long local player name for text animation and mask testing. With the ModderTools mod loaded, panel names follow ModderTools name replacement while debug is on (same rules as that mod, including enable_random_names).",
+		ru = "Включает внутренние debug-горячие клавиши Squad HUD. Numpad 1 переключает длинный ник локального игрока для проверки анимации текста и маски. При загруженном моде ModderTools имена на панелях следуют его подмене ников, пока включён debug (те же правила, включая enable_random_names).",
 	},
 	squadhud_reset_all_settings = {
 		en = "Reset settings",

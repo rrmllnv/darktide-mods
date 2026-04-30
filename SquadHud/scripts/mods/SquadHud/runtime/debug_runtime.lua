@@ -74,6 +74,56 @@ mod.squadhud_debug_update = function()
 	end
 end
 
+local cached_player_data_runtime
+
+local function player_data_runtime_module()
+	if not cached_player_data_runtime then
+		cached_player_data_runtime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/player_data_runtime")
+	end
+
+	return cached_player_data_runtime
+end
+
+mod.squadhud_debug_modder_tools_player_name = function(base_name, player)
+	if not debug_enabled() or type(base_name) ~= "string" or base_name == "" then
+		return base_name
+	end
+
+	local get_mod_fn = rawget(_G, "get_mod")
+
+	if type(get_mod_fn) ~= "function" then
+		return base_name
+	end
+
+	local ok_modder, modder_tools = pcall(get_mod_fn, "ModderTools")
+
+	if not ok_modder or not modder_tools or type(modder_tools.get_player_name) ~= "function" then
+		return base_name
+	end
+
+	local pdr = player_data_runtime_module()
+
+	if not pdr or type(pdr.player_account_id) ~= "function" then
+		return base_name
+	end
+
+	local account_id = pdr.player_account_id(player)
+
+	if account_id == nil then
+		return base_name
+	end
+
+	local ok_resolved, resolved = pcall(function()
+		return modder_tools.get_player_name(account_id, base_name)
+	end)
+
+	if ok_resolved and type(resolved) == "string" and resolved ~= "" then
+		return resolved
+	end
+
+	return base_name
+end
+
 mod.squadhud_debug_player_name = function(base_name, is_local_player)
 	if not debug_enabled() or not debug_state.long_name_enabled or not is_local_player then
 		return base_name
