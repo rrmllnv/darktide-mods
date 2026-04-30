@@ -10,6 +10,8 @@ function M.append_passes(passes, settings, templates)
 	passes[#passes + 1] = templates.text_pass(settings, "salvage_text", "salvage_text", settings.salvage_font_size, { settings.salvage_text_x, settings.salvage_text_y, 4 }, { settings.salvage_text_width, settings.salvage_text_height }, settings.color_text_default, "left", nil, true)
 	passes[#passes + 1] = templates.text_pass(settings, "inventory_value_out_text", "inventory_value_out_text", settings.inventory_value.font_size, { settings.inventory_value.x, settings.inventory_value.y, 7 }, { settings.inventory_value.text_width, settings.inventory_value.height }, settings.color_health, "left", nil, true)
 	passes[#passes + 1] = templates.text_pass(settings, "inventory_value_text", "inventory_value_text", settings.inventory_value.font_size, { settings.inventory_value.x, settings.inventory_value.y, 8 }, { settings.inventory_value.text_width, settings.inventory_value.height }, settings.color_health, "left", nil, true)
+	passes[#passes + 1] = templates.text_pass(settings, "expanded_health_value_text", "expanded_health_value_text", settings.inventory_value.font_size, { settings.inventory_value.x, settings.inventory_value.y, 9 }, { settings.inventory_value.text_width, settings.inventory_value.height }, settings.color_health, "left", nil, true)
+	passes[#passes + 1] = templates.text_pass(settings, "expanded_toughness_value_text", "expanded_toughness_value_text", settings.inventory_value.font_size, { settings.inventory_value.x, settings.inventory_value.y, 10 }, { settings.inventory_value.text_width, settings.inventory_value.height }, settings.color_toughness, "left", nil, true)
 end
 
 return M

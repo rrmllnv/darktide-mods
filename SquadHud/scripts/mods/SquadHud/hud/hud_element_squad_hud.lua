@@ -927,6 +927,50 @@ local function update_expanded_view_block_state(hud, player_key, target_visible,
 	return fraction, state.target_visible
 end
 
+local function update_expanded_inventory_value_state(hud, player_key, target_visible, t)
+	if not player_key or not hud._expanded_inventory_value_state_by_player then
+		return target_visible and 1 or 0
+	end
+
+	local now = type(t) == "number" and t or 0
+	local state = hud._expanded_inventory_value_state_by_player[player_key]
+
+	if not state then
+		state = {
+			current_fraction = target_visible and 1 or 0,
+			target_visible = target_visible,
+		}
+		hud._expanded_inventory_value_state_by_player[player_key] = state
+	end
+
+	if state.target_visible ~= target_visible then
+		state.from_fraction = state.current_fraction or (state.target_visible and 1 or 0)
+		state.to_fraction = target_visible and 1 or 0
+		state.transition_start_t = now
+		state.target_visible = target_visible
+	end
+
+	local fraction = state.target_visible and 1 or 0
+
+	if state.transition_start_t then
+		local progress = math.clamp((now - state.transition_start_t) / EXPANDED_VIEW_BLOCK_TRANSITION_DURATION, 0, 1)
+		local eased_progress = smoothstep(progress)
+
+		fraction = (state.from_fraction or 0) + ((state.to_fraction or 0) - (state.from_fraction or 0)) * eased_progress
+
+		if progress >= 1 then
+			state.transition_start_t = nil
+			state.from_fraction = nil
+			state.to_fraction = nil
+			fraction = state.target_visible and 1 or 0
+		end
+	end
+
+	state.current_fraction = fraction
+
+	return fraction, state.target_visible
+end
+
 local function expanded_view_item_fraction(fraction, item_index)
 	local delay = EXPANDED_VIEW_BLOCK_STAGGER * math.max(0, item_index - 1)
 	local duration = math.max(0.01, 1 - EXPANDED_VIEW_BLOCK_STAGGER * math.max(0, EXPANDED_VIEW_BLOCK_ITEM_COUNT - 1))
@@ -978,23 +1022,28 @@ local function apply_expanded_view_block_animation(content, style, fraction, tar
 	apply_expanded_view_text_fraction(content, style, "salvage_text", "salvage_text", expanded_view_item_fraction(fraction, 5), target_visible)
 	apply_expanded_view_text_fraction(content, style, "inventory_value_text", "inventory_value_text", expanded_view_item_fraction(fraction, 6), target_visible)
 	apply_expanded_view_text_fraction(content, style, "inventory_value_out_text", "inventory_value_out_text", expanded_view_item_fraction(fraction, 6), target_visible)
+	apply_expanded_view_text_fraction(content, style, "expanded_health_value_text", "expanded_health_value_text", expanded_view_item_fraction(fraction, 6), target_visible)
+	apply_expanded_view_text_fraction(content, style, "expanded_toughness_value_text", "expanded_toughness_value_text", expanded_view_item_fraction(fraction, 6), target_visible)
 end
 
 local function player_display_name(player, expanded_view)
 	local account_name = expanded_view and PlayerDataRuntime.player_account_name(player) or nil
-	local name = account_name or PlayerDataRuntime.player_name(player)
 
-	if expanded_view or not boolean_setting("squadhud_show_teammate_level", true) then
-		return name
+	return account_name or PlayerDataRuntime.player_name(player)
+end
+
+local function expanded_view_level_text(player, expanded_view)
+	if not expanded_view or not boolean_setting("squadhud_show_teammate_level", true) then
+		return ""
 	end
 
 	local total_level = PlayerDataRuntime.player_total_level(player)
 
 	if not total_level then
-		return name
+		return ""
 	end
 
-	return string.format("%s - %d", name, total_level)
+	return tostring(total_level)
 end
 
 local function apply_ability_state(style, ability_state)
@@ -1256,30 +1305,10 @@ InventoryValue.toughness_content = function(toughness_values, has_overshield)
 	return InventoryValue.colored_text(text, has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS), text
 end
 
-InventoryValue.expanded_content = function(extensions, has_overshield, is_down)
-	local parts = {}
-	local plain_parts = {}
+InventoryValue.health_content = function(extensions, is_down)
+	local text = InventoryValue.text(PlayerDataRuntime.health_value(extensions))
 
-	if boolean_setting("squadhud_show_health_value", true) then
-		local health_text = InventoryValue.text(PlayerDataRuntime.health_value(extensions))
-		local health_color = is_down and COLOR_HEALTH_CRITICAL or COLOR_HEALTH
-
-		parts[#parts + 1] = InventoryValue.colored_text(health_text, health_color)
-		plain_parts[#plain_parts + 1] = health_text
-	end
-
-	if boolean_setting("squadhud_show_toughness_value", true) then
-		local toughness_text, toughness_plain_text = InventoryValue.toughness_content(PlayerDataRuntime.toughness_values(extensions), has_overshield)
-
-		parts[#parts + 1] = toughness_text
-		plain_parts[#plain_parts + 1] = toughness_plain_text
-	end
-
-	if #parts == 0 then
-		return nil, nil
-	end
-
-	return table.concat(parts, "  "), table.concat(plain_parts, "  ")
+	return text, is_down and COLOR_HEALTH_CRITICAL or COLOR_HEALTH, text
 end
 
 InventoryValue.active_content = function(active_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
@@ -1298,6 +1327,64 @@ InventoryValue.active_content = function(active_mode, extensions, revive_state, 
 	local text = InventoryValue.text(PlayerDataRuntime.health_value(extensions))
 
 	return text, is_down and COLOR_HEALTH_CRITICAL or COLOR_HEALTH, text, "health"
+end
+
+InventoryValue.clear_expanded = function(content, style)
+	content.expanded_health_value_text = ""
+	content.expanded_toughness_value_text = ""
+
+	if style.expanded_health_value_text then
+		style.expanded_health_value_text.offset[1] = INVENTORY_VALUE.x
+		style.expanded_health_value_text.text_color[1] = 0
+	end
+
+	if style.expanded_toughness_value_text then
+		style.expanded_toughness_value_text.offset[1] = INVENTORY_VALUE.x
+		style.expanded_toughness_value_text.text_color[1] = 0
+	end
+end
+
+InventoryValue.apply_expanded = function(content, style, ui_renderer, extensions, has_overshield, is_down, active_mode, fraction)
+	if active_mode ~= "health" and active_mode ~= "toughness" then
+		InventoryValue.clear_expanded(content, style)
+
+		return
+	end
+
+	local health_enabled = boolean_setting("squadhud_show_health_value", true)
+	local toughness_enabled = boolean_setting("squadhud_show_toughness_value", true)
+
+	if not health_enabled or not toughness_enabled then
+		InventoryValue.clear_expanded(content, style)
+
+		return
+	end
+
+	local progress = smoothstep(fraction or 0)
+	local base_x = INVENTORY_VALUE.x
+	local slide_offset = INVENTORY_VALUE.slide_offset
+	local health_text, health_color, health_plain_text = InventoryValue.health_content(extensions, is_down)
+	local toughness_text, toughness_plain_text = InventoryValue.toughness_content(PlayerDataRuntime.toughness_values(extensions), has_overshield)
+	local health_width = InventoryValue.width(ui_renderer, health_plain_text, style.inventory_value_text)
+	local toughness_x = base_x + health_width + (INVENTORY_VALUE.gap or INVENTORY_ICON_GAP)
+
+	if active_mode == "health" then
+		content.expanded_health_value_text = ""
+		content.expanded_toughness_value_text = progress > 0 and toughness_text or ""
+		style.inventory_value_text.offset[1] = base_x
+		style.expanded_health_value_text.text_color[1] = 0
+		style.expanded_toughness_value_text.offset[1] = toughness_x - slide_offset * (1 - progress)
+		apply_color(style.expanded_toughness_value_text.text_color, COLOR_TEXT_DEFAULT)
+		style.expanded_toughness_value_text.text_color[1] = math.floor((COLOR_TEXT_DEFAULT[1] or 255) * progress + 0.5)
+	else
+		content.expanded_health_value_text = progress > 0 and health_text or ""
+		content.expanded_toughness_value_text = ""
+		style.inventory_value_text.offset[1] = base_x + (toughness_x - base_x) * progress
+		style.expanded_toughness_value_text.text_color[1] = 0
+		style.expanded_health_value_text.offset[1] = base_x - slide_offset * (1 - progress)
+		apply_color(style.expanded_health_value_text.text_color, health_color)
+		style.expanded_health_value_text.text_color[1] = math.floor((health_color[1] or 255) * progress + 0.5)
+	end
 end
 
 InventoryValue.width = function(ui_renderer, text, style)
@@ -1382,6 +1469,7 @@ end
 InventoryValue.clear = function(hud, player_key, content, style)
 	content.inventory_value_text = ""
 	content.inventory_value_out_text = ""
+	InventoryValue.clear_expanded(content, style)
 	style.inventory_value_text.offset[1] = INVENTORY_VALUE.x
 	style.inventory_value_out_text.offset[1] = INVENTORY_VALUE.x + INVENTORY_VALUE.slide_offset
 
@@ -1393,6 +1481,8 @@ end
 InventoryValue.apply_layout = function(style, visible_inventory_icons, ui_renderer, plain_text, grenade_value_layout, ammo_percent_layout)
 	style.inventory_value_text.size[1] = INVENTORY_VALUE.text_width
 	style.inventory_value_out_text.size[1] = INVENTORY_VALUE.text_width
+	style.expanded_health_value_text.size[1] = INVENTORY_VALUE.text_width
+	style.expanded_toughness_value_text.size[1] = INVENTORY_VALUE.text_width
 	style.salvage_text.size[1] = DefinitionSettings.salvage_text_width
 
 	local x = DefinitionSettings.grenade_icon_x
@@ -1478,15 +1568,15 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local active_bar_mode = ActiveBar.mode(self, player_key, health_fraction, tough_fraction, toughness_values.bonus, has_overshield, revive_state, t)
 	local health_bar_y, health_bar_height, toughness_bar_y, toughness_bar_height = ActiveBar.layout(active_bar_mode)
 	local inventory_value, inventory_value_color, inventory_value_plain, inventory_value_mode = InventoryValue.active_content(active_bar_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
-	local expanded_inventory_value, expanded_inventory_value_plain = InventoryValue.expanded_content(extensions, has_overshield, is_down)
 	local rescue_timer_status = PlayerDataRuntime.rescue_timer_status(player, status)
 	local operational_status = StatusRuntime.resolve(player, extensions, status, health_fraction, revive_state, rescue_timer_status)
 	local display_name, is_showing_status = StatusRuntime.display_name(self._name_status_flash_by_player, player_key, base_name, operational_status, t)
 	local display_name_color = player_name_color(base_name_color, operational_status, is_showing_status)
 	local expanded_view_block_fraction, expanded_view_block_target_visible = update_expanded_view_block_state(self, player_key, show_extra_blocks, t)
+	local expanded_inventory_value_fraction = update_expanded_inventory_value_state(self, player_key, revealed, t)
 	local show_inventory_blocks = show_extra_blocks or expanded_view_block_fraction > 0
 	local force_changed_values_visible = revealed
-	local show_expanded_inventory_value = mode == "short" and revealed
+	local show_expanded_inventory_value = expanded_inventory_value_fraction > 0
 	local class_status_icon, class_status_icon_key = player_status_icon(status)
 	local show_class_icon = boolean_setting("squadhud_show_class_icon", true)
 	local show_ability_icon = boolean_setting("squadhud_show_ability_icon", true)
@@ -1494,11 +1584,14 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local show_ammo_icon = boolean_setting("squadhud_show_ammo", true)
 	local show_stimm_icon = boolean_setting("squadhud_show_stimm", true)
 	local show_teammate_distance = boolean_setting("squadhud_show_teammate_distance", true)
-	local show_relation_status = not expanded_view and show_teammate_distance and not is_bad_status and not is_showing_status
-	local relation_status = show_relation_status and PlayerDataRuntime.player_distance_text(local_player, player, extensions) or ""
+	local level_text = expanded_view_level_text(player, expanded_view)
+	local show_level_status = level_text ~= "" and not is_showing_status
+	local show_distance_status = not expanded_view and show_teammate_distance and not is_bad_status and not is_showing_status
+	local show_relation_status = show_level_status or show_distance_status
+	local relation_status = show_level_status and level_text or show_distance_status and PlayerDataRuntime.player_distance_text(local_player, player, extensions) or ""
 	local name_x, name_width = player_name_layout(show_class_icon, show_relation_status)
 
-	if show_relation_status and mod.squadhud_debug_relation_status then
+	if show_distance_status and mod.squadhud_debug_relation_status then
 		relation_status = mod.squadhud_debug_relation_status(relation_status, is_local_player)
 	end
 
@@ -1546,9 +1639,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 
 	InventoryValue.apply_layout(style, visible_inventory_icons, ui_renderer, inventory_value_plain, grenade_value_layout, ammo_percent_layout)
 
-	if not hide_vitals and show_expanded_inventory_value and expanded_inventory_value then
-		InventoryValue.apply_transition(self, player_key, content, style, expanded_inventory_value, COLOR_TEXT_DEFAULT, expanded_inventory_value_plain, "expanded", t)
-	elseif not hide_vitals and show_inventory_blocks and inventory_value_visible(inventory_value_mode, revive_state) then
+	if not hide_vitals and show_inventory_blocks and inventory_value_visible(inventory_value_mode, revive_state) then
 		InventoryValue.apply_transition(self, player_key, content, style, inventory_value, inventory_value_color, inventory_value_plain, inventory_value_mode, t)
 	else
 		InventoryValue.clear(self, player_key, content, style)
@@ -1573,6 +1664,12 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.pocketable_small_icon.color, pocketable_small_icon_color(inventory_icons))
 	apply_color(style.salvage_text.text_color, COLOR_TEXT_DEFAULT)
 	apply_expanded_view_block_animation(content, style, expanded_view_block_fraction, expanded_view_block_target_visible)
+
+	if not hide_vitals and show_expanded_inventory_value then
+		InventoryValue.apply_expanded(content, style, ui_renderer, extensions, has_overshield, is_down, inventory_value_mode, expanded_inventory_value_fraction)
+	else
+		InventoryValue.clear_expanded(content, style)
+	end
 
 	set_rect_width(style.coherency_border, show_coherency_border and COHERENCY_BORDER_WIDTH or 0)
 
@@ -1608,6 +1705,7 @@ HudElementSquadHud.init = function(self, parent, draw_layer, start_scale)
 	self._active_bar_state_by_player = {}
 	self._ammo_percent_state_by_player = {}
 	self._expanded_view_block_state_by_player = {}
+	self._expanded_inventory_value_state_by_player = {}
 	self._grenade_value_state_by_player = {}
 	self._inventory_value_state_by_player = {}
 	self._overshield_spent_state_by_player = {}
