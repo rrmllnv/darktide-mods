@@ -6,7 +6,7 @@ mod._settings = mod._settings or {}
 
 local APPLY_SETTINGS_HANDLERS = {
 	"squadhud_debug_apply_settings",
-	"squadhud_social_apply_settings",
+	"squadhud_expanded_view_apply_settings",
 	"squadhud_vanilla_hud_apply_settings",
 }
 

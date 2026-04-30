@@ -3,7 +3,7 @@ local mod = get_mod("SquadHud")
 mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/defaults")
 
 local LayoutMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/layout")
-local SocialMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/social")
+local ExpandedViewMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/expanded_view")
 local SquadHudMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/squad_hud")
 local StrikeTeamMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/strike_team")
 local VanillaHudMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/vanilla_hud")
@@ -17,7 +17,7 @@ return {
 	options = {
 		widgets = {
 			LayoutMenu,
-			SocialMenu,
+			ExpandedViewMenu,
 			SquadHudMenu,
 			StrikeTeamMenu,
 			VanillaHudMenu,

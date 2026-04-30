@@ -861,15 +861,15 @@ local function hide_vitals_for_status(status)
 	return status == "dead" or status == "hogtied"
 end
 
-local function account_names_visible()
-	return mod._squadhud_show_account_names == true
+local function expanded_view_visible()
+	return mod._squadhud_expanded_view == true
 end
 
-local function player_display_name(player, show_account_name)
-	local account_name = show_account_name and PlayerDataRuntime.player_account_name(player) or nil
+local function player_display_name(player, expanded_view)
+	local account_name = expanded_view and PlayerDataRuntime.player_account_name(player) or nil
 	local name = account_name or PlayerDataRuntime.player_name(player)
 
-	if show_account_name or not boolean_setting("squadhud_show_teammate_level", true) then
+	if expanded_view or not boolean_setting("squadhud_show_teammate_level", true) then
 		return name
 	end
 
@@ -1319,8 +1319,8 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local inventory_icons = InventoryRuntime.icons(player, extensions, status)
 	local is_local_player = local_player == player
 	local is_teammate = not is_local_player
-	local show_account_names = account_names_visible()
-	local base_name = player_display_name(player, show_account_names)
+	local expanded_view = expanded_view_visible()
+	local base_name = player_display_name(player, expanded_view)
 
 	if mod.squadhud_debug_player_name then
 		base_name = mod.squadhud_debug_player_name(base_name, is_local_player)
@@ -1345,7 +1345,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local show_ammo_icon = boolean_setting("squadhud_show_ammo", true)
 	local show_stimm_icon = boolean_setting("squadhud_show_stimm", true)
 	local show_teammate_distance = boolean_setting("squadhud_show_teammate_distance", true)
-	local show_relation_status = not show_account_names and show_teammate_distance and not is_bad_status and not is_showing_status
+	local show_relation_status = not expanded_view and show_teammate_distance and not is_bad_status and not is_showing_status
 	local relation_status = show_relation_status and PlayerDataRuntime.player_distance_text(local_player, player, extensions) or ""
 	local name_x, name_width = player_name_layout(show_class_icon, show_relation_status)
 
@@ -1379,8 +1379,8 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 		uses_ammo = inventory_icons.uses_ammo,
 	}
 
-	content.class_icon = show_class_icon and (show_account_names and PlayerDataRuntime.player_account_platform_icon(player) or class_status_icon and "" or PlayerDataRuntime.archetype_icon(player)) or ""
-	content.class_status_icon = show_class_icon and not show_account_names and class_status_icon or nil
+	content.class_icon = show_class_icon and (expanded_view and PlayerDataRuntime.player_account_platform_icon(player) or class_status_icon and "" or PlayerDataRuntime.archetype_icon(player)) or ""
+	content.class_status_icon = show_class_icon and not expanded_view and class_status_icon or nil
 	content.relation_status = relation_status
 	content.ability_icon_visible = show_ability_icon and ability_state ~= nil
 	content.ability_progress = ability_state and ability_state.progress or 1
@@ -1407,7 +1407,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	style.player_name.size[1] = name_width
 	apply_color(style.player_name.text_color, display_name_color)
 	apply_color(style.relation_status.text_color, COLOR_TEXT_DEFAULT)
-	apply_color(style.class_icon.text_color, show_account_names and COLOR_TEXT_DEFAULT or slot_color)
+	apply_color(style.class_icon.text_color, expanded_view and COLOR_TEXT_DEFAULT or slot_color)
 	apply_color(style.class_status_icon.color, player_status_icon_color(class_status_icon_key))
 	apply_color(style.status_background.color, status_background_color)
 	apply_color(style.coherency_border.color, in_coherency and COLOR_COHERENCY_BORDER_IN or COLOR_COHERENCY_BORDER_OUT)

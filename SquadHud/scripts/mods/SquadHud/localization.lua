@@ -11,31 +11,31 @@ return {
 		en = "\238\128\140 DISPLAY",
 		ru = "\238\128\140 ОТОБРАЖЕНИЕ",
 	},
-	squadhud_social_group = {
-		en = "\238\128\171 SOCIAL",
-		ru = "\238\128\171 СОЦИАЛЬНОЕ",
+	squadhud_expanded_view_group = {
+		en = "\238\128\171 EXPANDED VIEW",
+		ru = "\238\128\171 РАСШИРЕННЫЙ ВИД",
 	},
-	squadhud_show_account_names_keybind = {
-		en = "Show account names",
-		ru = "Показывать имена аккаунтов",
+	squadhud_expanded_view_keybind = {
+		en = "Expanded squad view",
+		ru = "Расширенный вид отряда",
 	},
-	squadhud_show_account_names_keybind_description = {
-		en = "Shows account names and platform icons according to the selected key mode.",
-		ru = "Показывает имена аккаунтов и иконки платформ по выбранному режиму клавиши.",
+	squadhud_expanded_view_keybind_description = {
+		en = "Shows account names, platform icons, and additional squad HUD details according to the selected key mode.",
+		ru = "Показывает имена аккаунтов, иконки платформ и дополнительные данные HUD отряда по выбранному режиму клавиши.",
 	},
-	squadhud_account_names_keybind_mode = {
-		en = "Account name key mode",
-		ru = "Режим клавиши имён аккаунтов",
+	squadhud_expanded_view_keybind_mode = {
+		en = "Expanded view key mode",
+		ru = "Режим клавиши расширенного вида",
 	},
-	squadhud_account_names_keybind_mode_description = {
-		en = "Toggle switches account names on/off. Hold shows them only while the key is held.",
-		ru = "Toggle переключает имена аккаунтов вкл/выкл. Hold показывает их только пока клавиша удерживается.",
+	squadhud_expanded_view_keybind_mode_description = {
+		en = "Toggle switches expanded squad view on/off. Hold shows it only while the key is held.",
+		ru = "Toggle переключает расширенный вид отряда вкл/выкл. Hold показывает его только пока клавиша удерживается.",
 	},
-	squadhud_account_names_keybind_mode_toggle = {
+	squadhud_expanded_view_keybind_mode_toggle = {
 		en = "Toggle",
 		ru = "Toggle",
 	},
-	squadhud_account_names_keybind_mode_hold = {
+	squadhud_expanded_view_keybind_mode_hold = {
 		en = "Hold",
 		ru = "Hold",
 	},
