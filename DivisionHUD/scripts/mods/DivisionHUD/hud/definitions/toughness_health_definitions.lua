@@ -284,7 +284,7 @@ local function build(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap, sc)
 					style_id = "hit_indicator",
 					style = {
 						horizontal_alignment = "left",
-						vertical_alignment = "bottom",
+						vertical_alignment = "top",
 						offset = {
 							-toughness_hit_indicator_padding,
 							-toughness_hit_indicator_padding,
@@ -307,7 +307,7 @@ local function build(bar_w, bar_h, health_bar_h, bar_label_w, bar_stack_gap, sc)
 					style_id = "armor_break_indicator",
 					style = {
 						horizontal_alignment = "left",
-						vertical_alignment = "bottom",
+						vertical_alignment = "top",
 						offset = {
 							-toughness_hit_indicator_padding,
 							-toughness_hit_indicator_padding,

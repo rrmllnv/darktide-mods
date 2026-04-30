@@ -405,7 +405,7 @@ local function clear_toughness_hit_indicator(content, style)
 	apply_toughness_hit_rect(style.toughness_armor_break_indicator, COLOR_TOUGHNESS_ARMOR_BREAK_INDICATOR, 0, 0)
 end
 
-ToughnessHitIndicator.apply = function(hud, player_key, content, style, status, toughness_fraction, t)
+ToughnessHitIndicator.apply = function(hud, player_key, content, style, status, toughness_fraction, t, debug_request)
 	local hit_style = style.toughness_hit_indicator
 	local armor_break_style = style.toughness_armor_break_indicator
 
@@ -441,6 +441,12 @@ ToughnessHitIndicator.apply = function(hud, player_key, content, style, status, 
 		clear_toughness_hit_indicator(content, style)
 
 		return
+	end
+
+	if type(debug_request) == "table" then
+		state.start_t = now
+		state.armor_break = debug_request.armor_break == true
+		state.toughness = current_toughness
 	end
 
 	if state.toughness and current_toughness < state.toughness then
@@ -1417,7 +1423,10 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.salvage_text.text_color, COLOR_TEXT_DEFAULT)
 
 	set_rect_width(style.coherency_border, show_coherency_border and COHERENCY_BORDER_WIDTH or 0)
-	ToughnessHitIndicator.apply(self, player_key, content, style, status, tough_fraction, t)
+
+	local debug_toughness_hit_indicator_request = mod.squadhud_debug_consume_toughness_hit_indicator_request and mod.squadhud_debug_consume_toughness_hit_indicator_request(is_local_player) or nil
+
+	ToughnessHitIndicator.apply(self, player_key, content, style, status, tough_fraction, t, debug_toughness_hit_indicator_request)
 	style.toughness_fill.offset[2] = toughness_bar_y
 	style.toughness_fill.size[2] = toughness_bar_height
 	style.revive_fill.offset[2] = toughness_bar_y
