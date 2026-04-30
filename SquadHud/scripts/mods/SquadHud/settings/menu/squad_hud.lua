@@ -130,6 +130,10 @@ return {
 									text = "squadhud_ammo_value_format_count",
 									value = "count",
 								},
+								{
+									text = "squadhud_ammo_value_format_current_max",
+									value = "current_max",
+								},
 							},
 						},
 					},

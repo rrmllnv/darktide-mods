@@ -200,8 +200,8 @@ return {
 		ru = "Формат значения патронов",
 	},
 	squadhud_ammo_value_format_description = {
-		en = "Select whether the ammo value is shown as a percentage or as the total ammo count.",
-		ru = "Выберите, как показывать значение патронов: в процентах или общим количеством.",
+		en = "Select whether the ammo value is shown as a percentage, as the current ammo count only, or as current count divided by maximum reserve.",
+		ru = "Выберите формат: проценты, только текущее количество патронов или текущее / максимальное количество.",
 	},
 	squadhud_ammo_value_format_percent = {
 		en = "Percentage",
@@ -210,6 +210,10 @@ return {
 	squadhud_ammo_value_format_count = {
 		en = "Ammo count",
 		ru = "Количество патронов",
+	},
+	squadhud_ammo_value_format_current_max = {
+		en = "Current / max ammo",
+		ru = "Текущие / все патроны",
 	},
 	squadhud_ammo_percent_mode = {
 		en = "When to show ammo value",

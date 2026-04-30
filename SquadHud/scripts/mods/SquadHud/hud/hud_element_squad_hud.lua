@@ -153,7 +153,7 @@ end
 local function ammo_value_format()
 	local value = mod:get("squadhud_ammo_value_format")
 
-	if value == "count" then
+	if value == "count" or value == "current_max" then
 		return value
 	end
 
@@ -618,6 +618,13 @@ AmmoPercent.text = function(inventory_icons, format)
 		return tostring(math.max(0, math.floor((inventory_icons.ammo_count_current or 0) + 0.5)))
 	end
 
+	if format == "current_max" then
+		local current = math.max(0, math.floor((inventory_icons.ammo_count_current or 0) + 0.5))
+		local maximum = math.max(0, math.floor((inventory_icons.ammo_count_max or 0) + 0.5))
+
+		return string.format("%d/%d", current, maximum)
+	end
+
 	return string.format("%d%%", math.clamp(math.floor((inventory_icons.ammo_percent or 0) + 0.5), 0, 100))
 end
 
@@ -671,7 +678,7 @@ end
 AmmoPercent.apply = function(hud, player_key, content, style, inventory_icons, color, ui_renderer, t, force_visible)
 	local mode = ammo_percent_mode()
 	local format = ammo_value_format()
-	local has_ammo_value = inventory_icons and inventory_icons.ammo_icon ~= nil and inventory_icons.uses_ammo == true and ((format == "count" and type(inventory_icons.ammo_count_current) == "number") or (format ~= "count" and type(inventory_icons.ammo_percent) == "number"))
+	local has_ammo_value = inventory_icons and inventory_icons.ammo_icon ~= nil and inventory_icons.uses_ammo == true and ((format == "count" and type(inventory_icons.ammo_count_current) == "number") or (format == "current_max" and type(inventory_icons.ammo_count_current) == "number" and type(inventory_icons.ammo_count_max) == "number") or (format ~= "count" and format ~= "current_max" and type(inventory_icons.ammo_percent) == "number"))
 
 	if mode == "never" or not has_ammo_value or not player_key or not hud._ammo_percent_state_by_player then
 		return AmmoPercent.clear(hud, player_key, content, style)
@@ -679,8 +686,9 @@ AmmoPercent.apply = function(hud, player_key, content, style, inventory_icons, c
 
 	local now = type(t) == "number" and t or 0
 	local text = AmmoPercent.text(inventory_icons, format)
-	local ammo_current = format == "count" and inventory_icons.ammo_count_current or inventory_icons.ammo_current
-	local ammo_max = format == "count" and inventory_icons.ammo_count_max or inventory_icons.ammo_max
+	local use_count_totals = format == "count" or format == "current_max"
+	local ammo_current = use_count_totals and inventory_icons.ammo_count_current or inventory_icons.ammo_current
+	local ammo_max = use_count_totals and inventory_icons.ammo_count_max or inventory_icons.ammo_max
 	local ammo_key = tostring(ammo_current or "") .. "/" .. tostring(ammo_max or "")
 	local text_style = style.ammo_percent_text
 	local text_width = AmmoPercent.text_width(ui_renderer, text, text_style)
