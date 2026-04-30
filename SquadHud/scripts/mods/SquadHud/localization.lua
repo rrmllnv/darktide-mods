@@ -15,9 +15,25 @@ return {
 		en = "\238\128\171 EXPANDED VIEW",
 		ru = "\238\128\171 РАСШИРЕННЫЙ ВИД",
 	},
-	squadhud_expanded_view_keybind = {
+	squadhud_expanded_view_mode = {
 		en = "Expanded squad view",
 		ru = "Расширенный вид отряда",
+	},
+	squadhud_expanded_view_mode_description = {
+		en = "Controls how much extra squad HUD information is visible by default.",
+		ru = "Определяет, сколько дополнительных данных HUD отряда видно по умолчанию.",
+	},
+	squadhud_expanded_view_mode_short = {
+		en = "Short",
+		ru = "Короткий",
+	},
+	squadhud_expanded_view_mode_full = {
+		en = "Full",
+		ru = "Полный",
+	},
+	squadhud_expanded_view_keybind = {
+		en = "Show expanded view",
+		ru = "Показать расширенный вид",
 	},
 	squadhud_expanded_view_keybind_description = {
 		en = "Shows account names, platform icons, and additional squad HUD details according to the selected key mode.",

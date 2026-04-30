@@ -29,6 +29,10 @@ local INVENTORY_ICON_Y = DefinitionSettings.inventory_icon_y
 local GRENADE_VALUE = DefinitionSettings.grenade_value
 local AMMO_PERCENT = DefinitionSettings.ammo_percent
 local INVENTORY_VALUE = DefinitionSettings.inventory_value
+local EXPANDED_VIEW_BLOCK_TRANSITION_DURATION = 0.24
+local EXPANDED_VIEW_BLOCK_STAGGER = 0.04
+local EXPANDED_VIEW_BLOCK_SLIDE_OFFSET = INVENTORY_VALUE.slide_offset or 18
+local EXPANDED_VIEW_BLOCK_ITEM_COUNT = 6
 local BAR_LEFT = DefinitionSettings.bar_left
 local BAR_WIDTH = DefinitionSettings.bar_width
 local HEALTH_SEGMENT_GAP = DefinitionSettings.health_segment_gap
@@ -545,7 +549,7 @@ GrenadeValue.clear = function(hud, player_key, content, style)
 	}
 end
 
-GrenadeValue.apply = function(hud, player_key, content, style, inventory_icons, color, ui_renderer, t)
+GrenadeValue.apply = function(hud, player_key, content, style, inventory_icons, color, ui_renderer, t, force_visible)
 	local mode = grenade_value_mode()
 	local has_grenade_value = inventory_icons and inventory_icons.grenade_icon ~= nil and type(inventory_icons.grenade_current) == "number"
 
@@ -579,7 +583,7 @@ GrenadeValue.apply = function(hud, player_key, content, style, inventory_icons, 
 	state.text = text
 	state.width = text_width
 
-	local target_visible = mode == "always" or (mode == "changed" and state.visible_until_t ~= nil and now <= state.visible_until_t)
+	local target_visible = mode == "always" or (mode == "changed" and (force_visible == true or state.visible_until_t ~= nil and now <= state.visible_until_t))
 
 	if state.target_visible ~= target_visible then
 		state.from_fraction = state.current_fraction or (state.target_visible and 1 or 0)
@@ -664,7 +668,7 @@ AmmoPercent.clear = function(hud, player_key, content, style)
 	}
 end
 
-AmmoPercent.apply = function(hud, player_key, content, style, inventory_icons, color, ui_renderer, t)
+AmmoPercent.apply = function(hud, player_key, content, style, inventory_icons, color, ui_renderer, t, force_visible)
 	local mode = ammo_percent_mode()
 	local format = ammo_value_format()
 	local has_ammo_value = inventory_icons and inventory_icons.ammo_icon ~= nil and inventory_icons.uses_ammo == true and ((format == "count" and type(inventory_icons.ammo_count_current) == "number") or (format ~= "count" and type(inventory_icons.ammo_percent) == "number"))
@@ -701,7 +705,7 @@ AmmoPercent.apply = function(hud, player_key, content, style, inventory_icons, c
 	state.text = text
 	state.width = text_width
 
-	local target_visible = mode == "always" or (mode == "changed" and state.visible_until_t ~= nil and now <= state.visible_until_t)
+	local target_visible = mode == "always" or (mode == "changed" and (force_visible == true or state.visible_until_t ~= nil and now <= state.visible_until_t))
 
 	if state.target_visible ~= target_visible then
 		state.from_fraction = state.current_fraction or (state.target_visible and 1 or 0)
@@ -863,6 +867,117 @@ end
 
 local function expanded_view_visible()
 	return mod._squadhud_expanded_view == true
+end
+
+local function expanded_view_mode()
+	local value = mod:get("squadhud_expanded_view_mode")
+
+	if value == "short" then
+		return "short"
+	end
+
+	return "full"
+end
+
+local function expanded_view_revealed()
+	return expanded_view_visible()
+end
+
+local function update_expanded_view_block_state(hud, player_key, target_visible, t)
+	if not player_key or not hud._expanded_view_block_state_by_player then
+		return target_visible and 1 or 0
+	end
+
+	local now = type(t) == "number" and t or 0
+	local state = hud._expanded_view_block_state_by_player[player_key]
+
+	if not state then
+		state = {
+			current_fraction = target_visible and 1 or 0,
+			target_visible = target_visible,
+		}
+		hud._expanded_view_block_state_by_player[player_key] = state
+	end
+
+	if state.target_visible ~= target_visible then
+		state.from_fraction = state.current_fraction or (state.target_visible and 1 or 0)
+		state.to_fraction = target_visible and 1 or 0
+		state.transition_start_t = now
+		state.target_visible = target_visible
+	end
+
+	local fraction = state.target_visible and 1 or 0
+
+	if state.transition_start_t then
+		local progress = math.clamp((now - state.transition_start_t) / EXPANDED_VIEW_BLOCK_TRANSITION_DURATION, 0, 1)
+		local eased_progress = smoothstep(progress)
+
+		fraction = (state.from_fraction or 0) + ((state.to_fraction or 0) - (state.from_fraction or 0)) * eased_progress
+
+		if progress >= 1 then
+			state.transition_start_t = nil
+			state.from_fraction = nil
+			state.to_fraction = nil
+			fraction = state.target_visible and 1 or 0
+		end
+	end
+
+	state.current_fraction = fraction
+
+	return fraction, state.target_visible
+end
+
+local function expanded_view_item_fraction(fraction, item_index)
+	local delay = EXPANDED_VIEW_BLOCK_STAGGER * math.max(0, item_index - 1)
+	local duration = math.max(0.01, 1 - EXPANDED_VIEW_BLOCK_STAGGER * math.max(0, EXPANDED_VIEW_BLOCK_ITEM_COUNT - 1))
+
+	return math.clamp((fraction - delay) / duration, 0, 1)
+end
+
+local function apply_alpha_fraction(color, fraction)
+	if color then
+		color[1] = math.floor((color[1] or 255) * math.clamp(fraction or 0, 0, 1) + 0.5)
+	end
+end
+
+local function apply_offset_fraction(offset, fraction)
+	if offset then
+		offset[1] = offset[1] - EXPANDED_VIEW_BLOCK_SLIDE_OFFSET * (1 - math.clamp(fraction or 0, 0, 1))
+	end
+end
+
+local function apply_expanded_view_icon_fraction(content, style, content_id, style_id, fraction, target_visible)
+	if not target_visible and fraction <= 0 then
+		content[content_id] = nil
+	end
+
+	if style[style_id] then
+		apply_alpha_fraction(style[style_id].color, fraction)
+		apply_offset_fraction(style[style_id].offset, fraction)
+	end
+end
+
+local function apply_expanded_view_text_fraction(content, style, content_id, style_id, fraction, target_visible)
+	if not target_visible and fraction <= 0 then
+		content[content_id] = ""
+	end
+
+	if style[style_id] then
+		apply_alpha_fraction(style[style_id].text_color, fraction)
+		apply_offset_fraction(style[style_id].offset, fraction)
+	end
+end
+
+local function apply_expanded_view_block_animation(content, style, fraction, target_visible)
+	apply_expanded_view_icon_fraction(content, style, "grenade_icon", "grenade_icon", expanded_view_item_fraction(fraction, 1), target_visible)
+	apply_expanded_view_text_fraction(content, style, "grenade_value_text", "grenade_value_text", expanded_view_item_fraction(fraction, 1), target_visible)
+	apply_expanded_view_icon_fraction(content, style, "ammo_icon", "ammo_icon", expanded_view_item_fraction(fraction, 2), target_visible)
+	apply_expanded_view_text_fraction(content, style, "ammo_percent_text", "ammo_percent_text", expanded_view_item_fraction(fraction, 2), target_visible)
+	apply_expanded_view_icon_fraction(content, style, "pocketable_icon", "pocketable_icon", expanded_view_item_fraction(fraction, 3), target_visible)
+	apply_expanded_view_icon_fraction(content, style, "pocketable_small_icon", "pocketable_small_icon", expanded_view_item_fraction(fraction, 4), target_visible)
+	apply_expanded_view_text_fraction(content, style, "salvage_text", "salvage_text", expanded_view_item_fraction(fraction, 5), target_visible)
+	apply_expanded_view_text_fraction(content, style, "inventory_value_text", "inventory_value_text", expanded_view_item_fraction(fraction, 6), target_visible)
+	apply_expanded_view_text_fraction(content, style, "inventory_value_out_text", "inventory_value_out_text", expanded_view_item_fraction(fraction, 6), target_visible)
 end
 
 local function player_display_name(player, expanded_view)
@@ -1141,6 +1256,32 @@ InventoryValue.toughness_content = function(toughness_values, has_overshield)
 	return InventoryValue.colored_text(text, has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS), text
 end
 
+InventoryValue.expanded_content = function(extensions, has_overshield, is_down)
+	local parts = {}
+	local plain_parts = {}
+
+	if boolean_setting("squadhud_show_health_value", true) then
+		local health_text = InventoryValue.text(PlayerDataRuntime.health_value(extensions))
+		local health_color = is_down and COLOR_HEALTH_CRITICAL or COLOR_HEALTH
+
+		parts[#parts + 1] = InventoryValue.colored_text(health_text, health_color)
+		plain_parts[#plain_parts + 1] = health_text
+	end
+
+	if boolean_setting("squadhud_show_toughness_value", true) then
+		local toughness_text, toughness_plain_text = InventoryValue.toughness_content(PlayerDataRuntime.toughness_values(extensions), has_overshield)
+
+		parts[#parts + 1] = toughness_text
+		plain_parts[#plain_parts + 1] = toughness_plain_text
+	end
+
+	if #parts == 0 then
+		return nil, nil
+	end
+
+	return table.concat(parts, "  "), table.concat(plain_parts, "  ")
+end
+
 InventoryValue.active_content = function(active_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
 	if revive_state and revive_state.in_progress then
 		local text = string.format("%d%%", math.floor((revive_progress or 0) * 100 + 0.5))
@@ -1320,6 +1461,9 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local is_local_player = local_player == player
 	local is_teammate = not is_local_player
 	local expanded_view = expanded_view_visible()
+	local mode = expanded_view_mode()
+	local revealed = expanded_view_revealed()
+	local show_extra_blocks = mode == "full" or revealed
 	local base_name = player_display_name(player, expanded_view)
 
 	if mod.squadhud_debug_player_name then
@@ -1334,10 +1478,15 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local active_bar_mode = ActiveBar.mode(self, player_key, health_fraction, tough_fraction, toughness_values.bonus, has_overshield, revive_state, t)
 	local health_bar_y, health_bar_height, toughness_bar_y, toughness_bar_height = ActiveBar.layout(active_bar_mode)
 	local inventory_value, inventory_value_color, inventory_value_plain, inventory_value_mode = InventoryValue.active_content(active_bar_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
+	local expanded_inventory_value, expanded_inventory_value_plain = InventoryValue.expanded_content(extensions, has_overshield, is_down)
 	local rescue_timer_status = PlayerDataRuntime.rescue_timer_status(player, status)
 	local operational_status = StatusRuntime.resolve(player, extensions, status, health_fraction, revive_state, rescue_timer_status)
 	local display_name, is_showing_status = StatusRuntime.display_name(self._name_status_flash_by_player, player_key, base_name, operational_status, t)
 	local display_name_color = player_name_color(base_name_color, operational_status, is_showing_status)
+	local expanded_view_block_fraction, expanded_view_block_target_visible = update_expanded_view_block_state(self, player_key, show_extra_blocks, t)
+	local show_inventory_blocks = show_extra_blocks or expanded_view_block_fraction > 0
+	local force_changed_values_visible = revealed
+	local show_expanded_inventory_value = mode == "short" and revealed
 	local class_status_icon, class_status_icon_key = player_status_icon(status)
 	local show_class_icon = boolean_setting("squadhud_show_class_icon", true)
 	local show_ability_icon = boolean_setting("squadhud_show_ability_icon", true)
@@ -1356,13 +1505,13 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local in_coherency = is_teammate and PlayerDataRuntime.in_coherency_with_local_player(local_player, extensions)
 	local show_coherency_border = in_coherency or relation_status ~= ""
 	local status_background_color = operational_status and operational_status.is_critical and COLOR_STATUS_BACKGROUND_CRITICAL or COLOR_STATUS_BACKGROUND_DEFAULT
-	local pocketable_icon = filtered_pocketable_icon(inventory_icons)
-	local pocketable_small_icon = show_stimm_icon and inventory_icons.pocketable_small_icon or nil
-	local grenade_icon = show_grenade_icon and inventory_icons.grenade_icon or nil
+	local pocketable_icon = show_inventory_blocks and filtered_pocketable_icon(inventory_icons) or nil
+	local pocketable_small_icon = show_inventory_blocks and show_stimm_icon and inventory_icons.pocketable_small_icon or nil
+	local grenade_icon = show_inventory_blocks and show_grenade_icon and inventory_icons.grenade_icon or nil
 	local grenade_icon_color = ammo_color_from_status(inventory_icons.grenade_status, true)
-	local ammo_icon = show_ammo_icon and inventory_icons.ammo_icon or nil
+	local ammo_icon = show_inventory_blocks and show_ammo_icon and inventory_icons.ammo_icon or nil
 	local ammo_icon_color = ammo_color_from_status(inventory_icons.ammo_status, inventory_icons.uses_ammo)
-	local salvage_text = inventory_icons.salvage_text or ""
+	local salvage_text = show_inventory_blocks and inventory_icons.salvage_text or ""
 	local visible_inventory_icons = {
 		grenade_icon = grenade_icon,
 		grenade_current = inventory_icons.grenade_current,
@@ -1392,12 +1541,14 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 
 	apply_ability_state(style, ability_state)
 
-	local grenade_value_layout = GrenadeValue.apply(self, player_key, content, style, visible_inventory_icons, grenade_icon_color, ui_renderer, t)
-	local ammo_percent_layout = AmmoPercent.apply(self, player_key, content, style, visible_inventory_icons, ammo_icon_color, ui_renderer, t)
+	local grenade_value_layout = GrenadeValue.apply(self, player_key, content, style, visible_inventory_icons, grenade_icon_color, ui_renderer, t, force_changed_values_visible)
+	local ammo_percent_layout = AmmoPercent.apply(self, player_key, content, style, visible_inventory_icons, ammo_icon_color, ui_renderer, t, force_changed_values_visible)
 
 	InventoryValue.apply_layout(style, visible_inventory_icons, ui_renderer, inventory_value_plain, grenade_value_layout, ammo_percent_layout)
 
-	if not hide_vitals and inventory_value_visible(inventory_value_mode, revive_state) then
+	if not hide_vitals and show_expanded_inventory_value and expanded_inventory_value then
+		InventoryValue.apply_transition(self, player_key, content, style, expanded_inventory_value, COLOR_TEXT_DEFAULT, expanded_inventory_value_plain, "expanded", t)
+	elseif not hide_vitals and show_inventory_blocks and inventory_value_visible(inventory_value_mode, revive_state) then
 		InventoryValue.apply_transition(self, player_key, content, style, inventory_value, inventory_value_color, inventory_value_plain, inventory_value_mode, t)
 	else
 		InventoryValue.clear(self, player_key, content, style)
@@ -1421,6 +1572,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.pocketable_icon.color, COLOR_TEXT_DEFAULT)
 	apply_color(style.pocketable_small_icon.color, pocketable_small_icon_color(inventory_icons))
 	apply_color(style.salvage_text.text_color, COLOR_TEXT_DEFAULT)
+	apply_expanded_view_block_animation(content, style, expanded_view_block_fraction, expanded_view_block_target_visible)
 
 	set_rect_width(style.coherency_border, show_coherency_border and COHERENCY_BORDER_WIDTH or 0)
 
@@ -1455,6 +1607,7 @@ HudElementSquadHud.init = function(self, parent, draw_layer, start_scale)
 	self._slot_players = {}
 	self._active_bar_state_by_player = {}
 	self._ammo_percent_state_by_player = {}
+	self._expanded_view_block_state_by_player = {}
 	self._grenade_value_state_by_player = {}
 	self._inventory_value_state_by_player = {}
 	self._overshield_spent_state_by_player = {}

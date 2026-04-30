@@ -6,11 +6,30 @@ return {
 	title = "squadhud_expanded_view_group",
 	sub_widgets = {
 		{
+			setting_id = "squadhud_expanded_view_mode",
+			type = "dropdown",
+			title = "squadhud_expanded_view_mode",
+			tooltip_text = "squadhud_expanded_view_mode_description",
+			default_value = "full",
+			options = {
+				{
+					text = "squadhud_expanded_view_mode_short",
+					value = "short",
+				},
+				{
+					text = "squadhud_expanded_view_mode_full",
+					value = "full",
+				},
+			},
+		},
+		{
 			setting_id = "squadhud_expanded_view_keybind",
 			type = "keybind",
 			title = "squadhud_expanded_view_keybind",
 			tooltip_text = "squadhud_expanded_view_keybind_description",
-			default_value = {},
+			default_value = {
+				"left ctrl",
+			},
 			keybind_trigger = "held",
 			keybind_type = "function_call",
 			function_name = "squadhud_expanded_view_keybind",
