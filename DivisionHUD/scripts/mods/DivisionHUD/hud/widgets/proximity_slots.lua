@@ -4,6 +4,9 @@ local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 
 local M = {}
 local TACTICAL_ADVISOR_ALERT_RGB = { 200, 25, 25 }
+local TACTICAL_ADVISOR_ALERT_PULSE_DURATION = 0.34
+local TACTICAL_ADVISOR_ALERT_ALPHA_MAX = 200
+local TACTICAL_ADVISOR_ALERT_EXTRA_SIZE = 5
 local TACTICAL_ADVISOR_BLOCK_KEYS = {
 	"low_ammo",
 	"low_health",
@@ -39,7 +42,7 @@ local function _reset_widget(widget)
 	widget.dirty = true
 end
 
-local function _apply_tactical_advisor_alert_background(widget, visible, alpha)
+local function _apply_tactical_advisor_alert_background(widget, visible, alpha, extra_size)
 	if not widget or not widget.content then
 		return
 	end
@@ -48,6 +51,15 @@ local function _apply_tactical_advisor_alert_background(widget, visible, alpha)
 
 	local style = widget.style and widget.style.tactical_advisor_alert_background
 	local color = style and style.color
+	local base_size = style and style.default_size
+
+	if style and type(base_size) ~= "table" and type(style.size) == "table" then
+		base_size = {
+			style.size[1],
+			style.size[2],
+		}
+		style.default_size = base_size
+	end
 
 	if color then
 		color[1] = visible and alpha or 0
@@ -56,14 +68,23 @@ local function _apply_tactical_advisor_alert_background(widget, visible, alpha)
 		color[4] = TACTICAL_ADVISOR_ALERT_RGB[3]
 	end
 
+	if style and style.size and type(base_size) == "table" then
+		local extra = visible and (extra_size or 0) or 0
+
+		style.size[1] = base_size[1] + extra
+		style.size[2] = base_size[2] + extra
+	end
+
 	widget.dirty = true
 end
 
 local function _tactical_advisor_alert_alpha(self, opacity, dt)
-	self._tactical_advisor_blink_t = ((self._tactical_advisor_blink_t or 0) + dt) % 1
+	self._tactical_advisor_blink_t = ((self._tactical_advisor_blink_t or 0) + dt) % TACTICAL_ADVISOR_ALERT_PULSE_DURATION
 
-	local wave = (math.sin(self._tactical_advisor_blink_t * math.pi * 2) + 1) * 0.5
-	local alpha = 80 + 120 * wave
+	local progress = math.clamp(self._tactical_advisor_blink_t / TACTICAL_ADVISOR_ALERT_PULSE_DURATION, 0, 1)
+	local pulse_progress = math.easeInCubic(math.ease_pulse(progress))
+	local alpha = TACTICAL_ADVISOR_ALERT_ALPHA_MAX * pulse_progress
+	local extra_size = TACTICAL_ADVISOR_ALERT_EXTRA_SIZE * math.easeOutCubic(progress)
 	local settings = mod._settings
 	local intensity_percent = type(settings) == "table" and settings.tactical_advisor_blink_intensity or 100
 
@@ -73,7 +94,7 @@ local function _tactical_advisor_alert_alpha(self, opacity, dt)
 
 	alpha = math.clamp(alpha * math.clamp(intensity_percent, 25, 200) / 100, 0, 255)
 
-	return math.floor(math.clamp(alpha * opacity, 0, 255) + 0.5)
+	return math.floor(math.clamp(alpha * opacity, 0, 255) + 0.5), extra_size
 end
 
 local function _tactical_advisor_proximity_highlight_active(tactical_advisor_data, cat)
@@ -258,7 +279,7 @@ function M.update(self, widgets, opacity, dt, proximity_scan, right_slot_icon_fa
 	local enabled = type(settings) ~= "table" or (settings.proximity_enabled ~= false and settings.proximity_enabled ~= 0)
 	local show_stimm = type(settings) ~= "table" or (settings.proximity_show_stimm ~= false and settings.proximity_show_stimm ~= 0)
 	local tactical_advisor_data = self._tactical_advisor_data
-	local tactical_advisor_alert_alpha = _tactical_advisor_alert_alpha(self, opacity, dt)
+	local tactical_advisor_alert_alpha, tactical_advisor_alert_extra_size = _tactical_advisor_alert_alpha(self, opacity, dt)
 
 	_ensure_anim_state(self, categories)
 
@@ -430,7 +451,8 @@ function M.update(self, widgets, opacity, dt, proximity_scan, right_slot_icon_fa
 		_apply_tactical_advisor_alert_background(
 			bg_widget,
 			data ~= nil and _tactical_advisor_proximity_highlight_active(tactical_advisor_data, cat),
-			tactical_advisor_alert_alpha
+			tactical_advisor_alert_alpha,
+			tactical_advisor_alert_extra_size
 		)
 
 		widget.content.visible = true

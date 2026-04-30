@@ -72,6 +72,7 @@ local function create_prox_slot_bg_widget(scenegraph_id, slot_size, build_frame_
 			horizontal_alignment = "center",
 			vertical_alignment = "center",
 			size = { slot_size, slot_size },
+			default_size = { slot_size, slot_size },
 			color = { 0, 200, 0, 0 },
 			offset = { 0, 0, 1 },
 		},
