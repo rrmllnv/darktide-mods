@@ -33,6 +33,10 @@ local EXPANDED_VIEW_BLOCK_TRANSITION_DURATION = 0.24
 local EXPANDED_VIEW_BLOCK_STAGGER = 0.04
 local EXPANDED_VIEW_BLOCK_SLIDE_OFFSET = INVENTORY_VALUE.slide_offset or 18
 local EXPANDED_VIEW_BLOCK_ITEM_COUNT = 6
+local VITALS_REVEAL_DURATION = 0.35
+local VITALS_REVEAL_STAGGER = 0.06
+local VITALS_REVEAL_LAYER_COUNT = 3
+local VITALS_REVEAL_ABILITY_SLIDE_OFFSET = 22
 local BAR_LEFT = DefinitionSettings.bar_left
 local BAR_WIDTH = DefinitionSettings.bar_width
 local HEALTH_SEGMENT_GAP = DefinitionSettings.health_segment_gap
@@ -228,8 +232,8 @@ ActiveBar.rounded_fraction = function(value)
 	return math.floor(math.clamp(value or 0, 0, 1) * 10000 + 0.5)
 end
 
-ActiveBar.mode = function(hud, player_key, health_fraction, toughness_fraction, bonus_value, has_overshield, revive_state, t)
-	if revive_state and revive_state.in_progress then
+ActiveBar.mode = function(hud, player_key, health_fraction, toughness_fraction, bonus_value, has_overshield, revive_state, is_down, t)
+	if revive_state and revive_state.in_progress and is_down then
 		return "toughness"
 	end
 
@@ -859,8 +863,8 @@ local function filtered_pocketable_icon(inventory_icons)
 	return inventory_icons and inventory_icons.pocketable_icon or nil
 end
 
-local function inventory_value_visible(mode_key, revive_state)
-	if revive_state and revive_state.in_progress then
+local function inventory_value_visible(mode_key, revive_state, is_down)
+	if revive_state and revive_state.in_progress and is_down then
 		return true
 	elseif mode_key == "toughness" then
 		return boolean_setting("squadhud_show_toughness_value", true)
@@ -984,6 +988,87 @@ local function expanded_view_item_fraction(fraction, item_index)
 	local duration = math.max(0.01, 1 - EXPANDED_VIEW_BLOCK_STAGGER * math.max(0, EXPANDED_VIEW_BLOCK_ITEM_COUNT - 1))
 
 	return math.clamp((fraction - delay) / duration, 0, 1)
+end
+
+local function vitals_reveal_layer_fraction(master_fraction, layer_index)
+	local delay = VITALS_REVEAL_STAGGER * math.max(0, layer_index - 1)
+	local duration = math.max(0.01, 1 - VITALS_REVEAL_STAGGER * math.max(0, VITALS_REVEAL_LAYER_COUNT - 1))
+
+	return math.clamp((master_fraction - delay) / duration, 0, 1)
+end
+
+local function update_vitals_reveal_state(hud, player_key, vitals_visible, t)
+	if not player_key or not hud._vitals_reveal_state_by_player then
+		return vitals_visible and 1 or 0
+	end
+
+	local now = type(t) == "number" and t or 0
+	local state = hud._vitals_reveal_state_by_player[player_key]
+
+	if not state then
+		state = {
+			current_fraction = vitals_visible and 1 or 0,
+			target_visible = vitals_visible,
+		}
+		hud._vitals_reveal_state_by_player[player_key] = state
+	end
+
+	if state.target_visible ~= vitals_visible then
+		state.target_visible = vitals_visible
+
+		if vitals_visible then
+			state.from_fraction = state.current_fraction or 0
+			state.to_fraction = 1
+			state.transition_start_t = now
+		else
+			state.transition_start_t = nil
+			state.from_fraction = nil
+			state.to_fraction = nil
+			state.current_fraction = 0
+		end
+	end
+
+	local fraction = state.current_fraction or 0
+
+	if vitals_visible then
+		if state.transition_start_t then
+			local progress = math.clamp((now - state.transition_start_t) / VITALS_REVEAL_DURATION, 0, 1)
+			local eased_progress = smoothstep(progress)
+
+			fraction = (state.from_fraction or 0) + ((state.to_fraction or 1) - (state.from_fraction or 0)) * eased_progress
+
+			if progress >= 1 then
+				state.transition_start_t = nil
+				state.from_fraction = nil
+				state.to_fraction = nil
+				fraction = 1
+			end
+		else
+			fraction = 1
+		end
+	else
+		fraction = 0
+	end
+
+	state.current_fraction = fraction
+
+	return fraction
+end
+
+local function multiply_style_alpha_field(style, style_id, field_name, mult)
+	if mult >= 0.999 then
+		return
+	end
+
+	local s = style[style_id]
+
+	if not s or not s[field_name] then
+		return
+	end
+
+	local c = s[field_name]
+
+	c[1] = math.floor((c[1] or 255) * mult + 0.5)
 end
 
 local function apply_alpha_fraction(color, fraction)
@@ -1219,8 +1304,8 @@ local function clear_health_segments(widget)
 	end
 end
 
-local function revive_progress_for_player(self, player_key, revive_state, t)
-	if not revive_state or not revive_state.in_progress then
+local function revive_progress_for_player(self, player_key, revive_state, is_down, t)
+	if not revive_state or not revive_state.in_progress or not is_down then
 		if self._revive_progress_by_player then
 			self._revive_progress_by_player[player_key] = nil
 		end
@@ -1329,7 +1414,7 @@ InventoryValue.health_content = function(extensions, is_down)
 end
 
 InventoryValue.active_content = function(active_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
-	if revive_state and revive_state.in_progress then
+	if revive_state and revive_state.in_progress and is_down then
 		local text = string.format("%d%%", math.floor((revive_progress or 0) * 100 + 0.5))
 
 		return text, COLOR_REVIVE, text, "revive"
@@ -1581,10 +1666,16 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 
 	local base_name_color = (PlayerDataRuntime.is_bot(player) or status == "dead" or status == "hogtied") and COLOR_PLAYER_NAME_INACTIVE or COLOR_TEXT_DEFAULT
 	local player_key = PlayerDataRuntime.player_unique_id(player)
+	local vitals_reveal_master = update_vitals_reveal_state(self, player_key, not hide_vitals, t)
+	local vitals_ability_reveal = smoothstep(vitals_reveal_layer_fraction(vitals_reveal_master, 1))
+	local vitals_inventory_reveal = smoothstep(vitals_reveal_layer_fraction(vitals_reveal_master, 2))
+	local vitals_value_text_reveal = smoothstep(vitals_reveal_layer_fraction(vitals_reveal_master, 3))
 	local revive_state = PlayerDataRuntime.revive_state(extensions)
-	local revive_progress = revive_progress_for_player(self, player_key, revive_state, t)
+	local revive_in_progress = revive_state and revive_state.in_progress
+	local revive_ui_knocked_down = revive_in_progress and is_down
+	local revive_progress = revive_progress_for_player(self, player_key, revive_state, is_down, t)
 	local toughness_values = PlayerDataRuntime.toughness_values(extensions)
-	local active_bar_mode = ActiveBar.mode(self, player_key, health_fraction, tough_fraction, toughness_values.bonus, has_overshield, revive_state, t)
+	local active_bar_mode = ActiveBar.mode(self, player_key, health_fraction, tough_fraction, toughness_values.bonus, has_overshield, revive_state, is_down, t)
 	local health_bar_y, health_bar_height, toughness_bar_y, toughness_bar_height = ActiveBar.layout(active_bar_mode)
 	local inventory_value, inventory_value_color, inventory_value_plain, inventory_value_mode = InventoryValue.active_content(active_bar_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
 	local rescue_timer_status = PlayerDataRuntime.rescue_timer_status(player, status)
@@ -1646,7 +1737,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	content.class_icon = show_class_icon and (expanded_view and PlayerDataRuntime.player_account_platform_icon(player) or class_status_icon and "" or PlayerDataRuntime.archetype_icon(player)) or ""
 	content.class_status_icon = show_class_icon and not expanded_view and class_status_icon or nil
 	content.relation_status = relation_status
-	content.ability_icon_visible = show_ability_icon and ability_state ~= nil and not hide_vitals
+	content.ability_icon_visible = show_ability_icon and ability_state ~= nil and vitals_ability_reveal > 0.001 and not hide_vitals
 	content.ability_progress = ability_state and ability_state.progress or 1
 	content.grenade_icon = grenade_icon
 	content.ammo_icon = ammo_icon
@@ -1656,12 +1747,24 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 
 	apply_ability_state(style, ability_state)
 
+	local ability_slide_offset = (1 - vitals_ability_reveal) * VITALS_REVEAL_ABILITY_SLIDE_OFFSET
+
+	style.ability_icon.offset[1] = DefinitionSettings.ability_icon_x - ability_slide_offset
+	style.ability_frame.offset[1] = DefinitionSettings.ability_icon_frame_x - ability_slide_offset
+	style.ability_glow.offset[1] = DefinitionSettings.ability_icon_frame_x - ability_slide_offset
+
+	if vitals_ability_reveal < 0.999 then
+		style.ability_icon.color[1] = math.floor((style.ability_icon.color[1] or 255) * vitals_ability_reveal + 0.5)
+		style.ability_frame.color[1] = math.floor((style.ability_frame.color[1] or 255) * vitals_ability_reveal + 0.5)
+		style.ability_glow.color[1] = math.floor((style.ability_glow.color[1] or 255) * vitals_ability_reveal + 0.5)
+	end
+
 	local grenade_value_layout = GrenadeValue.apply(self, player_key, content, style, visible_inventory_icons, grenade_icon_color, ui_renderer, t, force_changed_values_visible)
 	local ammo_percent_layout = AmmoPercent.apply(self, player_key, content, style, visible_inventory_icons, ammo_icon_color, ui_renderer, t, force_changed_values_visible)
 
 	InventoryValue.apply_layout(style, visible_inventory_icons, ui_renderer, inventory_value_plain, grenade_value_layout, ammo_percent_layout)
 
-	if not hide_vitals and show_inventory_blocks and inventory_value_visible(inventory_value_mode, revive_state) then
+	if not hide_vitals and show_inventory_blocks and inventory_value_visible(inventory_value_mode, revive_state, is_down) then
 		InventoryValue.apply_transition(self, player_key, content, style, inventory_value, inventory_value_color, inventory_value_plain, inventory_value_mode, t)
 	else
 		InventoryValue.clear(self, player_key, content, style)
@@ -1675,7 +1778,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.class_status_icon.color, player_status_icon_color(class_status_icon_key))
 	apply_color(style.status_background.color, status_background_color)
 	apply_color(style.coherency_border.color, in_coherency and COLOR_COHERENCY_BORDER_IN or COLOR_COHERENCY_BORDER_OUT)
-	apply_color(style.toughness_fill.color, revive_state.in_progress and COLOR_TOUGHNESS or has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS)
+	apply_color(style.toughness_fill.color, revive_ui_knocked_down and COLOR_TOUGHNESS or has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS)
 	apply_color(style.grenade_icon.color, grenade_icon_color)
 	apply_color(style.grenade_value_text.text_color, grenade_icon_color)
 	style.grenade_value_text.text_color[1] = math.floor((grenade_icon_color[1] or 255) * (grenade_value_layout.fraction or 0) + 0.5)
@@ -1691,6 +1794,25 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 		InventoryValue.apply_expanded(content, style, ui_renderer, extensions, has_overshield, is_down, inventory_value_mode, expanded_inventory_value_fraction)
 	else
 		InventoryValue.clear_expanded(content, style)
+	end
+
+	if not hide_vitals then
+		if vitals_inventory_reveal < 0.999 then
+			multiply_style_alpha_field(style, "grenade_icon", "color", vitals_inventory_reveal)
+			multiply_style_alpha_field(style, "ammo_icon", "color", vitals_inventory_reveal)
+			multiply_style_alpha_field(style, "pocketable_icon", "color", vitals_inventory_reveal)
+			multiply_style_alpha_field(style, "pocketable_small_icon", "color", vitals_inventory_reveal)
+			multiply_style_alpha_field(style, "salvage_text", "text_color", vitals_inventory_reveal)
+			multiply_style_alpha_field(style, "grenade_value_text", "text_color", vitals_inventory_reveal)
+			multiply_style_alpha_field(style, "ammo_percent_text", "text_color", vitals_inventory_reveal)
+		end
+
+		if vitals_value_text_reveal < 0.999 then
+			multiply_style_alpha_field(style, "inventory_value_text", "text_color", vitals_value_text_reveal)
+			multiply_style_alpha_field(style, "inventory_value_out_text", "text_color", vitals_value_text_reveal)
+			multiply_style_alpha_field(style, "expanded_health_value_text", "text_color", vitals_value_text_reveal)
+			multiply_style_alpha_field(style, "expanded_toughness_value_text", "text_color", vitals_value_text_reveal)
+		end
 	end
 
 	set_rect_width(style.coherency_border, show_coherency_border and COHERENCY_BORDER_WIDTH or 0)
@@ -1727,9 +1849,9 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 		style.toughness_fill.size[2] = toughness_bar_height
 		style.revive_fill.offset[2] = toughness_bar_y
 		style.revive_fill.size[2] = toughness_bar_height
-		set_rect_width(style.toughness_fill, revive_state.in_progress and 0 or BAR_WIDTH * tough_fraction)
+		set_rect_width(style.toughness_fill, revive_ui_knocked_down and 0 or BAR_WIDTH * tough_fraction)
 		OvershieldSpent.apply(self, player_key, content, style, has_overshield, tough_fraction, toughness_bar_y, toughness_bar_height, revive_state, t)
-		set_rect_width(style.revive_fill, BAR_WIDTH * revive_progress)
+		set_rect_width(style.revive_fill, revive_ui_knocked_down and BAR_WIDTH * revive_progress or 0)
 		apply_health_segments(widget, health_fraction, health_max_fraction, max_wounds, is_down, health_bar_y, health_bar_height)
 	end
 
@@ -1757,6 +1879,7 @@ HudElementSquadHud.init = function(self, parent, draw_layer, start_scale)
 	self._name_status_flash_by_player = {}
 	self._last_applied_player_name_by_player = {}
 	self._revive_progress_by_player = {}
+	self._vitals_reveal_state_by_player = {}
 end
 
 HudElementSquadHud.update = function(self, dt, t, ui_renderer, render_settings, input_service)
