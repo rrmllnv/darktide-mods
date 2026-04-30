@@ -86,7 +86,7 @@ S.inventory_value = {
 	y = S.inventory_value_y,
 }
 
-S.ability_icon_y = S.toughness_bar_bottom_y - S.ability_icon_size
+S.ability_icon_y = S.toughness_bar_bottom_y - S.ability_icon_size - 2
 S.ability_icon_frame_y = S.ability_icon_y - S.ability_icon_frame_padding
 S.ability_icon_frame_x = S.ability_icon_x - S.ability_icon_frame_padding
 S.health_segment_gap = 3
