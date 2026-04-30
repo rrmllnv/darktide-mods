@@ -1646,7 +1646,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	content.class_icon = show_class_icon and (expanded_view and PlayerDataRuntime.player_account_platform_icon(player) or class_status_icon and "" or PlayerDataRuntime.archetype_icon(player)) or ""
 	content.class_status_icon = show_class_icon and not expanded_view and class_status_icon or nil
 	content.relation_status = relation_status
-	content.ability_icon_visible = show_ability_icon and ability_state ~= nil
+	content.ability_icon_visible = show_ability_icon and ability_state ~= nil and not hide_vitals
 	content.ability_progress = ability_state and ability_state.progress or 1
 	content.grenade_icon = grenade_icon
 	content.ammo_icon = ammo_icon
