@@ -252,6 +252,20 @@ function M.strip_format_directives(text)
 end
 
 function M.player_name(player)
+	if M.is_bot(player) and type(player) == "table" and type(player.profile) == "function" then
+		local ok_profile, profile = pcall(function()
+			return player:profile()
+		end)
+
+		if ok_profile and type(profile) == "table" then
+			local raw = profile.display_name or profile.name
+
+			if type(raw) == "string" and raw ~= "" then
+				return M.strip_format_directives(raw)
+			end
+		end
+	end
+
 	if type(player) == "table" and type(player.name) == "function" then
 		local ok, name = pcall(function()
 			return player:name()
@@ -502,6 +516,62 @@ local function player_account_id(player)
 end
 
 M.player_account_id = player_account_id
+
+function M.apply_modder_tools_display_name(base_name, player)
+	if type(base_name) ~= "string" or base_name == "" then
+		return base_name
+	end
+
+	local get_mod_fn = rawget(_G, "get_mod")
+
+	if type(get_mod_fn) ~= "function" then
+		return base_name
+	end
+
+	local ok_modder, modder_tools = pcall(get_mod_fn, "ModderTools")
+
+	if not ok_modder or not modder_tools or type(modder_tools.get_player_name) ~= "function" then
+		return base_name
+	end
+
+	local ok_feature = pcall(function()
+		return modder_tools:get("enable_random_names") == true
+	end)
+
+	if not ok_feature then
+		return base_name
+	end
+
+	local cache_key = player_account_id(player)
+
+	if cache_key == nil and type(modder_tools.player_name_cache_key) == "function" then
+		local ok_key, resolved_key = pcall(function()
+			return modder_tools.player_name_cache_key(player)
+		end)
+
+		if ok_key and resolved_key ~= nil then
+			cache_key = resolved_key
+		end
+	end
+
+	if cache_key == nil then
+		cache_key = M.player_unique_id(player)
+	end
+
+	if cache_key == nil then
+		return base_name
+	end
+
+	local ok_resolved, resolved = pcall(function()
+		return modder_tools.get_player_name(cache_key, base_name)
+	end)
+
+	if ok_resolved and type(resolved) == "string" and resolved ~= "" then
+		return resolved
+	end
+
+	return base_name
+end
 
 local function strip_platform_icons(text)
 	if type(text) ~= "string" or text == "" then

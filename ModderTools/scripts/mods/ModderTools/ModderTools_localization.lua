@@ -14,8 +14,8 @@ return {
         ru = "Включить случайные имена",
     },
     enable_random_names_description = {
-        en = "Replaces real player nicknames with random ones in missions",
-        ru = "Заменяет реальные ники игроков на случайные в миссиях",
+        en = "Master switch: must be on for team panel and nameplate name replacement to run.",
+        ru = "Общий переключатель: без него замена имён в панели команды и неймплейтах не выполняется.",
     },
 
     -- Настройки элементов UI
@@ -33,7 +33,7 @@ return {
         ru = "Замена имен в неймплейтах",
     },
     enable_nameplate_description = {
-        en = "Replaces names in floating nameplates above players",
-        ru = "Заменяет имена в плавающих неймплейтах над игроками",
+        en = "World markers above players (mission uses nameplate_party, not template \"nameplate\"). Requires \"Enable Random Names\".",
+        ru = "Маркеры над игроками в мире (в миссии — тип nameplate_party). Нужно включить «Включить случайные имена».",
     },
 }

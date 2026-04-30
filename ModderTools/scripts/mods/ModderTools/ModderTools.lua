@@ -168,7 +168,41 @@ mod.get_player_name = function(account_id, original_name)
         mod._name_cache[account_id] = generate_random_name(account_id)
     end
 
-    return mod._name_cache[account_id]
+	return mod._name_cache[account_id]
+end
+
+mod.player_name_cache_key = function(player)
+	if not player or player.__deleted then
+		return nil
+	end
+
+	local ok_account, account_id = pcall(function()
+		return player:account_id()
+	end)
+
+	if ok_account and account_id ~= nil then
+		return account_id
+	end
+
+	if type(player.unique_id) == "function" then
+		local ok_uid, unique_id = pcall(function()
+			return player:unique_id()
+		end)
+
+		if ok_uid and unique_id ~= nil then
+			return tostring(unique_id)
+		end
+	end
+
+	local ok_peer, peer_id = pcall(function()
+		return player:peer_id()
+	end)
+
+	if ok_peer and peer_id ~= nil then
+		return peer_id
+	end
+
+	return nil
 end
 
 -- Очистка кэша имен (при выходе из миссии)

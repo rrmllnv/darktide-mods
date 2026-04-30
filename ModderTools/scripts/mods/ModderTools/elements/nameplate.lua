@@ -1,51 +1,108 @@
 local mod = get_mod("ModderTools")
 local ref = "nameplate"
 
--- Хук для обновления неймплейтов
+local function nameplate_template_name(marker)
+	local template = marker.template
+
+	return template and template.name or marker.type
+end
+
+local function is_player_name_world_marker(marker)
+	local template_name = nameplate_template_name(marker)
+
+	return template_name == "nameplate" or template_name == "nameplate_party" or template_name == "nameplate_party_hud"
+end
+
+local function marker_subject_player(marker)
+	local player = marker.data
+
+	if type(player) ~= "table" or player.__deleted then
+		return nil
+	end
+
+	if type(player.name) ~= "function" then
+		return nil
+	end
+
+	return player
+end
+
+local function resolve_player_display_name(player)
+	local ok_name, name_from_api = pcall(function()
+		return player:name()
+	end)
+
+	if ok_name and type(name_from_api) == "string" and name_from_api ~= "" then
+		return name_from_api
+	end
+
+	if type(player.character_name) == "function" then
+		local ok_char, char_name = pcall(function()
+			return player:character_name()
+		end)
+
+		if ok_char and type(char_name) == "string" and char_name ~= "" then
+			return char_name
+		end
+	end
+
+	return nil
+end
+
+local function apply_replace_to_content_field(content, widget, field_id, account_id, player_name)
+	local current_text = content[field_id]
+
+	if type(current_text) ~= "string" or current_text == "" then
+		return
+	end
+
+	local new_text = mod.replace_name_in_text(current_text, account_id, player_name)
+
+	if new_text ~= current_text then
+		content[field_id] = new_text
+		widget.dirty = true
+	end
+end
+
 mod:hook_safe(CLASS.HudElementWorldMarkers, "update", function(self, dt, t, ui_renderer)
-    if not mod.is_enabled_feature(ref) or not mod:get("enable_random_names") then
-        return
-    end
+	if not mod.is_enabled_feature(ref) or not mod:get("enable_random_names") then
+		return
+	end
 
-    -- Получаем все маркеры
-    local markers = self._markers
+	local markers = self._markers
 
-    if not markers then
-        return
-    end
+	if not markers then
+		return
+	end
 
-    -- Проходим по всем маркерам и ищем неймплейты игроков
-    for marker_id, marker_data in pairs(markers) do
-        local widget = marker_data.widget
-        local marker_type = marker_data.type
+	for i = 1, #markers do
+		local marker = markers[i]
 
-        -- Ищем маркеры типа "nameplate"
-        if marker_type == "nameplate" and widget then
-            local player = marker_data.player
+		if marker and is_player_name_world_marker(marker) then
+			local widget = marker.widget
 
-            if player and not player.__deleted and player:is_human_controlled() then
-                local account_id = player:account_id() or player:name() or player:peer_id()
-                local content = widget.content
+			if widget then
+				local player = marker_subject_player(marker)
 
-                if content and account_id then
-                    local current_text = content.header or content.text
-                    local player_name = player:name() or player:character_name()
+				if player then
+					local account_id = mod.player_name_cache_key(player)
 
-                    if current_text and player_name and account_id then
-                        -- Заменяем имя на случайное
-                        local new_text = mod.replace_name_in_text(current_text, account_id, player_name)
+					if account_id then
+						local player_name = resolve_player_display_name(player)
 
-                        if new_text ~= current_text then
-                            if content.header then
-                                content.header = new_text
-                            elseif content.text then
-                                content.text = new_text
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
+						if player_name then
+							local content = widget.content
+
+							if content then
+								apply_replace_to_content_field(content, widget, "header_text", account_id, player_name)
+								apply_replace_to_content_field(content, widget, "header", account_id, player_name)
+								apply_replace_to_content_field(content, widget, "text", account_id, player_name)
+								apply_replace_to_content_field(content, widget, "icon_text", account_id, player_name)
+							end
+						end
+					end
+				end
+			end
+		end
+	end
 end)
-

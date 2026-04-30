@@ -9,15 +9,15 @@ mod:hook_safe(CLASS.HudElementTeamPanelHandler, "update", function(self, dt, t, 
 
     local player_panels_array = self._player_panels_array
 
-    for _, data in ipairs(player_panels_array) do
-        local panel = data.panel
-        local player = data.player
+	for _, data in ipairs(player_panels_array) do
+		local panel = data.panel
+		local player = data.player
 
-        if player and not player.__deleted and player:is_human_controlled() then
-            local account_id = player:account_id() or player:name() or player:peer_id()
-            local widget = panel._widgets_by_name.player_name
+		if player and not player.__deleted then
+			local account_id = mod.player_name_cache_key(player)
+			local widget = panel._widgets_by_name.player_name
 
-            if widget and account_id then
+			if widget and account_id then
                 local content = widget.content
                 local current_text = content.text
                 local player_name = player:name() or player:character_name()
@@ -47,13 +47,13 @@ mod:hook_safe(CLASS.HudElementTeamPlayerPanelHub, "update", function(self)
         return
     end
 
-    local player = self._data.player
+	local player = self._data.player
 
-    if player and not player.__deleted and player:is_human_controlled() then
-        local account_id = player:account_id() or player:name() or player:peer_id()
-        local widget = self._widgets_by_name.player_name
+	if player and not player.__deleted then
+		local account_id = mod.player_name_cache_key(player)
+		local widget = self._widgets_by_name.player_name
 
-        if widget and account_id then
+		if widget and account_id then
             local content = widget.content
             local current_text = content.text
             local player_name = player:name() or player:character_name()

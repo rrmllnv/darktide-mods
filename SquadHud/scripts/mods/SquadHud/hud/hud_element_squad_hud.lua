@@ -1261,6 +1261,15 @@ local function apply_name_marquee(self, widget, player_key, display_name, ui_ren
 	local name_style = widget.style.player_name
 	local max_width = name_width or NAME_WIDTH
 
+	if player_key then
+		local last_by_player = self._last_applied_player_name_by_player
+
+		if last_by_player[player_key] ~= display_name then
+			last_by_player[player_key] = display_name
+			widget.dirty = true
+		end
+	end
+
 	content.player_name = display_name
 
 	if not player_key or not ui_renderer or display_name == "" then
@@ -1564,9 +1573,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local show_extra_blocks = mode == "full" or revealed
 	local base_name = player_display_name(player, expanded_view)
 
-	if mod.squadhud_debug_modder_tools_player_name then
-		base_name = mod.squadhud_debug_modder_tools_player_name(base_name, player)
-	end
+	base_name = PlayerDataRuntime.apply_modder_tools_display_name(base_name, player)
 
 	if mod.squadhud_debug_player_name then
 		base_name = mod.squadhud_debug_player_name(base_name, is_local_player)
@@ -1727,6 +1734,7 @@ HudElementSquadHud.init = function(self, parent, draw_layer, start_scale)
 	self._toughness_hit_indicator_state_by_player = {}
 	self._name_marquee_by_player = {}
 	self._name_status_flash_by_player = {}
+	self._last_applied_player_name_by_player = {}
 	self._revive_progress_by_player = {}
 end
 
