@@ -4,6 +4,8 @@ local Text = require("scripts/utilities/ui/text")
 local UISettings = require("scripts/settings/ui/ui_settings")
 local HudElementCombatFeed = require("scripts/ui/hud/elements/combat_feed/hud_element_combat_feed")
 
+local DivisionHudModderToolsDisplay = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/modder_tools_display_runtime")
+
 local previous_target_by_enemy = {}
 
 local function _setting_enabled(key, fallback)
@@ -163,15 +165,33 @@ local function _player_display_name(player, unit)
 		return ""
 	end
 
+	local original_name = type(player.name) == "function" and player:name() or ""
+
+	if type(original_name) ~= "string" then
+		original_name = ""
+	end
+
 	if unit and Unit.alive(unit) then
 		local from_feed = HudElementCombatFeed._get_unit_presentation_name(HudElementCombatFeed, unit)
 
 		if type(from_feed) == "string" and from_feed ~= "" then
+			if DivisionHudModderToolsDisplay and type(DivisionHudModderToolsDisplay.replace_in_player_text) == "function" then
+				return DivisionHudModderToolsDisplay.replace_in_player_text(from_feed, player, original_name)
+			end
+
 			return from_feed
 		end
 	end
 
-	local name = type(player.name) == "function" and player:name() or ""
+	if original_name == "" then
+		return ""
+	end
+
+	local name = original_name
+
+	if DivisionHudModderToolsDisplay and type(DivisionHudModderToolsDisplay.resolve_plain_player_name) == "function" then
+		name = DivisionHudModderToolsDisplay.resolve_plain_player_name(name, player)
+	end
 
 	if type(name) ~= "string" or name == "" then
 		return ""

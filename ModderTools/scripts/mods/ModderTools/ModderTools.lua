@@ -198,11 +198,37 @@ mod.player_name_cache_key = function(player)
 		return player:peer_id()
 	end)
 
+	local ok_lpid, local_player_id = pcall(function()
+		return player:local_player_id()
+	end)
+
 	if ok_peer and peer_id ~= nil then
+		if ok_lpid and local_player_id ~= nil then
+			return tostring(peer_id) .. ":" .. tostring(local_player_id)
+		end
+
 		return peer_id
 	end
 
 	return nil
+end
+
+mod.resolve_substituted_player_display_name = function(player, original_name)
+	if type(original_name) ~= "string" or original_name == "" then
+		return original_name
+	end
+
+	if not player or type(player) ~= "table" or player.__deleted then
+		return original_name
+	end
+
+	local key = mod.player_name_cache_key(player)
+
+	if key == nil then
+		return original_name
+	end
+
+	return mod.get_player_name(key, original_name)
 end
 
 -- Очистка кэша имен (при выходе из миссии)

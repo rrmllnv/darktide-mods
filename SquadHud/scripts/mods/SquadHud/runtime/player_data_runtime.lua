@@ -542,27 +542,17 @@ function M.apply_modder_tools_display_name(base_name, player)
 		return base_name
 	end
 
-	local cache_key = player_account_id(player)
-
-	if cache_key == nil and type(modder_tools.player_name_cache_key) == "function" then
-		local ok_key, resolved_key = pcall(function()
-			return modder_tools.player_name_cache_key(player)
-		end)
-
-		if ok_key and resolved_key ~= nil then
-			cache_key = resolved_key
-		end
-	end
-
-	if cache_key == nil then
-		cache_key = M.player_unique_id(player)
-	end
-
-	if cache_key == nil then
-		return base_name
-	end
-
 	local ok_resolved, resolved = pcall(function()
+		if type(modder_tools.resolve_substituted_player_display_name) == "function" then
+			return modder_tools.resolve_substituted_player_display_name(player, base_name)
+		end
+
+		local cache_key = type(modder_tools.player_name_cache_key) == "function" and modder_tools.player_name_cache_key(player) or nil
+
+		if cache_key == nil then
+			return base_name
+		end
+
 		return modder_tools.get_player_name(cache_key, base_name)
 	end)
 

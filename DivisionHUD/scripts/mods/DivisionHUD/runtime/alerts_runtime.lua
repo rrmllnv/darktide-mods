@@ -3,6 +3,8 @@ local mod = get_mod("DivisionHUD")
 local Text = require("scripts/utilities/ui/text")
 local UISettings = require("scripts/settings/ui/ui_settings")
 
+local DivisionHudModderToolsDisplay = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/modder_tools_display_runtime")
+
 local function alerts_gameplay_time()
 	local Hu = mod.hud_utils
 
@@ -500,6 +502,14 @@ local function alerts_colored_player_name(player)
 	end
 
 	local raw = type(player.name) == "function" and player:name() or ""
+
+	if type(raw) ~= "string" or raw == "" then
+		return ""
+	end
+
+	if DivisionHudModderToolsDisplay and type(DivisionHudModderToolsDisplay.resolve_plain_player_name) == "function" then
+		raw = DivisionHudModderToolsDisplay.resolve_plain_player_name(raw, player)
+	end
 
 	if type(raw) ~= "string" or raw == "" then
 		return ""

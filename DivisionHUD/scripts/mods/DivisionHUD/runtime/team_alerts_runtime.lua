@@ -14,6 +14,8 @@ local HudElementCombatFeed = require("scripts/ui/hud/elements/combat_feed/hud_el
 local Text = require("scripts/utilities/ui/text")
 local UISettings = require("scripts/settings/ui/ui_settings")
 
+local DivisionHudModderToolsDisplay = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/runtime/modder_tools_display_runtime")
+
 local already_reported = {}
 
 local special_alert_cooldown_until = {}
@@ -117,15 +119,39 @@ local function player_display_name(player, unit)
 		return ""
 	end
 
+	local original_name = type(player.name) == "function" and player:name() or ""
+
+	if type(original_name) ~= "string" then
+		original_name = ""
+	end
+
+	local display_core = original_name
+
 	if unit and Unit.alive(unit) then
 		local from_feed = HudElementCombatFeed._get_unit_presentation_name(HudElementCombatFeed, unit)
+
 		if type(from_feed) == "string" and from_feed ~= "" then
-			return from_feed
+			display_core = from_feed
 		end
 	end
 
-	local raw = type(player.name) == "function" and player:name() or ""
-	if type(raw) ~= "string" or raw == "" then
+	if type(display_core) ~= "string" or display_core == "" then
+		return ""
+	end
+
+	if DivisionHudModderToolsDisplay then
+		if display_core == original_name then
+			if type(DivisionHudModderToolsDisplay.resolve_plain_player_name) == "function" then
+				display_core = DivisionHudModderToolsDisplay.resolve_plain_player_name(display_core, player)
+			end
+		else
+			if type(DivisionHudModderToolsDisplay.replace_in_player_text) == "function" then
+				display_core = DivisionHudModderToolsDisplay.replace_in_player_text(display_core, player, original_name)
+			end
+		end
+	end
+
+	if type(display_core) ~= "string" or display_core == "" then
 		return ""
 	end
 
@@ -133,11 +159,12 @@ local function player_display_name(player, unit)
 	local slot = type(slot_fn) == "function" and slot_fn(player)
 	local colors = UISettings.player_slot_colors
 	local col = slot and colors and colors[slot]
+
 	if col then
-		return Text.apply_color_to_text(raw, col)
+		return Text.apply_color_to_text(display_core, col)
 	end
 
-	return raw
+	return display_core
 end
 
 local function enqueue_team_alert(player, unit, suffix_text, cooldown_key)
