@@ -1,6 +1,8 @@
 local mod = get_mod("SquadHud")
 
 local HudElementBase = require("scripts/ui/hud/elements/hud_element_base")
+local HudHealthBarLogic = require("scripts/ui/hud/elements/hud_health_bar_logic")
+local TeamPlayerPanelSettings = require("scripts/ui/hud/elements/team_player_panel/hud_element_team_player_panel_settings")
 local UIHudSettings = require("scripts/settings/ui/ui_hud_settings")
 local TextUtilities = require("scripts/utilities/ui/text")
 
@@ -1391,6 +1393,24 @@ local function apply_name_marquee(self, widget, player_key, display_name, ui_ren
 	widget.dirty = true
 end
 
+local function squad_hud_scale_toughness_values_for_bar_animation(base_values, tough_fraction, animated_tough_fraction)
+	if not base_values then
+		return {
+			bonus = 0,
+			current = 0,
+			normal = 0,
+		}
+	end
+
+	local ratio = tough_fraction > 1e-8 and math.clamp(animated_tough_fraction / tough_fraction, 0, 10) or 0
+
+	return {
+		bonus = (base_values.bonus or 0) * ratio,
+		current = (base_values.current or 0) * ratio,
+		normal = (base_values.normal or 0) * ratio,
+	}
+end
+
 InventoryValue.toughness_content = function(toughness_values, has_overshield)
 	local bonus = toughness_values and toughness_values.bonus or 0
 	local normal = toughness_values and toughness_values.normal or 0
@@ -1407,13 +1427,19 @@ InventoryValue.toughness_content = function(toughness_values, has_overshield)
 	return InventoryValue.colored_text(text, has_overshield and COLOR_TOUGHNESS_OVERSHIELD or COLOR_TOUGHNESS), text
 end
 
-InventoryValue.health_content = function(extensions, is_down)
-	local text = InventoryValue.text(PlayerDataRuntime.health_value(extensions))
+InventoryValue.health_content = function(extensions, is_down, health_value_override)
+	local value = health_value_override
+
+	if value == nil then
+		value = PlayerDataRuntime.health_value(extensions)
+	end
+
+	local text = InventoryValue.text(value)
 
 	return text, is_down and COLOR_HEALTH_CRITICAL or COLOR_HEALTH, text
 end
 
-InventoryValue.active_content = function(active_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
+InventoryValue.active_content = function(active_mode, extensions, revive_state, revive_progress, has_overshield, is_down, health_value_override, toughness_values_override)
 	if revive_state and revive_state.in_progress and is_down then
 		local text = string.format("%d%%", math.floor((revive_progress or 0) * 100 + 0.5))
 
@@ -1421,14 +1447,15 @@ InventoryValue.active_content = function(active_mode, extensions, revive_state, 
 	end
 
 	if active_mode == "toughness" then
-		local text, shadow_text = InventoryValue.toughness_content(PlayerDataRuntime.toughness_values(extensions), has_overshield)
+		local tv = toughness_values_override or PlayerDataRuntime.toughness_values(extensions)
+		local text, shadow_text = InventoryValue.toughness_content(tv, has_overshield)
 
 		return text, COLOR_TOUGHNESS, shadow_text, "toughness"
 	end
 
-	local text = InventoryValue.text(PlayerDataRuntime.health_value(extensions))
+	local text, health_color, plain = InventoryValue.health_content(extensions, is_down, health_value_override)
 
-	return text, is_down and COLOR_HEALTH_CRITICAL or COLOR_HEALTH, text, "health"
+	return text, health_color, plain, "health"
 end
 
 InventoryValue.clear_expanded = function(content, style)
@@ -1446,7 +1473,7 @@ InventoryValue.clear_expanded = function(content, style)
 	end
 end
 
-InventoryValue.apply_expanded = function(content, style, ui_renderer, extensions, has_overshield, is_down, active_mode, fraction)
+InventoryValue.apply_expanded = function(content, style, ui_renderer, extensions, has_overshield, is_down, active_mode, fraction, health_value_override, toughness_values_override)
 	if active_mode ~= "health" and active_mode ~= "toughness" then
 		InventoryValue.clear_expanded(content, style)
 
@@ -1465,8 +1492,9 @@ InventoryValue.apply_expanded = function(content, style, ui_renderer, extensions
 	local progress = smoothstep(fraction or 0)
 	local base_x = INVENTORY_VALUE.x
 	local slide_offset = INVENTORY_VALUE.slide_offset
-	local health_text, health_color, health_plain_text = InventoryValue.health_content(extensions, is_down)
-	local toughness_text, toughness_plain_text = InventoryValue.toughness_content(PlayerDataRuntime.toughness_values(extensions), has_overshield)
+	local health_text, health_color, health_plain_text = InventoryValue.health_content(extensions, is_down, health_value_override)
+	local tv = toughness_values_override or PlayerDataRuntime.toughness_values(extensions)
+	local toughness_text, toughness_plain_text = InventoryValue.toughness_content(tv, has_overshield)
 	local health_width = InventoryValue.width(ui_renderer, health_plain_text, style.inventory_value_text)
 	local toughness_x = base_x + health_width + (INVENTORY_VALUE.gap or INVENTORY_ICON_GAP)
 
@@ -1636,7 +1664,37 @@ InventoryValue.apply_layout = function(style, visible_inventory_icons, ui_render
 	end
 end
 
-local function apply_player_panel(self, widget, local_player, player, extensions, t, ui_renderer)
+local function bar_health_logic_for_player(hud, player_key)
+	if not player_key or not hud._health_bar_logic_by_player then
+		return nil
+	end
+
+	local logic = hud._health_bar_logic_by_player[player_key]
+
+	if not logic then
+		logic = HudHealthBarLogic:new(TeamPlayerPanelSettings.health_bar_settings)
+		hud._health_bar_logic_by_player[player_key] = logic
+	end
+
+	return logic
+end
+
+local function bar_toughness_logic_for_player(hud, player_key)
+	if not player_key or not hud._toughness_bar_logic_by_player then
+		return nil
+	end
+
+	local logic = hud._toughness_bar_logic_by_player[player_key]
+
+	if not logic then
+		logic = HudHealthBarLogic:new(TeamPlayerPanelSettings.toughness_bar_settings)
+		hud._toughness_bar_logic_by_player[player_key] = logic
+	end
+
+	return logic
+end
+
+local function apply_player_panel(self, widget, local_player, player, extensions, dt, t, ui_renderer)
 	local content = widget.content
 	local style = widget.style
 	local status = PlayerDataRuntime.status_from_extensions(extensions)
@@ -1670,14 +1728,57 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local vitals_ability_reveal = smoothstep(vitals_reveal_layer_fraction(vitals_reveal_master, 1))
 	local vitals_inventory_reveal = smoothstep(vitals_reveal_layer_fraction(vitals_reveal_master, 2))
 	local vitals_value_text_reveal = smoothstep(vitals_reveal_layer_fraction(vitals_reveal_master, 3))
+	local animated_health_fraction = health_fraction
+	local animated_health_max_fraction = health_max_fraction
+	local animated_tough_fraction = tough_fraction
+	local health_bar_logic = bar_health_logic_for_player(self, player_key)
+	local toughness_bar_logic = bar_toughness_logic_for_player(self, player_key)
+
+	if health_bar_logic and toughness_bar_logic then
+		local dt_safe = type(dt) == "number" and dt or 0
+
+		if hide_vitals then
+			health_bar_logic:update(dt_safe, t, 0, health_max_fraction)
+			toughness_bar_logic:update(dt_safe, t, 0, 1)
+		else
+			health_bar_logic:update(dt_safe, t, health_fraction, health_max_fraction)
+			toughness_bar_logic:update(dt_safe, t, tough_fraction, 1)
+
+			local h_frac, _, h_max_frac = health_bar_logic:animated_health_fractions()
+
+			if h_frac ~= nil then
+				animated_health_fraction = h_frac
+			end
+
+			if h_max_frac ~= nil then
+				animated_health_max_fraction = h_max_frac
+			end
+
+			local t_frac = select(1, toughness_bar_logic:animated_health_fractions())
+
+			if t_frac ~= nil then
+				animated_tough_fraction = t_frac
+			end
+		end
+	end
 	local revive_state = PlayerDataRuntime.revive_state(extensions)
 	local revive_in_progress = revive_state and revive_state.in_progress
 	local revive_ui_knocked_down = revive_in_progress and is_down
 	local revive_progress = revive_progress_for_player(self, player_key, revive_state, is_down, t)
 	local toughness_values = PlayerDataRuntime.toughness_values(extensions)
+	local inventory_health_value_override = nil
+	local inventory_toughness_values_override = nil
+
+	if not hide_vitals then
+		local raw_health_val = PlayerDataRuntime.health_value(extensions)
+
+		inventory_health_value_override = health_fraction > 1e-8 and raw_health_val * (animated_health_fraction / health_fraction) or 0
+		inventory_toughness_values_override = squad_hud_scale_toughness_values_for_bar_animation(toughness_values, tough_fraction, animated_tough_fraction)
+	end
+
 	local active_bar_mode = ActiveBar.mode(self, player_key, health_fraction, tough_fraction, toughness_values.bonus, has_overshield, revive_state, is_down, t)
 	local health_bar_y, health_bar_height, toughness_bar_y, toughness_bar_height = ActiveBar.layout(active_bar_mode)
-	local inventory_value, inventory_value_color, inventory_value_plain, inventory_value_mode = InventoryValue.active_content(active_bar_mode, extensions, revive_state, revive_progress, has_overshield, is_down)
+	local inventory_value, inventory_value_color, inventory_value_plain, inventory_value_mode = InventoryValue.active_content(active_bar_mode, extensions, revive_state, revive_progress, has_overshield, is_down, inventory_health_value_override, inventory_toughness_values_override)
 	local rescue_timer_status = PlayerDataRuntime.rescue_timer_status(player, status)
 	local operational_status = StatusRuntime.resolve(player, extensions, status, health_fraction, revive_state, rescue_timer_status)
 	local display_name, is_showing_status = StatusRuntime.display_name(self._name_status_flash_by_player, player_key, base_name, operational_status, t)
@@ -1791,7 +1892,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_expanded_view_block_animation(content, style, expanded_view_block_fraction, expanded_view_block_target_visible)
 
 	if not hide_vitals and show_expanded_inventory_value then
-		InventoryValue.apply_expanded(content, style, ui_renderer, extensions, has_overshield, is_down, inventory_value_mode, expanded_inventory_value_fraction)
+		InventoryValue.apply_expanded(content, style, ui_renderer, extensions, has_overshield, is_down, inventory_value_mode, expanded_inventory_value_fraction, inventory_health_value_override, inventory_toughness_values_override)
 	else
 		InventoryValue.clear_expanded(content, style)
 	end
@@ -1849,10 +1950,10 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 		style.toughness_fill.size[2] = toughness_bar_height
 		style.revive_fill.offset[2] = toughness_bar_y
 		style.revive_fill.size[2] = toughness_bar_height
-		set_rect_width(style.toughness_fill, revive_ui_knocked_down and 0 or BAR_WIDTH * tough_fraction)
+		set_rect_width(style.toughness_fill, revive_ui_knocked_down and 0 or BAR_WIDTH * animated_tough_fraction)
 		OvershieldSpent.apply(self, player_key, content, style, has_overshield, tough_fraction, toughness_bar_y, toughness_bar_height, revive_state, t)
 		set_rect_width(style.revive_fill, revive_ui_knocked_down and BAR_WIDTH * revive_progress or 0)
-		apply_health_segments(widget, health_fraction, health_max_fraction, max_wounds, is_down, health_bar_y, health_bar_height)
+		apply_health_segments(widget, animated_health_fraction, animated_health_max_fraction, max_wounds, is_down, health_bar_y, health_bar_height)
 	end
 
 	apply_name_marquee(self, widget, player_key, display_name, ui_renderer, t, name_width)
@@ -1880,6 +1981,8 @@ HudElementSquadHud.init = function(self, parent, draw_layer, start_scale)
 	self._last_applied_player_name_by_player = {}
 	self._revive_progress_by_player = {}
 	self._vitals_reveal_state_by_player = {}
+	self._health_bar_logic_by_player = {}
+	self._toughness_bar_logic_by_player = {}
 end
 
 HudElementSquadHud.update = function(self, dt, t, ui_renderer, render_settings, input_service)
@@ -1911,7 +2014,7 @@ HudElementSquadHud.update = function(self, dt, t, ui_renderer, render_settings, 
 		local player = players[i]
 
 		if player then
-			apply_player_panel(self, widget, local_player, player, PlayerDataRuntime.extensions_for_player(self._parent, player), t, ui_renderer)
+			apply_player_panel(self, widget, local_player, player, PlayerDataRuntime.extensions_for_player(self._parent, player), dt, t, ui_renderer)
 		else
 			apply_empty_panel(widget)
 		end
