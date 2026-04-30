@@ -1697,18 +1697,39 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 
 	local debug_toughness_hit_indicator_request = mod.squadhud_debug_consume_toughness_hit_indicator_request and mod.squadhud_debug_consume_toughness_hit_indicator_request(is_local_player) or nil
 
-	ToughnessHitIndicator.apply(self, player_key, content, style, status, tough_fraction, t, debug_toughness_hit_indicator_request)
-	style.toughness_fill.offset[2] = toughness_bar_y
-	style.toughness_fill.size[2] = toughness_bar_height
-	style.revive_fill.offset[2] = toughness_bar_y
-	style.revive_fill.size[2] = toughness_bar_height
-	set_rect_width(style.toughness_fill, revive_state.in_progress and 0 or BAR_WIDTH * tough_fraction)
-	OvershieldSpent.apply(self, player_key, content, style, has_overshield, tough_fraction, toughness_bar_y, toughness_bar_height, revive_state, t)
-	set_rect_width(style.revive_fill, BAR_WIDTH * revive_progress)
-
 	if hide_vitals then
+		clear_toughness_hit_indicator(content, style)
+		style.toughness_fill.offset[2] = toughness_bar_y
+		style.toughness_fill.size[2] = 0
+		set_rect_width(style.toughness_fill, 0)
+		style.revive_fill.offset[2] = toughness_bar_y
+		style.revive_fill.size[2] = 0
+		set_rect_width(style.revive_fill, 0)
+		content.toughness_overshield_spent_visible = false
+
+		local spent_style = style.toughness_overshield_spent
+
+		if spent_style then
+			spent_style.color[1] = 0
+			spent_style.size[1] = 0
+
+			local size_addition = spent_style.size_addition
+
+			if size_addition then
+				size_addition[2] = 0
+			end
+		end
+
 		clear_health_segments(widget)
 	else
+		ToughnessHitIndicator.apply(self, player_key, content, style, status, tough_fraction, t, debug_toughness_hit_indicator_request)
+		style.toughness_fill.offset[2] = toughness_bar_y
+		style.toughness_fill.size[2] = toughness_bar_height
+		style.revive_fill.offset[2] = toughness_bar_y
+		style.revive_fill.size[2] = toughness_bar_height
+		set_rect_width(style.toughness_fill, revive_state.in_progress and 0 or BAR_WIDTH * tough_fraction)
+		OvershieldSpent.apply(self, player_key, content, style, has_overshield, tough_fraction, toughness_bar_y, toughness_bar_height, revive_state, t)
+		set_rect_width(style.revive_fill, BAR_WIDTH * revive_progress)
 		apply_health_segments(widget, health_fraction, health_max_fraction, max_wounds, is_down, health_bar_y, health_bar_height)
 	end
 
