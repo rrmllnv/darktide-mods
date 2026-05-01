@@ -369,7 +369,7 @@ return {
 	},
 	squadhud_show_status_ledge_hanging = {
 		en = "LEDGE HANGING",
-		ru = "МОЖНО СПАСТИ",
+		ru = "ВИСИТ НА УСТУПЕ",
 	},
 	squadhud_show_status_ledge_hanging_description = {
 		en = "Shows when a teammate is hanging from a ledge and can be rescued.",
@@ -476,8 +476,8 @@ return {
 		ru = "СХВАЧЕН",
 	},
 	squadhud_status_ledge_hanging = {
-		en = "CAN BE RESCUED",
-		ru = "МОЖНО СПАСТИ",
+		en = "LEDGE HANGING",
+		ru = "ВИСИТ НА УСТУПЕ",
 	},
 	squadhud_status_luggable = {
 		en = "CARRYING OBJECTIVE",
