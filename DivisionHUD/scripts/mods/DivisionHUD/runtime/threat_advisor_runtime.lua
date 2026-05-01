@@ -193,27 +193,49 @@ local function _player_for_unit(unit)
 	return player_unit_spawn_manager and player_unit_spawn_manager:owner(unit) or nil
 end
 
+local function _valid_player(player)
+	if not player or player.__deleted then
+		return false
+	end
+
+	local player_type = type(player)
+
+	return player_type == "table" or player_type == "userdata"
+end
+
+local function _player_method_value(player, method_name)
+	if not _valid_player(player) then
+		return nil
+	end
+
+	local ok, value = pcall(function()
+		return player[method_name](player)
+	end)
+
+	return ok and value or nil
+end
+
 local function _player_slot_color(player, unit)
 	if unit and Unit.alive(unit) then
 		local owner = _player_for_unit(unit)
 
-		if type(owner) == "table" then
+		if _valid_player(owner) then
 			player = owner
 		end
 	end
 
-	local slot = type(player) == "table" and type(player.slot) == "function" and player:slot() or nil
+	local slot = _player_method_value(player, "slot")
 	local colors = UISettings.player_slot_colors
 
 	return slot and colors and colors[slot] or nil
 end
 
 local function _player_display_name(player, unit)
-	if type(player) ~= "table" then
+	if not _valid_player(player) then
 		return ""
 	end
 
-	local original_name = type(player.name) == "function" and player:name() or ""
+	local original_name = _player_method_value(player, "name") or ""
 
 	if type(original_name) ~= "string" then
 		original_name = ""
@@ -271,15 +293,7 @@ local function _local_target_display_name(local_player, target_unit)
 end
 
 local function _player_identity_value(player, method_name)
-	if type(player) ~= "table" or type(player[method_name]) ~= "function" then
-		return nil
-	end
-
-	local ok, value = pcall(function()
-		return player[method_name](player)
-	end)
-
-	return ok and value or nil
+	return _player_method_value(player, method_name)
 end
 
 local function _is_same_player(left, right)
@@ -287,7 +301,7 @@ local function _is_same_player(left, right)
 		return true
 	end
 
-	if type(left) ~= "table" or type(right) ~= "table" then
+	if not _valid_player(left) or not _valid_player(right) then
 		return false
 	end
 

@@ -16,11 +16,13 @@ end
 local function marker_subject_player(marker)
 	local player = marker.data
 
-	if type(player) ~= "table" or player.__deleted then
+	if not player or player.__deleted then
 		return nil
 	end
 
-	if type(player.name) ~= "function" then
+	local player_type = type(player)
+
+	if player_type ~= "table" and player_type ~= "userdata" then
 		return nil
 	end
 
@@ -36,17 +38,29 @@ local function resolve_player_display_name(player)
 		return name_from_api
 	end
 
-	if type(player.character_name) == "function" then
-		local ok_char, char_name = pcall(function()
-			return player:character_name()
-		end)
+	local ok_char, char_name = pcall(function()
+		return player:character_name()
+	end)
 
-		if ok_char and type(char_name) == "string" and char_name ~= "" then
-			return char_name
-		end
+	if ok_char and type(char_name) == "string" and char_name ~= "" then
+		return char_name
 	end
 
 	return nil
+end
+
+local function player_display_key(player)
+	if type(mod.player_display_name_cache_key) == "function" then
+		local ok_key, key = pcall(function()
+			return mod.player_display_name_cache_key(player)
+		end)
+
+		if ok_key and key ~= nil then
+			return key
+		end
+	end
+
+	return mod.player_name_cache_key(player)
 end
 
 local function apply_replace_to_content_field(content, widget, field_id, account_id, player_name)
@@ -85,7 +99,7 @@ mod:hook_safe(CLASS.HudElementWorldMarkers, "update", function(self, dt, t, ui_r
 				local player = marker_subject_player(marker)
 
 				if player then
-					local account_id = mod.player_name_cache_key(player)
+					local account_id = player_display_key(player)
 
 					if account_id then
 						local player_name = resolve_player_display_name(player)

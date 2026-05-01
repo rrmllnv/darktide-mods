@@ -30,57 +30,63 @@ local PLATFORM_LABELS = {
 }
 local LUGGABLE_SLOT_NAME = "slot_luggable"
 
-function M.player_slot(player)
-	if type(player) == "table" and type(player.slot) == "function" then
-		local ok, slot = pcall(function()
-			return player:slot()
-		end)
+local function valid_player(player)
+	if not player or player.__deleted then
+		return false
+	end
 
-		if ok and type(slot) == "number" then
-			return slot
-		end
+	local player_type = type(player)
+
+	return player_type == "table" or player_type == "userdata"
+end
+
+local function player_method_value(player, method_name)
+	if not valid_player(player) then
+		return nil
+	end
+
+	local ok, value = pcall(function()
+		return player[method_name](player)
+	end)
+
+	return ok and value or nil
+end
+
+function M.player_slot(player)
+	local slot = player_method_value(player, "slot")
+
+	if type(slot) == "number" then
+		return slot
 	end
 
 	return 99
 end
 
 function M.player_unique_id(player)
-	if type(player) == "table" and type(player.unique_id) == "function" then
-		local ok, unique_id = pcall(function()
-			return player:unique_id()
-		end)
+	local unique_id = player_method_value(player, "unique_id")
 
-		if ok and unique_id ~= nil then
-			return tostring(unique_id)
-		end
+	if unique_id ~= nil then
+		return tostring(unique_id)
 	end
 
 	return tostring(player)
 end
 
 function M.is_bot(player)
-	if type(player) == "table" and type(player.is_human_controlled) == "function" then
-		local ok, is_human_controlled = pcall(function()
-			return player:is_human_controlled()
-		end)
+	local is_human_controlled = player_method_value(player, "is_human_controlled")
 
-		if ok then
-			return is_human_controlled ~= true
-		end
+	if is_human_controlled ~= nil then
+		return is_human_controlled ~= true
 	end
 
 	return false
 end
 
 local function player_raw_unique_id(player)
-	if type(player) == "table" and type(player.unique_id) == "function" then
-		local ok, unique_id = pcall(function()
-			return player:unique_id()
-		end)
+	local unique_id = player_method_value(player, "unique_id")
 
-		if ok and unique_id ~= nil then
-			return unique_id
-		end
+	if unique_id ~= nil then
+		return unique_id
 	end
 
 	return player
@@ -276,12 +282,10 @@ function M.strip_format_directives(text)
 end
 
 function M.player_name(player)
-	if M.is_bot(player) and type(player) == "table" and type(player.profile) == "function" then
-		local ok_profile, profile = pcall(function()
-			return player:profile()
-		end)
+	if M.is_bot(player) then
+		local profile = player_method_value(player, "profile")
 
-		if ok_profile and type(profile) == "table" then
+		if type(profile) == "table" then
 			local raw = profile.display_name or profile.name
 
 			if type(raw) == "string" and raw ~= "" then
@@ -290,14 +294,10 @@ function M.player_name(player)
 		end
 	end
 
-	if type(player) == "table" and type(player.name) == "function" then
-		local ok, name = pcall(function()
-			return player:name()
-		end)
+	local name = player_method_value(player, "name")
 
-		if ok and type(name) == "string" and name ~= "" then
-			return M.strip_format_directives(name)
-		end
+	if type(name) == "string" and name ~= "" then
+		return M.strip_format_directives(name)
 	end
 
 	return mod:localize("squadhud_empty_name")
@@ -526,20 +526,16 @@ local function fetch_presence_total_level(account_id)
 end
 
 local function player_account_id(player)
-	if type(player) == "table" and type(player.account_id) == "function" then
-		local ok, account_id = pcall(function()
-			return player:account_id()
-		end)
+	local account_id = player_method_value(player, "account_id")
 
-		if ok and account_id ~= nil then
-			local no_account_id = Managers.player and Managers.player.NO_ACCOUNT_ID or "no_account_id"
+	if account_id ~= nil then
+		local no_account_id = Managers.player and Managers.player.NO_ACCOUNT_ID or "no_account_id"
 
-			if account_id == no_account_id then
-				return nil
-			end
-
-			return account_id
+		if account_id == no_account_id then
+			return nil
 		end
+
+		return account_id
 	end
 
 	return nil
@@ -577,7 +573,13 @@ function M.apply_modder_tools_display_name(base_name, player)
 			return modder_tools.resolve_substituted_player_display_name(player, base_name)
 		end
 
-		local cache_key = type(modder_tools.player_name_cache_key) == "function" and modder_tools.player_name_cache_key(player) or nil
+		local cache_key = nil
+
+		if type(modder_tools.player_display_name_cache_key) == "function" then
+			cache_key = modder_tools.player_display_name_cache_key(player)
+		elseif type(modder_tools.player_name_cache_key) == "function" then
+			cache_key = modder_tools.player_name_cache_key(player)
+		end
 
 		if cache_key == nil then
 			return base_name

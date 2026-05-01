@@ -47,7 +47,7 @@ S.ammo_percent = {
 	gap = 2,
 	height = 18,
 	slide_duration = 0.24,
-	text_width = 60,
+	text_width = 69,
 	visible_duration = 5,
 }
 S.grenade_value = {
@@ -62,7 +62,7 @@ S.previous_inventory_block_width = S.inventory_icon_size * 2 + S.inventory_icon_
 S.salvage_text_width = 72
 S.salvage_text_height = 18
 S.salvage_font_size = 16
-S.inventory_block_width = S.inventory_value_max_width + S.inventory_icon_gap + S.inventory_icon_size * 4 + S.inventory_icon_gap * 4 + S.salvage_text_width
+S.inventory_block_width = S.inventory_value_max_width + S.inventory_icon_gap + S.inventory_icon_size * 4 + S.inventory_icon_gap * 4 + S.salvage_text_width + (S.ammo_percent.text_width - 60)
 S.name_extra_width = 40
 S.panel_width = 282 + S.inventory_block_width - S.previous_inventory_block_width + S.name_extra_width
 S.inventory_block_x = S.panel_width - S.inner_padding - S.inventory_block_width

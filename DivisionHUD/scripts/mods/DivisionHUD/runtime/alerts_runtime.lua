@@ -496,12 +496,34 @@ local function alerts_player_for_unit(unit)
 	return player_unit_spawn_manager and player_unit_spawn_manager:owner(unit) or nil
 end
 
+local function alerts_valid_player(player)
+	if not player or player.__deleted then
+		return false
+	end
+
+	local player_type = type(player)
+
+	return player_type == "table" or player_type == "userdata"
+end
+
+local function alerts_player_method_value(player, method_name)
+	if not alerts_valid_player(player) then
+		return nil
+	end
+
+	local ok, value = pcall(function()
+		return player[method_name](player)
+	end)
+
+	return ok and value or nil
+end
+
 local function alerts_colored_player_name(player)
-	if type(player) ~= "table" then
+	if not alerts_valid_player(player) then
 		return ""
 	end
 
-	local raw = type(player.name) == "function" and player:name() or ""
+	local raw = alerts_player_method_value(player, "name") or ""
 
 	if type(raw) ~= "string" or raw == "" then
 		return ""
@@ -515,7 +537,7 @@ local function alerts_colored_player_name(player)
 		return ""
 	end
 
-	local slot = type(player.slot) == "function" and player:slot() or nil
+	local slot = alerts_player_method_value(player, "slot")
 	local colors = UISettings.player_slot_colors
 	local col = slot and colors and colors[slot]
 

@@ -129,8 +129,6 @@ local RANDOM_NAMES = {
     "Sarine",
     "Severa",
     "Silvana",
-    "Undine",
-    "Unkara",
     "Valleni",
     "Vissia",
     "Waynoka",
@@ -168,6 +166,7 @@ local WH40K_CONSOLE_ACCOUNT_BASES = {
 }
 
 local CONSOLE_ACCOUNT_CACHE_SCHEMA = "ca7"
+local PLAYER_DISPLAY_NAME_CACHE_SCHEMA = "dn2"
 
 local function hash_string(seed_str)
 	local h = 5381
@@ -242,6 +241,33 @@ local function generate_random_name(cache_key_str)
 	return RANDOM_NAMES[(deterministic_mix(seed, 41) % #RANDOM_NAMES) + 1]
 end
 
+local function random_name_taken(random_name, current_key)
+	for key, cached_name in pairs(mod._name_cache) do
+		if type(key) == "string" and string.sub(key, 1, #PLAYER_DISPLAY_NAME_CACHE_SCHEMA + 1) == PLAYER_DISPLAY_NAME_CACHE_SCHEMA .. "|" and key ~= current_key and cached_name == random_name then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function random_name_for_key(key)
+	local seed = hash_string(key)
+	local nb = #RANDOM_NAMES
+	local start_index = (deterministic_mix(seed, 41) % nb) + 1
+
+	for offset = 0, nb - 1 do
+		local index = ((start_index + offset - 1) % nb) + 1
+		local random_name = RANDOM_NAMES[index]
+
+		if not random_name_taken(random_name, key) then
+			return random_name
+		end
+	end
+
+	return RANDOM_NAMES[start_index]
+end
+
 mod.player_name_cache_key = function(player)
 	if not player or player.__deleted then
 		return nil
@@ -284,7 +310,7 @@ mod.player_name_cache_key = function(player)
 	return nil
 end
 
-local function console_account_seed_string(player)
+local function player_identity_seed_string(player, schema)
 	if not player or player.__deleted then
 		return nil
 	end
@@ -378,14 +404,22 @@ local function console_account_seed_string(player)
 			return nil
 		end
 
-		return CONSOLE_ACCOUNT_CACHE_SCHEMA .. "|fb=" .. tostring(fallback)
+		return schema .. "|fb=" .. tostring(fallback)
 	end
 
-	return CONSOLE_ACCOUNT_CACHE_SCHEMA .. "|" .. table.concat(parts, "|")
+	return schema .. "|" .. table.concat(parts, "|")
+end
+
+local function console_account_seed_string(player)
+	return player_identity_seed_string(player, CONSOLE_ACCOUNT_CACHE_SCHEMA)
 end
 
 mod.console_account_cache_key = function(player)
 	return console_account_seed_string(player)
+end
+
+mod.player_display_name_cache_key = function(player)
+	return player_identity_seed_string(player, PLAYER_DISPLAY_NAME_CACHE_SCHEMA)
 end
 
 mod._substitution_allowed_for_random_names_key = function(cache_key)
@@ -409,13 +443,20 @@ mod._substitution_allowed_for_random_names_key = function(cache_key)
 		return true
 	end
 
-	local local_key = mod.player_name_cache_key(lp)
+	local cache_key_text = tostring(cache_key)
+	local local_key = nil
+
+	if string.sub(cache_key_text, 1, #PLAYER_DISPLAY_NAME_CACHE_SCHEMA + 1) == PLAYER_DISPLAY_NAME_CACHE_SCHEMA .. "|" and type(mod.player_display_name_cache_key) == "function" then
+		local_key = mod.player_display_name_cache_key(lp)
+	else
+		local_key = mod.player_name_cache_key(lp)
+	end
 
 	if local_key == nil then
 		return true
 	end
 
-	return tostring(cache_key) ~= tostring(local_key)
+	return cache_key_text ~= tostring(local_key)
 end
 
 mod.is_local_human_player = function(player)
@@ -456,7 +497,11 @@ mod.get_player_name = function(account_id, original_name)
 	local name_key = tostring(account_id)
 
 	if not mod._name_cache[name_key] then
-		mod._name_cache[name_key] = generate_random_name(name_key)
+		if string.sub(name_key, 1, #PLAYER_DISPLAY_NAME_CACHE_SCHEMA + 1) == PLAYER_DISPLAY_NAME_CACHE_SCHEMA .. "|" then
+			mod._name_cache[name_key] = random_name_for_key(name_key)
+		else
+			mod._name_cache[name_key] = generate_random_name(name_key)
+		end
 	end
 
 	return mod._name_cache[name_key]
@@ -531,7 +576,7 @@ mod.resolve_substituted_player_display_name = function(player, original_name)
 		return original_name
 	end
 
-	local key = mod.player_name_cache_key(player)
+	local key = type(mod.player_display_name_cache_key) == "function" and mod.player_display_name_cache_key(player) or mod.player_name_cache_key(player)
 
 	if key == nil then
 		return original_name

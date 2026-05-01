@@ -94,19 +94,39 @@ local function mod_localize_or_fallback(key, fallback_en)
 	return fallback_en
 end
 
+local function valid_player(player)
+	if not player or player.__deleted then
+		return false
+	end
+
+	local player_type = type(player)
+
+	return player_type == "table" or player_type == "userdata"
+end
+
+local function player_method_value(player, method_name)
+	if not valid_player(player) then
+		return nil
+	end
+
+	local ok, value = pcall(function()
+		return player[method_name](player)
+	end)
+
+	return ok and value or nil
+end
+
 local function player_identity_key(player)
-	if type(player) ~= "table" then
+	if not valid_player(player) then
 		return "unknown"
 	end
 
-	local name_fn = player.name
-	local nm = type(name_fn) == "function" and name_fn(player) or nil
+	local nm = player_method_value(player, "name")
 	if type(nm) == "string" and nm ~= "" then
 		return nm
 	end
 
-	local uid_fn = player.unique_id
-	local uid = type(uid_fn) == "function" and uid_fn(player) or nil
+	local uid = player_method_value(player, "unique_id")
 	if uid ~= nil then
 		return tostring(uid)
 	end
@@ -115,11 +135,11 @@ local function player_identity_key(player)
 end
 
 local function player_display_name(player, unit)
-	if type(player) ~= "table" then
+	if not valid_player(player) then
 		return ""
 	end
 
-	local original_name = type(player.name) == "function" and player:name() or ""
+	local original_name = player_method_value(player, "name") or ""
 
 	if type(original_name) ~= "string" then
 		original_name = ""
@@ -155,8 +175,7 @@ local function player_display_name(player, unit)
 		return ""
 	end
 
-	local slot_fn = player.slot
-	local slot = type(slot_fn) == "function" and slot_fn(player)
+	local slot = player_method_value(player, "slot")
 	local colors = UISettings.player_slot_colors
 	local col = slot and colors and colors[slot]
 
@@ -192,7 +211,7 @@ local function enqueue_team_alert(player, unit, suffix_text, cooldown_key)
 
 	local display = player_display_name(player, unit)
 	if type(display) ~= "string" or display == "" then
-		display = type(player.name) == "function" and player:name() or ""
+		display = player_method_value(player, "name") or ""
 	end
 	if type(display) ~= "string" or display == "" then
 		return false
@@ -269,10 +288,9 @@ local function on_team_panel_handler_post_update(handler)
 		local data = arr[i]
 		local player = type(data) == "table" and data.player
 
-		if type(player) == "table" and player ~= local_player then
+		if valid_player(player) and player ~= local_player then
 			local unit = player.player_unit
-			local uid_fn = player.unique_id
-			local uid = type(uid_fn) == "function" and uid_fn(player) or nil
+			local uid = player_method_value(player, "unique_id")
 			if uid == nil then
 				uid = "name:" .. player_identity_key(player)
 			end
@@ -357,7 +375,7 @@ mod:hook_safe("AttackReportManager", "_process_attack_result", function(self, bu
 
 	local killed_character_state_component = ude_or_nil:read_component("character_state")
 	local killed_is_dead = PlayerUnitStatus.is_dead(killed_character_state_component)
-	local player_name = attacked_player:name()
+	local player_name = player_identity_key(attacked_player)
 	if already_reported[player_name] == killed_is_dead then
 		return
 	end
