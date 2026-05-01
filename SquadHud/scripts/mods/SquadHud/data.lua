@@ -5,7 +5,6 @@ mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/defaults")
 local LayoutMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/layout")
 local ExpandedViewMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/expanded_view")
 local SquadHudMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/squad_hud")
--- TEMP: strike team settings group hidden from mod options UI
 -- local StrikeTeamMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/strike_team")
 local VanillaHudMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/vanilla_hud")
 local IntegrationsMenu = mod:io_dofile("SquadHud/scripts/mods/SquadHud/settings/menu/integrations")
