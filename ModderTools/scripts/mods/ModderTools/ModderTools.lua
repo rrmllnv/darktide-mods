@@ -144,10 +144,27 @@ mod._name_cache = {}
 
 mod._account_cache = {}
 
+local function preserve_local_player_identity_enabled()
+	local v = mod:get("preserve_local_player_identity")
+
+	return v ~= false and v ~= 0
+end
+
 local CONSOLE_PLATFORMS = {
 	"steam",
 	"xbox",
 	"psn",
+}
+
+local WH40K_CONSOLE_ACCOUNT_BASES = {
+	"SebastianYarrick",
+	"GideonRavenor",
+	"CiaphasCain",
+	"SlyMarbo",
+	"Malcador",
+	"NorkDeddog",
+	"PiousVorne",
+	"Torquemada",
 }
 
 local function hash_string(seed_str)
@@ -179,9 +196,16 @@ local function ensure_generated_console_account(cache_key)
 	local seed = hash_string(key)
 	local plat_index = (deterministic_mix(seed, 11) % #CONSOLE_PLATFORMS) + 1
 	local platform = CONSOLE_PLATFORMS[plat_index]
-	local ni = #RANDOM_NAMES
-	local base_a = RANDOM_NAMES[(deterministic_mix(seed, 13) % ni) + 1]
-	local base_b = RANDOM_NAMES[(deterministic_mix(seed, 17) % ni) + 1]
+	local nb = #WH40K_CONSOLE_ACCOUNT_BASES
+	local idx_a = (deterministic_mix(seed, 13) % nb) + 1
+	local idx_b = (deterministic_mix(seed, 17) % nb) + 1
+
+	if idx_b == idx_a then
+		idx_b = (idx_a % nb) + 1
+	end
+
+	local base_a = WH40K_CONSOLE_ACCOUNT_BASES[idx_a]
+	local base_b = WH40K_CONSOLE_ACCOUNT_BASES[idx_b]
 	local num_a = deterministic_mix(seed, 19) % 9000 + 1000
 	local num_b = deterministic_mix(seed, 23) % 99
 	local account_name
@@ -189,7 +213,7 @@ local function ensure_generated_console_account(cache_key)
 	if platform == "steam" then
 		account_name = string.lower(base_a) .. "_" .. tostring(num_a)
 	elseif platform == "xbox" then
-		account_name = base_a .. base_b .. tostring(deterministic_mix(seed, 29) % 9999)
+		account_name = base_a .. tostring(deterministic_mix(seed, 29) % 99999)
 	else
 		account_name = string.lower(base_a) .. "-" .. tostring(num_b) .. "_" .. string.lower(string.sub(base_b, 1, 6)) .. "_psn"
 	end
@@ -216,20 +240,6 @@ local function generate_random_name(account_id)
     math.randomseed(seed)
     local random_index = math.random(1, #RANDOM_NAMES)
     return RANDOM_NAMES[random_index]
-end
-
--- Получение имени для игрока (случайное или оригинальное)
-mod.get_player_name = function(account_id, original_name)
-    if not mod:get("enable_random_names") then
-        return original_name
-    end
-
-    -- Проверяем, есть ли уже сгенерированное имя для этого игрока
-    if not mod._name_cache[account_id] then
-        mod._name_cache[account_id] = generate_random_name(account_id)
-    end
-
-	return mod._name_cache[account_id]
 end
 
 mod.player_name_cache_key = function(player)
@@ -274,8 +284,78 @@ mod.player_name_cache_key = function(player)
 	return nil
 end
 
+mod._substitution_allowed_for_random_names_key = function(cache_key)
+	if not preserve_local_player_identity_enabled() then
+		return true
+	end
+
+	if cache_key == nil then
+		return true
+	end
+
+	local pm = Managers.player
+
+	if not pm or not pm.local_player then
+		return true
+	end
+
+	local lp = pm:local_player(1)
+
+	if not lp or lp.__deleted then
+		return true
+	end
+
+	local local_key = mod.player_name_cache_key(lp)
+
+	if local_key == nil then
+		return true
+	end
+
+	return tostring(cache_key) ~= tostring(local_key)
+end
+
+mod.is_local_human_player = function(player)
+	if not player or type(player) ~= "table" or player.__deleted then
+		return false
+	end
+
+	local pm = Managers.player
+
+	if not pm or not pm.local_player then
+		return false
+	end
+
+	local lp = pm:local_player(1)
+
+	if not lp or lp.__deleted then
+		return false
+	end
+
+	return lp == player
+end
+
+mod.get_player_name = function(account_id, original_name)
+	if not mod:get("enable_random_names") then
+		return original_name
+	end
+
+	if not mod._substitution_allowed_for_random_names_key(account_id) then
+		return original_name
+	end
+
+	if not mod._name_cache[account_id] then
+		mod._name_cache[account_id] = generate_random_name(account_id)
+	end
+
+	return mod._name_cache[account_id]
+end
+
 mod.resolve_substituted_player_account_info = function(player, account_info)
 	if mod:get("enable_random_console_accounts") ~= true then
+		return account_info
+	end
+
+	if preserve_local_player_identity_enabled() and mod.is_local_human_player(player) then
 		return account_info
 	end
 
@@ -310,6 +390,10 @@ mod.resolve_substituted_player_display_name = function(player, original_name)
 		return original_name
 	end
 
+	if preserve_local_player_identity_enabled() and mod.is_local_human_player(player) then
+		return original_name
+	end
+
 	local key = mod.player_name_cache_key(player)
 
 	if key == nil then
@@ -335,6 +419,10 @@ mod.replace_name_in_text = function(text, account_id, original_player_name)
     if not text or not account_id then
         return text
     end
+
+	if not mod._substitution_allowed_for_random_names_key(account_id) then
+		return text
+	end
 
     -- Если передано реальное имя игрока, используем его для замены
     if original_player_name and original_player_name ~= "" then

@@ -28,6 +28,15 @@ return {
         ru = "Подменяет имена аккаунтов и платформу (Steam, Xbox, PlayStation) в расширенном виде отряда на детерминированные вымышленные значения для скриншотов. Не зависит от случайных имён персонажей.",
     },
 
+    preserve_local_player_identity = {
+        en = "Keep local player name and account real",
+        ru = "Не подменять ник и аккаунт локального игрока",
+    },
+    preserve_local_player_identity_description = {
+        en = "When on, random names and fake console accounts never apply to your own player (local human). Other players are still substituted when the options above are enabled.",
+        ru = "Если включено, случайные имена и подставные аккаунты консолей не применяются к вашему персонажу (локальный человек). Остальные игроки по-прежнему подменяются при включённых опциях выше.",
+    },
+
     enable_team_panel = {
         en = "Replace Names in Team Panel",
         ru = "Замена имен в панели команды",

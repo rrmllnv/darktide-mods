@@ -17,6 +17,11 @@ return {
                 default_value = false,
             },
             {
+                setting_id = "preserve_local_player_identity",
+                type = "checkbox",
+                default_value = true,
+            },
+            {
                 setting_id = "enable_team_panel",
                 type = "checkbox",
                 default_value = true,
