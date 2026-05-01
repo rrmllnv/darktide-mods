@@ -245,6 +245,24 @@ function M.gameplay_hud_composition_name()
 	return hud_settings and hud_settings.player_composition or nil
 end
 
+function M.is_hub_game_mode()
+	local game_mode_manager = Managers.state and Managers.state.game_mode
+
+	if not game_mode_manager or type(game_mode_manager.game_mode_name) ~= "function" then
+		return false
+	end
+
+	local ok, game_mode_name = pcall(function()
+		return game_mode_manager:game_mode_name()
+	end)
+
+	if not ok or type(game_mode_name) ~= "string" then
+		return false
+	end
+
+	return game_mode_name == "hub" or game_mode_name == "prologue_hub"
+end
+
 function M.strip_format_directives(text)
 	if type(text) ~= "string" or text == "" then
 		return text

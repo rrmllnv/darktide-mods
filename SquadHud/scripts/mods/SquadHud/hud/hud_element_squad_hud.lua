@@ -1794,6 +1794,14 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local show_grenade_icon = boolean_setting("squadhud_show_grenade", true)
 	local show_ammo_icon = boolean_setting("squadhud_show_ammo", true)
 	local show_stimm_icon = boolean_setting("squadhud_show_stimm", true)
+	local hub_strip_squad_loadout_ui = PlayerDataRuntime.is_hub_game_mode()
+
+	if hub_strip_squad_loadout_ui then
+		show_ability_icon = false
+		show_grenade_icon = false
+		show_ammo_icon = false
+		show_stimm_icon = false
+	end
 	local show_teammate_distance = boolean_setting("squadhud_show_teammate_distance", true)
 	local level_text = expanded_view_level_text(player, expanded_view)
 	local show_level_status = level_text ~= "" and not is_showing_status
@@ -1819,6 +1827,12 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local ammo_icon = show_inventory_blocks and show_ammo_icon and inventory_icons.ammo_icon or nil
 	local ammo_icon_color = ammo_color_from_status(inventory_icons.ammo_status, inventory_icons.uses_ammo)
 	local salvage_text = show_inventory_blocks and inventory_icons.salvage_text or ""
+
+	if hub_strip_squad_loadout_ui then
+		pocketable_icon = nil
+		pocketable_small_icon = nil
+		salvage_text = ""
+	end
 	local visible_inventory_icons = {
 		grenade_icon = grenade_icon,
 		grenade_current = inventory_icons.grenade_current,
@@ -1846,7 +1860,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	content.pocketable_small_icon = pocketable_small_icon
 	content.salvage_text = salvage_text
 
-	apply_ability_state(style, ability_state)
+	apply_ability_state(style, hub_strip_squad_loadout_ui and nil or ability_state)
 
 	local ability_slide_offset = (1 - vitals_ability_reveal) * VITALS_REVEAL_ABILITY_SLIDE_OFFSET
 
@@ -1865,7 +1879,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 
 	InventoryValue.apply_layout(style, visible_inventory_icons, ui_renderer, inventory_value_plain, grenade_value_layout, ammo_percent_layout)
 
-	if not hide_vitals and show_inventory_blocks and inventory_value_visible(inventory_value_mode, revive_state, is_down) then
+	if not hide_vitals and show_inventory_blocks and inventory_value_visible(inventory_value_mode, revive_state, is_down) and not hub_strip_squad_loadout_ui then
 		InventoryValue.apply_transition(self, player_key, content, style, inventory_value, inventory_value_color, inventory_value_plain, inventory_value_mode, t)
 	else
 		InventoryValue.clear(self, player_key, content, style)
@@ -1891,7 +1905,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	apply_color(style.salvage_text.text_color, COLOR_TEXT_DEFAULT)
 	apply_expanded_view_block_animation(content, style, expanded_view_block_fraction, expanded_view_block_target_visible)
 
-	if not hide_vitals and show_expanded_inventory_value then
+	if not hide_vitals and show_expanded_inventory_value and not hub_strip_squad_loadout_ui then
 		InventoryValue.apply_expanded(content, style, ui_renderer, extensions, has_overshield, is_down, inventory_value_mode, expanded_inventory_value_fraction, inventory_health_value_override, inventory_toughness_values_override)
 	else
 		InventoryValue.clear_expanded(content, style)
