@@ -532,6 +532,12 @@ local function player_account_id(player)
 		end)
 
 		if ok and account_id ~= nil then
+			local no_account_id = Managers.player and Managers.player.NO_ACCOUNT_ID or "no_account_id"
+
+			if account_id == no_account_id then
+				return nil
+			end
+
 			return account_id
 		end
 	end
@@ -601,7 +607,11 @@ function M.apply_modder_tools_account_info(account_info, player)
 	end
 
 	local ok_on, enabled = pcall(function()
-		return modder_tools:get("enable_random_console_accounts") == true
+		if type(modder_tools.is_player_account_substitution_enabled) == "function" then
+			return modder_tools.is_player_account_substitution_enabled() == true
+		end
+
+		return modder_tools:get("enable_random_console_accounts") == true or modder_tools:get("enable_random_names") == true
 	end)
 
 	if not ok_on or enabled ~= true then
@@ -728,7 +738,7 @@ function M.player_account_info(player)
 	local account_id = player_account_id(player)
 
 	if not account_id then
-		return nil
+		return M.apply_modder_tools_account_info(nil, player)
 	end
 
 	local cache_key = tostring(account_id)

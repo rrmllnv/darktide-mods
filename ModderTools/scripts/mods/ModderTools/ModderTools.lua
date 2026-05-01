@@ -167,6 +167,8 @@ local WH40K_CONSOLE_ACCOUNT_BASES = {
 	"Torquemada",
 }
 
+local CONSOLE_ACCOUNT_CACHE_SCHEMA = "ca7"
+
 local function hash_string(seed_str)
 	local h = 5381
 
@@ -179,6 +181,32 @@ end
 
 local function deterministic_mix(seed, salt)
 	return (seed * 1103515245 + salt * 2654435761 + 12345) % 4294967296
+end
+
+local function console_account_name_taken(account_name, current_key)
+	for key, cached in pairs(mod._account_cache) do
+		if type(key) == "string" and string.sub(key, 1, #CONSOLE_ACCOUNT_CACHE_SCHEMA + 1) == CONSOLE_ACCOUNT_CACHE_SCHEMA .. "|" and key ~= current_key and type(cached) == "table" and cached.account_name == account_name then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function console_account_name_for_key(key, seed)
+	local nb = #WH40K_CONSOLE_ACCOUNT_BASES
+	local start_index = (deterministic_mix(seed, 13) % nb) + 1
+
+	for offset = 0, nb - 1 do
+		local index = ((start_index + offset - 1) % nb) + 1
+		local account_name = WH40K_CONSOLE_ACCOUNT_BASES[index]
+
+		if not console_account_name_taken(account_name, key) then
+			return account_name
+		end
+	end
+
+	return WH40K_CONSOLE_ACCOUNT_BASES[start_index]
 end
 
 local function ensure_generated_console_account(cache_key)
@@ -196,27 +224,7 @@ local function ensure_generated_console_account(cache_key)
 	local seed = hash_string(key)
 	local plat_index = (deterministic_mix(seed, 11) % #CONSOLE_PLATFORMS) + 1
 	local platform = CONSOLE_PLATFORMS[plat_index]
-	local nb = #WH40K_CONSOLE_ACCOUNT_BASES
-	local idx_a = (deterministic_mix(seed, 13) % nb) + 1
-	local idx_b = (deterministic_mix(seed, 17) % nb) + 1
-
-	if idx_b == idx_a then
-		idx_b = (idx_a % nb) + 1
-	end
-
-	local base_a = WH40K_CONSOLE_ACCOUNT_BASES[idx_a]
-	local base_b = WH40K_CONSOLE_ACCOUNT_BASES[idx_b]
-	local num_a = deterministic_mix(seed, 19) % 9000 + 1000
-	local num_b = deterministic_mix(seed, 23) % 99
-	local account_name
-
-	if platform == "steam" then
-		account_name = string.lower(base_a) .. "_" .. tostring(num_a)
-	elseif platform == "xbox" then
-		account_name = base_a .. tostring(deterministic_mix(seed, 29) % 99999)
-	else
-		account_name = string.lower(base_a) .. "-" .. tostring(num_b) .. "_" .. string.lower(string.sub(base_b, 1, 6)) .. "_psn"
-	end
+	local account_name = console_account_name_for_key(key, seed)
 
 	cached = {
 		account_name = account_name,
@@ -227,19 +235,11 @@ local function ensure_generated_console_account(cache_key)
 	return cached
 end
 
--- Генерация случайного имени
-local function generate_random_name(account_id)
-    -- Используем account_id как seed для детерминированной генерации
-    -- Это гарантирует, что один и тот же игрок всегда получает одно и то же случайное имя
-    local seed = 0
-    local account_id_str = tostring(account_id)
-    for i = 1, #account_id_str do
-        seed = seed + string.byte(account_id_str, i)
-    end
+-- Детерминированный индекс в RANDOM_NAMES по ключу игрока (без math.randomseed — он ломает глобальный RNG и даёт коллизии при слабом seed).
+local function generate_random_name(cache_key_str)
+	local seed = hash_string(cache_key_str)
 
-    math.randomseed(seed)
-    local random_index = math.random(1, #RANDOM_NAMES)
-    return RANDOM_NAMES[random_index]
+	return RANDOM_NAMES[(deterministic_mix(seed, 41) % #RANDOM_NAMES) + 1]
 end
 
 mod.player_name_cache_key = function(player)
@@ -247,22 +247,22 @@ mod.player_name_cache_key = function(player)
 		return nil
 	end
 
+	local no_account_id = Managers.player and Managers.player.NO_ACCOUNT_ID or "no_account_id"
+
 	local ok_account, account_id = pcall(function()
 		return player:account_id()
 	end)
 
-	if ok_account and account_id ~= nil then
+	if ok_account and account_id ~= nil and account_id ~= no_account_id then
 		return account_id
 	end
 
-	if type(player.unique_id) == "function" then
-		local ok_uid, unique_id = pcall(function()
-			return player:unique_id()
-		end)
+	local ok_uid, unique_id = pcall(function()
+		return player:unique_id()
+	end)
 
-		if ok_uid and unique_id ~= nil then
-			return tostring(unique_id)
-		end
+	if ok_uid and unique_id ~= nil then
+		return tostring(unique_id)
 	end
 
 	local ok_peer, peer_id = pcall(function()
@@ -282,6 +282,110 @@ mod.player_name_cache_key = function(player)
 	end
 
 	return nil
+end
+
+local function console_account_seed_string(player)
+	if not player or player.__deleted then
+		return nil
+	end
+
+	local player_type = type(player)
+
+	if player_type ~= "table" and player_type ~= "userdata" then
+		return nil
+	end
+
+	local no_account_id = Managers.player and Managers.player.NO_ACCOUNT_ID or "no_account_id"
+	local parts = {}
+	local function append(tag, value)
+		if value == nil then
+			return
+		end
+
+		local text = tostring(value)
+
+		if text ~= "" then
+			parts[#parts + 1] = tag .. "=" .. text
+		end
+	end
+
+	append("obj", player)
+
+	do
+		local ok, value = pcall(function()
+			return player:unique_id()
+		end)
+
+		if ok and value ~= nil then
+			append("u", value)
+		end
+	end
+
+	do
+		local ok, value = pcall(function()
+			return player:peer_id()
+		end)
+
+		if ok and value ~= nil then
+			append("p", value)
+		end
+	end
+
+	do
+		local ok, value = pcall(function()
+			return player:local_player_id()
+		end)
+
+		if ok and value ~= nil then
+			append("l", value)
+		end
+	end
+
+	do
+		local ok, value = pcall(function()
+			return player:slot()
+		end)
+
+		if ok and value ~= nil then
+			append("s", value)
+		end
+	end
+
+	do
+		local ok, value = pcall(function()
+			return player:account_id()
+		end)
+
+		if ok and value ~= nil and value ~= no_account_id then
+			append("a", value)
+		end
+	end
+
+	do
+		local ok, value = pcall(function()
+			return player:character_id()
+		end)
+
+		if ok and value ~= nil then
+			append("c", value)
+		end
+	end
+
+	if #parts == 0 then
+		local fallback = mod.player_name_cache_key(player)
+
+		if fallback == nil then
+			return nil
+		end
+
+		return CONSOLE_ACCOUNT_CACHE_SCHEMA .. "|fb=" .. tostring(fallback)
+	end
+
+	return CONSOLE_ACCOUNT_CACHE_SCHEMA .. "|" .. table.concat(parts, "|")
+end
+
+mod.console_account_cache_key = function(player)
+	return console_account_seed_string(player)
 end
 
 mod._substitution_allowed_for_random_names_key = function(cache_key)
@@ -315,7 +419,13 @@ mod._substitution_allowed_for_random_names_key = function(cache_key)
 end
 
 mod.is_local_human_player = function(player)
-	if not player or type(player) ~= "table" or player.__deleted then
+	if not player or player.__deleted then
+		return false
+	end
+
+	local human_player_type = type(player)
+
+	if human_player_type ~= "table" and human_player_type ~= "userdata" then
 		return false
 	end
 
@@ -343,15 +453,30 @@ mod.get_player_name = function(account_id, original_name)
 		return original_name
 	end
 
-	if not mod._name_cache[account_id] then
-		mod._name_cache[account_id] = generate_random_name(account_id)
+	local name_key = tostring(account_id)
+
+	if not mod._name_cache[name_key] then
+		mod._name_cache[name_key] = generate_random_name(name_key)
 	end
 
-	return mod._name_cache[account_id]
+	return mod._name_cache[name_key]
+end
+
+-- Включается при генерации консольных аккаунтов или при случайных именах персонажа (одна политика подмены для аккаунтов платформы).
+mod.is_player_account_substitution_enabled = function()
+	if mod:get("enable_random_console_accounts") == true then
+		return true
+	end
+
+	if mod:get("enable_random_names") == true then
+		return true
+	end
+
+	return false
 end
 
 mod.resolve_substituted_player_account_info = function(player, account_info)
-	if mod:get("enable_random_console_accounts") ~= true then
+	if not mod.is_player_account_substitution_enabled() then
 		return account_info
 	end
 
@@ -359,11 +484,17 @@ mod.resolve_substituted_player_account_info = function(player, account_info)
 		return account_info
 	end
 
-	if not player or type(player) ~= "table" or player.__deleted then
+	if not player or player.__deleted then
 		return account_info
 	end
 
-	local key = mod.player_name_cache_key(player)
+	local player_type = type(player)
+
+	if player_type ~= "table" and player_type ~= "userdata" then
+		return account_info
+	end
+
+	local key = mod.console_account_cache_key(player)
 
 	if key == nil then
 		return account_info
@@ -386,7 +517,13 @@ mod.resolve_substituted_player_display_name = function(player, original_name)
 		return original_name
 	end
 
-	if not player or type(player) ~= "table" or player.__deleted then
+	if not player or player.__deleted then
+		return original_name
+	end
+
+	local display_player_type = type(player)
+
+	if display_player_type ~= "table" and display_player_type ~= "userdata" then
 		return original_name
 	end
 
@@ -487,8 +624,10 @@ mod.on_setting_changed = function(id)
 		if not mod:get("enable_random_names") then
 			mod.clear_name_cache()
 		end
-	elseif id == "enable_random_console_accounts" then
-		if not mod:get("enable_random_console_accounts") then
+	end
+
+	if id == "enable_random_names" or id == "enable_random_console_accounts" then
+		if not mod.is_player_account_substitution_enabled() then
 			mod.clear_account_cache()
 		end
 	end

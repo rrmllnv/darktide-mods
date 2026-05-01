@@ -14,8 +14,8 @@ return {
         ru = "Включить случайные имена",
     },
     enable_random_names_description = {
-        en = "Master switch: must be on for team panel and nameplate name replacement to run.",
-        ru = "Общий переключатель: без него замена имён в панели команды и неймплейтах не выполняется.",
+        en = "Master switch for random character names in ModderTools hooks (team panel, nameplates). When on, Squad HUD expanded view also replaces platform account names with deterministic fakes (same pool as console-account option).",
+        ru = "Общий переключатель случайных имён персонажа в хуках ModderTools (панель команды, неймплейты). Если включено, в расширенном Squad HUD подменяются и имена платформенных аккаунтов на детерминированные вымышленные (тот же пул, что у опции консольных аккаунтов).",
     },
 
     -- Настройки элементов UI
@@ -24,8 +24,8 @@ return {
         ru = "Генерация аккаунтов игровых консолей",
     },
     enable_random_console_accounts_description = {
-        en = "Replaces squad expanded-view account names and platform (Steam, Xbox, PlayStation) with deterministic fakes for screenshots. Independent from random character names.",
-        ru = "Подменяет имена аккаунтов и платформу (Steam, Xbox, PlayStation) в расширенном виде отряда на детерминированные вымышленные значения для скриншотов. Не зависит от случайных имён персонажей.",
+        en = "Replaces Squad HUD expanded-view account names with one entry from the fixed Warhammer 40K name list (exact spelling, no extra suffixes). Platform icon is still picked among Steam / Xbox / PlayStation for the panel. Use without \"Random Names\" if you only want to hide account strings while keeping character names real.",
+        ru = "Подмена имени аккаунта в расширенном Squad HUD одной строкой из фиксированного списка имён Warhammer 40K (как в списке, без суффиксов и цифр). Иконка платформы по-прежнему выбирается между Steam / Xbox / PlayStation. Можно включить без «случайных имён», если нужно скрыть только строку аккаунта.",
     },
 
     preserve_local_player_identity = {

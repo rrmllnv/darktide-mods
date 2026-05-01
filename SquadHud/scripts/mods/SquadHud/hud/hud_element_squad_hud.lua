@@ -1121,10 +1121,15 @@ local function apply_expanded_view_block_animation(content, style, fraction, tar
 	apply_expanded_view_text_fraction(content, style, "expanded_toughness_value_text", "expanded_toughness_value_text", expanded_view_item_fraction(fraction, 6), target_visible)
 end
 
+-- Second value: expanded view is showing platform account name (already passed through ModderTools account substitution when enabled).
 local function player_display_name(player, expanded_view)
 	local account_name = expanded_view and PlayerDataRuntime.player_account_name(player) or nil
 
-	return account_name or PlayerDataRuntime.player_name(player)
+	if account_name then
+		return account_name, true
+	end
+
+	return PlayerDataRuntime.player_name(player), false
 end
 
 local function expanded_view_level_text(player, expanded_view)
@@ -1714,9 +1719,11 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local mode = expanded_view_mode()
 	local revealed = expanded_view_revealed()
 	local show_extra_blocks = mode == "full" or revealed
-	local base_name = player_display_name(player, expanded_view)
+	local base_name, squad_name_is_account_line = player_display_name(player, expanded_view)
 
-	base_name = PlayerDataRuntime.apply_modder_tools_display_name(base_name, player)
+	if not squad_name_is_account_line then
+		base_name = PlayerDataRuntime.apply_modder_tools_display_name(base_name, player)
+	end
 
 	if mod.squadhud_debug_player_name then
 		base_name = mod.squadhud_debug_player_name(base_name, is_local_player)
