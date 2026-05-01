@@ -60,8 +60,8 @@ return {
 		ru = "Показывать подсказку с клавишей расширенного вида",
 	},
 	squadhud_show_expanded_view_key_hint_description = {
-		en = "Reminds you which key expands squad HUD and prompts you to press it for extra details (account names, platforms, and more). Shown briefly below the last Squad HUD panel after joining a mission.",
-		ru = "Напоминает назначенную клавишу расширенного вида и предлагает нажать её, чтобы открыть дополнительные данные HUD отряда (имена аккаунтов, платформы и т. п.). Появляется на короткое время ниже последней панели после входа в миссию.",
+		en = "Reminds you which key expands squad HUD and prompts you to press it for extra details (account names, platforms, and more). Shown briefly below the last Squad HUD panel in missions or the Psykhanium, not in the Mourningstar hub.",
+		ru = "Напоминает назначенную клавишу расширенного вида и предлагает нажать её, чтобы открыть дополнительные данные HUD отряда (имена аккаунтов, платформы и т. п.). Появляется на короткое время ниже последней панели в миссии или Псайканиуме; в хабе Морнингстар не показывается.",
 	},
 	squadhud_expanded_view_hint_text = {
 		en = "Press %s to expand the view",
