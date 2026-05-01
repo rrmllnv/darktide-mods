@@ -31,6 +31,38 @@ local TOUGHNESS_ARMOR_BREAK_INDICATOR_COLOR = {
 
 local M = {}
 
+local function animated_fractions_with_fallback(bar_logic, cache, fill_fallback, max_fallback)
+	local hf, hgf, hmf = bar_logic:animated_health_fractions()
+
+	if hf ~= nil and hgf ~= nil and hmf ~= nil then
+		cache.hf = hf
+		cache.hgf = hgf
+		cache.hmf = hmf
+
+		return hf, hgf, hmf
+	end
+
+	hf = hf or cache.hf or fill_fallback
+	hgf = hgf or cache.hgf or fill_fallback
+	hmf = hmf or cache.hmf or max_fallback
+
+	cache.hf = hf
+	cache.hgf = hgf
+	cache.hmf = hmf
+
+	return hf, hgf, hmf
+end
+
+local function clear_animation_fraction_cache(cache)
+	if not cache then
+		return
+	end
+
+	cache.hf = nil
+	cache.hgf = nil
+	cache.hmf = nil
+end
+
 local function apply_color_to_text(text, color)
 	return "{#color(" .. color[2] .. "," .. color[3] .. "," .. color[4] .. ")}" .. text .. "{#reset()}"
 end
@@ -337,6 +369,8 @@ M.init = function(self, definitions)
 	self._vdth_bar_width = definitions.BAR_WIDTH
 	self._vdth_health_bar_logic = HudHealthBarLogic:new(HudElementPlayerHealthSettings)
 	self._vdth_toughness_bar_logic = HudHealthBarLogic:new(HudElementPlayerToughnessSettings)
+	self._vdth_health_anim_cache = {}
+	self._vdth_toughness_anim_cache = {}
 	self._vdth_disabled = nil
 	self._vdth_knocked_down = nil
 	self._vdth_has_toughness_overshield = false
@@ -749,6 +783,7 @@ M.update = function(self, dt, t, player_unit, opacity)
 	local show_health = show_hp ~= false and show_hp ~= 0
 
 	if not show_toughness then
+		clear_animation_fraction_cache(self._vdth_toughness_anim_cache)
 		reset_toughness_overshield_visual_state(self, widgets)
 		clear_toughness_hit_indicator(self, widgets)
 		M._set_toughness_row_visible(self, widgets, false)
@@ -761,6 +796,7 @@ M.update = function(self, dt, t, player_unit, opacity)
 		local toughness_extension = ScriptUnit.has_extension(player_unit, "toughness_system")
 
 		if not toughness_extension then
+			clear_animation_fraction_cache(self._vdth_toughness_anim_cache)
 			reset_toughness_overshield_visual_state(self, widgets)
 			clear_toughness_hit_indicator(self, widgets)
 			M._set_toughness_row_visible(self, widgets, false)
@@ -773,6 +809,7 @@ M.update = function(self, dt, t, player_unit, opacity)
 			local toughness_percentage = toughness_extension:current_toughness_percent()
 
 			if toughness_percentage == nil then
+				clear_animation_fraction_cache(self._vdth_toughness_anim_cache)
 				reset_toughness_overshield_visual_state(self, widgets)
 				clear_toughness_hit_indicator(self, widgets)
 				M._set_toughness_row_visible(self, widgets, false)
@@ -840,11 +877,9 @@ M.update = function(self, dt, t, player_unit, opacity)
 
 				M._set_bar_alpha_toughness(self, widgets, alpha)
 
-				local tf, tgf, tmf = bar_logic:animated_health_fractions()
+				local tf, tgf, tmf = animated_fractions_with_fallback(bar_logic, self._vdth_toughness_anim_cache, bar_progress, 1)
 
-				if tf and tgf then
-					M._apply_toughness_fraction(self, tf, tgf, tmf)
-				end
+				M._apply_toughness_fraction(self, tf, tgf, tmf)
 
 				M._set_toughness_row_visible(self, widgets, true)
 
@@ -874,6 +909,7 @@ M.update = function(self, dt, t, player_unit, opacity)
 	end
 
 	if not show_health then
+		clear_animation_fraction_cache(self._vdth_health_anim_cache)
 		M._set_health_row_visible(self, widgets, false)
 
 		if label_h and label_h.content then
@@ -884,6 +920,7 @@ M.update = function(self, dt, t, player_unit, opacity)
 		local health_extension = ScriptUnit.has_extension(player_unit, "health_system")
 
 		if not health_extension then
+			clear_animation_fraction_cache(self._vdth_health_anim_cache)
 			M._set_health_row_visible(self, widgets, false)
 
 			if label_h and label_h.content then
@@ -911,12 +948,10 @@ M.update = function(self, dt, t, player_unit, opacity)
 
 			M._set_bar_alpha_health(self, widgets, alpha)
 
-			local hf, hgf, hmf = bar_logic:animated_health_fractions()
+			local hf, hgf, hmf = animated_fractions_with_fallback(bar_logic, self._vdth_health_anim_cache, health_percentage, health_max_percentage)
 
-			if hf and hgf then
-				M._apply_health_fraction(self, hf, hgf, hmf)
-				self._vdth_health_fraction_for_nodges = hf
-			end
+			M._apply_health_fraction(self, hf, hgf, hmf)
+			self._vdth_health_fraction_for_nodges = hf
 
 			M._set_health_row_visible(self, widgets, true)
 
