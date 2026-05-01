@@ -207,20 +207,26 @@ function M.filtered_squad_slots(composition_name, output, scratch, local_player,
 
 	if display_mode == "teammates" then
 		local teammate_count = 0
+		local local_present = false
 
 		for i = 1, #scratch do
-			if not is_same_player(scratch[i], local_player) then
+			local entry = scratch[i]
+
+			if is_same_player(entry, local_player) then
+				local_present = true
+			else
 				teammate_count = teammate_count + 1
 			end
 		end
 
-		local visible_teammate_count = math.min(teammate_count, max_players)
-		local slot_index = max_players - visible_teammate_count + 1
+		local teammate_slot_max = local_present and math.max(1, max_players - 1) or max_players
+		local visible_teammate_count = math.min(teammate_count, teammate_slot_max)
+		local slot_index = teammate_slot_max - visible_teammate_count + 1
 
 		for i = 1, #scratch do
 			local player = scratch[i]
 
-			if not is_same_player(player, local_player) and slot_index <= max_players then
+			if not is_same_player(player, local_player) and slot_index <= teammate_slot_max then
 				output[slot_index] = player
 				slot_index = slot_index + 1
 			end
