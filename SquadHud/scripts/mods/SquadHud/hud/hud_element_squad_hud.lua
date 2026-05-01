@@ -9,6 +9,7 @@ local TextUtilities = require("scripts/utilities/ui/text")
 local Definitions = mod:io_dofile("SquadHud/scripts/mods/SquadHud/hud/definitions/squad_hud_definitions")
 local DefinitionSettings = Definitions.settings
 local AbilityRuntime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/ability_runtime")
+local ExpandedViewRuntime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/expanded_view_runtime")
 local InventoryRuntime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/inventory_runtime")
 local PlayerDataRuntime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/player_data_runtime")
 local StatusRuntime = mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/status_runtime")
@@ -1251,6 +1252,47 @@ local function apply_layout_settings(self, widgets_by_name)
 	end
 end
 
+local function last_visible_player_slot(players)
+	for i = MAX_PLAYERS, 1, -1 do
+		if players[i] then
+			return i
+		end
+	end
+
+	return nil
+end
+
+local function apply_expanded_view_hint(self, widgets_by_name, players, t)
+	local widget = widgets_by_name.expanded_view_hint
+
+	if not widget then
+		return
+	end
+
+	local slot_index = last_visible_player_slot(players)
+	local enabled = slot_index ~= nil and boolean_setting("squadhud_show_expanded_view_key_hint", true)
+	local fraction = ExpandedViewRuntime.update_fraction(self, t, enabled)
+
+	if enabled and fraction > 0 then
+		local hud_scale = math.clamp(numeric_setting("hud_layout_scale", DEFAULT_HUD_LAYOUT_SCALE), 0.5, 2)
+		local opacity = math.clamp(numeric_setting("opacity", DEFAULT_OPACITY), 0.1, 1)
+		local hint_x = math.floor(DefinitionSettings.expanded_view_hint_x + 0.5)
+		local hint_y = math.floor(((slot_index - 1) * (DefinitionSettings.panel_height + DefinitionSettings.panel_gap) + DefinitionSettings.panel_height + DefinitionSettings.expanded_view_hint_gap) * hud_scale + 0.5)
+
+		if self._expanded_view_hint_x ~= hint_x or self._expanded_view_hint_y ~= hint_y then
+			self:set_scenegraph_position("squadhud_expanded_view_hint", hint_x, hint_y, 2)
+			self._expanded_view_hint_x = hint_x
+			self._expanded_view_hint_y = hint_y
+		end
+
+		widget.content.text = self._expanded_view_hint_text or ExpandedViewRuntime.hint_text()
+		widget.alpha_multiplier = opacity
+		widget.scale = hud_scale
+	end
+
+	ExpandedViewRuntime.apply_widget(widget, fraction, DefinitionSettings)
+end
+
 ActiveBar.layout = function(mode)
 	if mode == "toughness" then
 		return HEALTH_BAR_Y, BAR_INACTIVE_HEIGHT, HEALTH_BAR_Y + BAR_INACTIVE_HEIGHT + BAR_GAP, BAR_ACTIVE_HEIGHT
@@ -2018,6 +2060,9 @@ HudElementSquadHud.update = function(self, dt, t, ui_renderer, render_settings, 
 			set_panel_visible(widgets_by_name["panel_" .. i], false)
 		end
 
+		ExpandedViewRuntime.reset(self)
+		ExpandedViewRuntime.apply_widget(widgets_by_name.expanded_view_hint, 0, DefinitionSettings)
+
 		return
 	end
 
@@ -2040,6 +2085,8 @@ HudElementSquadHud.update = function(self, dt, t, ui_renderer, render_settings, 
 			apply_empty_panel(widget)
 		end
 	end
+
+	apply_expanded_view_hint(self, widgets_by_name, players, t)
 end
 
 return HudElementSquadHud

@@ -111,6 +111,14 @@ S.status_background_y = 1
 S.status_background_width = S.name_right_x - S.status_background_x
 S.status_background_height = 20
 
+S.expanded_view_hint_x = S.status_background_x
+S.expanded_view_hint_width = S.status_background_width
+S.expanded_view_hint_height = S.status_background_height
+S.expanded_view_hint_gap = 10
+S.expanded_view_hint_padding_x = S.inner_padding
+S.expanded_view_hint_font_size = 11
+S.expanded_view_hint_slide_offset = 12
+
 S.name_marquee_start_pause = 0.6
 S.name_marquee_move_duration = 1.6
 S.name_marquee_end_pause = 0.9
@@ -164,6 +172,7 @@ S.color_status_background_critical = {
 	40,
 	40,
 }
+S.color_expanded_view_hint_background = table.clone(S.color_status_background_default)
 S.color_toughness_hit_indicator = {
 	0,
 	75,

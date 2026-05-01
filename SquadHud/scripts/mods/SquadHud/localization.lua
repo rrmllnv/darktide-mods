@@ -55,6 +55,22 @@ return {
 		en = "Hold",
 		ru = "Hold",
 	},
+	squadhud_show_expanded_view_key_hint = {
+		en = "Show Expanded View key hint",
+		ru = "Показывать подсказку с клавишей расширенного вида",
+	},
+	squadhud_show_expanded_view_key_hint_description = {
+		en = "Reminds you which key expands squad HUD and prompts you to press it for extra details (account names, platforms, and more). Shown briefly below the last Squad HUD panel after joining a mission.",
+		ru = "Напоминает назначенную клавишу расширенного вида и предлагает нажать её, чтобы открыть дополнительные данные HUD отряда (имена аккаунтов, платформы и т. п.). Появляется на короткое время ниже последней панели после входа в миссию.",
+	},
+	squadhud_expanded_view_hint_text = {
+		en = "Press %s to expand the view",
+		ru = "Нажмите %s, чтобы расширить вид",
+	},
+	squadhud_expanded_view_hint_key_unbound = {
+		en = "unbound key",
+		ru = "неназначенную клавишу",
+	},
 	squadhud_system_group = {
 		en = "\238\128\169 SYSTEM SETTINGS",
 		ru = "\238\128\169 СИСТЕМНЫЕ НАСТРОЙКИ",

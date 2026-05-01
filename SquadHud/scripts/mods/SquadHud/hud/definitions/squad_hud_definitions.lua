@@ -9,6 +9,7 @@ local AbilityIconDefinitions = mod:io_dofile("SquadHud/scripts/mods/SquadHud/hud
 local PlayerInfoDefinitions = mod:io_dofile("SquadHud/scripts/mods/SquadHud/hud/definitions/player_info_definitions")
 local InventoryDefinitions = mod:io_dofile("SquadHud/scripts/mods/SquadHud/hud/definitions/inventory_definitions")
 local BarDefinitions = mod:io_dofile("SquadHud/scripts/mods/SquadHud/hud/definitions/bar_definitions")
+local ExpandedViewDefinitions = mod:io_dofile("SquadHud/scripts/mods/SquadHud/hud/definitions/expanded_view_definitions")
 
 local M = {
 	settings = Settings,
@@ -50,6 +51,8 @@ local function create_scenegraph_definition()
 		}
 	end
 
+	ExpandedViewDefinitions.append_scenegraph(scenegraph_definition, Settings)
+
 	return scenegraph_definition
 end
 
@@ -70,6 +73,8 @@ local function create_widget_definitions()
 	for i = 1, Settings.max_players do
 		widget_definitions["panel_" .. i] = create_panel_definition("squadhud_panel_" .. i)
 	end
+
+	widget_definitions.expanded_view_hint = ExpandedViewDefinitions.create_widget_definition("squadhud_expanded_view_hint", Settings, PassTemplates)
 
 	return widget_definitions
 end

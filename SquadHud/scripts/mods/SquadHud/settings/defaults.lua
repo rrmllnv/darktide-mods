@@ -10,6 +10,7 @@ local defaults = {
 	squadhud_enabled = true,
 	squadhud_expanded_view_mode = "full",
 	squadhud_expanded_view_keybind_mode = "hold",
+	squadhud_show_expanded_view_key_hint = true,
 	squadhud_panel_display_mode = "all",
 	squadhud_reset_all_settings = 0,
 	squadhud_expanded_view_keybind = {
