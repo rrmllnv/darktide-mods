@@ -27,6 +27,54 @@ local function _is_alive_unit(unit)
 	return unit and HEALTH_ALIVE[unit] and Unit.alive(unit)
 end
 
+local function _threat_target_change_alert_allowed_for_enemy(enemy_unit)
+	if not enemy_unit or not Unit.alive(enemy_unit) then
+		return false
+	end
+
+	if not ScriptUnit.has_extension(enemy_unit, "health_system") then
+		return true
+	end
+
+	local health_ext = ScriptUnit.extension(enemy_unit, "health_system")
+
+	if not health_ext then
+		return true
+	end
+
+	if type(health_ext.is_alive) == "function" then
+		local ok_alive, alive = pcall(function()
+			return health_ext:is_alive()
+		end)
+
+		if ok_alive and alive == false then
+			return false
+		end
+	end
+
+	if type(health_ext.health_depleted) == "function" then
+		local ok_dep, depleted = pcall(function()
+			return health_ext:health_depleted()
+		end)
+
+		if ok_dep and depleted == true then
+			return false
+		end
+	end
+
+	if type(health_ext.current_health_percent) == "function" then
+		local ok_hp, hp = pcall(function()
+			return health_ext:current_health_percent()
+		end)
+
+		if ok_hp and type(hp) == "number" and hp <= 0 then
+			return false
+		end
+	end
+
+	return true
+end
+
 local function _resolve_side_system()
 	local extension_manager = Managers.state and Managers.state.extension
 
@@ -386,17 +434,19 @@ local function scan(player_unit)
 						local previous_target = previous_target_by_enemy[enemy_unit]
 
 						if previous_target ~= nil and previous_target ~= target_unit then
-							local target_is_local = local_player ~= nil and _is_same_player(target_player, local_player)
-							local target_player_name = target_is_local and _local_target_display_name(target_player, target_unit) or _player_display_name(target_player, target_unit)
+							if _threat_target_change_alert_allowed_for_enemy(enemy_unit) then
+								local target_is_local = local_player ~= nil and _is_same_player(target_player, local_player)
+								local target_player_name = target_is_local and _local_target_display_name(target_player, target_unit) or _player_display_name(target_player, target_unit)
 
-							events[#events + 1] = {
-								enemy_unit = enemy_unit,
-								target_unit = target_unit,
-								threat_type = threat_type,
-								enemy_name = _display_name_for_breed(breed),
-								target_is_local = target_is_local,
-								target_player_name = target_player_name,
-							}
+								events[#events + 1] = {
+									enemy_unit = enemy_unit,
+									target_unit = target_unit,
+									threat_type = threat_type,
+									enemy_name = _display_name_for_breed(breed),
+									target_is_local = target_is_local,
+									target_player_name = target_player_name,
+								}
+							end
 						end
 
 						previous_target_by_enemy[enemy_unit] = target_unit
