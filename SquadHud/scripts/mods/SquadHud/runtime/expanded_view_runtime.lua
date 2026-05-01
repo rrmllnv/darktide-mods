@@ -11,7 +11,7 @@ local KEY_NAME_HIGHLIGHT_COLOR = {
 	26,
 }
 
-local SHOW_DELAY = 1
+local SHOW_DELAY = 5
 local VISIBLE_DURATION = 10
 local TRANSITION_DURATION = 0.45
 
@@ -84,6 +84,10 @@ local function wrap_key_name_colored(plain_key_text)
 end
 
 function M.hint_text()
+	if not M.hint_keybind_assigned() then
+		return mod:localize("squadhud_expanded_view_hint_assign_key")
+	end
+
 	return mod:localize("squadhud_expanded_view_hint_text", wrap_key_name_colored(M.keybind_text()))
 end
 
@@ -93,10 +97,25 @@ function M.reset(hud)
 	hud._expanded_view_hint_finished = false
 	hud._expanded_view_hint_fraction = 0
 	hud._expanded_view_hint_text = nil
+	hud._expanded_view_hint_dismiss_token_at_show = nil
 end
 
 function M.hint_location_allowed()
 	return not PlayerDataRuntime.is_hub_game_mode()
+end
+
+function M.hint_keybind_assigned()
+	local key_names = {}
+
+	append_key_names(key_names, mod:get("squadhud_expanded_view_keybind"))
+
+	for i = 1, #key_names do
+		if type(key_names[i]) == "string" and string.match(key_names[i], "%S") then
+			return true
+		end
+	end
+
+	return false
 end
 
 function M.update_fraction(hud, t, eligible)
@@ -130,6 +149,14 @@ function M.update_fraction(hud, t, eligible)
 	if not hud._expanded_view_hint_show_start_t then
 		hud._expanded_view_hint_show_start_t = now
 		hud._expanded_view_hint_text = M.hint_text()
+		hud._expanded_view_hint_dismiss_token_at_show = mod._squadhud_expanded_view_hint_dismiss_token or 0
+	end
+
+	local dismiss_token = mod._squadhud_expanded_view_hint_dismiss_token or 0
+
+	if dismiss_token > (hud._expanded_view_hint_dismiss_token_at_show or 0) then
+		hud._expanded_view_hint_show_start_t = now - (TRANSITION_DURATION + VISIBLE_DURATION)
+		hud._expanded_view_hint_dismiss_token_at_show = dismiss_token
 	end
 
 	local elapsed = now - hud._expanded_view_hint_show_start_t

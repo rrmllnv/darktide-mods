@@ -57,13 +57,19 @@ mod.squadhud_expanded_view_keybind = function(...)
 	local a, b = ...
 	local pressed = type(b) == "boolean" and b or type(a) == "boolean" and a or false
 	local mode = expanded_view_keybind_mode()
+	local was_held = mod._squadhud_expanded_view_key_held == true
+	local key_down_edge = pressed == true and not was_held
 
 	if mode == "hold" then
 		mod._squadhud_expanded_view = pressed == true
 	else
-		if pressed == true and mod._squadhud_expanded_view_key_held ~= true then
+		if key_down_edge then
 			mod._squadhud_expanded_view = not mod._squadhud_expanded_view
 		end
+	end
+
+	if key_down_edge then
+		mod._squadhud_expanded_view_hint_dismiss_token = (mod._squadhud_expanded_view_hint_dismiss_token or 0) + 1
 	end
 
 	mod._squadhud_expanded_view_key_held = pressed == true
