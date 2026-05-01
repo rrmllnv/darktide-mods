@@ -19,6 +19,15 @@ return {
     },
 
     -- Настройки элементов UI
+    enable_random_console_accounts = {
+        en = "Generate console platform accounts",
+        ru = "Генерация аккаунтов игровых консолей",
+    },
+    enable_random_console_accounts_description = {
+        en = "Replaces squad expanded-view account names and platform (Steam, Xbox, PlayStation) with deterministic fakes for screenshots. Independent from random character names.",
+        ru = "Подменяет имена аккаунтов и платформу (Steam, Xbox, PlayStation) в расширенном виде отряда на детерминированные вымышленные значения для скриншотов. Не зависит от случайных имён персонажей.",
+    },
+
     enable_team_panel = {
         en = "Replace Names in Team Panel",
         ru = "Замена имен в панели команды",

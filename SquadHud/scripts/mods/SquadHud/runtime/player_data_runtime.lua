@@ -569,6 +569,63 @@ function M.apply_modder_tools_display_name(base_name, player)
 	return base_name
 end
 
+function M.apply_modder_tools_account_info(account_info, player)
+	local get_mod_fn = rawget(_G, "get_mod")
+
+	if type(get_mod_fn) ~= "function" then
+		return account_info
+	end
+
+	local ok_modder, modder_tools = pcall(get_mod_fn, "ModderTools")
+
+	if not ok_modder or not modder_tools or type(modder_tools.resolve_substituted_player_account_info) ~= "function" then
+		return account_info
+	end
+
+	local ok_on, enabled = pcall(function()
+		return modder_tools:get("enable_random_console_accounts") == true
+	end)
+
+	if not ok_on or enabled ~= true then
+		return account_info
+	end
+
+	local ok_call, sub = pcall(function()
+		return modder_tools.resolve_substituted_player_account_info(player, account_info)
+	end)
+
+	if not ok_call or type(sub) ~= "table" then
+		return account_info
+	end
+
+	local platform = sub.platform
+
+	if type(platform) ~= "string" or not PLATFORM_ICONS[platform] then
+		if type(account_info) == "table" and type(account_info.platform) == "string" and PLATFORM_ICONS[account_info.platform] then
+			platform = account_info.platform
+		else
+			platform = "unknown"
+		end
+	end
+
+	local name = sub.account_name
+
+	if type(name) ~= "string" or name == "" then
+		if type(account_info) == "table" and type(account_info.account_name) == "string" and account_info.account_name ~= "" then
+			name = account_info.account_name
+		else
+			return account_info
+		end
+	end
+
+	return {
+		account_name = name,
+		platform = platform,
+		platform_icon = PLATFORM_ICONS[platform] or PLATFORM_ICONS.unknown,
+		platform_label = PLATFORM_LABELS[platform] or PLATFORM_LABELS.unknown,
+	}
+end
+
 local function strip_platform_icons(text)
 	if type(text) ~= "string" or text == "" then
 		return text
@@ -660,7 +717,7 @@ function M.player_account_info(player)
 	local cached = account_info_cache[cache_key]
 
 	if type(cached) == "table" and type(cached.account_name) == "string" and cached.account_name ~= "" then
-		return cached
+		return M.apply_modder_tools_account_info(cached, player)
 	end
 
 	local player_info = player_info_for_account(account_id)
@@ -668,13 +725,13 @@ function M.player_account_info(player)
 	if not player_info then
 		fetch_account_presence(account_id)
 
-		return nil
+		return M.apply_modder_tools_account_info(nil, player)
 	end
 
 	local account_name = player_info_value(player_info, "user_display_name")
 
 	if account_name_is_unknown(account_name) then
-		return nil
+		return M.apply_modder_tools_account_info(nil, player)
 	end
 
 	local platform = player_info_value(player_info, "platform") or "unknown"
@@ -692,7 +749,7 @@ function M.player_account_info(player)
 
 	account_info_cache[cache_key] = account_info
 
-	return account_info
+	return M.apply_modder_tools_account_info(account_info, player)
 end
 
 function M.player_account_name(player)

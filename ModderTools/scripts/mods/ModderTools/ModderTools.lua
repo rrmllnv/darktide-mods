@@ -142,6 +142,67 @@ local RANDOM_NAMES = {
 -- Кэш замененных имен: account_id -> random_name
 mod._name_cache = {}
 
+mod._account_cache = {}
+
+local CONSOLE_PLATFORMS = {
+	"steam",
+	"xbox",
+	"psn",
+}
+
+local function hash_string(seed_str)
+	local h = 5381
+
+	for i = 1, #seed_str do
+		h = ((h * 33) + string.byte(seed_str, i)) % 4294967296
+	end
+
+	return h
+end
+
+local function deterministic_mix(seed, salt)
+	return (seed * 1103515245 + salt * 2654435761 + 12345) % 4294967296
+end
+
+local function ensure_generated_console_account(cache_key)
+	if cache_key == nil then
+		return nil
+	end
+
+	local key = tostring(cache_key)
+	local cached = mod._account_cache[key]
+
+	if cached then
+		return cached
+	end
+
+	local seed = hash_string(key)
+	local plat_index = (deterministic_mix(seed, 11) % #CONSOLE_PLATFORMS) + 1
+	local platform = CONSOLE_PLATFORMS[plat_index]
+	local ni = #RANDOM_NAMES
+	local base_a = RANDOM_NAMES[(deterministic_mix(seed, 13) % ni) + 1]
+	local base_b = RANDOM_NAMES[(deterministic_mix(seed, 17) % ni) + 1]
+	local num_a = deterministic_mix(seed, 19) % 9000 + 1000
+	local num_b = deterministic_mix(seed, 23) % 99
+	local account_name
+
+	if platform == "steam" then
+		account_name = string.lower(base_a) .. "_" .. tostring(num_a)
+	elseif platform == "xbox" then
+		account_name = base_a .. base_b .. tostring(deterministic_mix(seed, 29) % 9999)
+	else
+		account_name = string.lower(base_a) .. "-" .. tostring(num_b) .. "_" .. string.lower(string.sub(base_b, 1, 6)) .. "_psn"
+	end
+
+	cached = {
+		account_name = account_name,
+		platform = platform,
+	}
+	mod._account_cache[key] = cached
+
+	return cached
+end
+
 -- Генерация случайного имени
 local function generate_random_name(account_id)
     -- Используем account_id как seed для детерминированной генерации
@@ -213,6 +274,33 @@ mod.player_name_cache_key = function(player)
 	return nil
 end
 
+mod.resolve_substituted_player_account_info = function(player, account_info)
+	if mod:get("enable_random_console_accounts") ~= true then
+		return account_info
+	end
+
+	if not player or type(player) ~= "table" or player.__deleted then
+		return account_info
+	end
+
+	local key = mod.player_name_cache_key(player)
+
+	if key == nil then
+		return account_info
+	end
+
+	local generated = ensure_generated_console_account(key)
+
+	if not generated then
+		return account_info
+	end
+
+	return {
+		account_name = generated.account_name,
+		platform = generated.platform,
+	}
+end
+
 mod.resolve_substituted_player_display_name = function(player, original_name)
 	if type(original_name) ~= "string" or original_name == "" then
 		return original_name
@@ -232,9 +320,14 @@ mod.resolve_substituted_player_display_name = function(player, original_name)
 end
 
 -- Очистка кэша имен (при выходе из миссии)
+mod.clear_account_cache = function()
+	table.clear(mod._account_cache)
+end
+
 mod.clear_name_cache = function()
-    table.clear(mod._name_cache)
-    mod:info("Name cache cleared")
+	table.clear(mod._name_cache)
+	mod.clear_account_cache()
+	mod:info("Name cache cleared")
 end
 
 -- Функция замены имени в тексте
@@ -302,9 +395,13 @@ mod.on_game_state_changed = function(status, state_name)
 end
 
 mod.on_setting_changed = function(id)
-    if id == "enable_random_names" then
-        if not mod:get("enable_random_names") then
-            mod.clear_name_cache()
-        end
-    end
+	if id == "enable_random_names" then
+		if not mod:get("enable_random_names") then
+			mod.clear_name_cache()
+		end
+	elseif id == "enable_random_console_accounts" then
+		if not mod:get("enable_random_console_accounts") then
+			mod.clear_account_cache()
+		end
+	end
 end

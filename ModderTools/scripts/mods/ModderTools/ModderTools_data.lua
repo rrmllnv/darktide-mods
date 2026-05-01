@@ -12,6 +12,11 @@ return {
                 default_value = false,
             },
             {
+                setting_id = "enable_random_console_accounts",
+                type = "checkbox",
+                default_value = false,
+            },
+            {
                 setting_id = "enable_team_panel",
                 type = "checkbox",
                 default_value = true,
