@@ -510,6 +510,34 @@ local function tactical_advisor_alert_gameplay_time()
 	return nil
 end
 
+local function player_unit_health_alive(player_unit)
+	if not player_unit or not Unit.alive(player_unit) then
+		return false
+	end
+
+	local health_extension = ScriptUnit.has_extension(player_unit, "health_system")
+
+	if not health_extension or type(health_extension.is_alive) ~= "function" then
+		return false
+	end
+
+	return health_extension:is_alive() == true
+end
+
+local function tactical_advisor_suppressed(local_player, player_unit)
+	if not player_unit_health_alive(player_unit) then
+		return true
+	end
+
+	local camera_handler = local_player and local_player.camera_handler
+
+	if camera_handler and type(camera_handler.is_observing) == "function" and camera_handler:is_observing() then
+		return true
+	end
+
+	return false
+end
+
 local function localize_non_empty(key)
 	local text = mod:localize(key)
 
@@ -1207,7 +1235,9 @@ HudElementDivisionHUD._update_enemy_target_widget = function(self, widgets, opac
 end
 
 HudElementDivisionHUD._update_threat_advisor_scan = function(self, player_unit, dt)
-	if not player_unit or not Unit.alive(player_unit) then
+	local local_player = Managers.player and Managers.player.local_player and Managers.player:local_player(1)
+
+	if tactical_advisor_suppressed(local_player, player_unit) then
 		self._threat_advisor_scan_timer = 0
 		self._threat_advisor_data = {}
 
@@ -2513,7 +2543,9 @@ HudElementDivisionHUD._update_proximity_widgets = function(self, widgets, opacit
 end
 
 HudElementDivisionHUD._update_tactical_advisor_scan = function(self, player_unit, dt)
-	if not player_unit or not Unit.alive(player_unit) then
+	local local_player = Managers.player and Managers.player.local_player and Managers.player:local_player(1)
+
+	if tactical_advisor_suppressed(local_player, player_unit) then
 		self._tactical_advisor_scan_timer = 0
 		self._tactical_advisor_data = {}
 		self._tactical_advisor_alert_state = {}

@@ -34,6 +34,12 @@ local function effective_hud_visible(s_op, player_unit, defaults)
 		return base
 	end
 
+	local health_extension = ScriptUnit.has_extension(player_unit, "health_system")
+
+	if health_extension and type(health_extension.is_alive) == "function" and health_extension:is_alive() ~= true then
+		return false
+	end
+
 	local d = type(defaults) == "table" and defaults or {}
 	local show_1p = s_op.divisionhud_auto_first_person
 
