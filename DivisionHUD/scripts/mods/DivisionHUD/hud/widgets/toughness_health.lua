@@ -42,9 +42,13 @@ local function animated_fractions_with_fallback(bar_logic, cache, fill_fallback,
 		return hf, hgf, hmf
 	end
 
-	hf = hf or cache.hf or fill_fallback
-	hgf = hgf or cache.hgf or fill_fallback
-	hmf = hmf or cache.hmf or max_fallback
+	if cache.hf ~= nil and cache.hgf ~= nil and cache.hmf ~= nil then
+		return cache.hf, cache.hgf, cache.hmf
+	end
+
+	hf = fill_fallback
+	hgf = fill_fallback
+	hmf = max_fallback
 
 	cache.hf = hf
 	cache.hgf = hgf
