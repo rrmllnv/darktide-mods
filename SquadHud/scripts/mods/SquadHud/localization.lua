@@ -23,13 +23,13 @@ return {
 		en = "Controls how much extra squad HUD information is visible by default.",
 		ru = "Определяет, сколько дополнительных данных HUD отряда видно по умолчанию.",
 	},
-	squadhud_expanded_view_mode_short = {
-		en = "Short",
-		ru = "Короткий",
+	squadhud_expanded_view_mode_compact = {
+		en = "Compact",
+		ru = "Компактный",
 	},
-	squadhud_expanded_view_mode_full = {
-		en = "Full",
-		ru = "Полный",
+	squadhud_expanded_view_mode_expanded = {
+		en = "Expanded",
+		ru = "Развёрнутый",
 	},
 	squadhud_expanded_view_keybind = {
 		en = "Show expanded view",

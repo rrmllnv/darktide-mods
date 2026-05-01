@@ -120,7 +120,7 @@ return {
 							type = "dropdown",
 							title = "squadhud_ammo_value_format",
 							tooltip_text = "squadhud_ammo_value_format_description",
-							default_value = d("squadhud_ammo_value_format", "percent"),
+							default_value = d("squadhud_ammo_value_format", "current_max"),
 							options = {
 								{
 									text = "squadhud_ammo_value_format_percent",

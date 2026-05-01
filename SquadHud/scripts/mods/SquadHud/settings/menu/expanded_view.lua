@@ -13,11 +13,11 @@ return {
 			default_value = "full",
 			options = {
 				{
-					text = "squadhud_expanded_view_mode_short",
+					text = "squadhud_expanded_view_mode_compact",
 					value = "short",
 				},
 				{
-					text = "squadhud_expanded_view_mode_full",
+					text = "squadhud_expanded_view_mode_expanded",
 					value = "full",
 				},
 			},

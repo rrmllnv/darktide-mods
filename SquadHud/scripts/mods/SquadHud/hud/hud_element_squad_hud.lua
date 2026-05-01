@@ -159,11 +159,11 @@ end
 local function ammo_value_format()
 	local value = mod:get("squadhud_ammo_value_format")
 
-	if value == "count" or value == "current_max" then
+	if value == "count" or value == "current_max" or value == "percent" then
 		return value
 	end
 
-	return "percent"
+	return "current_max"
 end
 
 local function custom_hud_mod()

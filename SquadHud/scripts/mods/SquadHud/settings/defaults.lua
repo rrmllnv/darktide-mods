@@ -17,7 +17,7 @@ local defaults = {
 	},
 	squadhud_show_ability_icon = true,
 	squadhud_show_ammo = true,
-	squadhud_ammo_value_format = "percent",
+	squadhud_ammo_value_format = "current_max",
 	squadhud_ammo_percent_mode = "changed",
 	squadhud_show_ammo_crate = true,
 	squadhud_show_class_icon = true,
