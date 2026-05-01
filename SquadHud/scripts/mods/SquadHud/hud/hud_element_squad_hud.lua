@@ -1818,7 +1818,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local name_x, name_width = player_name_layout(show_class_icon, show_relation_status)
 
 	local in_coherency = is_teammate and PlayerDataRuntime.in_coherency_with_local_player(local_player, extensions)
-	local show_coherency_border = in_coherency or show_distance_status
+	local show_coherency_border = show_distance_status or (is_teammate and not is_bad_status)
 	local status_background_color = operational_status and operational_status.is_critical and COLOR_STATUS_BACKGROUND_CRITICAL or COLOR_STATUS_BACKGROUND_DEFAULT
 	local pocketable_icon = show_inventory_blocks and filtered_pocketable_icon(inventory_icons) or nil
 	local pocketable_small_icon = show_inventory_blocks and show_stimm_icon and inventory_icons.pocketable_small_icon or nil
