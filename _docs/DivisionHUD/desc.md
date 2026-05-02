@@ -1,3 +1,5 @@
+[img]https://raw.githubusercontent.com/rrmllnv/darktide-mods/master/_images/DivisionHUD1.gif[/img]
+
 [b][size=4]What it is and why use it[/size][/b]
 
 Division HUD adds a separate combat interface in the style of [i]The Division[/i]: health, resources, and loadout are shown in one block. It’s for players who want a different look and a clearer, more unified picture in combat—without having to rebuild the entire vanilla HUD by hand.
