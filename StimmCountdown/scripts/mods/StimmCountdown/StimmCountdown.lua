@@ -8,6 +8,7 @@ local UIFontSettings = require("scripts/managers/ui/ui_font_settings")
 
 local STIMM_SLOT_NAME = "slot_pocketable_small"
 local STIMM_ICON_MATERIAL = "content/ui/materials/icons/pocketables/hud/syringe_broker"
+local STIMM_PACKAGE_REFERENCE_NAME = "StimmCountdown"
 local STIMM_READY_SOUND_EVENT_DEFAULT = "wwise/events/ui/play_hud_heal_2d"
 
 local ACTIVE_COLOR = UIHudSettings.color_tint_main_1
@@ -42,6 +43,44 @@ local settings_cache = {
 	font_type = "machine_medium",
 	font_size = 30,
 }
+
+local stimm_icon_package_load_id = nil
+
+local function ensure_stimm_icon_package_loaded()
+	if stimm_icon_package_load_id then
+		return
+	end
+
+	local package_manager = Managers.package
+
+	if not package_manager or type(package_manager.load) ~= "function" then
+		return
+	end
+
+	local ok, load_id = pcall(function()
+		return package_manager:load(STIMM_ICON_MATERIAL, STIMM_PACKAGE_REFERENCE_NAME, nil, true)
+	end)
+
+	if ok then
+		stimm_icon_package_load_id = load_id
+	end
+end
+
+local function release_stimm_icon_package()
+	if not stimm_icon_package_load_id then
+		return
+	end
+
+	local package_manager = Managers.package
+
+	if package_manager and type(package_manager.release) == "function" then
+		pcall(function()
+			package_manager:release(stimm_icon_package_load_id)
+		end)
+	end
+
+	stimm_icon_package_load_id = nil
+end
 
 local function resolve_color_from_setting_value(value, fallback)
 	if type(value) == "string" and Color[value] then
@@ -80,6 +119,14 @@ local function refresh_settings()
 end
 
 refresh_settings()
+
+mod.on_all_mods_loaded = function()
+	ensure_stimm_icon_package_loaded()
+end
+
+mod.on_unload = function()
+	release_stimm_icon_package()
+end
 
 mod.stimm_countdown_api = {
 	pocketable_profiles = {
@@ -629,6 +676,8 @@ mod:hook_safe("HudElementPlayerWeapon", "update", function(self, dt, t, ui_rende
 			local became_ready_after_cooldown = is_ready and not self._stimm_ready_prev and (self._stimm_prev_has_cooldown or has_cooldown)
 
 			if became_ready_after_cooldown then
+				ensure_stimm_icon_package_loaded()
+
 				local line_color = enable_notification_override and notification_line_color or NOTIFICATION_LINE_DEFAULT
 				local icon_color = enable_notification_override and notification_icon_color or NOTIFICATION_ICON_DEFAULT
 				local background_color = enable_notification_override and notification_background_color or NOTIFICATION_BACKGROUND_DEFAULT
