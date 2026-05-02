@@ -1,3 +1,14 @@
+[b][size=4]Expanded View[/size][/b]
+
+[center][img]https://raw.githubusercontent.com/rrmllnv/darktide-mods/master/_images/squadhud1.gif[/img][/center]
+
+[b][size=4]Showcase[/size][/b]
+
+[center][img]https://raw.githubusercontent.com/rrmllnv/darktide-mods/master/_images/squadhud2.gif[/img][/center]
+
+[center][img]https://raw.githubusercontent.com/rrmllnv/darktide-mods/master/_images/squadhud3.gif[/img][/center]
+
+
 [b][size=4]What it is and why use it[/size][/b]
 
 Squad HUD replaces the vanilla squad panels with four compact panels for the whole strike team. Each panel can show class/status icon, player name, total character level, teammate distance or status text, combat ability state, inventory icons, grenade/blitz and ammo values, expedition salvage, toughness, health, wounds, and active health/toughness numbers.
