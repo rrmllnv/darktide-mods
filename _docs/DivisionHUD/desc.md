@@ -1,4 +1,4 @@
-[img]https://raw.githubusercontent.com/rrmllnv/darktide-mods/master/_images/DivisionHUD1.gif[/img]
+[center][img]https://raw.githubusercontent.com/rrmllnv/darktide-mods/master/_images/DivisionHUD1.gif[/img][/center]
 
 [b][size=4]What it is and why use it[/size][/b]
 
