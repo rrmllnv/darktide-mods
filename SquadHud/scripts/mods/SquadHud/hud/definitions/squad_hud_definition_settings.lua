@@ -47,7 +47,7 @@ S.ammo_percent = {
 	gap = 2,
 	height = 18,
 	slide_duration = 0.24,
-	text_width = 69,
+	text_width = 92,
 	visible_duration = 5,
 }
 S.grenade_value = {
