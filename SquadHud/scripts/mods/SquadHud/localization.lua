@@ -151,6 +151,18 @@ return {
 		en = "Only teammates",
 		ru = "Только тимейты",
 	},
+	squadhud_local_player_order = {
+		en = "Local player order",
+		ru = "Порядок локального игрока",
+	},
+	squadhud_local_player_order_top = {
+		en = "Top",
+		ru = "Наверху",
+	},
+	squadhud_local_player_order_bottom = {
+		en = "Bottom",
+		ru = "Внизу",
+	},
 	squadhud_elements_group = {
 		en = "\238\128\178 SQUAD HUD",
 		ru = "\238\128\178 SQUAD HUD",

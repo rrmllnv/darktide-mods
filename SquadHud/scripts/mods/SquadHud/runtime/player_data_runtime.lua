@@ -138,11 +138,12 @@ function M.sorted_squad_players(composition_name, output, local_player)
 	return output
 end
 
-function M.fixed_squad_slots(composition_name, output, scratch, local_player, max_players)
+function M.fixed_squad_slots(composition_name, output, scratch, local_player, max_players, local_order)
 	table.clear(output)
 
 	max_players = type(max_players) == "number" and math.max(1, math.floor(max_players)) or 4
 	scratch = M.sorted_squad_players(composition_name, scratch or {}, local_player)
+	local_order = local_order == "top" and "top" or "bottom"
 
 	local local_player_entry = nil
 	local teammate_count = 0
@@ -159,18 +160,33 @@ function M.fixed_squad_slots(composition_name, output, scratch, local_player, ma
 
 	if local_player_entry then
 		local visible_teammate_count = math.min(teammate_count, max_players - 1)
-		local slot_index = max_players - visible_teammate_count
+		local visible_player_count = visible_teammate_count + 1
+		local slot_index = max_players - visible_player_count + 1
 
-		for i = 1, #scratch do
-			local player = scratch[i]
+		if local_order == "top" then
+			output[slot_index] = local_player_entry
+			slot_index = slot_index + 1
 
-			if not is_same_player(player, local_player) and slot_index < max_players then
-				output[slot_index] = player
-				slot_index = slot_index + 1
+			for i = 1, #scratch do
+				local player = scratch[i]
+
+				if not is_same_player(player, local_player) and slot_index <= max_players then
+					output[slot_index] = player
+					slot_index = slot_index + 1
+				end
 			end
-		end
+		else
+			for i = 1, #scratch do
+				local player = scratch[i]
 
-		output[max_players] = local_player_entry
+				if not is_same_player(player, local_player) and slot_index < max_players then
+					output[slot_index] = player
+					slot_index = slot_index + 1
+				end
+			end
+
+			output[max_players] = local_player_entry
+		end
 	else
 		local visible_player_count = math.min(#scratch, max_players)
 		local slot_index = max_players - visible_player_count + 1
@@ -186,13 +202,14 @@ function M.fixed_squad_slots(composition_name, output, scratch, local_player, ma
 	return output
 end
 
-function M.filtered_squad_slots(composition_name, output, scratch, local_player, max_players, display_mode)
+function M.filtered_squad_slots(composition_name, output, scratch, local_player, max_players, display_mode, local_order)
 	table.clear(output)
 
 	max_players = type(max_players) == "number" and math.max(1, math.floor(max_players)) or 4
+	local_order = local_order == "top" and "top" or "bottom"
 
 	if display_mode == "all" or display_mode == nil then
-		return M.fixed_squad_slots(composition_name, output, scratch, local_player, max_players)
+		return M.fixed_squad_slots(composition_name, output, scratch, local_player, max_players, local_order)
 	end
 
 	scratch = M.sorted_squad_players(composition_name, scratch or {}, local_player)
@@ -202,7 +219,9 @@ function M.filtered_squad_slots(composition_name, output, scratch, local_player,
 			local player = scratch[i]
 
 			if is_same_player(player, local_player) then
-				output[max_players] = player
+				local slot_index = local_order == "top" and 1 or max_players
+
+				output[slot_index] = player
 
 				break
 			end
@@ -241,7 +260,7 @@ function M.filtered_squad_slots(composition_name, output, scratch, local_player,
 		return output
 	end
 
-	return M.fixed_squad_slots(composition_name, output, scratch, local_player, max_players)
+	return M.fixed_squad_slots(composition_name, output, scratch, local_player, max_players, local_order)
 end
 
 function M.gameplay_hud_composition_name()

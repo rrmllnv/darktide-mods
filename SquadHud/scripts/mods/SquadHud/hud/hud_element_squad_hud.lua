@@ -137,6 +137,16 @@ local function squad_panel_display_mode()
 	return "all"
 end
 
+local function local_player_order()
+	local value = mod:get("squadhud_local_player_order")
+
+	if value == "top" then
+		return value
+	end
+
+	return "bottom"
+end
+
 local function ammo_percent_mode()
 	local value = mod:get("squadhud_ammo_percent_mode")
 
@@ -2069,7 +2079,8 @@ HudElementSquadHud.update = function(self, dt, t, ui_renderer, render_settings, 
 	local local_player = self._parent and self._parent.player and self._parent:player() or Managers.player and Managers.player:local_player(1)
 	local composition_name = PlayerDataRuntime.gameplay_hud_composition_name()
 	local display_mode = squad_panel_display_mode()
-	local players = PlayerDataRuntime.filtered_squad_slots(composition_name, self._slot_players, self._players, local_player, MAX_PLAYERS, display_mode)
+	local player_order = local_player_order()
+	local players = PlayerDataRuntime.filtered_squad_slots(composition_name, self._slot_players, self._players, local_player, MAX_PLAYERS, display_mode, player_order)
 
 	if mod.squadhud_debug_update then
 		mod.squadhud_debug_update()

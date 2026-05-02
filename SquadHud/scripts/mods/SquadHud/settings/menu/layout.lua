@@ -53,6 +53,22 @@ return {
 			},
 		},
 		{
+			setting_id = "squadhud_local_player_order",
+			type = "dropdown",
+			title = "squadhud_local_player_order",
+			default_value = d("squadhud_local_player_order", "bottom"),
+			options = {
+				{
+					text = "squadhud_local_player_order_top",
+					value = "top",
+				},
+				{
+					text = "squadhud_local_player_order_bottom",
+					value = "bottom",
+				},
+			},
+		},
+		{
 			setting_id = "squadhud_placement",
 			type = "group",
 			title = "squadhud_placement",
