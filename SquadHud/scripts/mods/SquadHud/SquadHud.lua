@@ -1,5 +1,67 @@
 local mod = get_mod("SquadHud")
 
+local SQUADHUD_PACKAGE_REFERENCE_NAME = "SquadHud"
+local SQUADHUD_HUD_PACKAGE_NAMES = {
+	"packages/ui/hud/team_player_panel/team_player_panel",
+	"packages/ui/hud/player_ability/player_ability",
+	"packages/ui/hud/player_weapon/player_weapon",
+}
+
+mod._squadhud_hud_package_load_ids = mod._squadhud_hud_package_load_ids or {}
+
+local function ensure_squadhud_hud_packages_loaded()
+	local package_manager = Managers.package
+
+	if not package_manager or type(package_manager.load) ~= "function" then
+		return
+	end
+
+	for i = 1, #SQUADHUD_HUD_PACKAGE_NAMES do
+		local package_name = SQUADHUD_HUD_PACKAGE_NAMES[i]
+
+		if not mod._squadhud_hud_package_load_ids[package_name] then
+			local ok, load_id = pcall(function()
+				return package_manager:load(package_name, SQUADHUD_PACKAGE_REFERENCE_NAME, nil, true)
+			end)
+
+			if ok then
+				mod._squadhud_hud_package_load_ids[package_name] = load_id
+			end
+		end
+	end
+end
+
+local function release_squadhud_hud_packages()
+	local package_manager = Managers.package
+	local package_load_ids = mod._squadhud_hud_package_load_ids
+
+	if not package_manager or type(package_manager.release) ~= "function" or not package_load_ids then
+		mod._squadhud_hud_package_load_ids = {}
+
+		return
+	end
+
+	for package_name, load_id in pairs(package_load_ids) do
+		if load_id then
+			pcall(function()
+				package_manager:release(load_id)
+			end)
+		end
+
+		package_load_ids[package_name] = nil
+	end
+end
+
+mod.on_all_mods_loaded = function()
+	ensure_squadhud_hud_packages_loaded()
+end
+
+mod.on_unload = function()
+	release_squadhud_hud_packages()
+end
+
+ensure_squadhud_hud_packages_loaded()
+
 mod:io_dofile("SquadHud/scripts/mods/SquadHud/bootstrap/hud_registration")
 mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/debug_runtime")
 mod:io_dofile("SquadHud/scripts/mods/SquadHud/runtime/vanilla_hud_suppression")
