@@ -128,6 +128,8 @@ local hit_zone_name = HitZone.get_name(hit_unit, hit_actor)
 - `method_5_prepare_shooting`;
 - `method_6_shoot_hook`.
 
+Default value: `method_4_enemy_aim_target_node`, потому что это текущий подтверждённый baseline.
+
 Hooks регистрируются один раз в главном файле. Активный способ выбирается через dispatcher при каждом выстреле.
 
 Важно: `correction_method` можно менять в Mod Options во время теста. Новый способ должен применяться к следующим выстрелам без перезагрузки миссии.
@@ -139,48 +141,76 @@ Hooks регистрируются один раз в главном файле.
 Общий код:
 
 - `scripts/mods/ThirdPersonAimCorrection/methods/shared.lua` — camera ray, weapon whitelist, hit helpers, enemy side helpers, hit zone helpers, игнор player-owned units, расчет corrected rotation.
+- `camera_enemy_actor_hit` — только настоящий enemy actor под camera ray, без fallback в broadphase.
+- `validated_damageable_muzzle_hit` — проверка, что corrected muzzle ray даёт damageable hit zone.
+- `broadphase_target_node_position` — отдельный baseline-путь для метода 4.
 
 Файлы способов:
 
 | Dropdown value | Файл | Назначение |
 | --- | --- | --- |
-| `method_1_camera_hit_position` | `methods/method_1_camera_hit_position.lua` | Базовая parallax correction по точке попадания camera ray в enemy actor. |
-| `method_2_validated_shooting_ray` | `methods/method_2_validated_shooting_ray.lua` | Enemy camera hit position плюс дополнительная проверка shooting ray. |
-| `method_3_hit_zone_center` | `methods/method_3_hit_zone_center.lua` | Доворот в центр hit zone enemy actor под прицелом. |
-| `method_4_enemy_aim_target_node` | `methods/method_4_enemy_aim_target_node.lua` | Старый подход через `enemy_aim_target_*` nodes. |
-| `method_5_prepare_shooting` | `methods/method_5_prepare_shooting.lua` | Коррекция через hook `_prepare_shooting`. |
-| `method_6_shoot_hook` | `methods/method_6_shoot_hook.lua` | Коррекция только через hook `_shoot` для hitscan/pellets. |
+| `method_1_camera_hit_position` | `methods/method_1_camera_hit_position.lua` | Диагностика: только точка попадания camera ray в enemy actor. |
+| `method_2_validated_shooting_ray` | `methods/method_2_validated_shooting_ray.lua` | Диагностика: enemy camera hit плюс проверка damageable muzzle ray. |
+| `method_3_hit_zone_center` | `methods/method_3_hit_zone_center.lua` | Диагностика: центр hit zone enemy actor под camera ray. |
+| `method_4_enemy_aim_target_node` | `methods/method_4_enemy_aim_target_node.lua` | Baseline: рабочий broadphase-поиск `enemy_aim_target_*` nodes. |
+| `method_5_prepare_shooting` | `methods/method_5_prepare_shooting.lua` | Диагностика: только hook `_prepare_shooting`, без `_shoot`. |
+| `method_6_shoot_hook` | `methods/method_6_shoot_hook.lua` | Диагностика: только hook `_shoot` для hitscan/pellets, без prepare/projectile. |
+
+Метод 4 считается контрольным baseline. Его нельзя смешивать с fallback-логикой внутри методов 1/2/3/5/6, иначе тест перестаёт показывать, какой способ реально работает.
+
+Для диагностики включить `debug_enabled`. Тогда при отказе метода мод пишет в лог:
+
+- `disabled`;
+- `not_local_player`;
+- `not_third_person`;
+- `not_whitelisted`;
+- `no_physics_world`;
+- `no_camera_pose`;
+- `no_camera_hit`;
+- `no_enemy_actor`;
+- `no_hit_actor`;
+- `not_damageable`;
+- `no_hit_zone`;
+- `invalid_hit_zone`;
+- `no_hit_zone_center`;
+- `no_muzzle_hit`;
+- `no_target_position`;
+- `no_shooting_position`;
+- `no_shooting_rotation`;
+- `target_too_close`;
+- `angle_limit`.
 
 Тестировать нужно по одному способу за раз:
 
 1. Выбрать способ в dropdown.
-2. Сделать следующий выстрел без перезагрузки миссии.
-3. Проверить слабого врага в упор.
-4. Проверить слабого врага на средней дистанции.
-5. Проверить выстрел рядом с врагом, но не по нему.
-6. Проверить obstacle между оружием и врагом.
-7. Проверить needle pistol: урон, `on_hit`, токсин.
-8. Проверить pellets/shotgun.
-9. Записать результат в README или отдельный тестовый лог перед правкой метода.
+2. Включить `debug_enabled`, если метод не подворачивает пулю.
+3. Сделать следующий выстрел без перезагрузки миссии.
+4. Проверить слабого врага в упор.
+5. Проверить слабого врага на средней дистанции.
+6. Проверить выстрел рядом с врагом, но не по нему.
+7. Проверить obstacle между оружием и врагом.
+8. Проверить needle pistol: урон, `on_hit`, токсин.
+9. Проверить pellets/shotgun.
+10. Записать результат и debug reason перед правкой метода.
 
 ## Способы реализации
 
 | Способ | Суть | Когда пуля подворачивается | Плюсы | Минусы | Риск для урона/бафов |
 | --- | --- | --- | --- | --- | --- |
-| 1. Parallax correction по camera hit position | Camera ray ищет точку под прицелом, shooting ray доворачивается из `shooting_position` в эту точку. | Когда есть camera position/rotation и найден target point: реальный hit камеры или дальняя точка по направлению камеры. | Самый простой и предсказуемый способ; не выбирает цель за игрока; оставляет урон, стены, щиты, hit zone и бафы штатной логике игры. | Если камера попала в мелкое препятствие рядом с врагом, пуля честно пойдет в препятствие; нужно правильно сохранить spread/recoil/sway. | Низкий, если correction применяется один раз в `_shoot` и не подменяет `HitScan.process_hits`. |
+| 1. Parallax correction по camera hit position | Camera ray ищет enemy actor под прицелом, shooting ray доворачивается из `shooting_position` в hit position этого actor. | Только когда camera ray попал в настоящий enemy actor. | Простой диагностический способ; не выбирает цель через broadphase; оставляет урон, стены, щиты, hit zone и бафы штатной логике игры. | Если camera ray не даёт enemy actor, метод честно не сработает и пишет debug reason. | Низкий, если correction применяется один раз в `_shoot` и не подменяет `HitScan.process_hits`. |
 | 2. Camera hit position + validation shooting ray | После выбора точки камеры делается дополнительный raycast из оружия, чтобы проверить будущий hit. | Только если corrected shooting ray из `shooting_position` попадает в допустимый actor или hit zone. | Можно заранее отсеять ложные попадания; можно проверить `HitZone.get_name`, `afro`, `shield`, props. | Validation может не совпадать с реальным `hit_scan_template`, sphere sweep, penetration и collision tests; может давать нестабильное "то работает, то нет". | Средний: если validation проще оригинального `_shoot`, она может блокировать корректные выстрелы или пропускать некорректные. |
 | 3. Наведение по enemy hit zone center | Camera ray находит enemy actor, затем пуля доворачивается в центр выбранной hit zone. | Когда camera ray попал во врага и у actor есть валидный `hit_zone`. | Целится именно в damage zone; меньше шанс попасть в actor без урона; можно выбрать `torso`, `head`, `center_mass`. | Это уже aim assist/магнит, а не чистая parallax correction; может перетягивать пулю с края модели в центр; зависит от breed и hit zone layout. | Низкий-средний: урон обычно проходит, но поведение может стать нечестным и отличаться от намерения игрока. |
 | 4. Наведение по `enemy_aim_target_*` | Мод выбирает node врага: `enemy_aim_target_01/02/03`, затем доворачивает пулю в него. | Когда broadphase или camera ray нашел enemy unit с нужным node. | Просто реализовать; nodes есть у большинства enemies; удобно для coarse targeting. | Node не является hit actor и не гарантирует hit zone; broadphase может выбрать врага не под прицелом; на слабых врагах возможны визуальные попадания без урона. | Высокий: можно попасть "в модель", но не получить валидный `HitZone.get_name`, поэтому не будет урона и `on_hit`. |
 | 5. Hook `_prepare_shooting` | Мод заранее меняет `action_component.shooting_rotation` после оригинального `_prepare_shooting`. | До `_shoot`, когда action component уже содержит `shooting_position` и `shooting_rotation`. | Подходит для классов, которые внутри `_shoot` читают component; полезно для projectile actions. | Легко получить двойную коррекцию; component может использоваться другими системами; сложнее контролировать один выстрел. | Средний-высокий: при повторной коррекции пуля может улетать в сторону или ломать spread/recoil. |
-| 6. Hook `_shoot` | Мод не трогает component, а заменяет локальный аргумент `rotation` прямо перед оригинальным `_shoot`. | В момент выстрела, когда уже известны `position`, `rotation`, `fire_config`. | Лучший вариант для `ActionShootHitScan` и `ActionShootPellets`; коррекция применяется один раз; меньше побочных эффектов. | Не подходит напрямую для классов, которые игнорируют аргумент `rotation` и читают component внутри; projectiles требуют отдельной ветки. | Низкий для hitscan/pellets, если target point выбран правильно и сохранен spread offset. |
+| 6. Hook `_shoot` | Мод не трогает component, а заменяет локальный аргумент `rotation` прямо перед оригинальным `_shoot`. | В момент выстрела, когда уже известны `position`, `rotation`, `fire_config`. | Лучший вариант для `ActionShootHitScan` и `ActionShootPellets`; коррекция применяется один раз; меньше побочных эффектов. | Не подходит напрямую для классов, которые игнорируют аргумент `rotation` и читают component внутри; projectiles требуют отдельной ветки. | Низкий для hitscan/pellets, если target point выбран правильно. |
 
 ### Способ 1. Parallax correction по camera hit position
 
 Алгоритм:
 
 1. Сделать raycast из камеры по центру экрана.
-2. Взять первую точку hit, кроме собственного игрока.
-3. Если hit нет, взять дальнюю точку: `camera_position + camera_direction * max_distance`.
+2. Взять hit position только если hit actor принадлежит enemy unit.
+3. Если enemy actor нет, не применять коррекцию и записать debug reason.
 4. Построить направление из `shooting_position` в эту точку.
 5. Подменить rotation в `_shoot`.
 6. Не трогать `HitScan.process_hits`.
@@ -194,9 +224,9 @@ Hooks регистрируются один раз в главном файле.
 
 Минусы:
 
-- если camera ray попадает в мелкий obstacle рядом с врагом, пуля честно пойдет туда;
+- если camera ray попадает в obstacle рядом с врагом, метод не будет выбирать broadphase fallback;
 - если камера видит врага, а muzzle ray перекрыт стеной, игра должна сама решить попадание по стене;
-- для оружия со spread нужно сохранить offset spread/recoil поверх исправленной базовой rotation.
+- текущий диагностический режим не накладывает старый spread/recoil offset поверх corrected rotation, чтобы исключить увод выстрела в сторону.
 
 Когда применять:
 
@@ -281,7 +311,7 @@ Hooks регистрируются один раз в главном файле.
 Когда применять:
 
 - лучше не применять для боевого hitscan;
-- можно использовать только как вспомогательный fallback для визуальных эффектов или aim assist, но не как точку финального выстрела.
+- можно использовать как отдельный baseline или отдельный aim assist режим, но не как скрытую подмену внутри других способов.
 
 ### Способ 5. Hook `_prepare_shooting`
 
@@ -357,14 +387,11 @@ Hooks регистрируются один раз в главном файле.
 
 1. Для `ActionShootHitScan` и `ActionShootPellets` корректировать только в `_shoot`.
 2. Не менять `action_component.shooting_rotation` для hitscan/pellets.
-3. Target point брать из camera ray hit position.
-4. Если camera ray ничего не задел, использовать дальнюю точку по camera direction.
+3. Target point брать из camera ray enemy actor hit position.
+4. Если camera ray не нашел enemy actor, не применять диагностические методы 1/2/3/5/6 и смотреть debug reason.
 5. Не использовать broadphase для выбора врага.
 6. Не использовать `enemy_aim_target_*` как финальную точку выстрела.
-7. Сохранять spread/recoil/sway:
-   - вычислить offset между `aim_rotation` и текущим `shooting_rotation`;
-   - построить corrected base rotation в target point;
-   - применить offset поверх corrected base rotation.
+7. В диагностическом режиме строить corrected rotation напрямую в target point, без повторного применения offset от старой rotation.
 8. Для projectile actions обрабатывать отдельно, потому что `ActionShootProjectile._shoot` читает `action_component.shooting_rotation` внутри.
 
 Если нужен "магнит" именно к врагу, это должен быть отдельный режим:
@@ -373,7 +400,7 @@ Hooks регистрируются один раз в главном файле.
 - actor должен иметь валидный `HitZone`;
 - target point можно брать из hit position или center of mass этой hit zone;
 - угол коррекции должен быть маленьким;
-- broadphase можно использовать только как fallback и только с line of sight проверкой.
+- broadphase держать отдельным baseline-методом, а не скрытым fallback внутри других способов.
 
 ## Что проверять при тестировании
 

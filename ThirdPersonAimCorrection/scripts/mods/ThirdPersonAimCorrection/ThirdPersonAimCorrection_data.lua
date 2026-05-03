@@ -20,6 +20,11 @@ return {
 						type = "checkbox",
 						default_value = true,
 					},
+					{
+						setting_id = "debug_enabled",
+						type = "checkbox",
+						default_value = false,
+					},
 				},
 			},
 			{
@@ -37,7 +42,7 @@ return {
 					{
 						setting_id = "correction_method",
 						type = "dropdown",
-						default_value = "method_1_camera_hit_position",
+						default_value = "method_4_enemy_aim_target_node",
 						options = {
 							{ text = "correction_method_1_camera_hit_position", value = "method_1_camera_hit_position" },
 							{ text = "correction_method_2_validated_shooting_ray", value = "method_2_validated_shooting_ray" },

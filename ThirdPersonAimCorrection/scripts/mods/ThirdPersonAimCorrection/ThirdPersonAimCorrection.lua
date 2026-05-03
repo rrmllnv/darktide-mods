@@ -6,7 +6,7 @@ require("scripts/extension_systems/weapon/actions/action_shoot_pellets")
 require("scripts/extension_systems/weapon/actions/action_shoot_projectile")
 
 local BASE_PATH = "ThirdPersonAimCorrection/scripts/mods/ThirdPersonAimCorrection"
-local DEFAULT_METHOD_ID = "method_1_camera_hit_position"
+local DEFAULT_METHOD_ID = "method_4_enemy_aim_target_node"
 
 local WeaponWhitelist = mod:io_dofile(BASE_PATH .. "/settings/weapon_whitelist")
 local Shared = mod:io_dofile(BASE_PATH .. "/methods/shared")
@@ -49,6 +49,7 @@ end
 local settings = {
 	enable_mod = true,
 	only_third_person = true,
+	debug_enabled = false,
 	max_distance = 100,
 	correction_method = DEFAULT_METHOD_ID,
 }
@@ -56,6 +57,7 @@ local settings = {
 local function refresh_settings()
 	settings.enable_mod = mod:get("enable_mod") ~= false
 	settings.only_third_person = mod:get("only_third_person") ~= false
+	settings.debug_enabled = mod:get("debug_enabled") == true
 	settings.max_distance = tonumber(mod:get("max_distance")) or 100
 
 	local correction_method = mod:get("correction_method") or DEFAULT_METHOD_ID
@@ -95,7 +97,7 @@ local function active_method()
 	return methods[settings.correction_method] or methods[DEFAULT_METHOD_ID]
 end
 
-local function apply_shoot_rotation(self, position, rotation, error_prefix)
+local function apply_shoot_rotation(self, position, rotation, fire_config, error_prefix)
 	local method = active_method()
 	local shoot_rotation = method and method.shoot_rotation
 
@@ -103,7 +105,7 @@ local function apply_shoot_rotation(self, position, rotation, error_prefix)
 		return rotation
 	end
 
-	local ok, corrected_rotation_or_error = pcall(shoot_rotation, context, self, position, rotation)
+	local ok, corrected_rotation_or_error = pcall(shoot_rotation, context, self, position, rotation, fire_config)
 
 	if ok and corrected_rotation_or_error then
 		return corrected_rotation_or_error
@@ -120,7 +122,7 @@ local function hook_shoot_with_rotation_argument(action_class, error_prefix)
 	end
 
 	mod:hook(action_class, "_shoot", function(func, self, position, rotation, power_level, charge_level, t, fire_config)
-		rotation = apply_shoot_rotation(self, position, rotation, error_prefix)
+		rotation = apply_shoot_rotation(self, position, rotation, fire_config, error_prefix)
 
 		return func(self, position, rotation, power_level, charge_level, t, fire_config)
 	end)
@@ -169,7 +171,7 @@ if CLASS.ActionShootProjectile then
 		local shooting_position = action_component.shooting_position
 		local shooting_rotation = action_component.shooting_rotation
 		local original_rotation = shooting_rotation
-		local ok, corrected_rotation_or_error = pcall(projectile_rotation, context, self, shooting_position, shooting_rotation)
+		local ok, corrected_rotation_or_error = pcall(projectile_rotation, context, self, shooting_position, shooting_rotation, fire_config)
 
 		if ok and corrected_rotation_or_error then
 			action_component.shooting_rotation = corrected_rotation_or_error

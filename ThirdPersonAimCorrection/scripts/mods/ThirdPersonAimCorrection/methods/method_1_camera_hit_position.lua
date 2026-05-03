@@ -1,19 +1,21 @@
 local Method = {}
+local METHOD_ID = "method_1_camera_hit_position"
 
-Method.shoot_rotation = function(context, action, position, rotation)
-	local can_run, player_unit = context.action_can_run(action)
+Method.shoot_rotation = function(context, action, position, rotation, fire_config)
+	local can_run, player_unit, reason = context.action_can_run(action)
 
 	if not can_run then
+		context.debug_reject(METHOD_ID, reason)
+
 		return nil
 	end
 
-	local _, _, _, target_position = context.camera_enemy_hit(action._physics_world, player_unit, action)
+	local _, _, _, target_position, target_reason = context.camera_enemy_actor_hit(action._physics_world, player_unit, action)
+	local corrected_rotation, correction_reason = context.corrected_shot_rotation(action, position, rotation, target_position)
 
-	return context.corrected_shot_rotation(action, position, rotation, target_position)
-end
+	context.debug_reject(METHOD_ID, target_reason or correction_reason)
 
-Method.projectile_rotation = function(context, action, position, rotation)
-	return Method.shoot_rotation(context, action, position, rotation)
+	return corrected_rotation
 end
 
 return Method

@@ -19,6 +19,10 @@ return {
 		en = "Only while Perspectives is in third person",
 		ru = "Только когда Perspectives в третьем лице",
 	},
+	debug_enabled = {
+		en = "Debug correction rejections",
+		ru = "Debug причин отказа коррекции",
+	},
 	correction_group = {
 		en = "Correction",
 		ru = "Коррекция",

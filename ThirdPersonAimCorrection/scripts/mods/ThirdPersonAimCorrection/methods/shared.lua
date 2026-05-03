@@ -157,19 +157,19 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 
 	local function correction_can_run_for_unit(player_unit)
 		if not settings.enable_mod then
-			return false
+			return false, "disabled"
 		end
 
 		if not player_unit or not ALIVE[player_unit] then
-			return false
+			return false, "no_player_unit"
 		end
 
 		if player_unit ~= local_player_unit() then
-			return false
+			return false, "not_local_player"
 		end
 
 		if settings.only_third_person and not perspectives_requests_third_person() then
-			return false
+			return false, "not_third_person"
 		end
 
 		return true
@@ -177,17 +177,18 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 
 	local function action_can_run(action)
 		local player_unit = action._player_unit
+		local can_run, reason = correction_can_run_for_unit(player_unit)
 
-		if not correction_can_run_for_unit(player_unit) then
-			return false, nil
+		if not can_run then
+			return false, nil, reason
 		end
 
 		if not weapon_is_whitelisted(action) then
-			return false, nil
+			return false, nil, "not_whitelisted"
 		end
 
 		if not action._physics_world then
-			return false, nil
+			return false, nil, "no_physics_world"
 		end
 
 		return true, player_unit
@@ -232,94 +233,72 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 		return camera_raycast_hits, camera_position, camera_direction
 	end
 
-	local function camera_target_position(physics_world, player_unit, action)
-		local hits, camera_position, camera_direction = camera_raycast(physics_world)
-
-		if not camera_position or not camera_direction then
-			return nil
+	local function hit_has_damageable_zone(player_unit, actor)
+		if not actor then
+			return false, "no_hit_actor"
 		end
 
-		if hits then
-			for i = 1, #hits do
-				local hit = hits[i]
-				local position = hit_position(hit)
-				local actor = hit_actor(hit)
+		local target_unit = Actor.unit(actor)
 
-				if position then
-					if actor then
-						local target_unit = Actor.unit(actor)
-
-						if not raycast_unit_is_ignored(action, player_unit, target_unit) then
-							return position
-						end
-					else
-						return position
-					end
-				end
-			end
+		if not target_unit_is_enemy(player_unit, target_unit) then
+			return false, "no_enemy_actor"
 		end
 
-		return camera_position + camera_direction * settings.max_distance
+		if not Health.is_damagable(target_unit) then
+			return false, "not_damageable"
+		end
+
+		local hit_zone_name = HitZone.get_name(target_unit, actor)
+
+		if not hit_zone_name then
+			return false, "no_hit_zone"
+		end
+
+		if hit_zone_name == HitZone.hit_zone_names.afro then
+			return false, "invalid_hit_zone"
+		end
+
+		return true
 	end
 
-	local function camera_enemy_hit(physics_world, player_unit, action)
-		local hits = camera_raycast(physics_world)
+	local function camera_enemy_actor_hit(physics_world, player_unit, action)
+		local hits, camera_position = camera_raycast(physics_world)
 
 		if not hits then
-			return nil, nil, nil, nil
+			return nil, nil, nil, nil, camera_position and "no_camera_hit" or "no_camera_pose"
 		end
 
 		for i = 1, #hits do
 			local hit = hits[i]
 			local actor = hit_actor(hit)
 
-			if actor then
-				local target_unit = Actor.unit(actor)
+			if not actor then
+				return nil, nil, nil, nil, "no_hit_actor"
+			end
 
-				if raycast_unit_is_ignored(action, player_unit, target_unit) then
-					-- In third person the camera ray can start behind the character and touch player-owned units first.
-				elseif target_unit_is_enemy(player_unit, target_unit) then
-					return hit, target_unit, actor, hit_position(hit)
-				else
-					return nil, nil, nil, nil
-				end
+			local target_unit = Actor.unit(actor)
+
+			if raycast_unit_is_ignored(action, player_unit, target_unit) then
+				-- In third person the camera ray can start behind the character and touch player-owned units first.
+			elseif target_unit_is_enemy(player_unit, target_unit) then
+				return hit, target_unit, actor, hit_position(hit), nil
 			else
-				return nil, nil, nil, nil
+				return nil, nil, nil, nil, "no_enemy_actor"
 			end
 		end
 
-		return nil, nil, nil, nil
+		return nil, nil, nil, nil, "no_enemy_actor"
 	end
 
-	local function hit_has_damageable_zone(player_unit, actor)
-		if not actor then
-			return false
-		end
-
-		local target_unit = Actor.unit(actor)
-
-		if not target_unit_is_enemy(player_unit, target_unit) then
-			return false
-		end
-
-		if not Health.is_damagable(target_unit) then
-			return false
-		end
-
-		local hit_zone_name = HitZone.get_name(target_unit, actor)
-
-		return hit_zone_name and hit_zone_name ~= HitZone.hit_zone_names.afro
-	end
-
-	local function validated_shooting_hit_position(physics_world, player_unit, action, shooting_position, target_position)
+	local function validated_damageable_muzzle_hit(physics_world, player_unit, action, shooting_position, target_position)
 		if not shooting_position or not target_position then
-			return nil
+			return nil, "no_target_position"
 		end
 
 		local target_vector = target_position - shooting_position
 
 		if Vector3.length_squared(target_vector) <= MIN_DIRECTION_LENGTH_SQ then
-			return nil
+			return nil, "target_too_close"
 		end
 
 		local direction = Vector3.normalize(target_vector)
@@ -338,7 +317,7 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 		)
 
 		if not hits then
-			return nil
+			return nil, "no_muzzle_hit"
 		end
 
 		table.clear(validation_raycast_hits)
@@ -354,29 +333,88 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 
 				if raycast_unit_is_ignored(action, player_unit, target_unit) then
 					-- The muzzle ray can start inside player-owned collision in third person.
-				elseif hit_has_damageable_zone(player_unit, actor) then
-					return hit_position(hit)
 				else
-					return nil
+					local is_damageable_hit, reason = hit_has_damageable_zone(player_unit, actor)
+
+					if is_damageable_hit then
+						return hit_position(hit), nil
+					end
+
+					return nil, reason
 				end
+			else
+				return nil, "no_hit_actor"
 			end
 		end
 
-		return nil
+		return nil, "no_muzzle_hit"
 	end
 
-	local function hit_zone_center_position(target_unit, actor, fallback_position)
+	local function debug_reject(method_id, reason)
+		if settings.debug_enabled and reason then
+			mod:echo("[ThirdPersonAimCorrection] %s rejected: %s", tostring(method_id), tostring(reason))
+		end
+	end
+
+	local function corrected_rotation_from_position(shooting_position, shooting_rotation, target_position)
+		if not shooting_position then
+			return nil, "no_shooting_position"
+		end
+
+		if not shooting_rotation then
+			return nil, "no_shooting_rotation"
+		end
+
+		if not target_position then
+			return nil, "no_target_position"
+		end
+
+		local target_vector = target_position - shooting_position
+
+		if Vector3.length_squared(target_vector) <= MIN_DIRECTION_LENGTH_SQ then
+			return nil, "target_too_close"
+		end
+
+		local target_direction = Vector3.normalize(target_vector)
+		local _, camera_rotation = camera_pose()
+
+		if camera_rotation then
+			local camera_direction = Quaternion.forward(camera_rotation)
+			local camera_angle = Vector3.angle(camera_direction, target_direction)
+
+			if camera_angle > MAX_SHOOTING_TO_CAMERA_ANGLE then
+				return nil, "angle_limit"
+			end
+		end
+
+		local shooting_direction = Quaternion.forward(shooting_rotation)
+		local correction_angle = Vector3.angle(shooting_direction, target_direction)
+
+		if correction_angle > MAX_CORRECTION_ANGLE then
+			return nil, "angle_limit"
+		end
+
+		return Quaternion.look(target_direction, Vector3.up()), nil
+	end
+
+	local function corrected_shot_rotation(action, shooting_position, shooting_rotation, target_position)
+		return corrected_rotation_from_position(shooting_position, shooting_rotation, target_position)
+	end
+
+	local function hit_zone_center_position(target_unit, actor)
 		local hit_zone_name = actor and HitZone.get_name(target_unit, actor) or nil
 
 		if hit_zone_name and hit_zone_name ~= HitZone.hit_zone_names.afro then
 			local ok, position = pcall(HitZone.hit_zone_center_of_mass, target_unit, hit_zone_name, true)
 
 			if ok and position then
-				return position
+				return position, nil
 			end
+
+			return nil, "no_hit_zone_center"
 		end
 
-		return fallback_position
+		return nil, hit_zone_name == HitZone.hit_zone_names.afro and "invalid_hit_zone" or "no_hit_zone"
 	end
 
 	local function camera_blocker_distance(physics_world, camera_position, camera_direction, max_distance)
@@ -412,6 +450,8 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 						best_position = target_position
 						best_angle = camera_angle
 					end
+				else
+					return nil, nil
 				end
 			end
 		end
@@ -485,60 +525,17 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 		return best_position
 	end
 
-	local function corrected_rotation_from_position(shooting_position, aim_rotation, shooting_rotation, target_position)
-		if not shooting_position or not aim_rotation or not shooting_rotation or not target_position then
-			return nil
-		end
-
-		local aim_direction = Quaternion.forward(aim_rotation)
-		local target_vector = target_position - shooting_position
-
-		if Vector3.length_squared(target_vector) <= MIN_DIRECTION_LENGTH_SQ then
-			return nil
-		end
-
-		local target_direction = Vector3.normalize(target_vector)
-		local _, camera_rotation = camera_pose()
-
-		if camera_rotation then
-			local camera_direction = Quaternion.forward(camera_rotation)
-			local camera_angle = Vector3.angle(camera_direction, target_direction)
-
-			if camera_angle > MAX_SHOOTING_TO_CAMERA_ANGLE then
-				return nil
-			end
-		end
-
-		local correction_angle = Vector3.angle(aim_direction, target_direction)
-
-		if correction_angle > MAX_CORRECTION_ANGLE then
-			return nil
-		end
-
-		local target_rotation = Quaternion.look(target_direction, Vector3.up())
-		local shot_offset = Quaternion.multiply(Quaternion.inverse(aim_rotation), shooting_rotation)
-
-		return Quaternion.multiply(target_rotation, shot_offset)
-	end
-
-	local function corrected_shot_rotation(action, shooting_position, shooting_rotation, target_position)
-		local first_person_component = action._first_person_component
-		local aim_rotation = first_person_component and first_person_component.rotation or shooting_rotation
-
-		return corrected_rotation_from_position(shooting_position, aim_rotation, shooting_rotation, target_position)
-	end
-
 	context.mod = mod
 	context.settings = settings
 	context.CAMERA_RAYCAST_FILTER = CAMERA_RAYCAST_FILTER
 	context.action_can_run = action_can_run
 	context.camera_pose = camera_pose
-	context.camera_target_position = camera_target_position
-	context.camera_enemy_hit = camera_enemy_hit
-	context.validated_shooting_hit_position = validated_shooting_hit_position
+	context.camera_enemy_actor_hit = camera_enemy_actor_hit
+	context.validated_damageable_muzzle_hit = validated_damageable_muzzle_hit
 	context.hit_zone_center_position = hit_zone_center_position
 	context.broadphase_target_node_position = broadphase_target_node_position
 	context.corrected_shot_rotation = corrected_shot_rotation
+	context.debug_reject = debug_reject
 	context.hit_distance = hit_distance
 	context.hit_actor = hit_actor
 	context.hit_position = hit_position
