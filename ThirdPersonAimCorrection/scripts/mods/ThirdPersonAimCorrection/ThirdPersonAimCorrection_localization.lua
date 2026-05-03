@@ -27,4 +27,32 @@ return {
 		en = "Max correction distance",
 		ru = "Максимальная дистанция коррекции",
 	},
+	correction_method = {
+		en = "Correction method",
+		ru = "Способ коррекции",
+	},
+	correction_method_1_camera_hit_position = {
+		en = "1. Camera hit position",
+		ru = "1. Точка попадания камеры",
+	},
+	correction_method_2_validated_shooting_ray = {
+		en = "2. Validated shooting ray",
+		ru = "2. Проверка луча оружия",
+	},
+	correction_method_3_hit_zone_center = {
+		en = "3. Hit zone center",
+		ru = "3. Центр hit zone",
+	},
+	correction_method_4_enemy_aim_target_node = {
+		en = "4. Enemy aim target node",
+		ru = "4. Enemy aim target node",
+	},
+	correction_method_5_prepare_shooting = {
+		en = "5. Prepare shooting hook",
+		ru = "5. Hook prepare shooting",
+	},
+	correction_method_6_shoot_hook = {
+		en = "6. Shoot hook",
+		ru = "6. Hook shoot",
+	},
 }

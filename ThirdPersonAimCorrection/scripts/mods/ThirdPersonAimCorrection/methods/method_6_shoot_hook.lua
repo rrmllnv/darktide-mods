@@ -1,0 +1,15 @@
+local Method = {}
+
+Method.shoot_rotation = function(context, action, position, rotation)
+	local can_run, player_unit = context.action_can_run(action)
+
+	if not can_run then
+		return nil
+	end
+
+	local _, _, _, target_position = context.camera_enemy_hit(action._physics_world, player_unit, action)
+
+	return context.corrected_shot_rotation(action, position, rotation, target_position)
+end
+
+return Method

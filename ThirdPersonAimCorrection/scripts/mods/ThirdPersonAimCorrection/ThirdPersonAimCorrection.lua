@@ -5,269 +5,113 @@ require("scripts/extension_systems/weapon/actions/action_shoot_hit_scan")
 require("scripts/extension_systems/weapon/actions/action_shoot_pellets")
 require("scripts/extension_systems/weapon/actions/action_shoot_projectile")
 
-local WeaponWhitelist = mod:io_dofile("ThirdPersonAimCorrection/scripts/mods/ThirdPersonAimCorrection/settings/weapon_whitelist")
+local BASE_PATH = "ThirdPersonAimCorrection/scripts/mods/ThirdPersonAimCorrection"
+local DEFAULT_METHOD_ID = "method_1_camera_hit_position"
 
-local CAMERA_RAYCAST_FILTER = "filter_player_character_shooting_raycast"
-local MIN_DIRECTION_LENGTH_SQ = 0.0001
-local MAX_CORRECTION_ANGLE = math.rad(180)
-local MAX_RAYCAST_HITS = 64
-local MAX_SHOOTING_TO_CAMERA_ANGLE = math.rad(85)
+local WeaponWhitelist = mod:io_dofile(BASE_PATH .. "/settings/weapon_whitelist")
+local Shared = mod:io_dofile(BASE_PATH .. "/methods/shared")
+
+local METHOD_REGISTRY = {
+	{
+		id = "method_1_camera_hit_position",
+		path = BASE_PATH .. "/methods/method_1_camera_hit_position",
+	},
+	{
+		id = "method_2_validated_shooting_ray",
+		path = BASE_PATH .. "/methods/method_2_validated_shooting_ray",
+	},
+	{
+		id = "method_3_hit_zone_center",
+		path = BASE_PATH .. "/methods/method_3_hit_zone_center",
+	},
+	{
+		id = "method_4_enemy_aim_target_node",
+		path = BASE_PATH .. "/methods/method_4_enemy_aim_target_node",
+	},
+	{
+		id = "method_5_prepare_shooting",
+		path = BASE_PATH .. "/methods/method_5_prepare_shooting",
+	},
+	{
+		id = "method_6_shoot_hook",
+		path = BASE_PATH .. "/methods/method_6_shoot_hook",
+	},
+}
+
+local method_lookup = {}
+
+for i = 1, #METHOD_REGISTRY do
+	local entry = METHOD_REGISTRY[i]
+
+	method_lookup[entry.id] = entry
+end
 
 local settings = {
 	enable_mod = true,
 	only_third_person = true,
 	max_distance = 100,
+	correction_method = DEFAULT_METHOD_ID,
 }
-
-local camera_raycast_hits = {}
-local correction_error_logged = false
 
 local function refresh_settings()
 	settings.enable_mod = mod:get("enable_mod") ~= false
 	settings.only_third_person = mod:get("only_third_person") ~= false
 	settings.max_distance = tonumber(mod:get("max_distance")) or 100
+
+	local correction_method = mod:get("correction_method") or DEFAULT_METHOD_ID
+
+	settings.correction_method = method_lookup[correction_method] and correction_method or DEFAULT_METHOD_ID
 end
 
-local function local_player()
-	local player_manager = Managers.player
+local function load_method(entry)
+	local method = mod:io_dofile(entry.path)
 
-	if not player_manager then
+	if type(method) ~= "table" then
+		mod:error("Correction method `%s` does not return a method table.", tostring(entry.id))
+
 		return nil
 	end
 
-	return player_manager:local_player(1)
-end
-
-local function local_player_unit()
-	local player = local_player()
-
-	return player and player.player_unit or nil
-end
-
-local function camera_pose()
-	local player = local_player()
-	local state_manager = Managers.state
-	local camera_manager = state_manager and state_manager.camera
-	local viewport_name = player and player.viewport_name
-
-	if not camera_manager or not viewport_name then
-		return nil, nil
-	end
-
-	local camera = camera_manager:camera(viewport_name)
-
-	if not camera then
-		return nil, nil
-	end
-
-	return Camera.world_position(camera), Camera.world_rotation(camera)
-end
-
-local function perspectives_requests_third_person()
-	local perspectives_mod = get_mod("Perspectives") or get_mod("PerspectivesRedux")
-
-	if perspectives_mod and type(perspectives_mod.is_requesting_third_person) == "function" then
-		local ok, result = pcall(perspectives_mod.is_requesting_third_person)
-
-		return ok and result == true
-	end
-
-	local player_unit = local_player_unit()
-	local first_person_extension = player_unit and ScriptUnit.has_extension(player_unit, "first_person_system")
-
-	return first_person_extension and first_person_extension._force_third_person_mode == true
-end
-
-local function correction_can_run_for_unit(player_unit)
-	if not settings.enable_mod then
-		return false
-	end
-
-	if not player_unit or not ALIVE[player_unit] then
-		return false
-	end
-
-	if player_unit ~= local_player_unit() then
-		return false
-	end
-
-	if settings.only_third_person and not perspectives_requests_third_person() then
-		return false
-	end
-
-	return true
-end
-
-local function weapon_ids(action)
-	local weapon_action_component = action._weapon_action_component
-	local template_name = weapon_action_component and weapon_action_component.template_name or nil
-	local weapon = action._weapon
-	local item = weapon and weapon.item or nil
-	local item_name = item and item.name or nil
-	local master_item = item and item.__master_item or nil
-	local item_weapon_template = item and item.weapon_template or nil
-
-	return template_name, item_name, master_item, item_weapon_template
-end
-
-local function weapon_is_whitelisted(action)
-	local template_name, item_name, master_item, item_weapon_template = weapon_ids(action)
-
-	if WeaponWhitelist and WeaponWhitelist.all_weapons == true then
-		return true
-	end
-
-	local templates = WeaponWhitelist and WeaponWhitelist.templates or nil
-	local items = WeaponWhitelist and WeaponWhitelist.items or nil
-
-	if templates and template_name and templates[template_name] then
-		return true
-	end
-
-	if templates and item_weapon_template and templates[item_weapon_template] then
-		return true
-	end
-
-	if items and item_name and items[item_name] then
-		return true
-	end
-
-	if items and master_item and items[master_item] then
-		return true
-	end
-
-	return false
-end
-
-local function hit_distance(hit)
-	return hit.distance or hit[2] or 0
-end
-
-local function hit_actor(hit)
-	return hit.actor or hit[4]
-end
-
-local function hit_position(hit)
-	return hit.position or hit[1]
-end
-
-local function hit_sort_function(left, right)
-	return hit_distance(left) < hit_distance(right)
-end
-
-local function camera_target_position(physics_world, player_unit)
-	local camera_position, camera_rotation = camera_pose()
-
-	if not camera_position or not camera_rotation then
-		return nil
-	end
-
-	local camera_direction = Quaternion.forward(camera_rotation)
-	local hits = PhysicsWorld.raycast(
-		physics_world,
-		camera_position,
-		camera_direction,
-		settings.max_distance,
-		"all",
-		"types",
-		"both",
-		"max_hits",
-		MAX_RAYCAST_HITS,
-		"collision_filter",
-		CAMERA_RAYCAST_FILTER
-	)
-
-	if hits then
-		table.clear(camera_raycast_hits)
-		table.append(camera_raycast_hits, hits)
-		table.sort(camera_raycast_hits, hit_sort_function)
-
-		for i = 1, #camera_raycast_hits do
-			local hit = camera_raycast_hits[i]
-			local position = hit_position(hit)
-			local actor = hit_actor(hit)
-
-			if position then
-				if actor then
-					local target_unit = Actor.unit(actor)
-
-					if target_unit ~= player_unit then
-						return position
-					end
-				else
-					return position
-				end
-			end
-		end
-	end
-
-	return camera_position + camera_direction * settings.max_distance
-end
-
-local function corrected_rotation_from_position(shooting_position, aim_rotation, shooting_rotation, target_position)
-	if not shooting_position or not aim_rotation or not shooting_rotation or not target_position then
-		return nil
-	end
-
-	local aim_direction = Quaternion.forward(aim_rotation)
-	local target_vector = target_position - shooting_position
-
-	if Vector3.length_squared(target_vector) <= MIN_DIRECTION_LENGTH_SQ then
-		return nil
-	end
-
-	local target_direction = Vector3.normalize(target_vector)
-	local _, camera_rotation = camera_pose()
-
-	if camera_rotation then
-		local camera_direction = Quaternion.forward(camera_rotation)
-		local camera_angle = Vector3.angle(camera_direction, target_direction)
-
-		if camera_angle > MAX_SHOOTING_TO_CAMERA_ANGLE then
-			return nil
-		end
-	end
-
-	local correction_angle = Vector3.angle(aim_direction, target_direction)
-
-	if correction_angle > MAX_CORRECTION_ANGLE then
-		return nil
-	end
-
-	local target_rotation = Quaternion.look(target_direction, Vector3.up())
-	local shot_offset = Quaternion.multiply(Quaternion.inverse(aim_rotation), shooting_rotation)
-
-	return Quaternion.multiply(target_rotation, shot_offset)
-end
-
-local function corrected_shot_rotation(action, shooting_position, shooting_rotation)
-	local player_unit = action._player_unit
-
-	if not correction_can_run_for_unit(player_unit) then
-		return nil
-	end
-
-	if not weapon_is_whitelisted(action) then
-		return nil
-	end
-
-	local physics_world = action._physics_world
-
-	if not physics_world then
-		return nil
-	end
-
-	local target_position = camera_target_position(physics_world, player_unit)
-	local first_person_component = action._first_person_component
-	local aim_rotation = first_person_component and first_person_component.rotation or shooting_rotation
-
-	return corrected_rotation_from_position(shooting_position, aim_rotation, shooting_rotation, target_position)
+	return method
 end
 
 refresh_settings()
 
-mod.on_setting_changed = function()
+local context = Shared.create_context(mod, settings, WeaponWhitelist)
+local methods = {}
+
+for i = 1, #METHOD_REGISTRY do
+	local entry = METHOD_REGISTRY[i]
+	local method = load_method(entry)
+
+	if method then
+		methods[entry.id] = method
+	end
+end
+
+local function active_method()
 	refresh_settings()
+
+	return methods[settings.correction_method] or methods[DEFAULT_METHOD_ID]
+end
+
+local function apply_shoot_rotation(self, position, rotation, error_prefix)
+	local method = active_method()
+	local shoot_rotation = method and method.shoot_rotation
+
+	if type(shoot_rotation) ~= "function" then
+		return rotation
+	end
+
+	local ok, corrected_rotation_or_error = pcall(shoot_rotation, context, self, position, rotation)
+
+	if ok and corrected_rotation_or_error then
+		return corrected_rotation_or_error
+	elseif not ok then
+		mod:error("%s: %s", error_prefix, tostring(corrected_rotation_or_error))
+	end
+
+	return rotation
 end
 
 local function hook_shoot_with_rotation_argument(action_class, error_prefix)
@@ -276,46 +120,72 @@ local function hook_shoot_with_rotation_argument(action_class, error_prefix)
 	end
 
 	mod:hook(action_class, "_shoot", function(func, self, position, rotation, power_level, charge_level, t, fire_config)
-		local ok, corrected_rotation_or_error = pcall(corrected_shot_rotation, self, position, rotation)
-
-		if ok and corrected_rotation_or_error then
-			rotation = corrected_rotation_or_error
-		elseif not ok and not correction_error_logged then
-			correction_error_logged = true
-			mod:error("%s: %s", error_prefix, tostring(corrected_rotation_or_error))
-		end
+		rotation = apply_shoot_rotation(self, position, rotation, error_prefix)
 
 		return func(self, position, rotation, power_level, charge_level, t, fire_config)
 	end)
 end
 
-hook_shoot_with_rotation_argument(CLASS.ActionShootHitScan, "Third person hitscan correction failed")
-hook_shoot_with_rotation_argument(CLASS.ActionShootPellets, "Third person pellets correction failed")
+hook_shoot_with_rotation_argument(CLASS.ActionShootHitScan, "Hitscan correction failed")
+hook_shoot_with_rotation_argument(CLASS.ActionShootPellets, "Pellets correction failed")
 
-mod:hook(CLASS.ActionShootProjectile, "_shoot", function(func, self, position, rotation, power_level, charge_level, t, fire_config)
-	local action_component = self._action_component
+if CLASS.ActionShoot then
+	mod:hook(CLASS.ActionShoot, "_prepare_shooting", function(func, self, dt, t)
+		func(self, dt, t)
 
-	if not action_component then
-		return func(self, position, rotation, power_level, charge_level, t, fire_config)
-	end
+		local method = active_method()
+		local prepare_rotation = method and method.prepare_rotation
 
-	local shooting_position = action_component and action_component.shooting_position
-	local shooting_rotation = action_component and action_component.shooting_rotation
-	local ok, corrected_rotation_or_error = pcall(corrected_shot_rotation, self, shooting_position, shooting_rotation)
-	local original_rotation = shooting_rotation
+		if type(prepare_rotation) ~= "function" then
+			return
+		end
 
-	if ok and corrected_rotation_or_error then
-		action_component.shooting_rotation = corrected_rotation_or_error
-	elseif not ok and not correction_error_logged then
-		correction_error_logged = true
-		mod:error("Third person projectile correction failed: %s", tostring(corrected_rotation_or_error))
-	end
+		local action_component = self._action_component
 
-	local result = func(self, position, rotation, power_level, charge_level, t, fire_config)
+		if not action_component then
+			return
+		end
 
-	if original_rotation then
+		local ok, corrected_rotation_or_error = pcall(prepare_rotation, context, self)
+
+		if ok and corrected_rotation_or_error then
+			action_component.shooting_rotation = corrected_rotation_or_error
+		elseif not ok then
+			mod:error("Prepare shooting correction failed: %s", tostring(corrected_rotation_or_error))
+		end
+	end)
+end
+
+if CLASS.ActionShootProjectile then
+	mod:hook(CLASS.ActionShootProjectile, "_shoot", function(func, self, position, rotation, power_level, charge_level, t, fire_config)
+		local method = active_method()
+		local projectile_rotation = method and method.projectile_rotation
+		local action_component = self._action_component
+
+		if type(projectile_rotation) ~= "function" or not action_component then
+			return func(self, position, rotation, power_level, charge_level, t, fire_config)
+		end
+
+		local shooting_position = action_component.shooting_position
+		local shooting_rotation = action_component.shooting_rotation
+		local original_rotation = shooting_rotation
+		local ok, corrected_rotation_or_error = pcall(projectile_rotation, context, self, shooting_position, shooting_rotation)
+
+		if ok and corrected_rotation_or_error then
+			action_component.shooting_rotation = corrected_rotation_or_error
+			rotation = corrected_rotation_or_error
+		elseif not ok then
+			mod:error("Projectile correction failed: %s", tostring(corrected_rotation_or_error))
+		end
+
+		local result = func(self, position, rotation, power_level, charge_level, t, fire_config)
+
 		action_component.shooting_rotation = original_rotation
-	end
 
-	return result
-end)
+		return result
+	end)
+end
+
+mod.on_setting_changed = function()
+	refresh_settings()
+end

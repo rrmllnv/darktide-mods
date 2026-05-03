@@ -115,7 +115,64 @@ local hit_zone_name = HitZone.get_name(hit_unit, hit_actor)
 - мод стер spread/recoil/sway, из-за чего оружие ведет себя не как оригинальное;
 - projectile weapon читает не аргумент `rotation`, а `action_component.shooting_rotation`, поэтому его надо обрабатывать отдельно.
 
+## Тестовый режим
+
+Мод теперь должен рассматриваться как тестовый стенд. Активный способ выбирается через настройку `correction_method` в Mod Options.
+
+Доступные значения dropdown:
+
+- `method_1_camera_hit_position`;
+- `method_2_validated_shooting_ray`;
+- `method_3_hit_zone_center`;
+- `method_4_enemy_aim_target_node`;
+- `method_5_prepare_shooting`;
+- `method_6_shoot_hook`.
+
+Hooks регистрируются один раз в главном файле. Активный способ выбирается через dispatcher при каждом выстреле.
+
+Важно: `correction_method` можно менять в Mod Options во время теста. Новый способ должен применяться к следующим выстрелам без перезагрузки миссии.
+
+Главный файл:
+
+- `scripts/mods/ThirdPersonAimCorrection/ThirdPersonAimCorrection.lua` — точка входа, registry методов, чтение настроек, единый dispatcher hooks.
+
+Общий код:
+
+- `scripts/mods/ThirdPersonAimCorrection/methods/shared.lua` — camera ray, weapon whitelist, hit helpers, enemy side helpers, hit zone helpers, игнор player-owned units, расчет corrected rotation.
+
+Файлы способов:
+
+| Dropdown value | Файл | Назначение |
+| --- | --- | --- |
+| `method_1_camera_hit_position` | `methods/method_1_camera_hit_position.lua` | Базовая parallax correction по точке попадания camera ray в enemy actor. |
+| `method_2_validated_shooting_ray` | `methods/method_2_validated_shooting_ray.lua` | Enemy camera hit position плюс дополнительная проверка shooting ray. |
+| `method_3_hit_zone_center` | `methods/method_3_hit_zone_center.lua` | Доворот в центр hit zone enemy actor под прицелом. |
+| `method_4_enemy_aim_target_node` | `methods/method_4_enemy_aim_target_node.lua` | Старый подход через `enemy_aim_target_*` nodes. |
+| `method_5_prepare_shooting` | `methods/method_5_prepare_shooting.lua` | Коррекция через hook `_prepare_shooting`. |
+| `method_6_shoot_hook` | `methods/method_6_shoot_hook.lua` | Коррекция только через hook `_shoot` для hitscan/pellets. |
+
+Тестировать нужно по одному способу за раз:
+
+1. Выбрать способ в dropdown.
+2. Сделать следующий выстрел без перезагрузки миссии.
+3. Проверить слабого врага в упор.
+4. Проверить слабого врага на средней дистанции.
+5. Проверить выстрел рядом с врагом, но не по нему.
+6. Проверить obstacle между оружием и врагом.
+7. Проверить needle pistol: урон, `on_hit`, токсин.
+8. Проверить pellets/shotgun.
+9. Записать результат в README или отдельный тестовый лог перед правкой метода.
+
 ## Способы реализации
+
+| Способ | Суть | Когда пуля подворачивается | Плюсы | Минусы | Риск для урона/бафов |
+| --- | --- | --- | --- | --- | --- |
+| 1. Parallax correction по camera hit position | Camera ray ищет точку под прицелом, shooting ray доворачивается из `shooting_position` в эту точку. | Когда есть camera position/rotation и найден target point: реальный hit камеры или дальняя точка по направлению камеры. | Самый простой и предсказуемый способ; не выбирает цель за игрока; оставляет урон, стены, щиты, hit zone и бафы штатной логике игры. | Если камера попала в мелкое препятствие рядом с врагом, пуля честно пойдет в препятствие; нужно правильно сохранить spread/recoil/sway. | Низкий, если correction применяется один раз в `_shoot` и не подменяет `HitScan.process_hits`. |
+| 2. Camera hit position + validation shooting ray | После выбора точки камеры делается дополнительный raycast из оружия, чтобы проверить будущий hit. | Только если corrected shooting ray из `shooting_position` попадает в допустимый actor или hit zone. | Можно заранее отсеять ложные попадания; можно проверить `HitZone.get_name`, `afro`, `shield`, props. | Validation может не совпадать с реальным `hit_scan_template`, sphere sweep, penetration и collision tests; может давать нестабильное "то работает, то нет". | Средний: если validation проще оригинального `_shoot`, она может блокировать корректные выстрелы или пропускать некорректные. |
+| 3. Наведение по enemy hit zone center | Camera ray находит enemy actor, затем пуля доворачивается в центр выбранной hit zone. | Когда camera ray попал во врага и у actor есть валидный `hit_zone`. | Целится именно в damage zone; меньше шанс попасть в actor без урона; можно выбрать `torso`, `head`, `center_mass`. | Это уже aim assist/магнит, а не чистая parallax correction; может перетягивать пулю с края модели в центр; зависит от breed и hit zone layout. | Низкий-средний: урон обычно проходит, но поведение может стать нечестным и отличаться от намерения игрока. |
+| 4. Наведение по `enemy_aim_target_*` | Мод выбирает node врага: `enemy_aim_target_01/02/03`, затем доворачивает пулю в него. | Когда broadphase или camera ray нашел enemy unit с нужным node. | Просто реализовать; nodes есть у большинства enemies; удобно для coarse targeting. | Node не является hit actor и не гарантирует hit zone; broadphase может выбрать врага не под прицелом; на слабых врагах возможны визуальные попадания без урона. | Высокий: можно попасть "в модель", но не получить валидный `HitZone.get_name`, поэтому не будет урона и `on_hit`. |
+| 5. Hook `_prepare_shooting` | Мод заранее меняет `action_component.shooting_rotation` после оригинального `_prepare_shooting`. | До `_shoot`, когда action component уже содержит `shooting_position` и `shooting_rotation`. | Подходит для классов, которые внутри `_shoot` читают component; полезно для projectile actions. | Легко получить двойную коррекцию; component может использоваться другими системами; сложнее контролировать один выстрел. | Средний-высокий: при повторной коррекции пуля может улетать в сторону или ломать spread/recoil. |
+| 6. Hook `_shoot` | Мод не трогает component, а заменяет локальный аргумент `rotation` прямо перед оригинальным `_shoot`. | В момент выстрела, когда уже известны `position`, `rotation`, `fire_config`. | Лучший вариант для `ActionShootHitScan` и `ActionShootPellets`; коррекция применяется один раз; меньше побочных эффектов. | Не подходит напрямую для классов, которые игнорируют аргумент `rotation` и читают component внутри; projectiles требуют отдельной ветки. | Низкий для hitscan/pellets, если target point выбран правильно и сохранен spread offset. |
 
 ### Способ 1. Parallax correction по camera hit position
 
@@ -344,6 +401,6 @@ local hit_zone_name = HitZone.get_name(hit_unit, hit_actor)
 
 ## Текущее состояние
 
-Файл `ThirdPersonAimCorrection.lua` сейчас должен рассматриваться как экспериментальная реализация. Перед дальнейшей правкой нужно выбрать один из подходов выше и не смешивать несколько моделей одновременно.
+Файл `ThirdPersonAimCorrection.lua` сейчас должен рассматриваться как registry тестового стенда. Конкретную логику нужно править в отдельном файле выбранного способа.
 
 Самый безопасный следующий шаг: оставить только `_shoot` correction для hitscan/pellets по camera hit position и отдельно написать чистую ветку для projectile weapons.
