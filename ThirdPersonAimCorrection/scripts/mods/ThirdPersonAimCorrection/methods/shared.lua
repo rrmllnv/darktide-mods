@@ -196,12 +196,41 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 		return true
 	end
 
+	-- Minimum squared distance between camera and muzzle that indicates the
+	-- player is effectively in 3rd person view (or transitioning into it).
+	-- In first person camera-to-muzzle offset is < 0.3m; in 3rd person > 0.5m.
+	local THIRD_PERSON_OFFSET_THRESHOLD_SQ = 0.25
+
 	local function action_can_run(action)
 		local player_unit = action._player_unit
 		local can_run, reason = correction_can_run_for_unit(player_unit)
 
 		if not can_run then
-			return false, nil, reason
+			-- Camera-offset fallback for the not_third_person case.
+			-- Perspectives may return false during its camera transition animation
+			-- (first 5-6 shots after mission start). If the camera is already
+			-- significantly offset from the muzzle position, the player is
+			-- effectively in 3rd person and correction should apply.
+			if reason == "not_third_person" then
+				local action_component = action._action_component
+				local shooting_position = action_component and action_component.shooting_position
+
+				if shooting_position then
+					local cam_pos, _ = camera_pose()
+
+					if cam_pos then
+						local offset_sq = Vector3.length_squared(cam_pos - shooting_position)
+
+						if offset_sq > THIRD_PERSON_OFFSET_THRESHOLD_SQ then
+							can_run = true
+						end
+					end
+				end
+			end
+
+			if not can_run then
+				return false, nil, reason
+			end
 		end
 
 		if not weapon_is_whitelisted(action) then
@@ -650,33 +679,6 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 		end
 
 		return best_position
-	end
-
-	local _pending_injection_data = nil
-
-	context.set_pending_injection = function(data)
-		_pending_injection_data = data
-	end
-
-	context.consume_pending_injection = function(attacker_unit)
-		if not _pending_injection_data then
-			return nil
-		end
-
-		local player = local_player()
-		local local_unit = player and player.player_unit or nil
-
-		-- Only consume if this is the local player's shot.
-		-- Enemy shots must not clear the pending data prematurely.
-		if attacker_unit ~= local_unit then
-			return nil
-		end
-
-		local data = _pending_injection_data
-
-		_pending_injection_data = nil
-
-		return data
 	end
 
 	context.mod = mod

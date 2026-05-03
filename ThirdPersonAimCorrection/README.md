@@ -126,7 +126,8 @@ local hit_zone_name = HitZone.get_name(hit_unit, hit_actor)
 - `method_3_hit_zone_center`;
 - `method_4_enemy_aim_target_node`;
 - `method_5_prepare_shooting`;
-- `method_6_shoot_hook`.
+- `method_6_shoot_hook`;
+- `method_7_hits_injection`.
 
 Default value: `method_4_enemy_aim_target_node`, потому что это текущий подтверждённый baseline.
 
@@ -155,6 +156,7 @@ Hooks регистрируются один раз в главном файле.
 | `method_4_enemy_aim_target_node` | `methods/method_4_enemy_aim_target_node.lua` | Baseline: broadphase-поиск hit zone center вдоль camera line с проверкой damageable muzzle ray, затем fallback в `enemy_aim_target_*` nodes. |
 | `method_5_prepare_shooting` | `methods/method_5_prepare_shooting.lua` | Assist через hook `_prepare_shooting`, fallback в broadphase node. |
 | `method_6_shoot_hook` | `methods/method_6_shoot_hook.lua` | Assist через hook `_shoot` для hitscan/pellets, fallback в broadphase node. |
+| `method_7_hits_injection` | `methods/method_7_hits_injection.lua` | Injection: внедряет enemy actor напрямую в hits table перед `HitScan.process_hits`. Три фазы поиска: camera ray → broadphase (только rotation) → muzzle ray в camera direction (для point blank когда broadphase заблокирован телом игрока). |
 
 Метод 4 считается контрольным baseline. Методы 1/2/3/5/6 используют его broadphase/node путь как fallback, потому что цель мода — помогать стрельбе от третьего лица, а не блокировать коррекцию из-за слишком строгих hit zone проверок.
 

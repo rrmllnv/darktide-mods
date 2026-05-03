@@ -15,11 +15,11 @@ return {
 						type = "checkbox",
 						default_value = true,
 					},
-					{
-						setting_id = "only_third_person",
-						type = "checkbox",
-						default_value = true,
-					},
+				{
+					setting_id = "only_third_person",
+					type = "checkbox",
+					default_value = false,
+				},
 					{
 						setting_id = "debug_enabled",
 						type = "checkbox",
