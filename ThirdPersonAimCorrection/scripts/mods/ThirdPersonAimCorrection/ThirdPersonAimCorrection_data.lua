@@ -50,6 +50,7 @@ return {
 							{ text = "correction_method_4_enemy_aim_target_node", value = "method_4_enemy_aim_target_node" },
 							{ text = "correction_method_5_prepare_shooting", value = "method_5_prepare_shooting" },
 							{ text = "correction_method_6_shoot_hook", value = "method_6_shoot_hook" },
+						{ text = "correction_method_7_hits_injection", value = "method_7_hits_injection" },
 						},
 					},
 				},

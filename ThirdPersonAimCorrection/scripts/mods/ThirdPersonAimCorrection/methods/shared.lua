@@ -652,6 +652,33 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 		return best_position
 	end
 
+	local _pending_injection_data = nil
+
+	context.set_pending_injection = function(data)
+		_pending_injection_data = data
+	end
+
+	context.consume_pending_injection = function(attacker_unit)
+		if not _pending_injection_data then
+			return nil
+		end
+
+		local player = local_player()
+		local local_unit = player and player.player_unit or nil
+
+		-- Only consume if this is the local player's shot.
+		-- Enemy shots must not clear the pending data prematurely.
+		if attacker_unit ~= local_unit then
+			return nil
+		end
+
+		local data = _pending_injection_data
+
+		_pending_injection_data = nil
+
+		return data
+	end
+
 	context.mod = mod
 	context.settings = settings
 	context.CAMERA_RAYCAST_FILTER = CAMERA_RAYCAST_FILTER

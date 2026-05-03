@@ -59,4 +59,8 @@ return {
 		en = "6. Shoot hook",
 		ru = "6. Hook shoot",
 	},
+	correction_method_7_hits_injection = {
+		en = "7. Hits injection (guaranteed damage)",
+		ru = "7. Внедрение хита (гарантированный урон)",
+	},
 }
