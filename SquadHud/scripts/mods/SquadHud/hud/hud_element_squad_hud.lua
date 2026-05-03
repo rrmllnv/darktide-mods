@@ -1781,7 +1781,8 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 		base_name = mod.squadhud_debug_player_name(base_name, is_local_player)
 	end
 
-	local base_name_color = (PlayerDataRuntime.is_bot(player) or status == "dead" or status == "hogtied") and COLOR_PLAYER_NAME_INACTIVE or COLOR_TEXT_DEFAULT
+	local use_player_color_for_name = boolean_setting("squadhud_use_player_colors_for_names", true)
+	local base_name_color = (PlayerDataRuntime.is_bot(player) or status == "dead" or status == "hogtied") and COLOR_PLAYER_NAME_INACTIVE or use_player_color_for_name and slot_color or COLOR_TEXT_DEFAULT
 	local player_key = PlayerDataRuntime.player_unique_id(player)
 	local vitals_reveal_master = update_vitals_reveal_state(self, player_key, not hide_vitals, t)
 	local vitals_ability_reveal = smoothstep(vitals_reveal_layer_fraction(vitals_reveal_master, 1))

@@ -183,6 +183,10 @@ return {
 		en = "Shows the total level next to the nickname. The total level is calculated from the character progression data exposed by the game backend.",
 		ru = "Показывает общий уровень рядом с ником. Общий уровень считается из данных прогресса персонажа, которые отдает игровой backend.",
 	},
+	squadhud_use_player_colors_for_names = {
+		en = "Use player colors for names",
+		ru = "Использовать цвета игроков для имён",
+	},
 	squadhud_coherency_group = {
 		en = string.rep("\194\160", 8) .. "Coherency",
 		ru = string.rep("\194\160", 8) .. "Сплоченность (когерентность)",

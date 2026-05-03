@@ -41,6 +41,12 @@ return {
 			default_value = d("squadhud_show_teammate_level", true),
 		},
 		{
+			setting_id = "squadhud_use_player_colors_for_names",
+			type = "checkbox",
+			title = "squadhud_use_player_colors_for_names",
+			default_value = d("squadhud_use_player_colors_for_names", true),
+		},
+		{
 			setting_id = "squadhud_coherency_group",
 			type = "group",
 			title = "squadhud_coherency_group",
