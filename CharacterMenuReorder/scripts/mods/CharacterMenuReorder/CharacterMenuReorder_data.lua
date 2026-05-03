@@ -6,7 +6,20 @@ return {
 	is_togglable = false,
 	allow_rehooking = false,
 	options = {
-		widgets = {},
+		widgets = {
+			{
+				setting_id = "general_group",
+				type = "group",
+				sub_widgets = {
+					{
+						setting_id = "enabled",
+						type = "checkbox",
+						default_value = true,
+						tooltip_text = "enabled_description",
+					},
+				},
+			},
+		},
 	},
 }
 

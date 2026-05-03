@@ -1,5 +1,9 @@
 local mod = get_mod("CharacterMenuReorder")
 
+local function _is_enabled()
+	return mod:get("enabled") ~= false
+end
+
 local function _is_array(t)
 	if type(t) ~= "table" then
 		return false
@@ -212,6 +216,10 @@ mod._drag_state = mod._drag_state or {
 }
 
 mod:hook("MainMenuView", "_event_profiles_changed", function(func, self, profiles, ...)
+	if not _is_enabled() then
+		return func(self, profiles, ...)
+	end
+
 	local sorted_profiles, persist = _apply_saved_order_to_profiles(profiles)
 
 	if persist and persist ~= false then
@@ -222,6 +230,10 @@ mod:hook("MainMenuView", "_event_profiles_changed", function(func, self, profile
 end)
 
 mod:hook("MainMenuView", "_handle_input", function(func, self, input_service, dt, t, ...)
+	if not _is_enabled() then
+		return func(self, input_service, dt, t, ...)
+	end
+
 	if self and (self._profiles_wait_overlay_active or self._server_migration_element or self._is_main_menu_open) then
 		return func(self, input_service, dt, t, ...)
 	end
