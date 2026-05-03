@@ -141,7 +141,7 @@ Hooks регистрируются один раз в главном файле.
 Общий код:
 
 - `scripts/mods/ThirdPersonAimCorrection/methods/shared.lua` — camera ray, weapon whitelist, hit helpers, enemy side helpers, hit zone helpers, игнор player-owned units, расчет corrected rotation.
-- `camera_enemy_actor_hit` — только настоящий enemy actor под camera ray, без fallback в broadphase.
+- `camera_enemy_actor_hit` — настоящий enemy actor под camera ray.
 - `validated_damageable_muzzle_hit` — проверка, что corrected muzzle ray даёт damageable hit zone.
 - `broadphase_target_node_position` — отдельный baseline-путь для метода 4.
 
@@ -149,16 +149,16 @@ Hooks регистрируются один раз в главном файле.
 
 | Dropdown value | Файл | Назначение |
 | --- | --- | --- |
-| `method_1_camera_hit_position` | `methods/method_1_camera_hit_position.lua` | Диагностика: только точка попадания camera ray в enemy actor. |
-| `method_2_validated_shooting_ray` | `methods/method_2_validated_shooting_ray.lua` | Диагностика: enemy camera hit плюс проверка damageable muzzle ray. |
-| `method_3_hit_zone_center` | `methods/method_3_hit_zone_center.lua` | Диагностика: центр hit zone enemy actor под camera ray. |
-| `method_4_enemy_aim_target_node` | `methods/method_4_enemy_aim_target_node.lua` | Baseline: рабочий broadphase-поиск `enemy_aim_target_*` nodes. |
-| `method_5_prepare_shooting` | `methods/method_5_prepare_shooting.lua` | Диагностика: только hook `_prepare_shooting`, без `_shoot`. |
-| `method_6_shoot_hook` | `methods/method_6_shoot_hook.lua` | Диагностика: только hook `_shoot` для hitscan/pellets, без prepare/projectile. |
+| `method_1_camera_hit_position` | `methods/method_1_camera_hit_position.lua` | Assist: точка попадания camera ray в enemy actor, fallback в broadphase node. |
+| `method_2_validated_shooting_ray` | `methods/method_2_validated_shooting_ray.lua` | Assist: validation уточняет target, но не блокирует fallback. |
+| `method_3_hit_zone_center` | `methods/method_3_hit_zone_center.lua` | Assist: центр hit zone enemy actor, fallback в broadphase node. |
+| `method_4_enemy_aim_target_node` | `methods/method_4_enemy_aim_target_node.lua` | Baseline: broadphase-поиск `enemy_aim_target_*` nodes вдоль camera line. |
+| `method_5_prepare_shooting` | `methods/method_5_prepare_shooting.lua` | Assist через hook `_prepare_shooting`, fallback в broadphase node. |
+| `method_6_shoot_hook` | `methods/method_6_shoot_hook.lua` | Assist через hook `_shoot` для hitscan/pellets, fallback в broadphase node. |
 
-Метод 4 считается контрольным baseline. Его нельзя смешивать с fallback-логикой внутри методов 1/2/3/5/6, иначе тест перестаёт показывать, какой способ реально работает.
+Метод 4 считается контрольным baseline. Методы 1/2/3/5/6 используют его broadphase/node путь как fallback, потому что цель мода — помогать стрельбе от третьего лица, а не блокировать коррекцию из-за слишком строгих hit zone проверок.
 
-Для диагностики включить `debug_enabled`. Тогда при отказе метода мод пишет в лог:
+Для диагностики включить `debug_enabled`. Тогда при отказе метода мод пишет в log через `mod:info`, а не в чат:
 
 - `disabled`;
 - `not_local_player`;
@@ -209,8 +209,8 @@ Hooks регистрируются один раз в главном файле.
 Алгоритм:
 
 1. Сделать raycast из камеры по центру экрана.
-2. Взять hit position только если hit actor принадлежит enemy unit.
-3. Если enemy actor нет, не применять коррекцию и записать debug reason.
+2. Взять hit position, если hit actor принадлежит enemy unit.
+3. Если enemy actor нет, использовать broadphase/node fallback.
 4. Построить направление из `shooting_position` в эту точку.
 5. Подменить rotation в `_shoot`.
 6. Не трогать `HitScan.process_hits`.
@@ -224,7 +224,7 @@ Hooks регистрируются один раз в главном файле.
 
 Минусы:
 
-- если camera ray попадает в obstacle рядом с врагом, метод не будет выбирать broadphase fallback;
+- если camera ray попадает в obstacle рядом с врагом, метод может перейти на broadphase fallback;
 - если камера видит врага, а muzzle ray перекрыт стеной, игра должна сама решить попадание по стене;
 - текущий диагностический режим не накладывает старый spread/recoil offset поверх corrected rotation, чтобы исключить увод выстрела в сторону.
 
@@ -240,7 +240,8 @@ Hooks регистрируются один раз в главном файле.
 1. Найти target point через camera ray.
 2. Построить corrected rotation из `shooting_position`.
 3. Сделать контрольный raycast из `shooting_position`.
-4. Применять correction только если контрольный raycast попал в валидный `hit_actor`/`hit_zone`.
+4. Если контрольный raycast попал в валидный `hit_actor`/`hit_zone`, использовать его точку.
+5. Если validation не прошла, оставить исходный target point или broadphase fallback.
 
 Плюсы:
 
@@ -256,8 +257,8 @@ Hooks регистрируются один раз в главном файле.
 
 Когда применять:
 
-- только если нужен строгий режим "подворачивать пулю только при гарантированном damage hit";
-- лучше делать validation теми же collision settings, что использует конкретный `hit_scan_template`.
+- когда нужно уточнить target point, но не блокировать assist;
+- validation не должна отменять коррекцию, если broadphase/node fallback уже нашел цель.
 
 ### Способ 3. Наведение по enemy hit zone center
 
@@ -291,7 +292,7 @@ Hooks регистрируются один раз в главном файле.
 
 Алгоритм:
 
-1. Найти enemy unit через broadphase или camera ray.
+1. Найти enemy unit через broadphase относительно текущей camera position.
 2. Взять `enemy_aim_target_03`, `enemy_aim_target_02` или `enemy_aim_target_01`.
 3. Довернуть пулю в node.
 
@@ -306,7 +307,7 @@ Hooks регистрируются один раз в главном файле.
 - node не является damage hit actor;
 - node не гарантирует `HitZone.get_name`;
 - на слабых врагах и мелких целях легко получить визуальное попадание без урона;
-- broadphase может выбрать врага рядом с прицелом, даже если camera ray не попал в него.
+- broadphase может выбрать врага рядом с camera ray, даже если точный camera ray не попал в actor.
 
 Когда применять:
 
@@ -400,7 +401,7 @@ Hooks регистрируются один раз в главном файле.
 - actor должен иметь валидный `HitZone`;
 - target point можно брать из hit position или center of mass этой hit zone;
 - угол коррекции должен быть маленьким;
-- broadphase держать отдельным baseline-методом, а не скрытым fallback внутри других способов.
+- broadphase можно использовать как общий assist fallback, если camera actor/hit zone проверка не дала usable target.
 
 ## Что проверять при тестировании
 

@@ -11,9 +11,15 @@ Method.shoot_rotation = function(context, action, position, rotation, fire_confi
 	end
 
 	local _, _, _, target_position, target_reason = context.camera_enemy_actor_hit(action._physics_world, player_unit, action)
+
+	if not target_position then
+		target_position = context.broadphase_target_node_position(action._physics_world, player_unit)
+		context.debug_fallback(METHOD_ID, target_reason)
+	end
+
 	local corrected_rotation, correction_reason = context.corrected_shot_rotation(action, position, rotation, target_position)
 
-	context.debug_reject(METHOD_ID, target_reason or correction_reason)
+	context.debug_reject(METHOD_ID, correction_reason)
 
 	return corrected_rotation
 end

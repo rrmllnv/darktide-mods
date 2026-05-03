@@ -11,17 +11,23 @@ Method.shoot_rotation = function(context, action, position, rotation, fire_confi
 	end
 
 	local _, target_unit, actor, _, target_reason = context.camera_enemy_actor_hit(action._physics_world, player_unit, action)
+	local target_position, hit_zone_reason = nil, nil
 
-	if not target_unit then
-		context.debug_reject(METHOD_ID, target_reason)
-
-		return nil
+	if target_unit then
+		target_position, hit_zone_reason = context.hit_zone_center_position(target_unit, actor)
+	else
+		target_position = context.broadphase_target_node_position(action._physics_world, player_unit)
+		context.debug_fallback(METHOD_ID, target_reason)
 	end
 
-	local target_position, hit_zone_reason = context.hit_zone_center_position(target_unit, actor)
+	if not target_position then
+		target_position = context.broadphase_target_node_position(action._physics_world, player_unit)
+		context.debug_fallback(METHOD_ID, hit_zone_reason)
+	end
+
 	local corrected_rotation, correction_reason = context.corrected_shot_rotation(action, position, rotation, target_position)
 
-	context.debug_reject(METHOD_ID, hit_zone_reason or correction_reason)
+	context.debug_reject(METHOD_ID, correction_reason)
 
 	return corrected_rotation
 end

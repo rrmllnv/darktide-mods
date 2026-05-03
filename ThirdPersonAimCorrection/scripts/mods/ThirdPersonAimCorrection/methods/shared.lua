@@ -261,6 +261,51 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 		return true
 	end
 
+	local function hit_zone_center_position(target_unit, actor)
+		local hit_zone_name = actor and HitZone.get_name(target_unit, actor) or nil
+
+		if hit_zone_name and hit_zone_name ~= HitZone.hit_zone_names.afro then
+			local ok, position = pcall(HitZone.hit_zone_center_of_mass, target_unit, hit_zone_name, true)
+
+			if ok and position then
+				return position, nil
+			end
+
+			return nil, "no_hit_zone_center"
+		end
+
+		return nil, hit_zone_name == HitZone.hit_zone_names.afro and "invalid_hit_zone" or "no_hit_zone"
+	end
+
+	local function fallback_hit_zone_center_position(target_unit)
+		local fallback_hit_zone_names = {
+			HitZone.hit_zone_names.torso,
+			HitZone.hit_zone_names.center_mass,
+			HitZone.hit_zone_names.head,
+		}
+
+		for i = 1, #fallback_hit_zone_names do
+			local hit_zone_name = fallback_hit_zone_names[i]
+			local ok, position = pcall(HitZone.hit_zone_center_of_mass, target_unit, hit_zone_name, true)
+
+			if ok and position then
+				return position, nil
+			end
+		end
+
+		return nil, "no_hit_zone_center"
+	end
+
+	local function enemy_actor_target_position(target_unit, actor, fallback_position)
+		local hit_zone_name = actor and HitZone.get_name(target_unit, actor) or nil
+
+		if hit_zone_name == HitZone.hit_zone_names.afro then
+			return fallback_hit_zone_center_position(target_unit)
+		end
+
+		return fallback_position, nil
+	end
+
 	local function camera_enemy_actor_hit(physics_world, player_unit, action)
 		local hits, camera_position = camera_raycast(physics_world)
 
@@ -281,7 +326,9 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 			if raycast_unit_is_ignored(action, player_unit, target_unit) then
 				-- In third person the camera ray can start behind the character and touch player-owned units first.
 			elseif target_unit_is_enemy(player_unit, target_unit) then
-				return hit, target_unit, actor, hit_position(hit), nil
+				local position, reason = enemy_actor_target_position(target_unit, actor, hit_position(hit))
+
+				return hit, target_unit, actor, position, reason
 			else
 				return nil, nil, nil, nil, "no_enemy_actor"
 			end
@@ -352,7 +399,13 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 
 	local function debug_reject(method_id, reason)
 		if settings.debug_enabled and reason then
-			mod:echo("[ThirdPersonAimCorrection] %s rejected: %s", tostring(method_id), tostring(reason))
+			mod:info("[ThirdPersonAimCorrection] %s rejected: %s", tostring(method_id), tostring(reason))
+		end
+	end
+
+	local function debug_fallback(method_id, reason)
+		if settings.debug_enabled and reason then
+			mod:info("[ThirdPersonAimCorrection] %s fallback: %s", tostring(method_id), tostring(reason))
 		end
 	end
 
@@ -399,22 +452,6 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 
 	local function corrected_shot_rotation(action, shooting_position, shooting_rotation, target_position)
 		return corrected_rotation_from_position(shooting_position, shooting_rotation, target_position)
-	end
-
-	local function hit_zone_center_position(target_unit, actor)
-		local hit_zone_name = actor and HitZone.get_name(target_unit, actor) or nil
-
-		if hit_zone_name and hit_zone_name ~= HitZone.hit_zone_names.afro then
-			local ok, position = pcall(HitZone.hit_zone_center_of_mass, target_unit, hit_zone_name, true)
-
-			if ok and position then
-				return position, nil
-			end
-
-			return nil, "no_hit_zone_center"
-		end
-
-		return nil, hit_zone_name == HitZone.hit_zone_names.afro and "invalid_hit_zone" or "no_hit_zone"
 	end
 
 	local function camera_blocker_distance(physics_world, camera_position, camera_direction, max_distance)
@@ -536,6 +573,7 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 	context.broadphase_target_node_position = broadphase_target_node_position
 	context.corrected_shot_rotation = corrected_shot_rotation
 	context.debug_reject = debug_reject
+	context.debug_fallback = debug_fallback
 	context.hit_distance = hit_distance
 	context.hit_actor = hit_actor
 	context.hit_position = hit_position
