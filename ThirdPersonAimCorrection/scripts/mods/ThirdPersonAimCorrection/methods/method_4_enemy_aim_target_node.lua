@@ -7,7 +7,7 @@ Method.shoot_rotation = function(context, action, position, rotation)
 		return nil
 	end
 
-	local target_position = context.broadphase_target_node_position(action._physics_world, player_unit)
+	local target_position = context.broadphase_target_node_position(action._physics_world, player_unit, action, position)
 
 	return context.corrected_shot_rotation(action, position, rotation, target_position)
 end

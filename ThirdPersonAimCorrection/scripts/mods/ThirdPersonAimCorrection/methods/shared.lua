@@ -325,6 +325,12 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 		return nil, "no_hit_zone_center"
 	end
 
+	local function hit_zone_has_actors(target_unit, hit_zone_name)
+		local ok, actor_names = pcall(HitZone.get_actor_names, target_unit, hit_zone_name)
+
+		return ok and actor_names and #actor_names > 0
+	end
+
 	local function enemy_actor_target_position(target_unit, actor, fallback_position)
 		local hit_zone_name = actor and HitZone.get_name(target_unit, actor) or nil
 
@@ -506,6 +512,10 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 
 			if Unit.has_node(target_unit, target_node) then
 				local target_position = Unit.world_position(target_unit, Unit.node(target_unit, target_node))
+				if not target_position then
+					break
+				end
+
 				local target_vector = target_position - camera_position
 
 				if Vector3.length_squared(target_vector) > MIN_DIRECTION_LENGTH_SQ then
@@ -525,24 +535,41 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 		return best_position, best_angle
 	end
 
-	local function best_hit_zone_center_on_camera_line(target_unit, camera_position, camera_direction)
+	local function best_hit_zone_center_on_camera_line(target_unit, camera_position, camera_direction, physics_world, player_unit, action, shooting_position)
 		local best_position = nil
 		local best_angle = nil
 
 		for i = 1, #TARGET_HIT_ZONE_NAMES do
 			local hit_zone_name = TARGET_HIT_ZONE_NAMES[i]
-			local ok, target_position = pcall(HitZone.hit_zone_center_of_mass, target_unit, hit_zone_name, true)
 
-			if ok and target_position then
-				local target_vector = target_position - camera_position
+			if hit_zone_has_actors(target_unit, hit_zone_name) then
+				local ok, target_position = pcall(HitZone.hit_zone_center_of_mass, target_unit, hit_zone_name, true)
 
-				if Vector3.length_squared(target_vector) > MIN_DIRECTION_LENGTH_SQ then
+				if not ok then
+					target_position = nil
+				end
+
+				if target_position then
+					local target_vector = target_position - camera_position
+
+					if Vector3.length_squared(target_vector) > MIN_DIRECTION_LENGTH_SQ then
 					local target_direction = Vector3.normalize(target_vector)
 					local camera_angle = Vector3.angle(camera_direction, target_direction)
 
-					if not best_angle or camera_angle < best_angle then
-						best_position = target_position
-						best_angle = camera_angle
+					if camera_angle <= MAX_TARGET_NODE_CAMERA_ANGLE then
+						local candidate_position = target_position
+
+						if shooting_position then
+							local validated_position = validated_damageable_muzzle_hit(physics_world, player_unit, action, shooting_position, target_position)
+
+							candidate_position = validated_position
+						end
+
+						if candidate_position and (not best_angle or camera_angle < best_angle) then
+							best_position = candidate_position
+							best_angle = camera_angle
+						end
+					end
 					end
 				end
 			end
@@ -551,7 +578,7 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 		return best_position, best_angle
 	end
 
-	local function broadphase_target_node_position(physics_world, player_unit)
+	local function broadphase_target_node_position(physics_world, player_unit, action, shooting_position)
 		local camera_position, camera_rotation = camera_pose()
 		local side_names = enemy_side_names(player_unit)
 
@@ -583,10 +610,14 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 					break
 				end
 
-				local target_position, camera_angle = best_hit_zone_center_on_camera_line(target_unit, camera_position, camera_direction)
+				local target_position, camera_angle = best_hit_zone_center_on_camera_line(target_unit, camera_position, camera_direction, physics_world, player_unit, action, shooting_position)
 
 				if not target_position or not camera_angle then
 					target_position, camera_angle = best_target_node_on_camera_line(target_unit, camera_position, camera_direction)
+
+					if target_position and shooting_position then
+						target_position = validated_damageable_muzzle_hit(physics_world, player_unit, action, shooting_position, target_position)
+					end
 				end
 
 				if not target_position or not camera_angle then

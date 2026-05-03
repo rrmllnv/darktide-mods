@@ -16,7 +16,7 @@ Method.prepare_rotation = function(context, action)
 	local _, _, _, target_position, target_reason = context.camera_enemy_actor_hit(action._physics_world, player_unit, action)
 
 	if not target_position then
-		target_position = context.broadphase_target_node_position(action._physics_world, player_unit)
+		target_position = context.broadphase_target_node_position(action._physics_world, player_unit, action, shooting_position)
 		context.debug_fallback(METHOD_ID, target_reason)
 	end
 

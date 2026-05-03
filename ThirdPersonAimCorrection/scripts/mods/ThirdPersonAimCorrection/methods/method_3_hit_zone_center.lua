@@ -16,12 +16,12 @@ Method.shoot_rotation = function(context, action, position, rotation, fire_confi
 	if target_unit then
 		target_position, hit_zone_reason = context.hit_zone_center_position(target_unit, actor)
 	else
-		target_position = context.broadphase_target_node_position(action._physics_world, player_unit)
+		target_position = context.broadphase_target_node_position(action._physics_world, player_unit, action, position)
 		context.debug_fallback(METHOD_ID, target_reason)
 	end
 
 	if not target_position then
-		target_position = context.broadphase_target_node_position(action._physics_world, player_unit)
+		target_position = context.broadphase_target_node_position(action._physics_world, player_unit, action, position)
 		context.debug_fallback(METHOD_ID, hit_zone_reason)
 	end
 
