@@ -152,7 +152,7 @@ Hooks регистрируются один раз в главном файле.
 | `method_1_camera_hit_position` | `methods/method_1_camera_hit_position.lua` | Assist: точка попадания camera ray в enemy actor, fallback в broadphase node. |
 | `method_2_validated_shooting_ray` | `methods/method_2_validated_shooting_ray.lua` | Assist: validation уточняет target, но не блокирует fallback. |
 | `method_3_hit_zone_center` | `methods/method_3_hit_zone_center.lua` | Assist: центр hit zone enemy actor, fallback в broadphase node. |
-| `method_4_enemy_aim_target_node` | `methods/method_4_enemy_aim_target_node.lua` | Baseline: broadphase-поиск `enemy_aim_target_*` nodes вдоль camera line. |
+| `method_4_enemy_aim_target_node` | `methods/method_4_enemy_aim_target_node.lua` | Baseline: broadphase-поиск hit zone center вдоль camera line, затем fallback в `enemy_aim_target_*` nodes. |
 | `method_5_prepare_shooting` | `methods/method_5_prepare_shooting.lua` | Assist через hook `_prepare_shooting`, fallback в broadphase node. |
 | `method_6_shoot_hook` | `methods/method_6_shoot_hook.lua` | Assist через hook `_shoot` для hitscan/pellets, fallback в broadphase node. |
 
@@ -293,8 +293,9 @@ Hooks регистрируются один раз в главном файле.
 Алгоритм:
 
 1. Найти enemy unit через broadphase относительно текущей camera position.
-2. Взять `enemy_aim_target_03`, `enemy_aim_target_02` или `enemy_aim_target_01`.
-3. Довернуть пулю в node.
+2. Выбрать центр валидной hit zone, ближайший к camera line: голова, торс, руки, ноги и другие damage zones.
+3. Если hit zone center недоступен, взять `enemy_aim_target_03`, `enemy_aim_target_02` или `enemy_aim_target_01`.
+4. Довернуть пулю в выбранную точку.
 
 Плюсы:
 
@@ -304,8 +305,8 @@ Hooks регистрируются один раз в главном файле.
 
 Минусы:
 
-- node не является damage hit actor;
-- node не гарантирует `HitZone.get_name`;
+- hit zone center ближе к damage model, чем `enemy_aim_target_*`;
+- `enemy_aim_target_*` используется только как fallback, если hit zone center недоступен;
 - на слабых врагах и мелких целях легко получить визуальное попадание без урона;
 - broadphase может выбрать врага рядом с camera ray, даже если точный camera ray не попал в actor.
 

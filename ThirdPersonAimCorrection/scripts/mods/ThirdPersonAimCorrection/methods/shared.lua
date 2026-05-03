@@ -16,6 +16,27 @@ local TARGET_NODE_NAMES = {
 	"enemy_aim_target_02",
 	"enemy_aim_target_01",
 }
+local TARGET_HIT_ZONE_NAMES = {
+	HitZone.hit_zone_names.head,
+	HitZone.hit_zone_names.torso,
+	HitZone.hit_zone_names.center_mass,
+	HitZone.hit_zone_names.upper_left_arm,
+	HitZone.hit_zone_names.lower_left_arm,
+	HitZone.hit_zone_names.upper_right_arm,
+	HitZone.hit_zone_names.lower_right_arm,
+	HitZone.hit_zone_names.upper_left_leg,
+	HitZone.hit_zone_names.lower_left_leg,
+	HitZone.hit_zone_names.upper_right_leg,
+	HitZone.hit_zone_names.lower_right_leg,
+	HitZone.hit_zone_names.lower_tail,
+	HitZone.hit_zone_names.upper_tail,
+	HitZone.hit_zone_names.tongue,
+	HitZone.hit_zone_names.hound_tail,
+	HitZone.hit_zone_names.backpack,
+	HitZone.hit_zone_names.weakspot,
+	HitZone.hit_zone_names.right_shoulderguard,
+	HitZone.hit_zone_names.canister,
+}
 
 local function hit_distance(hit)
 	return hit.distance or hit[2] or 0
@@ -282,6 +303,14 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 			HitZone.hit_zone_names.torso,
 			HitZone.hit_zone_names.center_mass,
 			HitZone.hit_zone_names.head,
+			HitZone.hit_zone_names.upper_left_leg,
+			HitZone.hit_zone_names.lower_left_leg,
+			HitZone.hit_zone_names.upper_right_leg,
+			HitZone.hit_zone_names.lower_right_leg,
+			HitZone.hit_zone_names.upper_left_arm,
+			HitZone.hit_zone_names.lower_left_arm,
+			HitZone.hit_zone_names.upper_right_arm,
+			HitZone.hit_zone_names.lower_right_arm,
 		}
 
 		for i = 1, #fallback_hit_zone_names do
@@ -496,6 +525,32 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 		return best_position, best_angle
 	end
 
+	local function best_hit_zone_center_on_camera_line(target_unit, camera_position, camera_direction)
+		local best_position = nil
+		local best_angle = nil
+
+		for i = 1, #TARGET_HIT_ZONE_NAMES do
+			local hit_zone_name = TARGET_HIT_ZONE_NAMES[i]
+			local ok, target_position = pcall(HitZone.hit_zone_center_of_mass, target_unit, hit_zone_name, true)
+
+			if ok and target_position then
+				local target_vector = target_position - camera_position
+
+				if Vector3.length_squared(target_vector) > MIN_DIRECTION_LENGTH_SQ then
+					local target_direction = Vector3.normalize(target_vector)
+					local camera_angle = Vector3.angle(camera_direction, target_direction)
+
+					if not best_angle or camera_angle < best_angle then
+						best_position = target_position
+						best_angle = camera_angle
+					end
+				end
+			end
+		end
+
+		return best_position, best_angle
+	end
+
 	local function broadphase_target_node_position(physics_world, player_unit)
 		local camera_position, camera_rotation = camera_pose()
 		local side_names = enemy_side_names(player_unit)
@@ -528,7 +583,11 @@ function Shared.create_context(mod, settings, weapon_whitelist)
 					break
 				end
 
-				local target_position, camera_angle = best_target_node_on_camera_line(target_unit, camera_position, camera_direction)
+				local target_position, camera_angle = best_hit_zone_center_on_camera_line(target_unit, camera_position, camera_direction)
+
+				if not target_position or not camera_angle then
+					target_position, camera_angle = best_target_node_on_camera_line(target_unit, camera_position, camera_direction)
+				end
 
 				if not target_position or not camera_angle then
 					break
