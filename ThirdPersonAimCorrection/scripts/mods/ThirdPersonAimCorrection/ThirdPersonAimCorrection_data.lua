@@ -34,16 +34,6 @@ return {
 						decimals_number = 0,
 						unit = "m",
 					},
-					{
-						setting_id = "target_node",
-						type = "dropdown",
-						default_value = "enemy_aim_target_03",
-						options = {
-							{ text = "target_node_enemy_aim_target_03", value = "enemy_aim_target_03" },
-							{ text = "target_node_enemy_aim_target_02", value = "enemy_aim_target_02" },
-							{ text = "target_node_enemy_aim_target_01", value = "enemy_aim_target_01" },
-						},
-					},
 				},
 			},
 		},
