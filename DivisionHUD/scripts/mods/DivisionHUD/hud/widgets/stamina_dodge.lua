@@ -1,3 +1,5 @@
+local mod = get_mod("DivisionHUD")
+
 local HudElementStaminaSettings = require("scripts/ui/hud/elements/blocking/hud_element_stamina_settings")
 local HudElementDodgeCounterSettings = require("scripts/ui/hud/elements/dodge_counter/hud_element_dodge_counter_settings")
 local Stamina = require("scripts/utilities/attack/stamina")
@@ -9,6 +11,17 @@ local DODGE_BAR_STATE_COLORS_BAR_BACKGROUND = HudElementDodgeCounterSettings.DOD
 local STAMINA_NODGES_COLOR = HudElementStaminaSettings.STAMINA_NODGES_COLOR
 
 local M = {}
+
+local function _normalize_visibility_setting(visibility_setting)
+	local s = mod and mod._settings
+	local show_stamina_bar = type(s) == "table" and s.show_stamina_bar
+
+	if (show_stamina_bar ~= false and show_stamina_bar ~= 0) and visibility_setting == "both_disabled" then
+		return "dynamic"
+	end
+
+	return visibility_setting
+end
 
 M.init = function(self, definitions)
 	local stm_w = definitions and definitions.division_stamina_bar_width
@@ -39,7 +52,7 @@ M.init = function(self, definitions)
 	local save_data = Managers.save:account_data()
 	local interface_settings = save_data.interface_settings
 
-	self._stamina_dodge_visibility_setting = interface_settings.stamina_and_dodge_visibility_setting or "dynamic"
+	self._stamina_dodge_visibility_setting = _normalize_visibility_setting(interface_settings.stamina_and_dodge_visibility_setting) or "dynamic"
 	self._stamina_sync_with_dodge_bar = interface_settings.stamina_and_dodge_show_together or false
 	self._dodge_sync_with_stamina_bar = interface_settings.stamina_and_dodge_show_together or false
 	self._use_percentage_based_division = interface_settings.show_stamina_with_fixed_dividers or false
@@ -74,7 +87,7 @@ M.division_stamina_dodge_cb_percentage_text = function(self, enabled)
 end
 
 M.division_stamina_dodge_cb_visibility = function(self, visibility_setting)
-	self._stamina_dodge_visibility_setting = visibility_setting
+	self._stamina_dodge_visibility_setting = _normalize_visibility_setting(visibility_setting)
 end
 
 M.destroy = function(self, ui_renderer)
