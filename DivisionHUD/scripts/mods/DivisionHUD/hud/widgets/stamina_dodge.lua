@@ -49,6 +49,11 @@ M.init = function(self, definitions)
 	self._stamina_alpha_mult = 0
 	self._dodge_alpha_mult = 0
 
+	self.division_stamina_dodge_cb_visibility = self.division_stamina_dodge_cb_visibility or M.division_stamina_dodge_cb_visibility
+	self.division_stamina_dodge_cb_sync = self.division_stamina_dodge_cb_sync or M.division_stamina_dodge_cb_sync
+	self.division_stamina_dodge_cb_fixed_dividers = self.division_stamina_dodge_cb_fixed_dividers or M.division_stamina_dodge_cb_fixed_dividers
+	self.division_stamina_dodge_cb_percentage_text = self.division_stamina_dodge_cb_percentage_text or M.division_stamina_dodge_cb_percentage_text
+
 	Managers.event:register(self, "event_update_stamina_and_dodge_hud_visibility_changed", "division_stamina_dodge_cb_visibility")
 	Managers.event:register(self, "event_update_stamina_and_dodge_hud_syncronized", "division_stamina_dodge_cb_sync")
 	Managers.event:register(self, "event_update_show_stamina_with_fixed_dividers", "division_stamina_dodge_cb_fixed_dividers")
