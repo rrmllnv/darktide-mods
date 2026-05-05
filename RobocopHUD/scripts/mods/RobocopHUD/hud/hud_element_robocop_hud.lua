@@ -52,7 +52,7 @@ local function _local_player_unit()
 end
 
 local LOS_FILTER = "filter_minion_line_of_sight_check"
-local LOS_END_MARGIN = 0.5
+local LOS_END_MARGIN = 0.4
 local LOS_EYE_OFFSET = 1.65
 local LOS_HIT_ACTOR_INDEX = 4
 
@@ -78,14 +78,9 @@ local function _get_physics_world()
 	return nil
 end
 
-local function _has_line_of_sight(player_pos, target_pos, target_unit)
-	local pw = _get_physics_world()
-
-	if not pw or not player_pos or not target_pos then
-		return true
-	end
-
-	local from = Vector3(player_pos.x, player_pos.y, player_pos.z + LOS_EYE_OFFSET)
+-- Cast one ray from `from` to `target_pos`.
+-- Returns true if the path is clear (only the target_unit itself may be hit).
+local function _ray_clear(pw, from, target_pos, target_unit)
 	local delta = target_pos - from
 	local full_dist = Vector3.length(delta)
 
@@ -112,6 +107,45 @@ local function _has_line_of_sight(player_pos, target_pos, target_unit)
 	end
 
 	return true
+end
+
+-- Multi-point LoS check.
+-- Origin: camera world position (matches what the player actually sees).
+-- Targets: torso node + head node of the enemy.
+-- Returns true if AT LEAST ONE target point has a clear ray (partial walls don't fully hide).
+local function _has_line_of_sight(camera, player_pos, target_unit, target_positions)
+	local pw = _get_physics_world()
+
+	if not pw then
+		return true
+	end
+
+	-- Use camera position as the eye origin — matches the player's actual view.
+	local from
+	if camera and Camera.world_position then
+		local ok_cam, cam_pos = pcall(Camera.world_position, camera)
+		if ok_cam and cam_pos then
+			from = cam_pos
+		end
+	end
+
+	-- Fallback: approximate eye height from foot position.
+	if not from then
+		if not player_pos then
+			return true
+		end
+
+		from = Vector3(player_pos.x, player_pos.y, player_pos.z + LOS_EYE_OFFSET)
+	end
+
+	-- Check each target point; visible if ANY is unobstructed.
+	for _, target_pos in ipairs(target_positions) do
+		if target_pos and _ray_clear(pw, from, target_pos, target_unit) then
+			return true
+		end
+	end
+
+	return false
 end
 
 local FRAME_LINE_LEN = 3000
@@ -469,17 +503,21 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 	end
 
 	-- LoS check (both modes): only hides the frame widget, does NOT clear the target lock.
+	-- Casts rays to torso + head; visible if ANY point is unobstructed.
 	if cur_lock_unit and HEALTH_ALIVE[cur_lock_unit] and Unit.alive(cur_lock_unit) then
 		local node_torso = Unit.has_node(cur_lock_unit, "enemy_aim_target_02") and Unit.node(cur_lock_unit, "enemy_aim_target_02") or nil
-		local cur_pos = (node_torso and Unit.world_position(cur_lock_unit, node_torso)) or (POSITION_LOOKUP and POSITION_LOOKUP[cur_lock_unit])
+		local node_head = Unit.has_node(cur_lock_unit, "enemy_aim_target_03") and Unit.node(cur_lock_unit, "enemy_aim_target_03") or nil
+		local torso_pos = (node_torso and Unit.world_position(cur_lock_unit, node_torso)) or (POSITION_LOOKUP and POSITION_LOOKUP[cur_lock_unit])
+		local head_pos = node_head and Unit.world_position(cur_lock_unit, node_head) or nil
 
-		if cur_pos then
+		local target_positions = {}
+		if torso_pos then target_positions[#target_positions + 1] = torso_pos end
+		if head_pos then target_positions[#target_positions + 1] = head_pos end
+
+		if #target_positions > 0 then
 			local player_unit = _local_player_unit()
 			local player_pos = player_unit and POSITION_LOOKUP and POSITION_LOOKUP[player_unit]
-
-			if player_pos then
-				cur_lock_has_los = _has_line_of_sight(player_pos, cur_pos, cur_lock_unit)
-			end
+			cur_lock_has_los = _has_line_of_sight(camera, player_pos, cur_lock_unit, target_positions)
 		end
 	end
 
