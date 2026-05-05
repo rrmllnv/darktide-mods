@@ -62,6 +62,10 @@ return {
 		en = "Enable targeting widgets",
 		ru = "Включить виджеты захвата",
 	},
+	cycle_target_keybind = {
+		en = "Toggle AUTO / SCAN mode (Left Ctrl)",
+		ru = "Переключить режим AUTO / SCAN (Left Ctrl)",
+	},
 	target_hold_seconds = {
 		en = "Target hold time (s)",
 		ru = "Удержание цели (с)",

@@ -27,14 +27,6 @@ return {
 			default_value = d("robocophud_enabled", true),
 			tooltip_text = "robocophud_enabled_description",
 		},
-		{
-			setting_id = "toggle_keybind",
-			type = "keybind",
-			default_value = {},
-			keybind_trigger = "pressed",
-			keybind_type = "function_call",
-			function_name = "robocophud_toggle_enabled_keybind",
-		},
 	},
 }
 

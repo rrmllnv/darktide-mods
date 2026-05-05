@@ -27,6 +27,14 @@ return {
 			default_value = d("targeting_enabled", true),
 		},
 		{
+			setting_id = "cycle_target_keybind",
+			type = "keybind",
+			default_value = { "left ctrl" },
+			keybind_trigger = "pressed",
+			keybind_type = "function_call",
+			function_name = "robocophud_cycle_target_keybind",
+		},
+		{
 			setting_id = "target_hold_seconds",
 			type = "numeric",
 			default_value = d("target_hold_seconds", 1.0),

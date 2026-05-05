@@ -115,8 +115,8 @@ local function _has_line_of_sight(player_pos, target_pos, target_unit)
 end
 
 local FRAME_LINE_LEN = 3000
-
 local FRAME_LERP = 0.25
+local SCAN_DWELL = 0.5
 
 local function _update_lock_frame_offset(instance, widget, lock_state, render_settings, has_los)
 	if not instance or not widget or not widget.content then
@@ -356,9 +356,93 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 
 	local candidates, count
 	candidates, count, self._threat_state = ThreatQuery.acquire(self._threat_state, t, runtime_settings)
+
 	local best_unit, top_threats
 	best_unit, top_threats, self._scoring_state = ThreatScoring.rank(self._scoring_state, candidates, count, self._lock_state.unit, runtime_settings)
-	self._lock_state = TargetLock.update(self._lock_state, t, best_unit, runtime_settings)
+
+	if mod._robocophud_mode == "SCAN" then
+		-- SCAN mode: automatically cycle through all visible enemies one by one.
+		-- Each enemy is shown for SCAN_DWELL seconds.
+		-- Once all visible enemies have been shown, the frame hides.
+		-- When a shown enemy leaves the frustum, its "shown" flag resets so it can appear again.
+		local ss = mod._robocophud_scan_state
+		if not ss then
+			ss = { shown_set = {}, current_unit = nil, show_until_t = 0 }
+			mod._robocophud_scan_state = ss
+		end
+
+		-- Build lookup of units currently in the candidates list (in frustum).
+		local in_candidates = {}
+		for i = 1, count do
+			local e = candidates[i]
+			if e and e.unit then
+				in_candidates[e.unit] = true
+			end
+		end
+
+		-- Reset shown flag for units that have left the frustum.
+		for u, _ in pairs(ss.shown_set) do
+			if not in_candidates[u] then
+				ss.shown_set[u] = nil
+			end
+		end
+
+		-- Manage the currently displayed scan target.
+		local cur_scan = ss.current_unit
+		if cur_scan then
+			local ok, alive = pcall(Unit.alive, cur_scan)
+			if not ok or not alive or not in_candidates[cur_scan] then
+				-- Target died or left frustum — don't mark as shown (it left on its own).
+				cur_scan = nil
+				ss.current_unit = nil
+			elseif t >= (ss.show_until_t or 0) then
+				-- Dwell time expired — mark this unit as shown and advance.
+				ss.shown_set[cur_scan] = true
+				cur_scan = nil
+				ss.current_unit = nil
+			end
+		end
+
+		-- Pick next unshown candidate if we have no current target.
+		if not cur_scan then
+			local next_candidates = {}
+			for i = 1, count do
+				local e = candidates[i]
+				if e and e.unit and not ss.shown_set[e.unit] then
+					local ok, alive = pcall(Unit.alive, e.unit)
+					if ok and alive then
+						next_candidates[#next_candidates + 1] = e
+					end
+				end
+			end
+			if #next_candidates > 0 then
+				table.sort(next_candidates, function(a, b)
+					return (a.distance or 9999) < (b.distance or 9999)
+				end)
+				cur_scan = next_candidates[1].unit
+				ss.current_unit = cur_scan
+				ss.show_until_t = t + SCAN_DWELL
+			end
+		end
+
+		-- Directly control lock_state in SCAN mode — bypass TargetLock timing.
+		if cur_scan then
+			if self._lock_state.unit ~= cur_scan then
+				self._robocophud_frame_h = nil
+				self._robocophud_frame_w = nil
+			end
+			self._lock_state.unit = cur_scan
+			self._lock_state.stage = "LOCK"
+			self._lock_state.stage_t = t
+		else
+			self._lock_state.unit = nil
+			self._lock_state.stage = "IDLE"
+			self._lock_state.stage_t = t
+		end
+	else
+		-- AUTO mode: use best_unit from ThreatScoring (already computed above).
+		self._lock_state = TargetLock.update(self._lock_state, t, best_unit, runtime_settings)
+	end
 
 	-- Reset cached frame size when target changes to avoid lerping from wrong previous size.
 	if self._lock_state.unit ~= prev_lock_unit then
@@ -366,12 +450,13 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 		self._robocophud_frame_w = nil
 	end
 
-	-- Frustum check: if locked target left the field of view, reset lock for re-acquisition.
+	-- Frustum check (AUTO mode only): if locked target left the field of view, reset lock for re-acquisition.
+	-- In SCAN mode the scan logic already uses candidates (frustum-filtered), so no separate check needed.
 	-- LoS (obstacles) only hides the frame widget — does NOT clear the target lock.
 	local cur_lock_unit = self._lock_state.unit
 	local cur_lock_has_los = true
 
-	if cur_lock_unit and HEALTH_ALIVE[cur_lock_unit] and Unit.alive(cur_lock_unit) and camera then
+	if mod._robocophud_mode ~= "SCAN" and cur_lock_unit and HEALTH_ALIVE[cur_lock_unit] and Unit.alive(cur_lock_unit) and camera then
 		local node_torso = Unit.has_node(cur_lock_unit, "enemy_aim_target_02") and Unit.node(cur_lock_unit, "enemy_aim_target_02") or nil
 		local cur_pos = (node_torso and Unit.world_position(cur_lock_unit, node_torso)) or (POSITION_LOOKUP and POSITION_LOOKUP[cur_lock_unit])
 		local in_frustum = cur_pos and Camera.inside_frustum and Camera.inside_frustum(camera, cur_pos)
@@ -380,7 +465,7 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 			self._lock_state.unit = nil
 			self._lock_state.stage = "IDLE"
 			self._lock_state.stage_t = t
-		else
+		elseif cur_pos then
 			local player_unit = _local_player_unit()
 			local player_pos = player_unit and POSITION_LOOKUP and POSITION_LOOKUP[player_unit]
 
@@ -403,7 +488,7 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 		local rec_w = widgets.recorder_text
 		local dir_w = widgets.directives
 
-		RecorderOverlayWidget.update(rec_w, t, self._theme, opacity)
+		RecorderOverlayWidget.update(rec_w, t, self._theme, opacity, mod._robocophud_mode)
 		-- Colors/text first, then position+visibility (_update_lock_frame_offset is the sole authority on widget.content.visible).
 		LockFrameWidget.update(lock_w, self._lock_state, self._theme, opacity)
 		_update_lock_frame_offset(self, lock_w, self._lock_state, render_settings, cur_lock_has_los)

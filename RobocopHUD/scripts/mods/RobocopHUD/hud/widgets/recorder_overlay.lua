@@ -13,12 +13,13 @@ local function _format_time_seconds(t)
 	return string.format("%02d:%02d:%02d", h, m, ss)
 end
 
-M.update = function(widget, t, theme, opacity)
+M.update = function(widget, t, theme, opacity, targeting_mode)
 	if not widget or not widget.content or not widget.style then
 		return
 	end
 
-	widget.content.text = string.format("REC %s", _format_time_seconds(t))
+	local mode_label = (targeting_mode == "SCAN") and "AUTO SCAN" or "AUTO TARGET"
+	widget.content.text = string.format("REC %s  |  %s", _format_time_seconds(t), mode_label)
 
 	local c = widget.style.text.text_color
 	local a = math.floor(255 * (opacity or 1) + 0.5)
