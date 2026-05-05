@@ -517,6 +517,31 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 
 		-- Pick next unshown candidate if we have no current target.
 		if not cur_scan then
+			-- Looping logic: if we've shown all currently alive candidates and looping is enabled,
+			-- clear the shown_set so the scan continues without requiring camera movement.
+			if runtime_settings.auto_scan_loop == true and count > 0 then
+				local total_alive = 0
+				local unshown_alive = 0
+
+				for i = 1, count do
+					local e = candidates[i]
+					local u = e and e.unit
+					if u then
+						local ok, alive = pcall(Unit.alive, u)
+						if ok and alive then
+							total_alive = total_alive + 1
+							if not ss.shown_set[u] then
+								unshown_alive = unshown_alive + 1
+							end
+						end
+					end
+				end
+
+				if total_alive > 0 and unshown_alive == 0 then
+					ss.shown_set = {}
+				end
+			end
+
 			local next_candidates = {}
 			for i = 1, count do
 				local e = candidates[i]
@@ -524,19 +549,6 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 					local ok, alive = pcall(Unit.alive, e.unit)
 					if ok and alive then
 						next_candidates[#next_candidates + 1] = e
-					end
-				end
-			end
-			-- If we already showed everyone and loop is enabled, start over.
-			if #next_candidates == 0 and runtime_settings.auto_scan_loop == true and count > 0 then
-				ss.shown_set = {}
-				for i = 1, count do
-					local e = candidates[i]
-					if e and e.unit then
-						local ok, alive = pcall(Unit.alive, e.unit)
-						if ok and alive then
-							next_candidates[#next_candidates + 1] = e
-						end
 					end
 				end
 			end
