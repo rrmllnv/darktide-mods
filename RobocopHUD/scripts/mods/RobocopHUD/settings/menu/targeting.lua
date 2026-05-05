@@ -27,6 +27,11 @@ return {
 			default_value = d("targeting_enabled", true),
 		},
 		{
+			setting_id = "los_statics_only",
+			type = "checkbox",
+			default_value = d("los_statics_only", true),
+		},
+		{
 			setting_id = "cycle_target_keybind",
 			type = "keybind",
 			default_value = { "left ctrl" },

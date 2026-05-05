@@ -62,6 +62,10 @@ return {
 		en = "Enable targeting widgets",
 		ru = "Включить виджеты захвата",
 	},
+	los_statics_only = {
+		en = "LoS: statics only (ignore FX)",
+		ru = "LoS: только геометрия (игнор FX)",
+	},
 	cycle_target_keybind = {
 		en = "Toggle AUTO / SCAN mode (Left Ctrl)",
 		ru = "Переключить режим AUTO / SCAN (Left Ctrl)",

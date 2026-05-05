@@ -54,6 +54,7 @@ local function _local_player_unit()
 end
 
 local LOS_FILTER = "filter_minion_line_of_sight_check"
+local LOS_FILTER_STATICS = "filter_ray_aim_assist_line_of_sight"
 local LOS_END_MARGIN = 0.4
 local LOS_EYE_OFFSET = 1.65
 local LOS_HIT_ACTOR_INDEX = 4
@@ -82,7 +83,7 @@ end
 
 -- Cast one ray from `from` to `target_pos`.
 -- Returns true if the path is clear (only the target_unit itself may be hit).
-local function _ray_clear(pw, from, target_pos, target_unit)
+local function _ray_clear_all_hits(pw, from, target_pos, target_unit)
 	local delta = target_pos - from
 	local full_dist = Vector3.length(delta)
 
@@ -111,11 +112,32 @@ local function _ray_clear(pw, from, target_pos, target_unit)
 	return true
 end
 
+-- Statics-only LoS (matches Darktide smart-targeting visibility raycast setup).
+-- Ignores dynamic/FX occluders if they are not part of static collision.
+local function _ray_clear_statics_only(pw, from, target_pos)
+	local delta = target_pos - from
+	local full_dist = Vector3.length(delta)
+
+	if full_dist <= LOS_END_MARGIN then
+		return true
+	end
+
+	local dir = Vector3.normalize(delta)
+	local ray_dist = full_dist - LOS_END_MARGIN
+	local ok, hit = pcall(PhysicsWorld.raycast, pw, from, dir, ray_dist, "closest", "types", "statics", "collision_filter", LOS_FILTER_STATICS)
+
+	if not ok then
+		return true
+	end
+
+	return hit ~= true
+end
+
 -- Multi-point LoS check.
 -- Origin: camera world position (matches what the player actually sees).
 -- Targets: torso node + head node of the enemy.
 -- Returns true if AT LEAST ONE target point has a clear ray (partial walls don't fully hide).
-local function _has_line_of_sight(camera, player_pos, target_unit, target_positions)
+local function _has_line_of_sight(camera, player_pos, target_unit, target_positions, statics_only)
 	local pw = _get_physics_world()
 
 	if not pw then
@@ -142,8 +164,17 @@ local function _has_line_of_sight(camera, player_pos, target_unit, target_positi
 
 	-- Check each target point; visible if ANY is unobstructed.
 	for _, target_pos in ipairs(target_positions) do
-		if target_pos and _ray_clear(pw, from, target_pos, target_unit) then
-			return true
+		if target_pos then
+			local clear = false
+			if statics_only == true then
+				clear = _ray_clear_statics_only(pw, from, target_pos)
+			else
+				clear = _ray_clear_all_hits(pw, from, target_pos, target_unit)
+			end
+
+			if clear then
+				return true
+			end
 		end
 	end
 
@@ -405,6 +436,7 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 		lock_scan_seconds = type(s) == "table" and s.lock_scan_seconds or 0.20,
 		lock_track_seconds = type(s) == "table" and s.lock_track_seconds or 0.25,
 		target_hold_seconds = type(s) == "table" and s.target_hold_seconds or 1.0,
+		los_statics_only = type(s) == "table" and (s.los_statics_only == true or s.los_statics_only == 1) or false,
 		camera = camera,
 	}
 
@@ -562,7 +594,7 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 		if #target_positions > 0 then
 			local player_unit = _local_player_unit()
 			local player_pos = player_unit and POSITION_LOOKUP and POSITION_LOOKUP[player_unit]
-			cur_lock_has_los = _has_line_of_sight(camera, player_pos, cur_lock_unit, target_positions)
+			cur_lock_has_los = _has_line_of_sight(camera, player_pos, cur_lock_unit, target_positions, runtime_settings.los_statics_only)
 		end
 	end
 
