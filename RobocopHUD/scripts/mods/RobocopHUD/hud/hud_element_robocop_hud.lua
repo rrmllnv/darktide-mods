@@ -450,9 +450,8 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 		self._robocophud_frame_w = nil
 	end
 
-	-- Frustum check (AUTO mode only): if locked target left the field of view, reset lock for re-acquisition.
+	-- Frustum check (AUTO TARGET only): if locked target left the field of view, reset lock for re-acquisition.
 	-- In SCAN mode the scan logic already uses candidates (frustum-filtered), so no separate check needed.
-	-- LoS (obstacles) only hides the frame widget — does NOT clear the target lock.
 	local cur_lock_unit = self._lock_state.unit
 	local cur_lock_has_los = true
 
@@ -465,7 +464,16 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 			self._lock_state.unit = nil
 			self._lock_state.stage = "IDLE"
 			self._lock_state.stage_t = t
-		elseif cur_pos then
+			cur_lock_unit = nil
+		end
+	end
+
+	-- LoS check (both modes): only hides the frame widget, does NOT clear the target lock.
+	if cur_lock_unit and HEALTH_ALIVE[cur_lock_unit] and Unit.alive(cur_lock_unit) then
+		local node_torso = Unit.has_node(cur_lock_unit, "enemy_aim_target_02") and Unit.node(cur_lock_unit, "enemy_aim_target_02") or nil
+		local cur_pos = (node_torso and Unit.world_position(cur_lock_unit, node_torso)) or (POSITION_LOOKUP and POSITION_LOOKUP[cur_lock_unit])
+
+		if cur_pos then
 			local player_unit = _local_player_unit()
 			local player_pos = player_unit and POSITION_LOOKUP and POSITION_LOOKUP[player_unit]
 
