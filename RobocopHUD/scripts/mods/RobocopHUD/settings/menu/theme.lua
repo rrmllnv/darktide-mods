@@ -36,6 +36,7 @@ return {
 			type = "numeric",
 			default_value = d("hud_opacity", 1.0),
 			range = { 0.1, 1.0 },
+			decimals_number = 2,
 			interval = 0.05,
 		},
 		{
@@ -43,6 +44,7 @@ return {
 			type = "numeric",
 			default_value = d("hud_scale", 1.0),
 			range = { 0.5, 1.5 },
+			decimals_number = 2,
 			interval = 0.05,
 		},
 	},

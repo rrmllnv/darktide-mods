@@ -19,3 +19,10 @@ mod.robocophud_cycle_target_keybind = function()
 		mod._robocophud_scan_state = nil
 	end
 end
+
+-- One-shot "pulse" for scanner sweep (used when scanner_passive == false).
+-- The HUD element consumes this flag on next update tick.
+mod._robocophud_scanner_manual_pulse = false
+mod.robocophud_scanner_manual_pulse_keybind = function()
+	mod._robocophud_scanner_manual_pulse = true
+end

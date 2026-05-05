@@ -9,6 +9,7 @@ local Themes = mod.robocophud_themes or mod:io_dofile("RobocopHUD/scripts/mods/R
 local ThreatQuery = mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/runtime/threat_query")
 local ThreatScoring = mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/runtime/threat_scoring")
 local TargetLock = mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/runtime/target_lock")
+local ScannerSweepRuntime = mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/runtime/scanner_sweep")
 local WarningsRuntime = mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/runtime/warnings_runtime")
 
 local function _noop_table()
@@ -29,6 +30,7 @@ local LockFrameWidget = _safe_widget(mod:io_dofile("RobocopHUD/scripts/mods/Robo
 local ThreatLadderWidget = _safe_widget(mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/hud/widgets/threat_ladder"))
 local RecorderOverlayWidget = _safe_widget(mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/hud/widgets/recorder_overlay"))
 local DirectivesWidget = _safe_widget(mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/hud/widgets/directives"))
+local ScannerSweepWidget = _safe_widget(mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/hud/widgets/scanner_sweep"))
 
 local HudElementRobocopHUD = class("HudElementRobocopHUD", "HudElementBase")
 
@@ -342,6 +344,7 @@ HudElementRobocopHUD.init = function(self, parent, draw_layer, start_scale)
 	self._threat_state = {}
 	self._scoring_state = {}
 	self._lock_state = {}
+	self._scanner_state = {}
 	self._warnings_state = {}
 end
 
@@ -373,6 +376,25 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 	local parent_hud = self._parent
 	local camera = parent_hud and parent_hud.player_camera and parent_hud:player_camera()
 
+	local scanner_compass_angle = 0
+	if camera and Camera.local_rotation and Quaternion and Quaternion.yaw then
+		local ok_rot, cam_rot = pcall(Camera.local_rotation, camera)
+		if ok_rot and cam_rot then
+			local ok_yaw, yaw = pcall(Quaternion.yaw, cam_rot)
+			if ok_yaw and type(yaw) == "number" then
+				-- Rotate the compass ring opposite to camera yaw.
+				scanner_compass_angle = -yaw
+			else
+				local fwd = Quaternion.forward(cam_rot)
+				fwd.z = 0
+				if Vector3.length_squared(fwd) > 0.0001 then
+					fwd = Vector3.normalize(fwd)
+					scanner_compass_angle = -math.atan2(fwd.x, fwd.y)
+				end
+			end
+		end
+	end
+
 	local runtime_settings = {
 		target_scan_interval = 0.10,
 		max_candidates = 64,
@@ -385,6 +407,29 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 		target_hold_seconds = type(s) == "table" and s.target_hold_seconds or 1.0,
 		camera = camera,
 	}
+
+	local scanner_settings = {
+		enabled = type(s) == "table" and (s.scanner_enabled == true or s.scanner_enabled == 1) or false,
+		passive = type(s) == "table" and (s.scanner_passive == true or s.scanner_passive == 1) or true,
+		sweep_seconds = type(s) == "table" and s.scanner_sweep_seconds or 2.0,
+		range_m = type(s) == "table" and s.scanner_range_m or 80.0,
+		max_blips = math.min(24, type(s) == "table" and s.scanner_max_blips or 24),
+		blip_fade_seconds = type(s) == "table" and s.scanner_blip_fade_seconds or 1.0,
+		camera = camera,
+		manual_pulse = mod._robocophud_scanner_manual_pulse == true,
+	}
+
+	local scanner_offset_x = type(s) == "table" and s.scanner_offset_x
+	local scanner_offset_y = type(s) == "table" and s.scanner_offset_y
+
+	if type(scanner_offset_x) ~= "number" or scanner_offset_x ~= scanner_offset_x then
+		scanner_offset_x = 0
+	end
+	if type(scanner_offset_y) ~= "number" or scanner_offset_y ~= scanner_offset_y then
+		scanner_offset_y = 0
+	end
+
+	mod._robocophud_scanner_manual_pulse = false
 
 	local prev_lock_unit = self._lock_state.unit
 
@@ -533,6 +578,21 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 		local ladder_w = widgets.threat_ladder
 		local rec_w = widgets.recorder_text
 		local dir_w = widgets.directives
+		local scan_w = widgets.scanner_sweep
+
+		if scan_w then
+			local o = scan_w.offset
+			if not o then
+				scan_w.offset = { scanner_offset_x, scanner_offset_y, 0 }
+			else
+				o[1] = scanner_offset_x
+				o[2] = scanner_offset_y
+			end
+		end
+
+		self._scanner_state = ScannerSweepRuntime.update(self._scanner_state, dt, t, scanner_settings)
+		self._scanner_state.t = t
+		self._scanner_state.compass_angle = scanner_compass_angle
 
 		RecorderOverlayWidget.update(rec_w, t, self._theme, opacity, mod._robocophud_mode)
 		-- Colors/text first, then position+visibility (_update_lock_frame_offset is the sole authority on widget.content.visible).
@@ -540,6 +600,7 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 		_update_lock_frame_offset(self, lock_w, self._lock_state, render_settings, cur_lock_has_los)
 		ThreatLadderWidget.update(ladder_w, top_threats, self._theme, opacity)
 		DirectivesWidget.update(dir_w, self._lock_state, self._theme, opacity)
+		ScannerSweepWidget.update(scan_w, self._scanner_state, self._theme, opacity)
 	end
 
 	if status_widget and status_widget.content and status_widget.style and status_widget.style.text then

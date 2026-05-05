@@ -109,6 +109,38 @@ return {
 		en = "Enable scanner sweep",
 		ru = "Включить sweep-сканер",
 	},
+	scanner_passive = {
+		en = "Passive scanner (auto sweep)",
+		ru = "Пассивный сканер (авто-sweep)",
+	},
+	scanner_manual_pulse_keybind = {
+		en = "Manual scanner pulse (keybind)",
+		ru = "Ручной импульс сканера (клавиша)",
+	},
+	scanner_sweep_seconds = {
+		en = "Sweep duration (s)",
+		ru = "Длительность sweep (с)",
+	},
+	scanner_range_m = {
+		en = "Scanner range (m)",
+		ru = "Дальность сканера (м)",
+	},
+	scanner_max_blips = {
+		en = "Max blips",
+		ru = "Макс. меток",
+	},
+	scanner_blip_fade_seconds = {
+		en = "Blip fade (s)",
+		ru = "Затухание меток (с)",
+	},
+	scanner_offset_x = {
+		en = "Scanner offset X",
+		ru = "Смещение сканера X",
+	},
+	scanner_offset_y = {
+		en = "Scanner offset Y",
+		ru = "Смещение сканера Y",
+	},
 
 	warnings_group = {
 		en = "Warnings",

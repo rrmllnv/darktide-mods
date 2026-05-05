@@ -39,6 +39,7 @@ return {
 			type = "numeric",
 			default_value = d("target_hold_seconds", 1.0),
 			range = { 0.0, 3.0 },
+			decimals_number = 2,
 			interval = 0.05,
 		},
 		{
@@ -46,6 +47,7 @@ return {
 			type = "numeric",
 			default_value = d("lock_scan_seconds", 0.20),
 			range = { 0.0, 1.0 },
+			decimals_number = 2,
 			interval = 0.01,
 		},
 		{
@@ -53,6 +55,7 @@ return {
 			type = "numeric",
 			default_value = d("lock_track_seconds", 0.25),
 			range = { 0.0, 1.0 },
+			decimals_number = 2,
 			interval = 0.01,
 		},
 	},

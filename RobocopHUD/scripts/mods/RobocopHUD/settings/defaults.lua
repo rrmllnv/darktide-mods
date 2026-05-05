@@ -9,6 +9,15 @@ local defaults = {
 	lock_scan_seconds = 0.20,
 	lock_track_seconds = 0.25,
 
+	scanner_enabled = true,
+	scanner_passive = true,
+	scanner_sweep_seconds = 2.0,
+	scanner_range_m = 80.0,
+	scanner_max_blips = 24,
+	scanner_blip_fade_seconds = 1.0,
+	scanner_offset_x = 0,
+	scanner_offset_y = 0,
+
 	hide_vanilla_stamina = false,
 	hide_vanilla_dodge = false,
 
