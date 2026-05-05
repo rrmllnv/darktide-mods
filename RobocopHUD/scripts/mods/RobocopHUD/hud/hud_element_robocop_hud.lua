@@ -10,6 +10,7 @@ local ThreatQuery = mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/runtime/th
 local ThreatScoring = mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/runtime/threat_scoring")
 local TargetLock = mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/runtime/target_lock")
 local ScannerSweepRuntime = mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/runtime/scanner_sweep")
+local EnemyTargetRuntime = mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/runtime/enemy_target_runtime")
 local WarningsRuntime = mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/runtime/warnings_runtime")
 
 local function _noop_table()
@@ -31,6 +32,7 @@ local ThreatLadderWidget = _safe_widget(mod:io_dofile("RobocopHUD/scripts/mods/R
 local RecorderOverlayWidget = _safe_widget(mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/hud/widgets/recorder_overlay"))
 local DirectivesWidget = _safe_widget(mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/hud/widgets/directives"))
 local ScannerSweepWidget = _safe_widget(mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/hud/widgets/scanner_sweep"))
+local EnemyTargetWidget = _safe_widget(mod:io_dofile("RobocopHUD/scripts/mods/RobocopHUD/hud/widgets/enemy_target"))
 
 local HudElementRobocopHUD = class("HudElementRobocopHUD", "HudElementBase")
 
@@ -376,6 +378,7 @@ HudElementRobocopHUD.init = function(self, parent, draw_layer, start_scale)
 	self._scoring_state = {}
 	self._lock_state = {}
 	self._scanner_state = {}
+	self._enemy_target_data = {}
 	self._warnings_state = {}
 end
 
@@ -454,12 +457,20 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 
 	local scanner_offset_x = type(s) == "table" and s.scanner_offset_x
 	local scanner_offset_y = type(s) == "table" and s.scanner_offset_y
+	local target_info_offset_x = type(s) == "table" and s.target_info_offset_x
+	local target_info_offset_y = type(s) == "table" and s.target_info_offset_y
 
 	if type(scanner_offset_x) ~= "number" or scanner_offset_x ~= scanner_offset_x then
 		scanner_offset_x = 0
 	end
 	if type(scanner_offset_y) ~= "number" or scanner_offset_y ~= scanner_offset_y then
 		scanner_offset_y = 0
+	end
+	if type(target_info_offset_x) ~= "number" or target_info_offset_x ~= target_info_offset_x then
+		target_info_offset_x = 200
+	end
+	if type(target_info_offset_y) ~= "number" or target_info_offset_y ~= target_info_offset_y then
+		target_info_offset_y = 0
 	end
 
 	mod._robocophud_scanner_manual_pulse = false
@@ -630,6 +641,7 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 	}
 	self._last_lock_had_unit = self._lock_state.unit ~= nil
 	self._warnings_state = WarningsRuntime.update(self._warnings_state, t, warning_ctx, runtime_settings)
+	self._enemy_target_data = EnemyTargetRuntime.scan(self._lock_state, cur_lock_has_los)
 
 	local widgets = self._widgets_by_name
 	if widgets then
@@ -638,6 +650,7 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 		local rec_w = widgets.recorder_text
 		local dir_w = widgets.directives
 		local scan_w = widgets.scanner_sweep
+		local enemy_target_w = widgets.enemy_target
 
 		if scan_w then
 			local o = scan_w.offset
@@ -646,6 +659,16 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 			else
 				o[1] = scanner_offset_x
 				o[2] = scanner_offset_y
+			end
+		end
+
+		if enemy_target_w then
+			local o = enemy_target_w.offset
+			if not o then
+				enemy_target_w.offset = { target_info_offset_x, target_info_offset_y, 0 }
+			else
+				o[1] = target_info_offset_x
+				o[2] = target_info_offset_y
 			end
 		end
 
@@ -660,6 +683,7 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 		ThreatLadderWidget.update(ladder_w, top_threats, self._theme, opacity)
 		DirectivesWidget.update(dir_w, self._lock_state, self._theme, opacity)
 		ScannerSweepWidget.update(scan_w, self._scanner_state, self._theme, opacity)
+		EnemyTargetWidget.update(enemy_target_w, self._enemy_target_data, self._theme, opacity)
 	end
 
 	if status_widget and status_widget.content and status_widget.style and status_widget.style.text then
@@ -712,6 +736,11 @@ HudElementRobocopHUD.draw = function(self, dt, t, ui_renderer, render_settings, 
 end
 
 HudElementRobocopHUD.destroy = function(self, ui_renderer)
+	local widgets = self._widgets_by_name
+	if widgets and widgets.enemy_target and type(EnemyTargetWidget.destroy) == "function" then
+		EnemyTargetWidget.destroy(widgets.enemy_target)
+	end
+
 	HudElementRobocopHUD.super.destroy(self, ui_renderer)
 end
 

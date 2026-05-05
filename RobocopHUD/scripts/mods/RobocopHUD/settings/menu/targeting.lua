@@ -68,6 +68,27 @@ return {
 			decimals_number = 2,
 			interval = 0.01,
 		},
+		{
+			setting_id = "target_info_position_group",
+			type = "group",
+			title = "target_info_position_group",
+			sub_widgets = {
+				{
+					setting_id = "target_info_offset_x",
+					type = "numeric",
+					default_value = d("target_info_offset_x", 200),
+					range = { -960, 960 },
+					decimals_number = 0,
+				},
+				{
+					setting_id = "target_info_offset_y",
+					type = "numeric",
+					default_value = d("target_info_offset_y", 0),
+					range = { -540, 540 },
+					decimals_number = 0,
+				},
+			},
+		},
 	},
 }
 

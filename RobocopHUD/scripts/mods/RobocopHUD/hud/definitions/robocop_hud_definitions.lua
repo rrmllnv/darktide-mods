@@ -52,6 +52,13 @@ M.scenegraph_definition = {
 		size = { 360, 360 },
 		position = { 0, 0, 5 },
 	},
+	target_info = {
+		parent = "center",
+		vertical_alignment = "center",
+		horizontal_alignment = "center",
+		size = { 360, 260 },
+		position = { 0, 0, 6 },
+	},
 	bottom = {
 		parent = "screen",
 		vertical_alignment = "bottom",
@@ -536,7 +543,158 @@ M.widget_definitions = {
 			},
 		},
 	}, "scanner"),
+
+	enemy_target = UIWidget.create_definition({
+		{
+			pass_type = "text",
+			value = "",
+			value_id = "name_text",
+			style_id = "name_text",
+			style = table.merge_recursive(table.clone(base_text_style), {
+				font_size = 18,
+				offset = { 12, 6, 3 },
+				size = { 230, 24 },
+				text_horizontal_alignment = "left",
+				text_vertical_alignment = "center",
+				truncated = true,
+				max_lines = 1,
+			}),
+		},
+		{
+			pass_type = "rect",
+			style_id = "health_bar_background",
+			style = {
+				color = { 60, 120, 255, 160 },
+				horizontal_alignment = "left",
+				vertical_alignment = "top",
+				size = { 220, 6 },
+				offset = { 12, 34, 2 },
+			},
+		},
+		{
+			pass_type = "rect",
+			style_id = "health_bar_fill",
+			style = {
+				color = { 220, 60, 255, 120 },
+				horizontal_alignment = "left",
+				vertical_alignment = "top",
+				size = { 220, 6 },
+				default_size = { 220, 6 },
+				offset = { 12, 34, 3 },
+			},
+		},
+		{
+			pass_type = "text",
+			value = "",
+			value_id = "health_text",
+			style_id = "health_text",
+			style = table.merge_recursive(table.clone(base_text_style), {
+				font_size = 13,
+				offset = { 238, 24, 3 },
+				size = { 48, 20 },
+				text_horizontal_alignment = "right",
+				text_vertical_alignment = "center",
+			}),
+		},
+		{
+			pass_type = "text",
+			value = "",
+			value_id = "type_text",
+			style_id = "type_text",
+			style = table.merge_recursive(table.clone(base_text_style), {
+				font_size = 12,
+				offset = { 12, 43, 3 },
+				size = { 250, 18 },
+				text_horizontal_alignment = "left",
+				text_vertical_alignment = "center",
+				truncated = true,
+				max_lines = 1,
+			}),
+		},
+	}, "target_info"),
 }
+
+do
+	local enemy_target_definition = M.widget_definitions.enemy_target
+	local debuff_icon_size = 16
+	local debuff_row_height = 18
+	local debuff_text_x = 34
+	local debuff_icon_x = 12
+	local debuff_start_y = 64
+
+	for i = 1, 16 do
+		local row_y = debuff_start_y + (i - 1) * debuff_row_height
+		local icon_id = "debuff_icon_" .. i
+		local text_id = "debuff_text_" .. i
+		local outline_id = text_id .. "_outline_text"
+
+		enemy_target_definition.content[icon_id] = nil
+		enemy_target_definition.content[text_id] = ""
+		enemy_target_definition.content[outline_id] = ""
+
+		enemy_target_definition.style[icon_id] = {
+			horizontal_alignment = "left",
+			vertical_alignment = "top",
+			offset = { debuff_icon_x, row_y, 4 },
+			size = { debuff_icon_size, debuff_icon_size },
+			color = { 255, 120, 255, 160 },
+		}
+
+		enemy_target_definition.style[text_id] = {
+			font_type = "machine_medium",
+			font_size = 13,
+			text_horizontal_alignment = "left",
+			text_vertical_alignment = "center",
+			offset = { debuff_text_x, row_y - 1, 6 },
+			size = { 250, debuff_row_height },
+			text_color = { 255, 120, 255, 160 },
+			truncated = true,
+			max_lines = 1,
+			drop_shadow = true,
+			shadow_offset = { 1, -1 },
+			shadow_color = { 180, 0, 0, 0 },
+		}
+
+		enemy_target_definition.style[text_id .. "_outline"] = {
+			font_type = "machine_medium",
+			font_size = 13,
+			text_horizontal_alignment = "left",
+			text_vertical_alignment = "center",
+			offset = { debuff_text_x + 1, row_y, 5 },
+			size = { 250, debuff_row_height },
+			text_color = { 255, 0, 0, 0 },
+			truncated = true,
+			max_lines = 1,
+		}
+
+		enemy_target_definition.passes[#enemy_target_definition.passes + 1] = {
+			pass_type = "texture",
+			style_id = icon_id,
+			value_id = icon_id,
+			visibility_function = function(content)
+				return content[icon_id] ~= nil
+			end,
+		}
+
+		enemy_target_definition.passes[#enemy_target_definition.passes + 1] = {
+			pass_type = "text",
+			style_id = text_id,
+			value_id = text_id,
+			visibility_function = function(content)
+				return content[text_id] ~= ""
+			end,
+		}
+
+		enemy_target_definition.passes[#enemy_target_definition.passes + 1] = {
+			pass_type = "text",
+			style_id = text_id .. "_outline",
+			value_id = outline_id,
+			visibility_function = function(content)
+				return content[outline_id] ~= ""
+			end,
+		}
+	end
+end
 
 mod.robocophud_definitions = M
 

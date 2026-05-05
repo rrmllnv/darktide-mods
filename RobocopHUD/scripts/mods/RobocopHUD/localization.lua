@@ -86,6 +86,18 @@ return {
 		en = "TRACK duration (s)",
 		ru = "Длительность TRACK (с)",
 	},
+	target_info_position_group = {
+		en = "Target readout position",
+		ru = "Позиция блока цели",
+	},
+	target_info_offset_x = {
+		en = "Target readout offset X",
+		ru = "Смещение блока цели X",
+	},
+	target_info_offset_y = {
+		en = "Target readout offset Y",
+		ru = "Смещение блока цели Y",
+	},
 
 	vanilla_hud_group = {
 		en = "Vanilla HUD suppression",
@@ -148,6 +160,107 @@ return {
 	scanner_offset_y = {
 		en = "Scanner offset Y",
 		ru = "Смещение сканера Y",
+	},
+
+	enemy_target_debuff_label_bleed = {
+		en = "Bleed",
+		ru = "Кровотечение",
+	},
+	enemy_target_debuff_label_fire = {
+		en = "Fire",
+		ru = "Огонь",
+	},
+	enemy_target_debuff_label_warp = {
+		en = "Warp",
+		ru = "Варп",
+	},
+	enemy_target_debuff_label_shock = {
+		en = "Electroshock",
+		ru = "Электрошок",
+	},
+	enemy_target_debuff_label_toxin = {
+		en = "Poison",
+		ru = "Токсин",
+	},
+	enemy_target_debuff_label_rending = {
+		en = "Armor Break",
+		ru = "Пробитие брони",
+	},
+	enemy_target_debuff_label_stagger = {
+		en = "Stun",
+		ru = "Оглушение",
+	},
+	enemy_target_debuff_label_blind = {
+		en = "Smoke Effect",
+		ru = "Дымовой эффект",
+	},
+	enemy_target_debuff_label_damage_taken = {
+		en = "More Damage",
+		ru = "Повышенный урон",
+	},
+	enemy_target_debuff_label_melee_damage_taken = {
+		en = "More Melee Damage",
+		ru = "Повышенный урон в ближнем бою",
+	},
+	enemy_target_debuff_label_stagger_damage = {
+		en = "More Stunned Damage",
+		ru = "Урон по оглушённым",
+	},
+	enemy_target_debuff_label_impact_taken = {
+		en = "Easier to Stun",
+		ru = "Легче оглушить",
+	},
+	enemy_target_debuff_label_count_as_stagger = {
+		en = "Stun Effect",
+		ru = "Эффект оглушения",
+	},
+	enemy_target_debuff_label_damage_dealt_down = {
+		en = "Weakening Effect",
+		ru = "Ослабление",
+	},
+	enemy_target_type_monster = {
+		en = "Monster",
+		ru = "Монстр",
+	},
+	enemy_target_type_captain = {
+		en = "Captain",
+		ru = "Капитан",
+	},
+	enemy_target_type_cultist_captain = {
+		en = "Captain",
+		ru = "Капитан",
+	},
+	enemy_target_type_disabler = {
+		en = "Disabler",
+		ru = "Дизейблер",
+	},
+	enemy_target_type_witch = {
+		en = "Witch",
+		ru = "Ведьма",
+	},
+	enemy_target_type_sniper = {
+		en = "Sniper",
+		ru = "Снайпер",
+	},
+	enemy_target_type_far = {
+		en = "Ranged",
+		ru = "Стрелок",
+	},
+	enemy_target_type_elite = {
+		en = "Elite",
+		ru = "Элита",
+	},
+	enemy_target_type_special = {
+		en = "Specialist",
+		ru = "Специалист",
+	},
+	enemy_target_type_horde = {
+		en = "Horde",
+		ru = "Орда",
+	},
+	enemy_target_type_enemy = {
+		en = "Enemy",
+		ru = "Враг",
 	},
 
 	warnings_group = {

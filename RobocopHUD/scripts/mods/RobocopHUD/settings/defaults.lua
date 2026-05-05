@@ -10,6 +10,8 @@ local defaults = {
 	lock_track_seconds = 0.25,
 	los_statics_only = true,
 	auto_scan_loop = true,
+	target_info_offset_x = 200,
+	target_info_offset_y = 0,
 
 	scanner_enabled = true,
 	scanner_passive = true,
