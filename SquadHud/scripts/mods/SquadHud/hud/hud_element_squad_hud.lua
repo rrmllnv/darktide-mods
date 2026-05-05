@@ -1861,6 +1861,11 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 		show_grenade_icon = false
 		show_ammo_icon = false
 		show_stimm_icon = false
+		operational_status = nil
+		is_showing_status = false
+		display_name = base_name
+		base_name_color = use_player_color_for_name and slot_color or COLOR_TEXT_DEFAULT
+		display_name_color = base_name_color
 	end
 	local show_teammate_distance = boolean_setting("squadhud_show_teammate_distance", true)
 	local level_text = expanded_view_level_text(player, expanded_view)
