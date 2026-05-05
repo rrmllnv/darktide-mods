@@ -32,6 +32,11 @@ return {
 			default_value = d("los_statics_only", true),
 		},
 		{
+			setting_id = "auto_scan_loop",
+			type = "checkbox",
+			default_value = d("auto_scan_loop", true),
+		},
+		{
 			setting_id = "cycle_target_keybind",
 			type = "keybind",
 			default_value = { "left ctrl" },

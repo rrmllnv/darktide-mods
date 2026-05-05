@@ -437,6 +437,7 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 		lock_track_seconds = type(s) == "table" and s.lock_track_seconds or 0.25,
 		target_hold_seconds = type(s) == "table" and s.target_hold_seconds or 1.0,
 		los_statics_only = type(s) == "table" and (s.los_statics_only == true or s.los_statics_only == 1) or false,
+		auto_scan_loop = type(s) ~= "table" or (s.auto_scan_loop ~= false and s.auto_scan_loop ~= 0),
 		camera = camera,
 	}
 
@@ -526,6 +527,20 @@ HudElementRobocopHUD.update = function(self, dt, t, ui_renderer, render_settings
 					end
 				end
 			end
+			-- If we already showed everyone and loop is enabled, start over.
+			if #next_candidates == 0 and runtime_settings.auto_scan_loop == true and count > 0 then
+				ss.shown_set = {}
+				for i = 1, count do
+					local e = candidates[i]
+					if e and e.unit then
+						local ok, alive = pcall(Unit.alive, e.unit)
+						if ok and alive then
+							next_candidates[#next_candidates + 1] = e
+						end
+					end
+				end
+			end
+
 			if #next_candidates > 0 then
 				table.sort(next_candidates, function(a, b)
 					return (a.distance or 9999) < (b.distance or 9999)

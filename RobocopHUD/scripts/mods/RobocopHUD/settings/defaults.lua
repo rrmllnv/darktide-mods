@@ -9,6 +9,7 @@ local defaults = {
 	lock_scan_seconds = 0.20,
 	lock_track_seconds = 0.25,
 	los_statics_only = true,
+	auto_scan_loop = true,
 
 	scanner_enabled = true,
 	scanner_passive = true,

@@ -66,6 +66,10 @@ return {
 		en = "LoS: statics only (ignore FX)",
 		ru = "LoS: только геометрия (игнор FX)",
 	},
+	auto_scan_loop = {
+		en = "AUTO SCAN: loop targets",
+		ru = "AUTO SCAN: цикл целей",
+	},
 	cycle_target_keybind = {
 		en = "Toggle AUTO / SCAN mode (Left Ctrl)",
 		ru = "Переключить режим AUTO / SCAN (Left Ctrl)",
