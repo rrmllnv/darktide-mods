@@ -86,6 +86,24 @@ local function pickup_type_from_unit(unit)
 	return Unit.get_data(unit, "pickup_type")
 end
 
+local function pickup_type_from_marker_data(marker)
+	if not marker then
+		return nil
+	end
+
+	local success, pickup_type = pcall(function()
+		local data = marker.data
+
+		return data and data.type or nil
+	end)
+
+	if not success then
+		return nil
+	end
+
+	return pickup_type
+end
+
 local function stop_effect_for_unit(unit)
 	local effect_data = tracked_effects_by_unit[unit]
 
@@ -172,8 +190,8 @@ local function add_marker_units(desired_units)
 		local unit = marker and marker.unit
 		local pickup_type = unit and pickup_type_from_unit(unit)
 
-		if not pickup_type and marker and marker.data and marker.data.type then
-			pickup_type = marker.data.type
+		if not pickup_type then
+			pickup_type = pickup_type_from_marker_data(marker)
 		end
 
 		if unit and pickup_type and pickup_type_enabled(pickup_type) then
