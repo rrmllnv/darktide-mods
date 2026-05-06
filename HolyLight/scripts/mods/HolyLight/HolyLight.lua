@@ -36,6 +36,21 @@ local MEDICAL_CRATE_PICKUP_TYPES = {
 	medical_crate_deployable = true,
 }
 
+local MATERIAL_PICKUP_TYPES = {
+	small_metal = true,
+	large_metal = true,
+	small_platinum = true,
+	large_platinum = true,
+}
+
+local SIDE_MISSION_BOOK_PICKUP_TYPES = {
+	grimoire = true,
+	grimoire_pocketable = true,
+	tome = true,
+	tome_pocketable = true,
+	scripture_pocketable = true,
+}
+
 local function mod_enabled()
 	return mod:get("enable_mod") ~= false
 end
@@ -63,6 +78,14 @@ local function pickup_type_enabled(pickup_type)
 
 	if MEDICAL_CRATE_PICKUP_TYPES[pickup_type] then
 		return mod:get("enable_medical_crates") ~= false
+	end
+
+	if MATERIAL_PICKUP_TYPES[pickup_type] then
+		return mod:get("enable_material_pickups") ~= false
+	end
+
+	if SIDE_MISSION_BOOK_PICKUP_TYPES[pickup_type] then
+		return mod:get("enable_side_mission_books") ~= false
 	end
 
 	return false

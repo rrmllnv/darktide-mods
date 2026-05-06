@@ -43,4 +43,12 @@ return {
 		en = "Holy light on medical crates",
 		ru = "Свечение на медицинских ящиках",
 	},
+	enable_material_pickups = {
+		en = "Holy light on plasteel and diamantine",
+		ru = "Свечение на пластиле и диамантине",
+	},
+	enable_side_mission_books = {
+		en = "Holy light on grimoires and scriptures",
+		ru = "Свечение на гримуарах и писаниях",
+	},
 }

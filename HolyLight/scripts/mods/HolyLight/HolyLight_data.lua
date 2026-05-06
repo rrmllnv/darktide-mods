@@ -19,8 +19,8 @@ return {
 					{
 						setting_id = "effect_height",
 						type = "numeric",
-						default_value = 0.2,
-						range = { 0.2, 2.0 },
+						default_value = 0.1,
+						range = { 0.1, 2.0 },
 						decimals_number = 2,
 						interval = 0.05,
 					},
@@ -53,6 +53,16 @@ return {
 					},
 					{
 						setting_id = "enable_medical_crates",
+						type = "checkbox",
+						default_value = true,
+					},
+					{
+						setting_id = "enable_material_pickups",
+						type = "checkbox",
+						default_value = true,
+					},
+					{
+						setting_id = "enable_side_mission_books",
 						type = "checkbox",
 						default_value = true,
 					},
