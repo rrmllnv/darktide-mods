@@ -8,12 +8,12 @@ return {
 		ru = "Добавляет свечение над выбранными предметами и ящиками.",
 	},
 	general_group = {
-		en = "General Settings",
-		ru = "Общие настройки",
+		en = "\238\128\140 DISPLAY",
+		ru = "\238\128\140 ОТОБРАЖЕНИЕ",
 	},
 	targets_group = {
-		en = "Target Categories",
-		ru = "Категории предметов",
+		en = "\238\128\161 ITEM CATEGORIES",
+		ru = "\238\128\161 КАТЕГОРИИ ПРЕДМЕТОВ",
 	},
 	enable_mod = {
 		en = "Enable mod",
