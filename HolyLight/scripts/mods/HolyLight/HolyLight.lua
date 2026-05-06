@@ -62,6 +62,10 @@ local SKULL_PICKUP_TYPES = {
 	skulls_01_pickup = true,
 }
 
+local PICKUP_TYPE_BY_UNIT_NAME = {
+	["content/pickups/collectibles/collectible_tainted_skull_01"] = "skulls_01_pickup",
+}
+
 local function mod_enabled()
 	return mod:get("enable_mod") ~= false
 end
@@ -130,6 +134,16 @@ local function pickup_type_from_unit(unit)
 	end
 
 	return Unit.get_data(unit, "pickup_type")
+end
+
+local function pickup_type_from_unit_name(unit)
+	if not unit or not Unit or not Unit.alive(unit) or not Unit.has_data(unit, "unit_name") then
+		return nil
+	end
+
+	local unit_name = Unit.get_data(unit, "unit_name")
+
+	return unit_name and PICKUP_TYPE_BY_UNIT_NAME[unit_name] or nil
 end
 
 local function pickup_type_from_marker_data(marker)
@@ -235,6 +249,10 @@ local function add_marker_units(desired_units)
 		local marker = interaction_markers[i]
 		local unit = marker and marker.unit
 		local pickup_type = unit and pickup_type_from_unit(unit)
+
+		if not pickup_type then
+			pickup_type = unit and pickup_type_from_unit_name(unit)
+		end
 
 		if not pickup_type then
 			pickup_type = pickup_type_from_marker_data(marker)
