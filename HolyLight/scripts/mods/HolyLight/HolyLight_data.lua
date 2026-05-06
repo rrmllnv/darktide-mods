@@ -76,11 +76,6 @@ return {
 						type = "checkbox",
 						default_value = true,
 					},
-					{
-						setting_id = "enable_skulls",
-						type = "checkbox",
-						default_value = true,
-					},
 				},
 			},
 		},

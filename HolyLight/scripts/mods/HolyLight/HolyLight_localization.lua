@@ -104,11 +104,4 @@ return {
 		fr = "Lueur sur les ecritures",
 		["zh-cn"] = "圣卷发光",
 	},
-	enable_skulls = {
-		en = "Glow on skulls",
-		ru = "Свечение на черепах",
-		de = "Leuchten auf Schadeln",
-		fr = "Lueur sur les cranes",
-		["zh-cn"] = "骷髅发光",
-	},
 }

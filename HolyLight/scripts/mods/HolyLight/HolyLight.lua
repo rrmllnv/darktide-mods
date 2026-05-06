@@ -5,6 +5,7 @@ local ROOT_NODE_INDEX = 1
 local DEFAULT_HEIGHT = 0.1
 
 local tracked_effects_by_unit = {}
+local tracked_pickups_by_unit = {}
 local tracked_deployables_by_unit = {}
 
 local STIMM_PICKUP_TYPES = {
@@ -57,15 +58,6 @@ local SCRIPTURE_PICKUP_TYPES = {
 	scripture_pocketable = true,
 }
 
-local SKULL_PICKUP_TYPES = {
-	collectible_01_pickup = true,
-	skulls_01_pickup = true,
-}
-
-local PICKUP_TYPE_BY_UNIT_NAME = {
-	["content/pickups/collectibles/collectible_tainted_skull_01"] = "skulls_01_pickup",
-}
-
 local function mod_enabled()
 	return mod:get("enable_mod") ~= false
 end
@@ -111,10 +103,6 @@ local function pickup_type_enabled(pickup_type)
 		return mod:get("enable_scriptures") ~= false
 	end
 
-	if SKULL_PICKUP_TYPES[pickup_type] then
-		return mod:get("enable_skulls") ~= false
-	end
-
 	return false
 end
 
@@ -134,16 +122,6 @@ local function pickup_type_from_unit(unit)
 	end
 
 	return Unit.get_data(unit, "pickup_type")
-end
-
-local function pickup_type_from_unit_name(unit)
-	if not unit or not Unit or not Unit.alive(unit) or not Unit.has_data(unit, "unit_name") then
-		return nil
-	end
-
-	local unit_name = Unit.get_data(unit, "unit_name")
-
-	return unit_name and PICKUP_TYPE_BY_UNIT_NAME[unit_name] or nil
 end
 
 local function pickup_type_from_marker_data(marker)
@@ -186,6 +164,7 @@ local function stop_all_effects()
 		stop_effect_for_unit(unit)
 	end
 
+	table.clear(tracked_pickups_by_unit)
 	table.clear(tracked_deployables_by_unit)
 end
 
@@ -234,32 +213,53 @@ local function register_deployable_unit(unit, pickup_type)
 	tracked_deployables_by_unit[unit] = pickup_type
 end
 
+local function register_pickup_unit(unit)
+	if not unit or not Unit or not Unit.alive(unit) then
+		return
+	end
+
+	local pickup_type = pickup_type_from_unit(unit)
+
+	if not pickup_type then
+		return
+	end
+
+	tracked_pickups_by_unit[unit] = pickup_type
+end
+
+local function add_registered_pickup_units(desired_units)
+	for unit, pickup_type in pairs(tracked_pickups_by_unit) do
+		if unit and Unit.alive(unit) and pickup_type_enabled(pickup_type) then
+			desired_units[unit] = pickup_type
+		else
+			tracked_pickups_by_unit[unit] = nil
+		end
+	end
+end
+
 local function add_marker_units(desired_units)
 	local ui_manager = Managers.ui
 	local hud = ui_manager and ui_manager:get_hud()
 	local world_markers = hud and hud:element("HudElementWorldMarkers")
 	local markers_by_type = world_markers and world_markers._markers_by_type
-	local interaction_markers = markers_by_type and markers_by_type.interaction
 
-	if not interaction_markers then
+	if not markers_by_type then
 		return
 	end
 
-	for i = 1, #interaction_markers do
-		local marker = interaction_markers[i]
-		local unit = marker and marker.unit
-		local pickup_type = unit and pickup_type_from_unit(unit)
+	for _, markers in pairs(markers_by_type) do
+		for i = 1, #markers do
+			local marker = markers[i]
+			local unit = marker and marker.unit
+			local pickup_type = unit and pickup_type_from_unit(unit)
 
-		if not pickup_type then
-			pickup_type = unit and pickup_type_from_unit_name(unit)
-		end
+			if not pickup_type then
+				pickup_type = pickup_type_from_marker_data(marker)
+			end
 
-		if not pickup_type then
-			pickup_type = pickup_type_from_marker_data(marker)
-		end
-
-		if unit and pickup_type and pickup_type_enabled(pickup_type) then
-			desired_units[unit] = pickup_type
+			if unit and pickup_type and pickup_type_enabled(pickup_type) then
+				desired_units[unit] = pickup_type
+			end
 		end
 	end
 end
@@ -283,6 +283,7 @@ local function sync_effects()
 	local desired_units = {}
 
 	add_marker_units(desired_units)
+	add_registered_pickup_units(desired_units)
 	add_deployable_units(desired_units)
 
 	for unit, pickup_type in pairs(desired_units) do
@@ -304,6 +305,16 @@ mod.on_all_mods_loaded = function()
 	mod:hook_require("scripts/extension_systems/unit_templates", function(instance)
 		if not is_mod_loading then
 			return
+		end
+
+		if instance.pickup then
+			mod:hook_safe(instance.pickup, "local_unit_spawned", function(unit)
+				register_pickup_unit(unit)
+			end)
+
+			mod:hook_safe(instance.pickup, "husk_unit_spawned", function(unit)
+				register_pickup_unit(unit)
+			end)
 		end
 
 		if instance.medical_crate_deployable then
