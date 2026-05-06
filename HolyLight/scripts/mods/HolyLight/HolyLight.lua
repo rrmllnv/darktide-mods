@@ -2,7 +2,7 @@ local mod = get_mod("HolyLight")
 
 local HOLY_LIGHT_VFX = "content/fx/particles/player_buffs/buff_preacher_holy_light"
 local ROOT_NODE_INDEX = 1
-local DEFAULT_HEIGHT = 0.8
+local DEFAULT_HEIGHT = 0.1
 
 local tracked_effects_by_unit = {}
 local tracked_deployables_by_unit = {}
@@ -36,19 +36,30 @@ local MEDICAL_CRATE_PICKUP_TYPES = {
 	medical_crate_deployable = true,
 }
 
-local MATERIAL_PICKUP_TYPES = {
+local PLASTEEL_PICKUP_TYPES = {
 	small_metal = true,
 	large_metal = true,
+}
+
+local DIAMANTINE_PICKUP_TYPES = {
 	small_platinum = true,
 	large_platinum = true,
 }
 
-local SIDE_MISSION_BOOK_PICKUP_TYPES = {
+local GRIMOIRE_PICKUP_TYPES = {
 	grimoire = true,
 	grimoire_pocketable = true,
+}
+
+local SCRIPTURE_PICKUP_TYPES = {
 	tome = true,
 	tome_pocketable = true,
 	scripture_pocketable = true,
+}
+
+local SKULL_PICKUP_TYPES = {
+	collectible_01_pickup = true,
+	skulls_01_pickup = true,
 }
 
 local function mod_enabled()
@@ -80,12 +91,24 @@ local function pickup_type_enabled(pickup_type)
 		return mod:get("enable_medical_crates") ~= false
 	end
 
-	if MATERIAL_PICKUP_TYPES[pickup_type] then
-		return mod:get("enable_material_pickups") ~= false
+	if PLASTEEL_PICKUP_TYPES[pickup_type] then
+		return mod:get("enable_plasteel_pickups") ~= false
 	end
 
-	if SIDE_MISSION_BOOK_PICKUP_TYPES[pickup_type] then
-		return mod:get("enable_side_mission_books") ~= false
+	if DIAMANTINE_PICKUP_TYPES[pickup_type] then
+		return mod:get("enable_diamantine_pickups") ~= false
+	end
+
+	if GRIMOIRE_PICKUP_TYPES[pickup_type] then
+		return mod:get("enable_grimoires") ~= false
+	end
+
+	if SCRIPTURE_PICKUP_TYPES[pickup_type] then
+		return mod:get("enable_scriptures") ~= false
+	end
+
+	if SKULL_PICKUP_TYPES[pickup_type] then
+		return mod:get("enable_skulls") ~= false
 	end
 
 	return false

@@ -4,8 +4,8 @@ return {
 		ru = "Holy Light",
 	},
 	mod_description = {
-		en = "Adds the Zealot holy light particle above selected pickups and crates.",
-		ru = "Добавляет свечение Zealot holy light над выбранными предметами и ящиками.",
+		en = "Adds glow above selected pickups and crates.",
+		ru = "Добавляет свечение над выбранными предметами и ящиками.",
 	},
 	general_group = {
 		en = "General Settings",
@@ -20,35 +20,47 @@ return {
 		ru = "Включить мод",
 	},
 	effect_height = {
-		en = "Effect height",
-		ru = "Высота эффекта",
+		en = "Height offset",
+		ru = "Смещение по высоте",
 	},
 	enable_stimms = {
-		en = "Holy light on stimms",
+		en = "Glow on stimms",
 		ru = "Свечение на стимулах",
 	},
 	enable_ammo_pickups = {
-		en = "Holy light on ammo pickups",
+		en = "Glow on ammo pickups",
 		ru = "Свечение на патронах",
 	},
 	enable_grenade_pickups = {
-		en = "Holy light on grenade pickups",
+		en = "Glow on grenade pickups",
 		ru = "Свечение на гранатах",
 	},
 	enable_ammo_crates = {
-		en = "Holy light on ammo crates",
+		en = "Glow on ammo crates",
 		ru = "Свечение на ящиках боеприпасов",
 	},
 	enable_medical_crates = {
-		en = "Holy light on medical crates",
+		en = "Glow on medical crates",
 		ru = "Свечение на медицинских ящиках",
 	},
-	enable_material_pickups = {
-		en = "Holy light on plasteel and diamantine",
-		ru = "Свечение на пластиле и диамантине",
+	enable_plasteel_pickups = {
+		en = "Glow on plasteel",
+		ru = "Свечение на пластиле",
 	},
-	enable_side_mission_books = {
-		en = "Holy light on grimoires and scriptures",
-		ru = "Свечение на гримуарах и писаниях",
+	enable_diamantine_pickups = {
+		en = "Glow on diamantine",
+		ru = "Свечение на диамантине",
+	},
+	enable_grimoires = {
+		en = "Glow on grimoires",
+		ru = "Свечение на гримуарах",
+	},
+	enable_scriptures = {
+		en = "Glow on scriptures",
+		ru = "Свечение на писаниях",
+	},
+	enable_skulls = {
+		en = "Glow on skulls",
+		ru = "Свечение на черепах",
 	},
 }

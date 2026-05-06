@@ -57,12 +57,27 @@ return {
 						default_value = true,
 					},
 					{
-						setting_id = "enable_material_pickups",
+						setting_id = "enable_plasteel_pickups",
 						type = "checkbox",
 						default_value = true,
 					},
 					{
-						setting_id = "enable_side_mission_books",
+						setting_id = "enable_diamantine_pickups",
+						type = "checkbox",
+						default_value = true,
+					},
+					{
+						setting_id = "enable_grimoires",
+						type = "checkbox",
+						default_value = true,
+					},
+					{
+						setting_id = "enable_scriptures",
+						type = "checkbox",
+						default_value = true,
+					},
+					{
+						setting_id = "enable_skulls",
 						type = "checkbox",
 						default_value = true,
 					},
