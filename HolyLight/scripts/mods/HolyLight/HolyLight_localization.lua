@@ -7,11 +7,11 @@ return {
 		["zh-cn"] = "Holy Light",
 	},
 	mod_description = {
-		en = "Adds glow above selected pickups and crates.",
-		ru = "Добавляет свечение над выбранными предметами и ящиками.",
-		de = "Fugt ausgewahlten Beuteobjekten und Kisten ein Leuchten hinzu.",
-		fr = "Ajoute une lueur au-dessus des objets et caisses selectionnes.",
-		["zh-cn"] = "为选定的拾取物和箱子添加发光效果。",
+		en = "Adds glow above pickups and crates in missions.",
+		ru = "Добавляет свечение над предметами и ящиками в миссиях.",
+		de = "Fugt Beuteobjekten und Kisten in Missionen ein Leuchten hinzu.",
+		fr = "Ajoute une lueur au-dessus des objets et des caisses en mission.",
+		["zh-cn"] = "为任务中的拾取物和箱子添加发光效果。",
 	},
 	general_group = {
 		en = "\238\128\140 DISPLAY",
