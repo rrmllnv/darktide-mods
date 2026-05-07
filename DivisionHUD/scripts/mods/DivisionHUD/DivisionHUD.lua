@@ -2,6 +2,8 @@ local mod = get_mod("DivisionHUD")
 
 mod.tracked_deployables = mod.tracked_deployables or {}
 
+local GameFlowContext = mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/context/game_flow")
+
 local DIVISIONHUD_PACKAGE_REFERENCE_NAME = "DivisionHUD"
 local DIVISIONHUD_HUD_PACKAGE_NAMES = {
 	"packages/ui/hud/team_player_panel/team_player_panel",
@@ -53,6 +55,7 @@ local DIVISIONHUD_HUD_MATERIAL_NAMES = {
 }
 
 mod._divisionhud_hud_resource_load_ids = mod._divisionhud_hud_resource_load_ids or {}
+mod._divisionhud_hud_resources_loaded_once = mod._divisionhud_hud_resources_loaded_once or false
 
 local function ensure_divisionhud_hud_resources_loaded()
 	local package_manager = Managers.package
@@ -90,6 +93,26 @@ local function ensure_divisionhud_hud_resources_loaded()
 	end
 end
 
+local function try_load_divisionhud_hud_resources()
+	if mod._divisionhud_hud_resources_loaded_once then
+		return
+	end
+
+	if GameFlowContext and type(GameFlowContext.is_hub_like) == "function" and GameFlowContext.is_hub_like() then
+		return
+	end
+
+	local package_manager = Managers.package
+
+	if not package_manager or type(package_manager.load) ~= "function" then
+		return
+	end
+
+	ensure_divisionhud_hud_resources_loaded()
+
+	mod._divisionhud_hud_resources_loaded_once = true
+end
+
 local function release_divisionhud_hud_resources()
 	local package_manager = Managers.package
 	local resource_load_ids = mod._divisionhud_hud_resource_load_ids
@@ -115,7 +138,9 @@ mod.on_unload = function()
 	release_divisionhud_hud_resources()
 end
 
-ensure_divisionhud_hud_resources_loaded()
+mod.update = function()
+	try_load_divisionhud_hud_resources()
+end
 
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/bootstrap/hud_registration")
 mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/bootstrap/deployable_tracker")
@@ -124,10 +149,22 @@ mod:io_dofile("DivisionHUD/scripts/mods/DivisionHUD/bootstrap/module_loader")
 local previous_on_all_mods_loaded = mod.on_all_mods_loaded
 
 mod.on_all_mods_loaded = function(...)
-	ensure_divisionhud_hud_resources_loaded()
+	try_load_divisionhud_hud_resources()
 
 	if type(previous_on_all_mods_loaded) == "function" then
 		previous_on_all_mods_loaded(...)
+	end
+end
+
+local previous_on_game_state_changed = mod.on_game_state_changed
+
+mod.on_game_state_changed = function(status, state_name)
+	if status == "enter" then
+		try_load_divisionhud_hud_resources()
+	end
+
+	if type(previous_on_game_state_changed) == "function" then
+		previous_on_game_state_changed(status, state_name)
 	end
 end
 
