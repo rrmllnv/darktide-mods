@@ -8,6 +8,10 @@ local tracked_effects_by_unit = {}
 local tracked_pickups_by_unit = {}
 local tracked_deployables_by_unit = {}
 
+local function is_alive_unit(unit)
+	return type(unit) == "userdata" and Unit and Unit.alive and Unit.alive(unit)
+end
+
 local STIMM_PICKUP_TYPES = {
 	expedition_time_syringe_timed = true,
 	syringe_ability_boost_pocketable = true,
@@ -117,7 +121,7 @@ local function effect_height()
 end
 
 local function pickup_type_from_unit(unit)
-	if not unit or not Unit or not Unit.alive(unit) or not Unit.has_data(unit, "pickup_type") then
+	if not is_alive_unit(unit) or not Unit.has_data(unit, "pickup_type") then
 		return nil
 	end
 
@@ -169,7 +173,7 @@ local function stop_all_effects()
 end
 
 local function spawn_effect_for_unit(unit, pickup_type)
-	if not unit or not Unit or not Unit.alive(unit) or tracked_effects_by_unit[unit] then
+	if not is_alive_unit(unit) or tracked_effects_by_unit[unit] then
 		return
 	end
 
@@ -214,7 +218,7 @@ local function register_deployable_unit(unit, pickup_type)
 end
 
 local function register_pickup_unit(unit)
-	if not unit or not Unit or not Unit.alive(unit) then
+	if not is_alive_unit(unit) then
 		return
 	end
 
@@ -229,7 +233,7 @@ end
 
 local function add_registered_pickup_units(desired_units)
 	for unit, pickup_type in pairs(tracked_pickups_by_unit) do
-		if unit and Unit.alive(unit) and pickup_type_enabled(pickup_type) then
+		if is_alive_unit(unit) and pickup_type_enabled(pickup_type) then
 			desired_units[unit] = pickup_type
 		else
 			tracked_pickups_by_unit[unit] = nil
@@ -257,7 +261,7 @@ local function add_marker_units(desired_units)
 				pickup_type = pickup_type_from_marker_data(marker)
 			end
 
-			if unit and pickup_type and pickup_type_enabled(pickup_type) then
+			if type(unit) == "userdata" and pickup_type and pickup_type_enabled(pickup_type) then
 				desired_units[unit] = pickup_type
 			end
 		end
@@ -266,7 +270,7 @@ end
 
 local function add_deployable_units(desired_units)
 	for unit, pickup_type in pairs(tracked_deployables_by_unit) do
-		if unit and Unit.alive(unit) and pickup_type_enabled(pickup_type) then
+		if is_alive_unit(unit) and pickup_type_enabled(pickup_type) then
 			desired_units[unit] = pickup_type
 		else
 			tracked_deployables_by_unit[unit] = nil
@@ -293,7 +297,7 @@ local function sync_effects()
 	for unit, effect_data in pairs(tracked_effects_by_unit) do
 		local desired_pickup_type = desired_units[unit]
 
-		if not unit or not Unit.alive(unit) or not desired_pickup_type or effect_data.pickup_type ~= desired_pickup_type then
+		if not is_alive_unit(unit) or not desired_pickup_type or effect_data.pickup_type ~= desired_pickup_type then
 			stop_effect_for_unit(unit)
 		end
 	end
