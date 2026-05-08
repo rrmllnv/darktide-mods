@@ -895,6 +895,62 @@ function M.archetype_icon(player)
 	return "?"
 end
 
+function M.archetype_title(player, exclude_symbol)
+	local profile = player_profile(player)
+
+	if not profile then
+		return ""
+	end
+
+	local ok, text = pcall(function()
+		return ProfileUtils.character_archetype_title(profile, exclude_symbol == true)
+	end)
+
+	return ok and type(text) == "string" and text or ""
+end
+
+function M.presence_hud_text(player)
+	if not valid_player(player) then
+		return ""
+	end
+
+	-- "Еще не используется" is the vanilla fallback localization for missing rich presence.
+	-- In vanilla party members, presence_hud_text is backed by PresenceEntryImmaterium:activity_localized().
+	local text = player_method_value(player, "presence_hud_text")
+
+	if type(text) == "string" and text ~= "" then
+		-- If player implementation returns the default rich presence string, prefer the presence manager path below.
+		local ok_default, default_text = pcall(function()
+			return type(Localize) == "function" and Localize("loc_hud_player_rich_presence_default") or nil
+		end)
+
+		if not ok_default or type(default_text) ~= "string" or default_text == "" or text ~= default_text then
+			return text
+		end
+	end
+
+	-- Vanilla presence system path (PresenceEntryImmaterium:activity_localized()).
+	local account_id = player_account_id(player)
+
+	if account_id and Managers.presence and type(Managers.presence.get_presence) == "function" then
+		local ok_presence, presence_entry = pcall(function()
+			return Managers.presence:get_presence(account_id)
+		end)
+
+		if ok_presence and presence_entry and type(presence_entry.activity_localized) == "function" then
+			local ok_text, presence_text = pcall(function()
+				return presence_entry:activity_localized()
+			end)
+
+			if ok_text and type(presence_text) == "string" and presence_text ~= "" then
+				return presence_text
+			end
+		end
+	end
+
+	return ""
+end
+
 function M.slot_color(player)
 	local slot = M.player_slot(player)
 

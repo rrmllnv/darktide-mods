@@ -48,6 +48,8 @@ local defaults = {
 	squadhud_show_status_unconscious = true,
 	squadhud_show_status_vortex_grabbed = true,
 	squadhud_show_status_warp_grabbed = true,
+	squadhud_hub_show_class = true,
+	squadhud_hub_show_presence = true,
 }
 
 return defaults

@@ -31,6 +31,24 @@ function M.append_passes(passes, settings, templates)
 		passes[#passes + 1] = templates.rect_pass(settings, "health_fill_" .. i, settings.color_health, { settings.bar_left, settings.health_bar_y, 4 }, { 0, settings.bar_height })
 		passes[#passes + 1] = templates.rect_pass(settings, "corruption_fill_" .. i, settings.color_corruption, { settings.bar_left, settings.health_bar_y, 5 }, { 0, settings.bar_height })
 	end
+
+	-- Hub (Mourningstar) info rendered in bar area (class only).
+	do
+		local class_style = templates.text_style(settings, settings.hub_info_font_size, "left", "center", settings.color_text_default)
+		class_style.offset = { settings.hub_info_x, settings.hub_info_y, 6 }
+		class_style.size = { settings.hub_text_width, settings.hub_info_height }
+
+		passes[#passes + 1] = {
+			pass_type = "text",
+			style_id = "hub_class_text",
+			value_id = "hub_class_text",
+			value = "",
+			style = class_style,
+			visibility_function = function(content)
+				return content.visible == true and content.hub_class_visible == true
+			end,
+		}
+	end
 end
 
 return M

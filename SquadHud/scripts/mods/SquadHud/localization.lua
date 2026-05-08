@@ -95,6 +95,26 @@ return {
 		en = string.rep("\194\160", 8) .. "Position, opacity & scale",
 		ru = string.rep("\194\160", 8) .. "Позиция, прозрачность и масштаб",
 	},
+	squadhud_mourningstar = {
+		en = string.rep("\194\160", 8) .. "Mourningstar",
+		ru = string.rep("\194\160", 8) .. "Моурнингстар",
+	},
+	squadhud_hub_show_class = {
+		en = "Show class",
+		ru = "Показывать класс",
+	},
+	squadhud_hub_show_class_description = {
+		en = "In the Mourningstar hub, shows the character class in the bar area.",
+		ru = "В хабе Морнингстар показывает класс персонажа в области шкал.",
+	},
+	squadhud_hub_show_presence = {
+		en = "Show status",
+		ru = "Показывать статус",
+	},
+	squadhud_hub_show_presence_description = {
+		en = "In the Mourningstar hub, shows the vanilla activity text (hub/loading/etc.) in the items area.",
+		ru = "В хабе Морнингстар показывает ванильный текст активности (хаб/загрузка и т.п.) в области предметов.",
+	},
 	position_x = {
 		en = "Offset X",
 		ru = "Смещение по X",

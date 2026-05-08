@@ -110,5 +110,26 @@ return {
 				},
 			},
 		},
+		{
+			setting_id = "squadhud_mourningstar",
+			type = "group",
+			title = "squadhud_mourningstar",
+			sub_widgets = {
+				{
+					setting_id = "squadhud_hub_show_class",
+					type = "checkbox",
+					title = "squadhud_hub_show_class",
+					tooltip_text = "squadhud_hub_show_class_description",
+					default_value = d("squadhud_hub_show_class", true),
+				},
+				{
+					setting_id = "squadhud_hub_show_presence",
+					type = "checkbox",
+					title = "squadhud_hub_show_presence",
+					tooltip_text = "squadhud_hub_show_presence_description",
+					default_value = d("squadhud_hub_show_presence", true),
+				},
+			},
+		},
 	},
 }

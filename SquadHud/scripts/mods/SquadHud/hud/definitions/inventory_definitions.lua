@@ -8,6 +8,25 @@ function M.append_passes(passes, settings, templates)
 	passes[#passes + 1] = templates.inventory_texture_pass(settings, "pocketable_icon", "pocketable_icon", { settings.inventory_icon_x, settings.inventory_icon_y, 4 })
 	passes[#passes + 1] = templates.inventory_texture_pass(settings, "pocketable_small_icon", "pocketable_small_icon", { settings.inventory_small_icon_x, settings.inventory_icon_y, 4 })
 	passes[#passes + 1] = templates.text_pass(settings, "salvage_text", "salvage_text", settings.salvage_font_size, { settings.salvage_text_x, settings.salvage_text_y, 4 }, { settings.salvage_text_width, settings.salvage_text_height }, settings.color_text_default, "left", nil, true)
+
+	-- Hub (Mourningstar): show rich presence where inventory icons normally are.
+	do
+		local style = templates.text_style(settings, settings.hub_presence_inventory_font_size, "left", "center", settings.color_text_default)
+		style.offset = { settings.hub_presence_inventory_x, settings.hub_presence_inventory_y, 6 }
+		style.size = { settings.hub_presence_inventory_width, settings.hub_presence_inventory_height }
+
+		passes[#passes + 1] = {
+			pass_type = "text",
+			style_id = "hub_presence_inventory_text",
+			value_id = "hub_presence_inventory_text",
+			value = "",
+			style = style,
+			visibility_function = function(content)
+				return content.visible == true and content.hub_presence_visible == true
+			end,
+		}
+	end
+
 	passes[#passes + 1] = templates.text_pass(settings, "inventory_value_out_text", "inventory_value_out_text", settings.inventory_value.font_size, { settings.inventory_value.x, settings.inventory_value.y, 7 }, { settings.inventory_value.text_width, settings.inventory_value.height }, settings.color_health, "left", nil, true)
 	passes[#passes + 1] = templates.text_pass(settings, "inventory_value_text", "inventory_value_text", settings.inventory_value.font_size, { settings.inventory_value.x, settings.inventory_value.y, 8 }, { settings.inventory_value.text_width, settings.inventory_value.height }, settings.color_health, "left", nil, true)
 	passes[#passes + 1] = templates.text_pass(settings, "expanded_health_value_text", "expanded_health_value_text", settings.inventory_value.font_size, { settings.inventory_value.x, settings.inventory_value.y, 9 }, { settings.inventory_value.text_width, settings.inventory_value.height }, settings.color_health, "left", nil, true)

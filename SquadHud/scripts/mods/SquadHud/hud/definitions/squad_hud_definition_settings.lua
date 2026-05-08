@@ -75,6 +75,22 @@ S.inventory_small_icon_x = S.inventory_icon_x + S.inventory_icon_size + S.invent
 S.salvage_text_x = S.inventory_small_icon_x + S.inventory_icon_size + S.inventory_icon_gap
 S.salvage_text_y = S.inventory_icon_y - 1
 S.bar_width = S.inventory_block_x - S.inventory_icon_gap - S.bar_left
+
+-- Hub (Mourningstar) player info: replace health/toughness bars with class + rich presence text.
+S.hub_info_font_size = 15
+-- Match the exact bar block height (health bar top -> toughness bar bottom)
+S.hub_info_height = S.toughness_bar_bottom_y - S.health_bar_y
+S.hub_info_gap = 8
+S.hub_info_x = S.bar_left
+S.hub_info_y = S.health_bar_y
+S.hub_text_width = S.bar_width
+
+-- Hub (Mourningstar) presence text moved to inventory block area.
+S.hub_presence_inventory_font_size = 15
+S.hub_presence_inventory_height = S.inventory_icon_size
+S.hub_presence_inventory_x = S.grenade_icon_x
+S.hub_presence_inventory_y = S.inventory_icon_y + 1
+S.hub_presence_inventory_width = S.inventory_block_width
 S.inventory_value = {
 	font_size = 16,
 	height = 18,

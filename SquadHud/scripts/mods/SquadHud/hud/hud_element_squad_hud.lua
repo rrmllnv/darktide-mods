@@ -1855,6 +1855,8 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local show_ammo_icon = boolean_setting("squadhud_show_ammo", true)
 	local show_stimm_icon = boolean_setting("squadhud_show_stimm", true)
 	local hub_strip_squad_loadout_ui = PlayerDataRuntime.is_hub_game_mode()
+	local hub_show_class = boolean_setting("squadhud_hub_show_class", true)
+	local hub_show_presence = boolean_setting("squadhud_hub_show_presence", true)
 
 	if hub_strip_squad_loadout_ui then
 		show_ability_icon = false
@@ -1924,6 +1926,20 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	content.pocketable_icon = pocketable_icon
 	content.pocketable_small_icon = pocketable_small_icon
 	content.salvage_text = salvage_text
+	content.hub_class_visible = hub_strip_squad_loadout_ui == true and hub_show_class == true
+	content.hub_presence_visible = hub_strip_squad_loadout_ui == true and hub_show_presence == true
+
+	if content.hub_class_visible then
+		content.hub_class_text = PlayerDataRuntime.archetype_title(player, true)
+	else
+		content.hub_class_text = ""
+	end
+
+	if content.hub_presence_visible then
+		content.hub_presence_inventory_text = PlayerDataRuntime.presence_hud_text(player)
+	else
+		content.hub_presence_inventory_text = ""
+	end
 
 	apply_ability_state(style, hub_strip_squad_loadout_ui and nil or ability_state)
 
@@ -1999,7 +2015,7 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 
 	local debug_toughness_hit_indicator_request = mod.squadhud_debug_consume_toughness_hit_indicator_request and mod.squadhud_debug_consume_toughness_hit_indicator_request(is_local_player) or nil
 
-	if hide_vitals then
+	if hide_vitals or (hub_strip_squad_loadout_ui and hub_show_class) then
 		clear_toughness_hit_indicator(content, style)
 		style.toughness_fill.offset[2] = toughness_bar_y
 		style.toughness_fill.size[2] = 0
