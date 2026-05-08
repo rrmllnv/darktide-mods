@@ -7,6 +7,7 @@ local defaults = {
 	opacity = 1.0,
 	position_x = 50,
 	position_y = 780,
+	panel_gap = 20,
 	squadhud_enabled = true,
 	squadhud_expanded_view_mode = "full",
 	squadhud_expanded_view_keybind_mode = "hold",

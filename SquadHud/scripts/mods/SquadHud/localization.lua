@@ -143,6 +143,14 @@ return {
 		en = "Scale multiplier applied to the whole Squad HUD. Values below 1 shrink the HUD, values above 1 enlarge it.",
 		ru = "Множитель масштаба для всего Squad HUD. Значения меньше 1 уменьшают HUD, больше 1 — увеличивают.",
 	},
+	panel_gap = {
+		en = "Panel spacing",
+		ru = "Расстояние между панелями",
+	},
+	panel_gap_description = {
+		en = "Vertical spacing between Squad HUD player panels (in pixels).",
+		ru = "Вертикальное расстояние между панелями Squad HUD (в пикселях).",
+	},
 	squadhud_enabled = {
 		en = "Enable Squad HUD",
 		ru = "Включить Squad HUD",

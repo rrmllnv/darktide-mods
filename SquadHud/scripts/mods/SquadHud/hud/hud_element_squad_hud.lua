@@ -1232,12 +1232,21 @@ local function apply_layout_settings(self, widgets_by_name)
 	local position_z = 1
 	local opacity = math.clamp(numeric_setting("opacity", DEFAULT_OPACITY), 0.1, 1)
 	local hud_scale = math.clamp(numeric_setting("hud_layout_scale", DEFAULT_HUD_LAYOUT_SCALE), 0.5, 2)
+	local panel_gap = math.max(0, math.floor(numeric_setting("panel_gap", DefinitionSettings.panel_gap) + 0.5))
 
 	if not custom_hud_has_root_node and (self._squadhud_position_x ~= position_x or self._squadhud_position_y ~= position_y or self._squadhud_position_z ~= position_z) then
 		self:set_scenegraph_position("squadhud_root", position_x, position_y, position_z)
 		self._squadhud_position_x = position_x
 		self._squadhud_position_y = position_y
 		self._squadhud_position_z = position_z
+	end
+
+	-- Keep root height consistent with configured spacing (prevents any potential clipping).
+	local root_height = math.floor((DefinitionSettings.panel_height * MAX_PLAYERS + panel_gap * (MAX_PLAYERS - 1)) * hud_scale + 0.5)
+
+	if self._squadhud_root_height ~= root_height then
+		self:_set_scenegraph_size("squadhud_root", nil, root_height)
+		self._squadhud_root_height = root_height
 	end
 
 	if not self._squadhud_panel_y_by_index then
@@ -1252,7 +1261,7 @@ local function apply_layout_settings(self, widgets_by_name)
 			widget.scale = hud_scale
 		end
 
-		local panel_y = math.floor((i - 1) * (DefinitionSettings.panel_height + DefinitionSettings.panel_gap) * hud_scale + 0.5)
+		local panel_y = math.floor((i - 1) * (DefinitionSettings.panel_height + panel_gap) * hud_scale + 0.5)
 		local panel_scenegraph_id = "squadhud_panel_" .. i
 
 		if self._squadhud_panel_y_by_index[i] ~= panel_y then
@@ -1287,7 +1296,8 @@ local function apply_expanded_view_hint(self, widgets_by_name, players, t)
 		local hud_scale = math.clamp(numeric_setting("hud_layout_scale", DEFAULT_HUD_LAYOUT_SCALE), 0.5, 2)
 		local opacity = math.clamp(numeric_setting("opacity", DEFAULT_OPACITY), 0.1, 1)
 		local hint_x = math.floor(DefinitionSettings.expanded_view_hint_x + 0.5)
-		local hint_y = math.floor(((slot_index - 1) * (DefinitionSettings.panel_height + DefinitionSettings.panel_gap) + DefinitionSettings.panel_height + DefinitionSettings.expanded_view_hint_gap) * hud_scale + 0.5)
+		local panel_gap = math.max(0, math.floor(numeric_setting("panel_gap", DefinitionSettings.panel_gap) + 0.5))
+		local hint_y = math.floor(((slot_index - 1) * (DefinitionSettings.panel_height + panel_gap) + DefinitionSettings.panel_height + DefinitionSettings.expanded_view_hint_gap) * hud_scale + 0.5)
 
 		if self._expanded_view_hint_x ~= hint_x or self._expanded_view_hint_y ~= hint_y then
 			self:set_scenegraph_position("squadhud_expanded_view_hint", hint_x, hint_y, 2)

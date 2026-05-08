@@ -108,6 +108,15 @@ return {
 					range = { 0.5, 2.0 },
 					decimals_number = 2,
 				},
+				{
+					setting_id = "panel_gap",
+					type = "numeric",
+					title = "panel_gap",
+					tooltip_text = "panel_gap_description",
+					default_value = d("panel_gap", 20),
+					range = { 0, 200 },
+					decimals_number = 0,
+				},
 			},
 		},
 		{
