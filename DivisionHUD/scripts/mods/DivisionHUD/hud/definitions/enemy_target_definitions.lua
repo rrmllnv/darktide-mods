@@ -26,10 +26,8 @@ function M.build(params)
 	local health_info_y = top_y + name_height + sc(3)
 	local health_text_height = sc(24)
 	local debuff_text_font = slot_text_font
-	local debuff_icon_size = sc(24)
 	local debuff_row_height = sc(24)
 	local debuff_start_y = health_info_y + health_text_height + sc(4)
-	local debuff_gap = sc(4)
 	local debuff_text_min_width = sc(300)
 	local block_width = math.max(sc(440), expedition_salvage_slot_w + sc(364))
 	local block_x = expedition_salvage_slot_x + expedition_salvage_slot_w - block_width
@@ -38,10 +36,8 @@ function M.build(params)
 	local health_bar_height = main_row_height
 	local block_height = math.max(main_row_height, debuff_start_y + debuff_row_height * MAX_DEBUFF_ROWS + sc(5))
 	local bar_x = block_width - padding_x - health_bar_width
-	local content_right_x = block_width - content_right_inset
-	local icon_x = content_right_x - debuff_icon_size
 	local text_x = padding_x
-	local text_width = math.max(debuff_text_min_width, icon_x - debuff_gap - text_x)
+	local text_width = math.max(debuff_text_min_width, content_width)
 
 	local title_style = table.clone(UIFontSettings.body_small)
 
@@ -113,18 +109,8 @@ function M.build(params)
 	}
 
 	for i = 1, MAX_DEBUFF_ROWS do
-		local icon_id = "debuff_icon_" .. i
 		local text_id = "debuff_text_" .. i
 		local outline_id = text_id .. "_outline_text"
-
-		passes[#passes + 1] = {
-			pass_type = "texture",
-			style_id = icon_id,
-			value_id = icon_id,
-			visibility_function = function(content)
-				return content[icon_id] ~= nil
-			end,
-		}
 
 		passes[#passes + 1] = {
 			pass_type = "text",
@@ -149,20 +135,11 @@ function M.build(params)
 
 	for i = 1, MAX_DEBUFF_ROWS do
 		local row_y = debuff_start_y + (i - 1) * debuff_row_height
-		local icon_id = "debuff_icon_" .. i
 		local text_id = "debuff_text_" .. i
 		local outline_id = text_id .. "_outline_text"
 
-		definition.content[icon_id] = nil
 		definition.content[text_id] = ""
 		definition.content[outline_id] = ""
-		definition.style[icon_id] = {
-			horizontal_alignment = "left",
-			vertical_alignment = "top",
-			offset = { icon_x, row_y, 5 },
-			size = { debuff_icon_size, debuff_icon_size },
-			color = { 255, 255, 255, 255 },
-		}
 		definition.style[text_id] = {
 			horizontal_alignment = "left",
 			vertical_alignment = "top",

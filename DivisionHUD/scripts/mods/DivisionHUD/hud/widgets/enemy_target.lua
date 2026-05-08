@@ -42,7 +42,6 @@ local function reset_widget(widget, max_debuff_slots)
 	end
 
 	for i = 1, max_debuff_slots do
-		widget.content["debuff_icon_" .. i] = nil
 		widget.content["debuff_text_" .. i] = ""
 		widget.content["debuff_text_" .. i .. "_outline_text"] = ""
 	end
@@ -158,17 +157,13 @@ function M.update(self, widget, opacity, dt)
 
 		for i = 1, max_debuff_slots do
 			local debuff = debuffs[i]
-			local icon_id = "debuff_icon_" .. i
 			local text_id = "debuff_text_" .. i
 			local outline_id = text_id .. "_outline_text"
-			local icon_style = widget.style[icon_id]
 
 			if debuff then
 				local label = debuff.label or ""
 				local value_text = debuff.value_text or ""
 				local colored_value_text = color_text(value_text, debuff.colour)
-
-				widget.content[icon_id] = debuff.icon
 
 				if label ~= "" and value_text ~= "" then
 					widget.content[text_id] = label .. " " .. colored_value_text
@@ -177,24 +172,9 @@ function M.update(self, widget, opacity, dt)
 					widget.content[text_id] = label ~= "" and label or colored_value_text
 					widget.content[outline_id] = label ~= "" and label or value_text
 				end
-
-				if icon_style and debuff.colour then
-					icon_style.color[1] = 255
-					icon_style.color[2] = debuff.colour[2] or 255
-					icon_style.color[3] = debuff.colour[3] or 255
-					icon_style.color[4] = debuff.colour[4] or 255
-				end
 			else
-				widget.content[icon_id] = nil
 				widget.content[text_id] = ""
 				widget.content[outline_id] = ""
-
-				if icon_style then
-					icon_style.color[1] = 255
-					icon_style.color[2] = 255
-					icon_style.color[3] = 255
-					icon_style.color[4] = 255
-				end
 			end
 		end
 	end
