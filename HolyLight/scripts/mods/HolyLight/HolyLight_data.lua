@@ -104,6 +104,11 @@ return {
 						default_value = true,
 					},
 					{
+						setting_id = "enable_expedition_mines",
+						type = "checkbox",
+						default_value = true,
+					},
+					{
 						setting_id = "enable_expedition_luggables",
 						type = "checkbox",
 						default_value = true,

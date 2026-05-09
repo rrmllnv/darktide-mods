@@ -139,6 +139,13 @@ return {
 		fr = "Lueur sur les grenades de frappe",
 		["zh-cn"] = "打击手雷发光",
 	},
+	enable_expedition_mines = {
+		en = "Glow on servo-triggered mines",
+		ru = "Свечение на сервоминах",
+		de = "Leuchten auf servogesteuerten Minen",
+		fr = "Lueur sur les mines à déclenchement servo",
+		["zh-cn"] = "伺服触发地雷发光",
+	},
 	enable_expedition_luggables = {
 		en = "Glow on explosive luggables",
 		ru = "Свечение на переносимых взрывных бочках",

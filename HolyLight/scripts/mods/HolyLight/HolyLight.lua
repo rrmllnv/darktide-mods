@@ -89,6 +89,12 @@ local EXPEDITION_STRIKE_PICKUP_TYPES = {
 	expedition_grenade_valkyrie_hover_pocketable = true,
 }
 
+local EXPEDITION_MINE_PICKUP_TYPES = {
+	motion_detection_mine_fire_pocketable = true,
+	motion_detection_mine_shock_pocketable = true,
+	motion_detection_mine_explosive_pocketable = true,
+}
+
 local EXPEDITION_LUGGABLE_PICKUP_TYPES = {
 	expedition_explosive_luggable_01 = true,
 }
@@ -116,6 +122,10 @@ local function pickup_type_enabled(pickup_type)
 
 	if EXPEDITION_STRIKE_PICKUP_TYPES[pickup_type] then
 		return mod:get("enable_expedition_strikes") ~= false
+	end
+
+	if EXPEDITION_MINE_PICKUP_TYPES[pickup_type] then
+		return mod:get("enable_expedition_mines") ~= false
 	end
 
 	if EXPEDITION_LUGGABLE_PICKUP_TYPES[pickup_type] then
