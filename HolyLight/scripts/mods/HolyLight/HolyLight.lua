@@ -13,7 +13,6 @@ local function is_alive_unit(unit)
 end
 
 local STIMM_PICKUP_TYPES = {
-	expedition_time_syringe_timed = true,
 	syringe_ability_boost_pocketable = true,
 	syringe_broker_pocketable = true,
 	syringe_corruption_pocketable = true,
@@ -62,6 +61,38 @@ local SCRIPTURE_PICKUP_TYPES = {
 	scripture_pocketable = true,
 }
 
+local EXPEDITION_SALVAGE_PICKUP_TYPES = {
+	expedition_currency_small_tier_1 = true,
+	expedition_currency_small_tier_2 = true,
+}
+
+local EXPEDITION_TECH_REMNANTS_PICKUP_TYPES = {
+	expedition_loot_small_tier_1 = true,
+	expedition_loot_small_tier_2 = true,
+	expedition_loot_small_tier_3 = true,
+	expedition_loot_player_drop = true,
+	expedition_loot_crate_tier_1 = true,
+	expedition_loot_crate_tier_2 = true,
+	expedition_loot_crate_tier_3 = true,
+}
+
+local EXPEDITION_RELIQUARY_PICKUP_TYPES = {
+	expedition_loot_heavy_tier_1 = true,
+	expedition_loot_heavy_tier_2 = true,
+	expedition_loot_heavy_tier_3 = true,
+}
+
+local EXPEDITION_STRIKE_PICKUP_TYPES = {
+	expedition_grenade_airstrike_pocketable = true,
+	expedition_grenade_artillery_strike_pocketable = true,
+	expedition_grenade_big_pocketable = true,
+	expedition_grenade_valkyrie_hover_pocketable = true,
+}
+
+local EXPEDITION_LUGGABLE_PICKUP_TYPES = {
+	expedition_explosive_luggable_01 = true,
+}
+
 local function mod_enabled()
 	return mod:get("enable_mod") ~= false
 end
@@ -69,6 +100,26 @@ end
 local function pickup_type_enabled(pickup_type)
 	if not pickup_type then
 		return false
+	end
+
+	if EXPEDITION_SALVAGE_PICKUP_TYPES[pickup_type] then
+		return mod:get("enable_expedition_salvage") ~= false
+	end
+
+	if EXPEDITION_TECH_REMNANTS_PICKUP_TYPES[pickup_type] then
+		return mod:get("enable_expedition_tech_remnants") ~= false
+	end
+
+	if EXPEDITION_RELIQUARY_PICKUP_TYPES[pickup_type] then
+		return mod:get("enable_expedition_reliquaries") ~= false
+	end
+
+	if EXPEDITION_STRIKE_PICKUP_TYPES[pickup_type] then
+		return mod:get("enable_expedition_strikes") ~= false
+	end
+
+	if EXPEDITION_LUGGABLE_PICKUP_TYPES[pickup_type] then
+		return mod:get("enable_expedition_luggables") ~= false
 	end
 
 	if STIMM_PICKUP_TYPES[pickup_type] then

@@ -78,6 +78,38 @@ return {
 					},
 				},
 			},
+			{
+				setting_id = "expedition_group",
+				type = "group",
+				text = mod:localize("expedition_group"),
+				sub_widgets = {
+					{
+						setting_id = "enable_expedition_salvage",
+						type = "checkbox",
+						default_value = true,
+					},
+					{
+						setting_id = "enable_expedition_tech_remnants",
+						type = "checkbox",
+						default_value = true,
+					},
+					{
+						setting_id = "enable_expedition_reliquaries",
+						type = "checkbox",
+						default_value = true,
+					},
+					{
+						setting_id = "enable_expedition_strikes",
+						type = "checkbox",
+						default_value = true,
+					},
+					{
+						setting_id = "enable_expedition_luggables",
+						type = "checkbox",
+						default_value = true,
+					},
+				},
+			},
 		},
 	},
 }
