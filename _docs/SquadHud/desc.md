@@ -72,6 +72,13 @@ Squad HUD shows coherency information inside the teammate panel. For every teamm
 [*]Offset Y - vertical offset from the top-left screen area in logical pixels, range 0 to 1080. Default 780.[/*]
 [*]Opacity - 0.1 to 1.0. Default 1.0.[/*]
 [*]Scale - 0.5 to 2.0. Default 0.8. Scale multiplier for the whole Squad HUD.[/*]
+[*]Panel spacing - vertical spacing between Squad HUD player panels (in pixels), range 0 to 200. Default 20.[/*]
+[/list]
+[/*]
+[*]Mourningstar
+[list=1]
+[*]Show class - on/off. Default on. In the Mourningstar hub, shows the character class in the bar area.[/*]
+[*]Show status - on/off. Default on. In the Mourningstar hub, shows the vanilla activity text (hub/loading/etc.) in the items area.[/*]
 [/list]
 [/*]
 [/list]
@@ -145,4 +152,4 @@ Squad HUD shows coherency information inside the teammate panel. For every teamm
 [/list]
 
 
-[url=https://www.nexusmods.com/profile/RRMLLNV/mods?gameId=4943][img]https://raw.githubusercontent.com/rrmllnv/darktide-mods/7a4b9d4360284e0ddc192bbcee6a32243c32162a/_images/all-mods.png[/img][/url]
+[url=https://www.nexusmods.com/profile/RRMLLNV/mods?gameId=4943][img]https://raw.githubusercontent.com/rrmllnv/darktide-mods/master/_images/all-mods.png[/img][/url]
