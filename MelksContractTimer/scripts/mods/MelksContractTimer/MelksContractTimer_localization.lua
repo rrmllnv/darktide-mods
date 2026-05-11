@@ -21,11 +21,11 @@ return {
 		["zh-cn"] = "启用模组",
 	},
 	contracts_time_left_label = {
-		en = "Time left",
-		ru = "Осталось времени",
-		de = "Verbleibende Zeit",
-		fr = "Temps restant",
-		["zh-cn"] = "剩余时间",
+		en = "Time left:",
+		ru = "Осталось времени:",
+		de = "Verbleibende Zeit:",
+		fr = "Temps restant :",
+		["zh-cn"] = "剩余时间：",
 	},
 }
 
