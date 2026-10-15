@@ -1,0 +1,8 @@
+{
+  "name": "TalentUI",
+  "description": "Shows ability icons with cooldown timers for teammates and local player in the team HUD. Displays teammate weapon icons with ammunition count.",
+  "version": "1.3.0",
+  "author": "RRMLLNV & LucLeto",
+  "homepage": "https://www.nexusmods.com/warhammer40kdarktide/mods/683",
+  "source": "https://github.com/rrmllnv/darktide-mods"
+}
