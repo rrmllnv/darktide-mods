@@ -1,0 +1,8 @@
+{
+  "name": "Squad HUD",
+  "description": "Squad HUD is a compact strike team interface in the style of The Division: it shows all squad members with health, toughness, statuses, distance, resources, and loadout in four clean panels.",
+  "version": "1.5.0",
+  "author": "RRMLLNV & LucLeto",
+  "homepage": "https://www.nexusmods.com/warhammer40kdarktide/mods/844",
+  "source": "https://github.com/rrmllnv/darktide-mods"
+}

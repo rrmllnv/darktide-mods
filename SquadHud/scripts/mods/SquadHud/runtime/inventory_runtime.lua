@@ -7,6 +7,8 @@ local WeaponTemplate = require("scripts/utilities/weapon/weapon_template")
 
 local M = {}
 
+local pcall = pcall
+
 local POCKETABLE_SLOT_NAME = "slot_pocketable"
 local POCKETABLE_SMALL_SLOT_NAME = "slot_pocketable_small"
 local GRENADE_ABILITY_SLOT_NAME = "slot_grenade_ability"
@@ -14,6 +16,17 @@ local GRENADE_ABILITY_ID = "grenade_ability"
 local RANGED_SLOT_NAME = "slot_secondary"
 local AMMO_ICON = "content/ui/materials/hud/icons/party_ammo"
 local MAX_STATUS = 3
+local AMMO_UPDATE_INTERVAL = 0.1
+local NO_ICONS = {}
+
+-- Per player (weak keys, so a player who leaves is dropped): the reused result table and the last ammo read
+local icons_by_player = setmetatable({}, { __mode = "k" })
+local ammo_by_player = setmetatable({}, { __mode = "k" })
+
+-- Item name -> master item hud icon / weapon template id (false for none). Both are fixed per item, so only lookups
+-- that found the item are kept, and an item that isn't loaded yet is looked up again.
+local icon_by_item_name = {}
+local template_id_by_item_name = {}
 
 local WEAPON_SLOTS = {
 	"slot_primary",
@@ -21,17 +34,13 @@ local WEAPON_SLOTS = {
 }
 
 local function safe_call(object, method_name, ...)
-	if not object or type(object[method_name]) ~= "function" then
+	local method = object and object[method_name]
+
+	if type(method) ~= "function" then
 		return false, nil
 	end
 
-	local args = {
-		...
-	}
-
-	return pcall(function()
-		return object[method_name](object, unpack(args))
-	end)
+	return pcall(method, object, ...)
 end
 
 local function safe_read_component(unit_data_extension, component_name)
@@ -39,9 +48,7 @@ local function safe_read_component(unit_data_extension, component_name)
 		return nil
 	end
 
-	local ok, component = pcall(function()
-		return unit_data_extension:read_component(component_name)
-	end)
+	local ok, component = pcall(unit_data_extension.read_component, unit_data_extension, component_name)
 
 	return ok and component or nil
 end
@@ -77,9 +84,7 @@ local function is_human_controlled(player)
 		return true
 	end
 
-	local ok, human_controlled = pcall(function()
-		return player:is_human_controlled()
-	end)
+	local ok, human_controlled = pcall(player.is_human_controlled, player)
 
 	return not ok or human_controlled == true
 end
@@ -89,9 +94,7 @@ local function player_profile(player)
 		return nil
 	end
 
-	local ok, profile = pcall(function()
-		return player:profile()
-	end)
+	local ok, profile = pcall(player.profile, player)
 
 	return ok and profile or nil
 end
@@ -127,9 +130,7 @@ local function master_item_from_name(item_name)
 		return nil
 	end
 
-	local ok, item = pcall(function()
-		return MasterItems.get_item(item_name)
-	end)
+	local ok, item = pcall(MasterItems.get_item, item_name)
 
 	if not ok or not item then
 		return nil
@@ -139,7 +140,22 @@ local function master_item_from_name(item_name)
 end
 
 hud_icon_from_master_item_name = function(item_name)
-	return hud_icon_from_item(master_item_from_name(item_name))
+	local icon = icon_by_item_name[item_name]
+
+	if icon ~= nil then
+		return icon or nil
+	end
+
+	local item = master_item_from_name(item_name)
+
+	if not item then
+		return nil
+	end
+
+	icon = hud_icon_from_item(item)
+	icon_by_item_name[item_name] = icon or false
+
+	return icon
 end
 
 local function weapon_template_id_from_slot(inventory_component, slot_name)
@@ -148,10 +164,24 @@ local function weapon_template_id_from_slot(inventory_component, slot_name)
 	end
 
 	local item_name = inventory_component[slot_name]
-	local item = master_item_from_name(item_name)
-	local weapon_template_id = item and item.weapon_template
+	local template_id = template_id_by_item_name[item_name]
 
-	return type(weapon_template_id) == "string" and weapon_template_id or nil
+	if template_id ~= nil then
+		return template_id or nil
+	end
+
+	local item = master_item_from_name(item_name)
+
+	if not item then
+		return nil
+	end
+
+	local weapon_template_id = item.weapon_template
+
+	template_id = type(weapon_template_id) == "string" and weapon_template_id or false
+	template_id_by_item_name[item_name] = template_id
+
+	return template_id or nil
 end
 
 local function grenade_hud_icon_from_profile(player)
@@ -252,9 +282,7 @@ local function weapon_ammo_status(player, unit_data_extension, visual_loadout_ex
 		local has_component = true
 
 		if type(unit_data_extension.has_component) == "function" then
-			local ok, result = pcall(function()
-				return unit_data_extension:has_component(slot_name)
-			end)
+			local ok, result = pcall(unit_data_extension.has_component, unit_data_extension, slot_name)
 
 			has_component = ok and result == true
 		end
@@ -297,6 +325,31 @@ local function weapon_ammo_status(player, unit_data_extension, visual_loadout_ex
 	return uses_ammo, ammo_status, true, ammo_fraction, ranged_current_ammo, ranged_max_ammo, ranged_current_ammo, ranged_max_ammo
 end
 
+-- Ammo only changes when a player shoots, reloads or picks some up, so it is read at most every AMMO_UPDATE_INTERVAL
+-- per player, as NumericUI's team panel does. Without a time every call reads it.
+local function throttled_weapon_ammo_status(player, unit_data_extension, visual_loadout_extension, t)
+	local ammo = ammo_by_player[player]
+
+	if ammo and t and t < ammo.next_t then
+		return ammo[1], ammo[2], ammo[3], ammo[4], ammo[5], ammo[6], ammo[7], ammo[8]
+	end
+
+	local uses_ammo, ammo_status, ammo_visible, ammo_fraction, ammo_current, ammo_max, ammo_count_current, ammo_count_max = weapon_ammo_status(player, unit_data_extension, visual_loadout_extension)
+
+	if t and type(player) == "table" then
+		if not ammo then
+			ammo = {}
+			ammo_by_player[player] = ammo
+		end
+
+		ammo.next_t = t + AMMO_UPDATE_INTERVAL
+		ammo[1], ammo[2], ammo[3], ammo[4] = uses_ammo, ammo_status, ammo_visible, ammo_fraction
+		ammo[5], ammo[6], ammo[7], ammo[8] = ammo_current, ammo_max, ammo_count_current, ammo_count_max
+	end
+
+	return uses_ammo, ammo_status, ammo_visible, ammo_fraction, ammo_current, ammo_max, ammo_count_current, ammo_count_max
+end
+
 local function expedition_salvage_text(player)
 	local game_mode_manager = Managers.state and Managers.state.game_mode
 	local game_mode = game_mode_manager and game_mode_manager:game_mode()
@@ -316,9 +369,7 @@ local function expedition_salvage_text(player)
 		return nil
 	end
 
-	local ok, amount = pcall(function()
-		return game_mode:expedition_currency(peer_id)
-	end)
+	local ok, amount = pcall(game_mode.expedition_currency, game_mode, peer_id)
 
 	if not ok then
 		return nil
@@ -337,15 +388,15 @@ local function expedition_salvage_text(player)
 	return string.format("%s %s", string_symbol, amount_text)
 end
 
-function M.icons(player, extensions, status)
+-- t, when given, throttles the ammo reads. The returned table is reused for the player, so read it before the next call.
+function M.icons(player, extensions, status, t)
 	if status == "dead" or status == "hogtied" then
-		return {
-			ammo_icon = nil,
-			grenade_icon = nil,
-			pocketable_icon = nil,
-			pocketable_small_icon = nil,
-			salvage_text = nil,
-		}
+		-- read ammo straight away once they are back
+		if type(player) == "table" then
+			ammo_by_player[player] = nil
+		end
+
+		return NO_ICONS
 	end
 
 	local unit_data_extension = extensions and extensions.unit_data
@@ -355,33 +406,43 @@ function M.icons(player, extensions, status)
 	local inventory_component = safe_read_component(unit_data_extension, "inventory")
 	local grenade_icon = grenade_hud_icon(player, inventory_component, visual_loadout_extension, ability_extension)
 	local grenade_ability_status, grenade_visible, grenade_current, grenade_max = grenade_status(player, ability_extension)
-	local uses_ammo, ammo_status, ammo_visible, ammo_fraction, ammo_current, ammo_max, ammo_count_current, ammo_count_max = weapon_ammo_status(player, unit_data_extension, visual_loadout_extension)
+	local uses_ammo, ammo_status, ammo_visible, ammo_fraction, ammo_current, ammo_max, ammo_count_current, ammo_count_max = throttled_weapon_ammo_status(player, unit_data_extension, visual_loadout_extension, t)
 	local pocketable_icon = item_hud_icon_from_slot(inventory_component, visual_loadout_extension, POCKETABLE_SLOT_NAME)
 	local pocketable_template_id = weapon_template_id_from_slot(inventory_component, POCKETABLE_SLOT_NAME)
 	local pocketable_small_icon = item_hud_icon_from_slot(inventory_component, visual_loadout_extension, POCKETABLE_SMALL_SLOT_NAME)
 	local pocketable_small_template_id = weapon_template_id_from_slot(inventory_component, POCKETABLE_SMALL_SLOT_NAME)
 	local salvage_text = expedition_salvage_text(player)
 
-	return {
-		ammo_icon = ammo_visible and AMMO_ICON or nil,
-		ammo_count_current = ammo_count_current,
-		ammo_count_max = ammo_count_max,
-		ammo_current = ammo_current,
-		ammo_fraction = ammo_fraction,
-		ammo_max = ammo_max,
-		ammo_percent = ammo_fraction and math.floor(ammo_fraction * 100 + 0.5) or nil,
-		ammo_status = ammo_status,
-		grenade_icon = (grenade_visible or grenade_icon ~= nil) and grenade_icon or nil,
-		grenade_current = grenade_current,
-		grenade_max = grenade_max,
-		grenade_status = grenade_ability_status,
-		pocketable_icon = pocketable_icon,
-		pocketable_template_id = pocketable_template_id,
-		pocketable_small_icon = pocketable_small_icon,
-		pocketable_small_template_id = pocketable_small_template_id,
-		salvage_text = salvage_text,
-		uses_ammo = uses_ammo,
-	}
+	local result = icons_by_player[player]
+
+	if not result then
+		result = {}
+
+		if type(player) == "table" then
+			icons_by_player[player] = result
+		end
+	end
+
+	result.ammo_icon = ammo_visible and AMMO_ICON or nil
+	result.ammo_count_current = ammo_count_current
+	result.ammo_count_max = ammo_count_max
+	result.ammo_current = ammo_current
+	result.ammo_fraction = ammo_fraction
+	result.ammo_max = ammo_max
+	result.ammo_percent = ammo_fraction and math.floor(ammo_fraction * 100 + 0.5) or nil
+	result.ammo_status = ammo_status
+	result.grenade_icon = (grenade_visible or grenade_icon ~= nil) and grenade_icon or nil
+	result.grenade_current = grenade_current
+	result.grenade_max = grenade_max
+	result.grenade_status = grenade_ability_status
+	result.pocketable_icon = pocketable_icon
+	result.pocketable_template_id = pocketable_template_id
+	result.pocketable_small_icon = pocketable_small_icon
+	result.pocketable_small_template_id = pocketable_small_template_id
+	result.salvage_text = salvage_text
+	result.uses_ammo = uses_ammo
+
+	return result
 end
 
 return M

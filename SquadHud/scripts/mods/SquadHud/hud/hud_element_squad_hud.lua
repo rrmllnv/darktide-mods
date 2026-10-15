@@ -99,14 +99,27 @@ local CUSTOM_HUD_MOD_NAME = "custom_hud"
 local CUSTOM_HUD_NODE_PREFIX = "HudElementSquadHud|"
 local CUSTOM_HUD_ROOT_NODE_NAME = CUSTOM_HUD_NODE_PREFIX .. "squadhud_root"
 
+-- Settings are read every frame, so they come from the cache settings_cache.lua keeps current (on load, in
+-- on_setting_changed and after a reset); a setting that isn't cached falls back to mod:get
+local function setting_value(setting_id)
+	local settings = mod._settings
+	local value = settings and settings[setting_id]
+
+	if value == nil then
+		value = mod:get(setting_id)
+	end
+
+	return value
+end
+
 local function setting_enabled()
-	local value = mod:get("squadhud_enabled")
+	local value = setting_value("squadhud_enabled")
 
 	return value == true or value == nil
 end
 
 local function numeric_setting(setting_id, fallback)
-	local value = mod:get(setting_id)
+	local value = setting_value(setting_id)
 
 	if type(value) == "number" and value == value then
 		return value
@@ -116,7 +129,7 @@ local function numeric_setting(setting_id, fallback)
 end
 
 local function boolean_setting(setting_id, fallback)
-	local value = mod:get(setting_id)
+	local value = setting_value(setting_id)
 
 	if value == false or value == 0 then
 		return false
@@ -128,7 +141,7 @@ local function boolean_setting(setting_id, fallback)
 end
 
 local function squad_panel_display_mode()
-	local value = mod:get("squadhud_panel_display_mode")
+	local value = setting_value("squadhud_panel_display_mode")
 
 	if value == "local" or value == "teammates" then
 		return value
@@ -138,7 +151,7 @@ local function squad_panel_display_mode()
 end
 
 local function local_player_order()
-	local value = mod:get("squadhud_local_player_order")
+	local value = setting_value("squadhud_local_player_order")
 
 	if value == "top" then
 		return value
@@ -148,7 +161,7 @@ local function local_player_order()
 end
 
 local function ammo_percent_mode()
-	local value = mod:get("squadhud_ammo_percent_mode")
+	local value = setting_value("squadhud_ammo_percent_mode")
 
 	if value == "never" or value == "always" then
 		return value
@@ -158,7 +171,7 @@ local function ammo_percent_mode()
 end
 
 local function grenade_value_mode()
-	local value = mod:get("squadhud_grenade_value_mode")
+	local value = setting_value("squadhud_grenade_value_mode")
 
 	if value == "never" or value == "always" then
 		return value
@@ -168,7 +181,7 @@ local function grenade_value_mode()
 end
 
 local function ammo_value_format()
-	local value = mod:get("squadhud_ammo_value_format")
+	local value = setting_value("squadhud_ammo_value_format")
 
 	if value == "count" or value == "current_max" or value == "percent" then
 		return value
@@ -895,7 +908,7 @@ local function expanded_view_visible()
 end
 
 local function expanded_view_mode()
-	local value = mod:get("squadhud_expanded_view_mode")
+	local value = setting_value("squadhud_expanded_view_mode")
 
 	if value == "short" then
 		return "short"
@@ -1773,8 +1786,8 @@ local function apply_player_panel(self, widget, local_player, player, extensions
 	local hide_vitals = hide_vitals_for_status(status)
 	local is_bad_status = status ~= "alive" and status ~= "luggable"
 	local player_unit = PlayerDataRuntime.player_unit(player)
-	local ability_state = AbilityRuntime.combat_ability_state(player_unit)
-	local inventory_icons = InventoryRuntime.icons(player, extensions, status)
+	local ability_state = AbilityRuntime.combat_ability_state(player_unit, player)
+	local inventory_icons = InventoryRuntime.icons(player, extensions, status, t)
 	local is_local_player = local_player == player
 	local is_teammate = not is_local_player
 	local expanded_view = expanded_view_visible()

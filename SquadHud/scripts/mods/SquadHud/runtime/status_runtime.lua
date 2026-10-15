@@ -16,8 +16,23 @@ local STATUS_TEXT_KEYS = {
 	warp_grabbed = "squadhud_status_warp_grabbed",
 }
 
+local STATUS_SETTING_IDS = {}
+
+-- From the settings cache settings_cache.lua keeps current
 local function status_enabled(status_id)
-	local value = mod:get("squadhud_show_status_" .. status_id)
+	local setting_id = STATUS_SETTING_IDS[status_id]
+
+	if not setting_id then
+		setting_id = "squadhud_show_status_" .. status_id
+		STATUS_SETTING_IDS[status_id] = setting_id
+	end
+
+	local settings = mod._settings
+	local value = settings and settings[setting_id]
+
+	if value == nil then
+		value = mod:get(setting_id)
+	end
 
 	return value ~= false and value ~= 0
 end
