@@ -2622,8 +2622,9 @@ HudElementDivisionHUD._update_tactical_advisor_alerts = function(self, tactical_
 end
 
 HudElementDivisionHUD._update_ability_bar = function(self, player_unit, widget, opacity, dt)
-	CombatAbilityBar.update(player_unit, widget, opacity, Definitions, COMBAT_ABILITY_TYPE)
-	AbilityIconWidget.update(self, player_unit, opacity, dt)
+	local cooldown_state, effect_active = CombatAbilityBar.update(player_unit, widget, opacity, Definitions, COMBAT_ABILITY_TYPE)
+
+	AbilityIconWidget.update(self, player_unit, opacity, dt, cooldown_state, effect_active)
 end
 
 HudElementDivisionHUD._set_all_visible = function(self, visible)

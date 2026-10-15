@@ -1,0 +1,8 @@
+{
+  "name": "Division HUD",
+  "description": "Division HUD is a separate combat interface in the style of The Division: it shows your health, resources, and loadout in one clean, compact block.",
+  "version": "1.11.0",
+  "author": "RRMLLNV & LucLeto",
+  "homepage": "https://www.nexusmods.com/warhammer40kdarktide/mods/813",
+  "source": "https://github.com/rrmllnv/darktide-mods"
+}

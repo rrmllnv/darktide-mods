@@ -1,5 +1,8 @@
 local mod = get_mod("DivisionHUD")
 
+local ProjectileTemplates = require("scripts/settings/projectile/projectile_templates")
+local TalentSettings = require("scripts/settings/talent/talent_settings")
+
 mod.tracked_deployables = mod.tracked_deployables or {}
 
 if mod._divisionhud_deployable_tracker_hooked then
@@ -68,8 +71,7 @@ mod:hook_safe("UnitSpawnerManager", "spawn_husk_unit", function(self, game_objec
 			local owner_unit = Managers.state.unit_spawner:unit(owner_unit_id)
 
 			if owner_unit and owner_unit == local_player.player_unit then
-				local talent_settings = require("scripts/settings/talent/talent_settings")
-				local ability_settings = talent_settings.broker.combat_ability.stimm_field
+				local ability_settings = TalentSettings.broker.combat_ability.stimm_field
 				local lifetime = ability_settings.life_time
 				local owner_talent_extension = ScriptUnit.has_extension(owner_unit, "talent_system")
 
@@ -78,24 +80,6 @@ mod:hook_safe("UnitSpawnerManager", "spawn_husk_unit", function(self, game_objec
 				end
 
 				division_hud_add_tracked_deployable(unit, "broker_stimm_field", lifetime)
-			end
-		end
-	elseif unit_template_name == "item_deployable_projectile" then
-		local owner_unit_id = GameSession.game_object_field(session, game_object_id, "owner_unit_id")
-
-		if owner_unit_id ~= NetworkConstants.invalid_game_object_id then
-			local owner_unit = Managers.state.unit_spawner:unit(owner_unit_id)
-
-			if owner_unit and owner_unit == local_player.player_unit then
-				local item_id = GameSession.game_object_field(session, game_object_id, "item_id")
-				local item_name = NetworkLookup.player_item_names[item_id]
-
-				if item_name == "content/items/weapons/player/drone_area_buff" then
-					local talent_settings = require("scripts/settings/talent/talent_settings")
-					local lifetime = talent_settings.adamant.blitz_ability.drone.duration
-
-					division_hud_add_tracked_deployable(unit, "adamant_drone", lifetime)
-				end
 			end
 		end
 	end
@@ -118,13 +102,22 @@ mod:hook_safe("ProximityBrokerStimmField", "init", function(self, context, init_
 	end
 end)
 
-mod:hook_safe("ProximityAreaBuffDrone", "init", function(self, context, init_data, owner_unit)
-	local local_player = Managers.player and Managers.player:local_player(1)
-	local is_owner = local_player and owner_unit == local_player.player_unit
+local area_buff_drone = ProjectileTemplates.area_buff_drone
+local area_buff_drone_deployable = area_buff_drone and area_buff_drone.deployable
 
-	if is_owner then
-		division_hud_add_tracked_deployable(self._unit, "adamant_drone", self._life_time)
-	end
-end)
+-- ProximityAreaBuffDrone only exists on the server, so the drone is tracked where it deploys: the server registers
+-- its lifetime job here, and clients run the same function when they see it land. Its life time is always the talent
+-- duration, since the drone deployable has no improved life time.
+if area_buff_drone_deployable and area_buff_drone_deployable.deploy_func then
+	mod:hook_safe(area_buff_drone_deployable, "deploy_func", function(_world, _physics_world, unit)
+		local player_unit_spawn_manager = Managers.state.player_unit_spawn
+		local owner = player_unit_spawn_manager and player_unit_spawn_manager:owner(unit)
+		local local_player = Managers.player and Managers.player:local_player(1)
+
+		if owner and owner == local_player then
+			division_hud_add_tracked_deployable(unit, "adamant_drone", TalentSettings.adamant.blitz_ability.drone.duration)
+		end
+	end)
+end
 
 return mod

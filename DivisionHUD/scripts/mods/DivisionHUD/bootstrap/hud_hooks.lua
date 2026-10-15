@@ -35,9 +35,6 @@ end
 
 mod:hook_require("scripts/ui/hud/hud_elements_player_onboarding", add_or_replace_division_hud_elements)
 mod:hook_require("scripts/ui/hud/hud_elements_player", add_or_replace_division_hud_elements)
-mod:hook_require("scripts/ui/hud/hud_elements_training_grounds", add_or_replace_division_hud_elements)
-mod:hook_require("scripts/ui/hud/hud_elements_shooting_range", add_or_replace_division_hud_elements)
-mod:hook_require("scripts/ui/hud/hud_elements_tutorial", add_or_replace_division_hud_elements)
 
 mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, params)
 	local is_spectator_hud = params and params.renderer_name == "spectator_hud_ui_renderer"

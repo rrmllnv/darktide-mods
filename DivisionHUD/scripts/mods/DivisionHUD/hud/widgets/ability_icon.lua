@@ -92,80 +92,6 @@ local function resolve_ability_icon(self, player_unit)
 	return icon
 end
 
-local function _duration_buff_progress(buff_extension, buff_name)
-	if not buff_extension or type(buff_name) ~= "string" or buff_name == "" then
-		return nil
-	end
-
-	if (buff_extension:current_stacks(buff_name) or 0) <= 0 then
-		return nil
-	end
-
-	return buff_extension:buff_duration_progress(buff_name)
-end
-
-local function compute_cooldown_progress(player_unit)
-	local ability_extension = ScriptUnit.has_extension(player_unit, "ability_system")
-
-	if not ability_extension or not ability_extension:ability_is_equipped(COMBAT_ABILITY_TYPE) then
-		return 1
-	end
-
-	local max_cd = ability_extension:max_ability_cooldown(COMBAT_ABILITY_TYPE) or 0
-	local rem_cd = ability_extension:remaining_ability_cooldown(COMBAT_ABILITY_TYPE) or 0
-	local progress
-
-	if max_cd > 0 then
-		progress = 1 - math.min(1, math.max(0, rem_cd / max_cd))
-
-		if progress == 0 then
-			progress = 1
-		end
-	else
-		progress = 0
-	end
-
-	if not ability_extension.ability_pause_cooldown_settings then
-		return progress
-	end
-
-	local pause_settings = ability_extension:ability_pause_cooldown_settings(COMBAT_ABILITY_TYPE)
-
-	if type(pause_settings) ~= "table" then
-		return progress
-	end
-
-	local tracking = pause_settings.duration_tracking_buff
-
-	if not tracking then
-		return progress
-	end
-
-	local buff_extension = ScriptUnit.has_extension(player_unit, "buff_system")
-
-	if not buff_extension then
-		return progress
-	end
-
-	if type(tracking) == "table" then
-		for i = 1, #tracking do
-			local p = _duration_buff_progress(buff_extension, tracking[i])
-
-			if p then
-				return p
-			end
-		end
-	else
-		local p = _duration_buff_progress(buff_extension, tracking)
-
-		if p then
-			return p
-		end
-	end
-
-	return progress
-end
-
 local function copy_color_into(dst, src)
 	if type(dst) ~= "table" or type(src) ~= "table" then
 		return false
@@ -210,75 +136,6 @@ local function apply_state_colors(self, widget, state)
 	end
 end
 
-local function _duration_buff_is_active(buff_extension, tracking)
-	if not buff_extension or not tracking then
-		return false
-	end
-
-	if type(tracking) == "table" then
-		for i = 1, #tracking do
-			local name = tracking[i]
-
-			if type(name) == "string" and (buff_extension:current_stacks(name) or 0) > 0 then
-				local p = buff_extension:buff_duration_progress(name) or 0
-
-				if p > 0 then
-					return true
-				end
-			end
-		end
-
-		return false
-	end
-
-	if type(tracking) ~= "string" or (buff_extension:current_stacks(tracking) or 0) <= 0 then
-		return false
-	end
-
-	return (buff_extension:buff_duration_progress(tracking) or 0) > 0
-end
-
-local function is_ability_on_cooldown(player_unit)
-	local ability_extension = ScriptUnit.has_extension(player_unit, "ability_system")
-
-	if not ability_extension or not ability_extension:ability_is_equipped(COMBAT_ABILITY_TYPE) then
-		return false
-	end
-
-	local max_cd = ability_extension:max_ability_cooldown(COMBAT_ABILITY_TYPE) or 0
-	local rem_cd = ability_extension:remaining_ability_cooldown(COMBAT_ABILITY_TYPE) or 0
-	local cooldown_progress = 1
-
-	if max_cd > 0 then
-		cooldown_progress = 1 - math.min(1, math.max(0, rem_cd / max_cd))
-
-		if cooldown_progress == 0 then
-			cooldown_progress = 1
-		end
-	end
-
-	local in_process_of_going_on_cooldown = false
-	local force_on_cooldown = false
-
-	if ability_extension.ability_pause_cooldown_settings then
-		local pause_settings = ability_extension:ability_pause_cooldown_settings(COMBAT_ABILITY_TYPE)
-
-		if type(pause_settings) == "table" then
-			local buff_extension = ScriptUnit.has_extension(player_unit, "buff_system")
-
-			if _duration_buff_is_active(buff_extension, pause_settings.duration_tracking_buff) then
-				in_process_of_going_on_cooldown = true
-			end
-
-			if _duration_buff_is_active(buff_extension, pause_settings.on_cooldown_tracking_buff) then
-				force_on_cooldown = true
-			end
-		end
-	end
-
-	return (cooldown_progress ~= 1 and not in_process_of_going_on_cooldown) or force_on_cooldown
-end
-
 function M.init(self, definitions)
 	self._ability_icon_alpha_mult = 0
 	self._ability_icon_unit = nil
@@ -307,7 +164,8 @@ function M.init(self, definitions)
 	end
 end
 
-function M.update(self, player_unit, opacity, dt)
+-- cooldown_state and effect_active come from this frame's CombatAbilityBar.update; both are nil when the bar is hidden
+function M.update(self, player_unit, opacity, dt, cooldown_state, effect_active)
 	dt = (type(dt) == "number" and dt == dt and dt > 0) and dt or 0
 
 	local widget = self._widgets_by_name and self._widgets_by_name.ability_icon
@@ -321,7 +179,11 @@ function M.update(self, player_unit, opacity, dt)
 	local is_requested = false
 
 	if feature_enabled and player_unit and ALIVE[player_unit] then
-		is_requested = CombatAbilityBar.is_ability_in_use_or_on_cooldown(player_unit, COMBAT_ABILITY_TYPE) and true or false
+		if cooldown_state then
+			is_requested = CombatAbilityBar.is_state_in_use_or_on_cooldown(cooldown_state, effect_active)
+		else
+			is_requested = CombatAbilityBar.is_ability_in_use_or_on_cooldown(player_unit, COMBAT_ABILITY_TYPE) and true or false
+		end
 	end
 
 	local alpha = self._ability_icon_alpha_mult or 0
@@ -377,14 +239,16 @@ function M.update(self, player_unit, opacity, dt)
 			widget.dirty = true
 		end
 
-		local progress = compute_cooldown_progress(player_unit)
+		cooldown_state = cooldown_state or CombatAbilityBar.cooldown_state(player_unit, COMBAT_ABILITY_TYPE)
+
+		local progress = cooldown_state.cooldown_progress
 
 		if widget.content.duration_progress ~= progress then
 			widget.content.duration_progress = progress
 			widget.dirty = true
 		end
 
-		local on_cooldown = is_ability_on_cooldown(player_unit)
+		local on_cooldown = CombatAbilityBar.is_state_on_cooldown(cooldown_state)
 		local target_state = on_cooldown and "cooldown" or "active"
 
 		if self._ability_icon_state ~= target_state then
